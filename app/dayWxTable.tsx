@@ -20,67 +20,78 @@ function DayAveragesTable({
 
     const table = d3
       .select(ref.current)
-      .selectAll('table')
+      .selectAll<HTMLTableElement, null>('table')
       .data([null]);
     const tableEnter = table
       .enter()
       .append('table')
       .attr('class', 'weatherTable');
-    const tableUpdate = tableEnter.merge(table);
+    const tableUpdate = tableEnter.merge(table as any);
 
     const headers = Object.keys(dayAverages[0]);
 
     // Headers
-    const thead = tableUpdate.selectAll('thead').data([null]);
+    const thead = tableUpdate
+      .selectAll<HTMLTableSectionElement, null>('thead')
+      .data([null]);
     const theadEnter = thead.enter().append('thead');
-    const theadUpdate = theadEnter.merge(thead);
+    const theadUpdate = theadEnter.merge(thead as any);
 
-    const headerRow = theadUpdate.selectAll('tr').data([null]);
+    const headerRow = theadUpdate
+      .selectAll<HTMLTableRowElement, null>('tr')
+      .data([null]);
     const headerRowEnter = headerRow.enter().append('tr');
-    const headerRowUpdate = headerRowEnter.merge(headerRow);
+    const headerRowUpdate = headerRowEnter.merge(headerRow as any);
 
-    const headerCells = headerRowUpdate.selectAll('th').data(headers);
+    const headerCells = headerRowUpdate
+      .selectAll<HTMLTableHeaderCellElement, string>('th')
+      .data(headers);
     headerCells
       .enter()
       .append('th')
-      .merge(headerCells)
+      .merge(headerCells as any)
       .text((d) => d)
-      .style('background-color', 'cornflowerblue'); // Set a background color for the header
+      .style('background-color', 'cornflowerblue');
 
     headerCells.exit().remove();
 
     // Body
-    const tbody = tableUpdate.selectAll('tbody').data([null]);
+    const tbody = tableUpdate
+      .selectAll<HTMLTableSectionElement, null>('tbody')
+      .data([null]);
     const tbodyEnter = tbody.enter().append('tbody');
-    const tbodyUpdate = tbodyEnter.merge(tbody);
+    const tbodyUpdate = tbodyEnter.merge(tbody as any);
 
-    const rows = tbodyUpdate.selectAll('tr').data(dayAverages);
+    const rows = tbodyUpdate
+      .selectAll<HTMLTableRowElement, DayAverage>('tr')
+      .data(dayAverages);
     const rowsEnter = rows
       .enter()
       .append('tr')
       .attr('class', (d, i) =>
         i % 2 === 0 ? 'even-row' : 'odd-row'
-      ); // Apply alternating row classes
-    const rowsUpdate = rowsEnter.merge(rows);
+      );
+    const rowsUpdate = rowsEnter.merge(rows as any);
     rows.exit().remove();
 
     const cells = rowsUpdate
-      .selectAll('td')
+      .selectAll<
+        HTMLTableDataCellElement,
+        { key: string; value: string | number }
+      >('td')
       .data((d) =>
         headers.map((header) => ({ key: header, value: d[header] }))
       );
     cells
       .enter()
       .append('td')
-      .merge(cells)
+      .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
   }, [dayAverages]);
 
   return (
     <div className="table-container">
-      {' '}
-      {/* Add this div for scrolling */}
       <div ref={ref}></div>
     </div>
   );
