@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Add your custom class here */
+.my-button {
+  background-color: cornflowerblue;
+  color: lightgrey;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.my-table {
+  background-color: cornflowerblue;
+  color: lightgrey;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.my-table th {
+  font-size: 8px; /* Adjust this value to make the headers smaller or larger */
+}
+
+.my-table th,
+.my-table td {
+  border: 1px solid black;
+  padding: 6px;
+  text-align: left;
+}
+
+.my-table th {
+  /*background-color: #f2f2f2;*/
+  font-size: 8px; /* Adjust this value to make the headers smaller or larger */
+}
+
+/* Sticky header for the table */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background-color: white; /* Adjust as needed */
+  z-index: 10; /* Ensure it stays above other content */
+}
+
+/* Alternating row colors */
+.even-row {
+  background-color: cornflowerblue; /* Light gray for even rows */
+}
+
+.odd-row {
+  background-color: rgb(121, 161, 236); /* White for odd rows */
+}
+
+.weatherTable {
+  background-color: cornflowerblue;
+  color: lightgrey;
+  border: collapse;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.weatherTable th,
+.weatherTable td {
+  border: 1px solid black;
+  padding: 6px;
+  text-align: left;
+}
+
+.weatherTable th {
+  /*background-color: #f2f2f2;*/
+  font-size: 8px; /* Adjust this value to make the headers smaller or larger */
+  font-weight: bold;
+  /* Add sticky header class to the th elements */
+  position: sticky;
+  top: 0;
+  z-index: 1; /* Ensure header is above other content */
+}
+
+/* Container for the table to enable scrolling */
+.table-container {
+  max-height: 800px; /* Set a maximum height for vertical scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: auto; /* Enable horizontal scrolling */
+  border: 1px solid #ccc; /* Optional: Add a border around the table */
+  width: 100%; /* Set the width to 100% of the screen */
+}
