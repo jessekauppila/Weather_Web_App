@@ -86,8 +86,12 @@ export default function Home() {
     '8',
     '9',
   ]; // really need to define these!
-  const [observationsData, setObservationsData] = useState<any[]>([]);
-  const [unitConversions, setUnitConversions] = useState<any>({});
+  const [observationsData, setObservationsData] = useState<
+    Array<Record<string, any>>
+  >([]);
+  const [unitConversions, setUnitConversions] = useState<
+    Record<string, string>
+  >({});
 
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {

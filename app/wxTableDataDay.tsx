@@ -8,7 +8,7 @@ import {
 } from '../utils/formatAverages';
 
 function wxTableDataDay(
-  observationsData: Array<any>,
+  observationsData: Array<Record<string, any>>,
   unitConversions: Record<string, string>
 ): Array<{ [key: string]: number | string }> {
   console.log('wxTableDataDay input:', observationsData);
@@ -60,12 +60,11 @@ function wxTableDataDay(
     snowDepths: number[],
     threshold = 1
   ): number[] {
-    // Specify type for snowDepths
     const mean = calculateMean(snowDepths);
     const stdDev = calculateStandardDeviation(snowDepths, mean);
 
     return snowDepths.filter(
-      (value: number) => Math.abs(value - mean) <= threshold * stdDev // Specify type for value
+      (value: number) => Math.abs(value - mean) <= threshold * stdDev
     );
   }
   ///////////\\\\\\\\\\\\\\\//////////////\\\\\\\\\\\\////////////\\\\\\\\\\\/////////////////
@@ -74,7 +73,7 @@ function wxTableDataDay(
   //// calculating wind direction \\\\
   ///////////\\\\\\\\\\\\\\\//////////////\\\\\\\\\\\\////////////\\\\\\\\\\\/////////////////
 
-  function meanWindDirection(directions) {
+  function meanWindDirection(directions: number[]): number {
     // Convert degrees to radians and calculate x, y components
     let xSum = 0;
     let ySum = 0;
@@ -103,7 +102,7 @@ function wxTableDataDay(
     return meanAngleDeg;
   }
 
-  function degreeToCompass(degree) {
+  function degreeToCompass(degree: number): string {
     // A utility function to convert degrees to compass directions
     const directions = [
       'N',

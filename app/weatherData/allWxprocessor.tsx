@@ -1,11 +1,15 @@
 import fetchHrWeatherData from './getHrWxWithID';
 
+// Add types for the parameters
 async function processAllWxData(
-  start_time_pst: any,
-  end_time_pst: any,
+  start_time_pst: moment.Moment,
+  end_time_pst: moment.Moment,
   stids: string[],
-  auth: any
-): Promise<any> {
+  auth: string
+): Promise<{
+  observationsData: any[];
+  unitConversions: Record<string, string>;
+}> {
   try {
     const data = await fetchHrWeatherData(
       start_time_pst,

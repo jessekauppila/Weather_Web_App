@@ -1,11 +1,12 @@
 import getNWACobservations from './fetchNWACweather';
 
+// Add types for the parameters
 async function fetchHrWeatherData(
-  start_time_pst: any,
-  end_time_pst: any,
-  stids: any,
-  auth: any
-): Promise<any> {
+  start_time_pst: moment.Moment,
+  end_time_pst: moment.Moment,
+  stids: string[],
+  auth: string
+): Promise<Record<string, WeatherData> | undefined> {
   try {
     const data = await getNWACobservations(
       start_time_pst,

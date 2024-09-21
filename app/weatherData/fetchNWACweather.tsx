@@ -2,9 +2,14 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 
 interface WeatherData {
-  UNITS: Record<string, any>;
+  UNITS: Record<string, string>;
   VARIABLES: Array<Record<string, any>>;
-  STATION?: Record<string, any>;
+  STATION?: Array<{
+    name: string;
+    longitude: string;
+    latitude: string;
+    observations: Record<string, any[]>;
+  }>;
 }
 
 const getNWACobservations = async (
