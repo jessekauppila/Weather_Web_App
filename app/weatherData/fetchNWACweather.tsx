@@ -1,7 +1,4 @@
-import moment from 'moment-timezone';
-import axios from 'axios';
-
-interface WeatherData {
+export interface WeatherData {
   UNITS: Record<string, string>;
   VARIABLES: Array<Record<string, any>>;
   STATION?: Array<{
@@ -11,6 +8,9 @@ interface WeatherData {
     observations: Record<string, any[]>;
   }>;
 }
+
+import moment from 'moment-timezone';
+import axios from 'axios';
 
 const getNWACobservations = async (
   start_time_pst: moment.Moment,

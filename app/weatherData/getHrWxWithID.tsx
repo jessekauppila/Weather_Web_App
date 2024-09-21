@@ -1,4 +1,6 @@
-import getNWACobservations from './fetchNWACweather';
+import getNWACobservations, { WeatherData } from './fetchNWACweather';
+
+import moment from 'moment-timezone';
 
 // Add types for the parameters
 async function fetchHrWeatherData(
