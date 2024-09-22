@@ -1,4 +1,5 @@
 import fetchHrWeatherData from './getHrWxWithID';
+import { WeatherData } from './fetchNWACweather'; // Import the WeatherData type
 
 // Add types for the parameters
 async function processAllWxData(
@@ -11,12 +12,17 @@ async function processAllWxData(
   unitConversions: Record<string, string>;
 }> {
   try {
-    const data = await fetchHrWeatherData(
-      start_time_pst,
-      end_time_pst,
-      stids,
-      auth
-    );
+    const data: Record<string, WeatherData> | undefined =
+      await fetchHrWeatherData(
+        start_time_pst,
+        end_time_pst,
+        stids,
+        auth
+      );
+
+    if (!data) {
+      throw new Error('No data returned from fetchHrWeatherData');
+    }
 
     // Define the desired order of keys
     const orderedKeys = [
@@ -60,11 +66,14 @@ async function processAllWxData(
         }
       }
 
-      for (const stationObject of stationObjects) {
-        const observations = stationObject.observations;
-        for (const observationKey in observations) {
-          if (observations.hasOwnProperty(observationKey)) {
-            availableKeys.add(observationKey);
+      // Add a check for stationObjects
+      if (stationObjects) {
+        for (const stationObject of stationObjects) {
+          const observations = stationObject.observations;
+          for (const observationKey in observations) {
+            if (observations.hasOwnProperty(observationKey)) {
+              availableKeys.add(observationKey);
+            }
           }
         }
       }
@@ -90,29 +99,32 @@ async function processAllWxData(
         const stationData = data[stationKey];
         const stationObjects = stationData.STATION;
 
-        for (const stationObject of stationObjects) {
-          const observations = stationObject.observations;
-          const newStationInfo: {
-            [key: string]: string | (string | number)[];
-          } = {};
+        // Add a check for stationObjects
+        if (stationObjects) {
+          for (const stationObject of stationObjects) {
+            const observations = stationObject.observations;
+            const newStationInfo: {
+              [key: string]: string | (string | number)[];
+            } = {};
 
-          for (const key of sortedKeys) {
-            if (key === 'Station Name') {
-              newStationInfo[key] = stationObject.name;
-            } else if (key === 'Longitude') {
-              newStationInfo[key] = stationObject.longitude;
-            } else if (key === 'Latitude') {
-              newStationInfo[key] = stationObject.latitude;
-            } else {
-              const observationValues = observations[key] || [];
-              newStationInfo[key] =
-                observationValues.length === 0
-                  ? ['']
-                  : observationValues;
+            for (const key of sortedKeys) {
+              if (key === 'Station Name') {
+                newStationInfo[key] = stationObject.name;
+              } else if (key === 'Longitude') {
+                newStationInfo[key] = stationObject.longitude;
+              } else if (key === 'Latitude') {
+                newStationInfo[key] = stationObject.latitude;
+              } else {
+                const observationValues = observations[key] || [];
+                newStationInfo[key] =
+                  observationValues.length === 0
+                    ? ['']
+                    : observationValues;
+              }
             }
-          }
 
-          observationsData.push(newStationInfo);
+            observationsData.push(newStationInfo);
+          }
         }
       }
     }
