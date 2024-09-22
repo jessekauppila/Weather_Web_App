@@ -109,19 +109,25 @@ body {
 
 .weatherTable th,
 .weatherTable td {
-  border: 1px solid black;
-  padding: 6px;
-  text-align: left;
+  border: 1px solid darkgrey;
+  /* border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  border-left: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0; */
 }
 
 .weatherTable th {
   /*background-color: #f2f2f2;*/
-  font-size: 8px; /* Adjust this value to make the headers smaller or larger */
+  font-size: 10px; /* Adjust this value to make the headers smaller or larger */
   font-weight: bold;
   /* Add sticky header class to the th elements */
   position: sticky;
   top: 0;
   z-index: 1; /* Ensure header is above other content */
+  /* border-color: #c0c0c0; */
+  background-color: cornflowerblue;
+
+  border-bottom: 1px solid #darkgrey; /* Adjust color as needed */
 }
 
 /* Container for the table to enable scrolling */
@@ -131,4 +137,21 @@ body {
   overflow-x: auto; /* Enable horizontal scrolling */
   border: 1px solid #ccc; /* Optional: Add a border around the table */
   width: 100%; /* Set the width to 100% of the screen */
+}
+
+.table-container .d3-weather-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-container .d3-weather-table th,
+.table-container .d3-weather-table td {
+  border: 1px solid #e0e0e0; /* Light grey border */
+  padding: 6px;
+  text-align: left;
+}
+
+.table-container .d3-weather-table th {
+  background-color: #f2f2f2; /* Light grey background for headers */
+  border-color: #c0c0c0; /* Slightly darker border for headers */
 }

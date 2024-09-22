@@ -7,10 +7,12 @@ interface DayAverage {
 
 interface DayAveragesTableProps {
   dayAverages: DayAverage[];
+  title?: string; // Add this line
 }
 
 function DayAveragesTable({
   dayAverages = [],
+  title = 'Station Daily Weather Data', // Add a title prop with a default value
 }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,6 +29,18 @@ function DayAveragesTable({
       .append('table')
       .attr('class', 'weatherTable');
     const tableUpdate = tableEnter.merge(table as any);
+
+    // Add caption to the table
+    tableUpdate
+      .selectAll('caption')
+      .data([null])
+      .enter()
+      .append('caption')
+      .text(title)
+      .style('caption-side', 'top')
+      .style('font-weight', 'bold')
+      .style('font-size', '1.2em')
+      .style('margin-bottom', '10px');
 
     const headers = Object.keys(dayAverages[0]);
 
@@ -50,8 +64,7 @@ function DayAveragesTable({
       .enter()
       .append('th')
       .merge(headerCells as any)
-      .text((d) => d)
-      .style('background-color', 'cornflowerblue');
+      .text((d) => d);
 
     headerCells.exit().remove();
 
@@ -88,7 +101,7 @@ function DayAveragesTable({
       .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
-  }, [dayAverages]);
+  }, [dayAverages, title]); // Add title to the dependency array
 
   return (
     <div className="table-container">

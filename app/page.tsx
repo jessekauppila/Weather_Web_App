@@ -166,7 +166,7 @@ export default function Home() {
         <p>Loading...</p>
       ) : (
         <>
-          <h2 className="text-gray-800">Daily Data</h2>
+          {/* <h2 className="text-gray-800">Daily Data</h2> */}
           <DayAveragesTable dayAverages={observationsData} />
         </>
       )}
