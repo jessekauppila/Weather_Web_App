@@ -1,3 +1,5 @@
+//main page
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
 
@@ -12,7 +14,7 @@ interface DayAveragesTableProps {
 
 // Define the header structure for known categories
 const knownCategories = [
-  { category: 'Station Info', columns: ['Date Time', 'Station'] },
+  { category: 'Station', columns: ['Date Time', 'Station'] },
   {
     category: 'Temperatures',
     columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
