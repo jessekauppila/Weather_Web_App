@@ -137,7 +137,6 @@ export default function Home() {
   }, [submittedDate, selectedDate, stationIds, auth]); // Include all dependencies here
 
   return (
-    // Names and Like button implementation...
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
       <div className="flex flex-col items-center space-y-1">
         <div className="flex space-x-4">
@@ -166,7 +165,6 @@ export default function Home() {
         <p>Loading...</p>
       ) : (
         <>
-          {/* <h2 className="text-gray-800">Daily Data</h2> */}
           <DayAveragesTable dayAverages={observationsData} />
         </>
       )}
