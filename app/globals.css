@@ -79,7 +79,7 @@ body {
 .sticky-header {
   position: sticky;
   top: 0;
-  background-color: white; /* Adjust as needed */
+  background-color: #79a1ed; /* Adjust as needed */
   z-index: 10; /* Ensure it stays above other content */
 }
 
@@ -92,66 +92,73 @@ body {
   background-color: rgb(121, 161, 236); /* White for odd rows */
 }
 
+/* Weather Table Styles */
+.table-container {
+  max-height: 800px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
 .weatherTable {
-  background-color: cornflowerblue;
-  color: lightgrey;
-  border: collapse;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-  margin: 4px 2px;
-  cursor: pointer;
   border-collapse: collapse;
   width: 100%;
+  background-color: cornflowerblue;
+  color: lightgrey;
+  font-size: 12px;
+}
+
+.weatherTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .weatherTable th,
 .weatherTable td {
-  border: 1px solid darkgrey;
-  /* border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
-  border-left: 1px solid #f0f0f0;
-  border-right: 1px solid #f0f0f0; */
+  border: 0.5px solid #5a7ac2; /* Slightly darker border color */
+  padding: 6px;
+  text-align: center;
 }
 
 .weatherTable th {
-  /*background-color: #f2f2f2;*/
-  font-size: 10px; /* Adjust this value to make the headers smaller or larger */
+  font-size: 10px;
   font-weight: bold;
-  /* Add sticky header class to the th elements */
-  position: sticky;
-  top: 0;
-  z-index: 1; /* Ensure header is above other content */
-  /* border-color: #c0c0c0; */
+}
+
+/* Category row (first header row) */
+.weatherTable .category-row th {
   background-color: cornflowerblue;
-
-  border-bottom: 1px solid #darkgrey; /* Adjust color as needed */
+  color: lightgrey;
+  border: 0.5px solid #5a7ac2; /* Explicitly set border color */
+  border-bottom: none; /* Remove bottom border */
 }
 
-/* Container for the table to enable scrolling */
-.table-container {
-  max-height: 800px; /* Set a maximum height for vertical scrolling */
-  overflow-y: auto; /* Enable vertical scrolling */
-  overflow-x: auto; /* Enable horizontal scrolling */
-  border: 1px solid #ccc; /* Optional: Add a border around the table */
-  width: 100%; /* Set the width to 100% of the screen */
+/* Column row (second header row) */
+.weatherTable .column-row th {
+  background-color: #79a1ed;
+  color: lightgrey;
+  border: 0.5px solid #5a7ac2; /* Explicitly set border color */
 }
 
-.table-container .d3-weather-table {
-  border-collapse: collapse;
-  width: 100%;
+/* Alternating row colors */
+.weatherTable tbody tr:nth-child(even) {
+  background-color: #79a1ed; /* Light blue for even rows */
 }
 
-.table-container .d3-weather-table th,
-.table-container .d3-weather-table td {
-  border: 1px solid #e0e0e0; /* Light grey border */
-  padding: 6px;
-  text-align: left;
+.weatherTable tbody tr:nth-child(odd) {
+  background-color: cornflowerblue; /* Cornflower blue for odd rows */
 }
 
-.table-container .d3-weather-table th {
-  background-color: #f2f2f2; /* Light grey background for headers */
-  border-color: #c0c0c0; /* Slightly darker border for headers */
+/* Add this new style for the table caption */
+.weatherTable caption {
+  background-color: #79a1ed; /* Set the background color for the title area */
+  color: lightgrey; /* Adjust text color for better contrast if needed */
+  padding: 10px;
+  font-weight: bold;
+  font-size: 14px; /* Adjust size as needed */
+  caption-side: top; /* Ensure the caption is at the top of the table */
 }
+
+/* ... keep your existing styles below ... */
