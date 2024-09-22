@@ -1,8 +1,7 @@
 import fetchHrWeatherData from './getHrWxWithID';
-import { WeatherData } from './fetchNWACweather'; // Import the WeatherData type
+import { WeatherData } from './fetchNWACweather';
 import moment from 'moment-timezone';
 
-// Add types for the parameters
 async function processAllWxData(
   start_time_pst: moment.Moment,
   end_time_pst: moment.Moment,
@@ -13,13 +12,12 @@ async function processAllWxData(
   unitConversions: Record<string, string>;
 }> {
   try {
-    const data: Record<string, WeatherData> | undefined | null =
-      await fetchHrWeatherData(
-        start_time_pst,
-        end_time_pst,
-        stids,
-        auth
-      );
+    const data = (await fetchHrWeatherData(
+      start_time_pst,
+      end_time_pst,
+      stids,
+      auth
+    )) as Record<string, WeatherData>; // Type assertion here
 
     if (!data) {
       throw new Error('No data returned from fetchHrWeatherData');
