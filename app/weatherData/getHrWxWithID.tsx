@@ -8,7 +8,7 @@ async function fetchHrWeatherData(
   end_time_pst: moment.Moment,
   stids: string[],
   auth: string
-): Promise<Record<string, WeatherData> | undefined> {
+): Promise<Record<string, WeatherData> | undefined | null> {
   try {
     const data = await getNWACobservations(
       start_time_pst,
@@ -26,6 +26,7 @@ async function fetchHrWeatherData(
     return data;
   } catch (error) {
     console.error('Failed to fetch NWAC stations:', error);
+    return undefined;
   }
 }
 
