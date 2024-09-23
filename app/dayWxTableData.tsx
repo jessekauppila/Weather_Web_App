@@ -1,6 +1,6 @@
 import { mean } from 'd3';
 
-import wxTableDataConversion from './wxTableDataConversion';
+import wxTableDataConversion from '../utils/wxTableDataConversion';
 import {
   formatAveragesData,
   UnitConversions,
@@ -27,10 +27,6 @@ function wxTableDataDay(
       )
     );
   }
-
-  ///////////\\\\\\\\\\\\\\\//////////////\\\\\\\\\\\\////////////\\\\\\\\\\\////////\\\\\\\\
-  //// Unit Conversions: Initial conversion from Meters to centimeters...\\\\
-  ///////////\\\\\\\\\\\\\\\//////////////\\\\\\\\\\\\////////////\\\\\\\\\\\/////////////////
 
   ///////////\\\\\\\\\\\\\\\//////////////\\\\\\\\\\\\////////////\\\\\\\\\\\////////\\\\\\\\
   //// functions for calculating snow depth using a threshold to do some error correction \\\\

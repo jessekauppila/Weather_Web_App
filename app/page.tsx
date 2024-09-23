@@ -5,8 +5,8 @@ import moment from 'moment-timezone';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 import DayAveragesTable from './dayWxTable';
-import processAllWxData from './weatherData/allWxprocessor';
-import wxTableDataDay from './wxTableDataDay';
+import processAllWxData from './api/allWxprocessor';
+import wxTableDataDay from './dayWxTableData';
 //import { ObservationsData } from './types'; // Add this import
 
 export default function Home() {
