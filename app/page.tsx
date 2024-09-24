@@ -101,29 +101,43 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const start_time_pst = moment(selectedDate).tz(
-          'America/Los_Angeles'
+        console.log('Selected Date:', selectedDate);
+
+        // Set the time to 5am PDT on the selected date
+        const start_time_pdt = moment(selectedDate)
+          .tz('America/Los_Angeles')
+          .startOf('day')
+          .add(5, 'hours');
+
+        // Set the time to 5am PDT on the next day
+        const end_time_pdt = moment(start_time_pdt).add(1, 'day');
+
+        console.log(
+          'Start time (PDT):',
+          start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
         );
-        const end_time_pst = moment(selectedDate)
-          .add(1, 'day')
-          .tz('America/Los_Angeles');
+        console.log(
+          'End time (PDT):',
+          end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
+        );
 
         const result = await processAllWxData(
-          start_time_pst,
-          end_time_pst,
+          start_time_pdt,
+          end_time_pdt,
           stationIds,
           auth
         );
+
         console.log('Data received from processAllWxData:', result);
 
-        const observationsData = result.observationsData; // Extract the array
-        const unitConversions = result.unitConversions; // Extract unit conversions
-        setUnitConversions(unitConversions); // Set unit conversions in state
+        const observationsData = result.observationsData;
+        const unitConversions = result.unitConversions;
+        setUnitConversions(unitConversions);
 
         const processedData = wxTableDataDay(
           observationsData,
           unitConversions
-        ); // Pass unit conversions
+        );
         console.log('Processed data:', processedData);
         setObservationsData(processedData);
         setIsLoading(false);

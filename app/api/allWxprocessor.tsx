@@ -128,37 +128,37 @@ async function processAllWxData(
       }
     }
 
-    if (Array.isArray(observationsData)) {
-      console.log('observationsData is an Array');
-    } else if (
-      typeof observationsData === 'object' &&
-      observationsData !== null
-    ) {
-      console.log('observationsData is an Object');
-    } else {
-      console.log(
-        'observationsData is of type:',
-        typeof observationsData
-      );
-    }
+    // if (Array.isArray(observationsData)) {
+    //   console.log('observationsData is an Array');
+    // } else if (
+    //   typeof observationsData === 'object' &&
+    //   observationsData !== null
+    // ) {
+    //   console.log('observationsData is an Object');
+    // } else {
+    //   console.log(
+    //     'observationsData is of type:',
+    //     typeof observationsData
+    //   );
+    // }
 
     // Check if unitConversions is an array or an object
-    if (Array.isArray(unitConversions)) {
-      console.log('unitConversions is an Array');
-    } else if (
-      typeof unitConversions === 'object' &&
-      unitConversions !== null
-    ) {
-      console.log('unitConversions is an Object');
-    } else {
-      console.log(
-        'unitConversions is of type:',
-        typeof unitConversions
-      );
-    }
+    // if (Array.isArray(unitConversions)) {
+    //   console.log('unitConversions is an Array');
+    // } else if (
+    //   typeof unitConversions === 'object' &&
+    //   unitConversions !== null
+    // ) {
+    //   console.log('unitConversions is an Object');
+    // } else {
+    //   console.log(
+    //     'unitConversions is of type:',
+    //     typeof unitConversions
+    //   );
+    // }
 
-    console.log('unitConversions:', unitConversions);
-    console.log('observationsData:', observationsData);
+    // console.log('unitConversions:', unitConversions);
+    // console.log('observationsData:', observationsData);
     return { observationsData, unitConversions };
   } catch (error) {
     console.error('Error in processAllWxData:', error);

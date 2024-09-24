@@ -14,7 +14,15 @@ interface DayAveragesTableProps {
 
 // Define the header structure for known categories
 const knownCategories = [
-  { category: 'Station', columns: ['Date Time', 'Station'] },
+  {
+    category: 'Station',
+    columns: [
+      'Date Time',
+      'Start Date Time',
+      'End Date Time',
+      'Station',
+    ],
+  },
   {
     category: 'Temperatures',
     columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
@@ -34,9 +42,7 @@ const knownCategories = [
       'Snow Depth',
       'Snow Depth Max',
       'Snow Depth 24h Total',
-      'Intermittent Snow',
-      'Precep Accum One Hour',
-      'New Snow',
+      'Precip Accum One Hour',
     ],
   },
   { category: 'RH', columns: ['Relative Humidity'] },
@@ -68,7 +74,7 @@ function DayAveragesTable({
     // Add the 'Other' category with remaining columns
     return [
       ...knownCategories,
-      { category: 'Other', columns: otherKeys },
+      //{ category: 'Other', columns: otherKeys },
     ];
   }, [dayAverages]);
 

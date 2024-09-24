@@ -11,13 +11,13 @@ function wxTableDataDay(
   observationsData: Array<Record<string, any>>,
   unitConversions: Record<string, string>
 ): Array<{ [key: string]: number | string }> {
-  console.log('wxTableDataDay input:', observationsData);
-  console.log(
-    'Type of wxTableDataDay input:',
-    Array.isArray(observationsData)
-      ? 'Array'
-      : typeof observationsData
-  );
+  // console.log('wxTableDataDay input:', observationsData);
+  // console.log(
+  //   'Type of wxTableDataDay input:',
+  //   Array.isArray(observationsData)
+  //     ? 'Array'
+  //     : typeof observationsData
+  // );
 
   function isNoData(observationValues: any[]): boolean {
     return (
@@ -310,16 +310,34 @@ function wxTableDataDay(
 
         /// Date/Time Adjustments \\\
         else if (observationKey === 'date_time') {
-          const date = new Date(observationValues[0]); // Assuming the first value is the date
-          averages[observationKey] = date.toLocaleDateString(
-            'en-US',
-            {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }
+          const startDateTime = moment(observationValues[0]).tz(
+            'America/Los_Angeles'
           );
-        } else {
+          const endDateTime = moment(
+            observationValues[observationValues.length - 1]
+          ).tz('America/Los_Angeles');
+
+          const formatDate = (date: moment.Moment) =>
+            date.format('MMM D, YYYY, hh:mm A z');
+
+          averages['start_date_time'] = formatDate(startDateTime);
+          averages['end_date_time'] = formatDate(endDateTime);
+          averages[observationKey] = `${formatDate(
+            startDateTime
+          )} - ${formatDate(endDateTime)}`;
+
+          console.log(
+            'startDateTime :',
+            startDateTime.format('YYYY-MM-DD HH:mm:ss z')
+          );
+          console.log(
+            'endDateTime :',
+            endDateTime.format('YYYY-MM-DD HH:mm:ss z')
+          );
+        }
+
+        /// this deals with the rest of the data \\\
+        else {
           const lastValue =
             observationValues[observationValues.length - 1];
           const processedValue =
@@ -333,18 +351,18 @@ function wxTableDataDay(
         averages[observationKey] = observationValues;
       }
     }
-    console.log('averages :', averages);
+    //console.log('averages :', averages);
 
-    if (Array.isArray(averages)) {
-      console.log('averages is an Array');
-    } else if (
-      typeof observationsData === 'object' &&
-      observationsData !== null
-    ) {
-      console.log('averages is an Object');
-    } else {
-      console.log('averages is of type:', typeof observationsData);
-    }
+    // if (Array.isArray(averages)) {
+    //   console.log('averages is an Array');
+    // } else if (
+    //   typeof observationsData === 'object' &&
+    //   observationsData !== null
+    // ) {
+    //   console.log('averages is an Object');
+    // } else {
+    //   console.log('averages is of type:', typeof observationsData);
+    // }
 
     ///////////\\\\\\\\\\\\
     //// Add units to  \\\\
@@ -396,12 +414,12 @@ function wxTableDataDay(
       formattedAveragesWithHeader[modifiedKey] = value;
     });
 
-    console.log(
-      'formattedAveragesWithHeader :',
-      formattedAveragesWithHeader
-    );
+    // console.log(
+    //   'formattedAveragesWithHeader :',
+    //   formattedAveragesWithHeader
+    // );
 
-    console.log('formattedAverages :', formattedAveragesWithHeader);
+    // console.log('formattedAverages :', formattedAveragesWithHeader);
     return formattedAveragesWithHeader;
   });
 }

@@ -13,19 +13,49 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 
 const getNWACobservations = async (
-  start_time_pst: moment.Moment,
-  end_time_pst: moment.Moment,
+  start_time_pdt: moment.Moment,
+  end_time_pdt: moment.Moment,
   sites: string[],
   auth: string
 ): Promise<Record<string, WeatherData> | null> => {
   let output_data: Record<string, WeatherData> = {};
   const requests = sites.map(async (site) => {
-    let t1 = moment(start_time_pst).format('YYYYMMDDHHmm');
-    let t2 = moment(end_time_pst).format('YYYYMMDDHHmm');
+    let t1 = start_time_pdt
+      .tz('America/Los_Angeles')
+      .format('YYYYMMDDHHmm');
+    let t2 = end_time_pdt
+      .tz('America/Los_Angeles')
+      .format('YYYYMMDDHHmm');
+
+    console.log(`Fetching data for site ${site}`);
+    console.log(`Start time (t1): ${t1}`);
+    console.log(`End time (t2): ${t2}`);
+    console.log(
+      `Start time (PDT): ${start_time_pdt.format(
+        'YYYY-MM-DD HH:mm:ss'
+      )}`
+    );
+    console.log(
+      `End time (PDT): ${end_time_pdt.format('YYYY-MM-DD HH:mm:ss')}`
+    );
+    console.log(
+      `Start time (UTC): ${start_time_pdt
+        .utc()
+        .format('YYYY-MM-DD HH:mm:ss')}`
+    );
+    console.log(
+      `End time (UTC): ${end_time_pdt
+        .utc()
+        .format('YYYY-MM-DD HH:mm:ss')}`
+    );
+
     let url =
       `https://api.snowobs.com/wx/v1/station/data/timeseries/?stid=${site}` +
       `&source=nwac&start_date=${t1}&end_date=${t2}` +
-      `&units=metric&output=mesowest&calc_diff=false&raw_data=true&token=${auth}`;
+      `&units=metric&output=mesowest&calc_diff=false&raw_data=true&token=${auth}` +
+      `&tz=America/Los_Angeles`; // Add this parameter
+
+    console.log('API URL:', url);
 
     let response = await axios.get(url);
     let wx_data: WeatherData = response.data;

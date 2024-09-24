@@ -102,7 +102,8 @@ body {
 }
 
 .weatherTable {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   background-color: cornflowerblue;
   color: lightgrey;
@@ -117,38 +118,41 @@ body {
 
 .weatherTable th,
 .weatherTable td {
-  border: 0.5px solid #5a7ac2; /* Slightly darker border color */
+  border: 0.5px solid #5a7ac2; /* Restore this line */
   padding: 6px;
   text-align: center;
 }
 
-.weatherTable th {
+/* Increase specificity for header styles */
+.weatherTable thead th {
+  border: 0.5px solid #49597f;
   font-size: 10px;
   font-weight: bold;
 }
 
 /* Category row (first header row) */
-.weatherTable .category-row th {
+.weatherTable thead tr.category-row th {
   background-color: cornflowerblue;
   color: lightgrey;
-  border: 0.5px solid #5a7ac2; /* Explicitly set border color */
-  border-bottom: none; /* Remove bottom border */
+  border-width: 1px 0.5px 1px 0.5px; /* Top, Right, Bottom, Left */
 }
 
 /* Column row (second header row) */
-.weatherTable .column-row th {
+.weatherTable thead tr.column-row th {
   background-color: #79a1ed;
   color: lightgrey;
-  border: 0.5px solid #5a7ac2; /* Explicitly set border color */
+  border-width: 1px 0.5px 1px 0.5px; /* Top, Right, Bottom, Left */
 }
 
-/* Alternating row colors */
-.weatherTable tbody tr:nth-child(even) {
-  background-color: #79a1ed; /* Light blue for even rows */
-}
-
-.weatherTable tbody tr:nth-child(odd) {
-  background-color: cornflowerblue; /* Cornflower blue for odd rows */
+/* Fix for sticky header borders */
+.weatherTable thead::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px; /* Adjust this to match your bottom border width */
+  background-color: #49597f; /* Match your border color */
 }
 
 /* Add this new style for the table caption */
