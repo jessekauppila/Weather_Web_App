@@ -1,4 +1,5 @@
 import { mean } from 'd3';
+import moment from 'moment-timezone';
 
 import wxTableDataConversion from '../utils/wxTableDataConversion';
 import {
@@ -310,12 +311,12 @@ function wxTableDataDay(
 
         /// Date/Time Adjustments \\\
         else if (observationKey === 'date_time') {
-          const startDateTime = moment(observationValues[0]).tz(
-            'America/Los_Angeles'
-          );
-          const endDateTime = moment(
-            observationValues[observationValues.length - 1]
-          ).tz('America/Los_Angeles');
+          const startDateTime = moment
+            .utc(observationValues[0])
+            .tz('America/Los_Angeles');
+          const endDateTime = moment
+            .utc(observationValues[observationValues.length - 1])
+            .tz('America/Los_Angeles');
 
           const formatDate = (date: moment.Moment) =>
             date.format('MMM D, YYYY, hh:mm A z');

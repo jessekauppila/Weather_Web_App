@@ -20,40 +20,28 @@ const getNWACobservations = async (
 ): Promise<Record<string, WeatherData> | null> => {
   let output_data: Record<string, WeatherData> = {};
   const requests = sites.map(async (site) => {
-    let t1 = start_time_pdt
-      .tz('America/Los_Angeles')
-      .format('YYYYMMDDHHmm');
-    let t2 = end_time_pdt
-      .tz('America/Los_Angeles')
-      .format('YYYYMMDDHHmm');
+    let t1 = start_time_pdt.utc().format('YYYYMMDDHHmm');
+    let t2 = end_time_pdt.utc().format('YYYYMMDDHHmm');
 
     console.log(`Fetching data for site ${site}`);
     console.log(`Start time (t1): ${t1}`);
     console.log(`End time (t2): ${t2}`);
     console.log(
       `Start time (PDT): ${start_time_pdt.format(
-        'YYYY-MM-DD HH:mm:ss'
+        'YYYY-MM-DD HH:mm:ss z'
       )}`
     );
     console.log(
-      `End time (PDT): ${end_time_pdt.format('YYYY-MM-DD HH:mm:ss')}`
-    );
-    console.log(
-      `Start time (UTC): ${start_time_pdt
-        .utc()
-        .format('YYYY-MM-DD HH:mm:ss')}`
-    );
-    console.log(
-      `End time (UTC): ${end_time_pdt
-        .utc()
-        .format('YYYY-MM-DD HH:mm:ss')}`
+      `End time (PDT): ${end_time_pdt.format(
+        'YYYY-MM-DD HH:mm:ss z'
+      )}`
     );
 
     let url =
       `https://api.snowobs.com/wx/v1/station/data/timeseries/?stid=${site}` +
       `&source=nwac&start_date=${t1}&end_date=${t2}` +
       `&units=metric&output=mesowest&calc_diff=false&raw_data=true&token=${auth}` +
-      `&tz=America/Los_Angeles`; // Add this parameter
+      `&tz=UTC`; // Change this to UTC
 
     console.log('API URL:', url);
 
