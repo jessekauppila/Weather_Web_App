@@ -11,7 +11,10 @@ import {
 function wxTableDataDay(
   observationsData: Array<Record<string, any>>,
   unitConversions: Record<string, string>
-): { data: Array<{ [key: string]: number | string }>; title: string } {
+): {
+  data: Array<{ [key: string]: number | string }>;
+  title: string;
+} {
   // console.log('wxTableDataDay input:', observationsData);
   // console.log(
   //   'Type of wxTableDataDay input:',
@@ -354,7 +357,6 @@ function wxTableDataDay(
               'MMM D, YYYY, h:mm a'
             );
             averages[observationKey] = formattedDateRange;
-
           }
 
           /// this deals with the rest of the data \\\
@@ -446,9 +448,10 @@ function wxTableDataDay(
   );
 
   // Get the title from the first entry's Date Time
-  const title = convertedDataWithDateRange.length > 0
-    ? `Daily Station Data: ${convertedDataWithDateRange[0]['Date Time']}`
-    : 'Daily Station Data';
+  const title =
+    convertedDataWithDateRange.length > 0
+      ? `Station Data: ${convertedDataWithDateRange[0]['Date Time']}`
+      : 'Station Data';
 
   return { data: convertedDataWithDateRange, title };
 }

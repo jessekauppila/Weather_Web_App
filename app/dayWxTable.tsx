@@ -17,13 +17,8 @@ interface DayAveragesTableProps {
 // Define the header structure for known categories
 const knownCategories = [
   {
-    category: 'Station',
-    columns: [
-      'Date Time',
-      'Start Date Time',
-      'End Date Time',
-      'Station',
-    ],
+    category: '',
+    columns: ['Station'],
   },
   {
     category: 'Temperatures',
