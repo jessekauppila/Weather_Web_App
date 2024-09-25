@@ -8,13 +8,10 @@ interface DayAverage {
 }
 
 interface DayAveragesTableProps {
-  dayAverages:
-    | DayAverage[]
-    | {
-        data: DayAverage[];
-        dateRange: { start: string; end: string };
-      };
-  title: string;
+  dayAverages: {
+    data: DayAverage[];
+    title: string;
+  };
 }
 
 // Define the header structure for known categories
@@ -53,23 +50,16 @@ const knownCategories = [
   { category: 'RH', columns: ['Relative Humidity'] },
 ];
 
-function DayAveragesTable({
-  dayAverages,
-  title,
-}: DayAveragesTableProps) {
+function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure to avoid recalculating on every render
   const headerStructure = useMemo(() => {
-    const dataArray = Array.isArray(dayAverages)
-      ? dayAverages
-      : dayAverages.data;
-
-    if (dataArray.length === 0) return knownCategories;
+    if (dayAverages.data.length === 0) return knownCategories;
 
     // Get all unique keys from the data
     const allKeys = Array.from(
-      new Set(dataArray.flatMap(Object.keys))
+      new Set(dayAverages.data.flatMap(Object.keys))
     );
 
     // Get all keys already included in the known categories
@@ -85,14 +75,15 @@ function DayAveragesTable({
       ...knownCategories,
       //{ category: 'Other', columns: otherKeys },
     ];
-  }, [dayAverages]);
+  }, [dayAverages.data]);
 
   useEffect(() => {
-    const dataArray = Array.isArray(dayAverages)
-      ? dayAverages
-      : dayAverages.data;
-
-    if (!dataArray || dataArray.length === 0 || !ref.current) return;
+    if (
+      !dayAverages.data ||
+      dayAverages.data.length === 0 ||
+      !ref.current
+    )
+      return;
 
     // Derive headers from headerStructure
     const headers = headerStructure.flatMap(
@@ -114,7 +105,7 @@ function DayAveragesTable({
       .selectAll('caption')
       .data([null])
       .join('caption')
-      .text(title)
+      .text(dayAverages.title)
       .style('caption-side', 'top');
 
     // Headers
@@ -179,7 +170,7 @@ function DayAveragesTable({
 
     const rows = tbodyUpdate
       .selectAll<HTMLTableRowElement, DayAverage>('tr')
-      .data(dayAverages);
+      .data(dayAverages.data);
     const rowsEnter = rows
       .enter()
       .append('tr')
@@ -204,7 +195,7 @@ function DayAveragesTable({
       .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
-  }, [dayAverages, title, headerStructure]); // Add title and headerStructure to the dependency array
+  }, [dayAverages, headerStructure]);
 
   return (
     <div className="table-container">

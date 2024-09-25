@@ -11,7 +11,7 @@ import {
 function wxTableDataDay(
   observationsData: Array<Record<string, any>>,
   unitConversions: Record<string, string>
-): Array<{ [key: string]: number | string }> {
+): { data: Array<{ [key: string]: number | string }>; title: string } {
   // console.log('wxTableDataDay input:', observationsData);
   // console.log(
   //   'Type of wxTableDataDay input:',
@@ -348,21 +348,13 @@ function wxTableDataDay(
             );
 
             averages['start_date_time'] = startDateTimeMoment.format(
-              'MMM D, YYYY, h:mm A'
+              'MMM D, YYYY, h:mm a'
             );
             averages['end_date_time'] = endDateTimeMoment.format(
-              'MMM D, YYYY, h:mm A'
+              'MMM D, YYYY, h:mm a'
             );
             averages[observationKey] = formattedDateRange;
 
-            console.log(
-              'startDateTime :',
-              startDateTimeMoment.format('YYYY-MM-DD HH:mm:ss z')
-            );
-            console.log(
-              'endDateTime :',
-              endDateTimeMoment.format('YYYY-MM-DD HH:mm:ss z')
-            );
           }
 
           /// this deals with the rest of the data \\\
@@ -453,7 +445,12 @@ function wxTableDataDay(
     }
   );
 
-  return convertedDataWithDateRange;
+  // Get the title from the first entry's Date Time
+  const title = convertedDataWithDateRange.length > 0
+    ? `Daily Station Data: ${convertedDataWithDateRange[0]['Date Time']}`
+    : 'Daily Station Data';
+
+  return { data: convertedDataWithDateRange, title };
 }
 
 export default wxTableDataDay;

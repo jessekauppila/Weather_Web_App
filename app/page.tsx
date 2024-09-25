@@ -12,6 +12,11 @@ import wxTableDataDay from './dayWxTableData';
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [submittedDate, setSubmittedDate] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [observationsData, setObservationsData] = useState<{
+    data: any[];
+    title: string;
+  } | null>(null);
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -88,28 +93,18 @@ export default function Home() {
       '9',
     ],
     []
-  ); // Empty dependency array means this will only be computed once
+  );
 
-  const [observationsData, setObservationsData] = useState<
-    Array<Record<string, any>>
-  >([]);
-  const [unitConversions, setUnitConversions] = useState<
-    Record<string, string>
-  >({});
-
-  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
       try {
         console.log('Selected Date:', selectedDate);
 
-        // Set the time to 5am PDT on the selected date
         const start_time_pdt = moment(selectedDate)
           .tz('America/Los_Angeles')
           .startOf('day')
           .add(5, 'hours');
 
-        // Set the time to 5am PDT on the next day
         const end_time_pdt = moment(start_time_pdt).add(1, 'day');
 
         console.log(
@@ -128,8 +123,6 @@ export default function Home() {
           auth
         );
 
-        console.log('Data received from processAllWxData:', result);
-
         const processedData = wxTableDataDay(
           result.observationsData,
           result.unitConversions
@@ -144,7 +137,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [submittedDate, selectedDate, stationIds, auth]); // Include all dependencies here
+  }, [submittedDate, selectedDate, stationIds, auth]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
@@ -173,10 +166,12 @@ export default function Home() {
 
       {isLoading ? (
         <p>Loading...</p>
-      ) : (
+      ) : observationsData ? (
         <>
           <DayAveragesTable dayAverages={observationsData} />
         </>
+      ) : (
+        <p>No data available</p>
       )}
     </main>
   );
