@@ -130,15 +130,11 @@ export default function Home() {
 
         console.log('Data received from processAllWxData:', result);
 
-        const observationsData = result.observationsData;
-        const unitConversions = result.unitConversions;
-        setUnitConversions(unitConversions);
-
         const processedData = wxTableDataDay(
-          observationsData,
-          unitConversions
+          result.observationsData,
+          result.unitConversions
         );
-        console.log('Processed data:', processedData);
+
         setObservationsData(processedData);
         setIsLoading(false);
       } catch (error) {

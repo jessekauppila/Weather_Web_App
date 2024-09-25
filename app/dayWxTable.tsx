@@ -8,8 +8,13 @@ interface DayAverage {
 }
 
 interface DayAveragesTableProps {
-  dayAverages: DayAverage[];
-  title?: string; // Add this line
+  dayAverages:
+    | DayAverage[]
+    | {
+        data: DayAverage[];
+        dateRange: { start: string; end: string };
+      };
+  title: string;
 }
 
 // Define the header structure for known categories
@@ -49,18 +54,22 @@ const knownCategories = [
 ];
 
 function DayAveragesTable({
-  dayAverages = [],
-  title = 'Station Daily Weather Data', // Add a title prop with a default value
+  dayAverages,
+  title,
 }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure to avoid recalculating on every render
   const headerStructure = useMemo(() => {
-    if (dayAverages.length === 0) return knownCategories;
+    const dataArray = Array.isArray(dayAverages)
+      ? dayAverages
+      : dayAverages.data;
+
+    if (dataArray.length === 0) return knownCategories;
 
     // Get all unique keys from the data
     const allKeys = Array.from(
-      new Set(dayAverages.flatMap(Object.keys))
+      new Set(dataArray.flatMap(Object.keys))
     );
 
     // Get all keys already included in the known categories
@@ -79,8 +88,11 @@ function DayAveragesTable({
   }, [dayAverages]);
 
   useEffect(() => {
-    if (!dayAverages || dayAverages.length === 0 || !ref.current)
-      return;
+    const dataArray = Array.isArray(dayAverages)
+      ? dayAverages
+      : dayAverages.data;
+
+    if (!dataArray || dataArray.length === 0 || !ref.current) return;
 
     // Derive headers from headerStructure
     const headers = headerStructure.flatMap(
@@ -97,12 +109,11 @@ function DayAveragesTable({
       .attr('class', 'weatherTable');
     const tableUpdate = tableEnter.merge(table as any);
 
-    // Add caption to the table
+    // Update the caption text
     tableUpdate
       .selectAll('caption')
       .data([null])
-      .enter()
-      .append('caption')
+      .join('caption')
       .text(title)
       .style('caption-side', 'top');
 
