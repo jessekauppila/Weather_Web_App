@@ -48,6 +48,8 @@ async function processAllWxData(
       'Station Name',
       'Longitude',
       'Latitude',
+      'id',
+      'stid',
     ]);
 
     let unitConversions: { [key: string]: string } = {};
@@ -113,6 +115,10 @@ async function processAllWxData(
                 newStationInfo[key] = stationObject.longitude;
               } else if (key === 'Latitude') {
                 newStationInfo[key] = stationObject.latitude;
+              } else if (key === 'stid') {
+                newStationInfo[key] = stationObject.stid;
+              } else if (key === 'id') {
+                newStationInfo[key] = stationObject.id;
               } else {
                 const observationValues = observations[key] || [];
                 newStationInfo[key] =
@@ -159,6 +165,8 @@ async function processAllWxData(
 
     // console.log('unitConversions:', unitConversions);
     // console.log('observationsData:', observationsData);
+    console.log('observationData:', observationsData);
+    console.log('unitConversions:', unitConversions);
     return { observationsData, unitConversions };
   } catch (error) {
     console.error('Error in processAllWxData:', error);

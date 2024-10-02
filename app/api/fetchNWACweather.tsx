@@ -23,19 +23,19 @@ const getNWACobservations = async (
     let t1 = start_time_pdt.utc().format('YYYYMMDDHHmm');
     let t2 = end_time_pdt.utc().format('YYYYMMDDHHmm');
 
-    console.log(`Fetching data for site ${site}`);
-    console.log(`Start time (t1): ${t1}`);
-    console.log(`End time (t2): ${t2}`);
-    console.log(
-      `Start time (PDT): ${start_time_pdt.format(
-        'YYYY-MM-DD HH:mm:ss z'
-      )}`
-    );
-    console.log(
-      `End time (PDT): ${end_time_pdt.format(
-        'YYYY-MM-DD HH:mm:ss z'
-      )}`
-    );
+    // console.log(`Fetching data for site ${site}`);
+    // console.log(`Start time (t1): ${t1}`);
+    // console.log(`End time (t2): ${t2}`);
+    // console.log(
+    //   `Start time (PDT): ${start_time_pdt.format(
+    //     'YYYY-MM-DD HH:mm:ss z'
+    //   )}`
+    // );
+    // console.log(
+    //   `End time (PDT): ${end_time_pdt.format(
+    //     'YYYY-MM-DD HH:mm:ss z'
+    //   )}`
+    // );
 
     let url =
       `https://api.snowobs.com/wx/v1/station/data/timeseries/?stid=${site}` +
@@ -43,7 +43,7 @@ const getNWACobservations = async (
       `&units=metric&output=mesowest&calc_diff=false&raw_data=true&token=${auth}` +
       `&tz=UTC`; // Change this to UTC
 
-    console.log('API URL:', url);
+    //console.log('API URL:', url);
 
     let response = await axios.get(url);
     let wx_data: WeatherData = response.data;
@@ -54,12 +54,6 @@ const getNWACobservations = async (
       );
       return;
     }
-
-    // // Add the 'stid' number to the 'UNITS' object
-    // wx_data['UNITS']['stid'] = site;
-
-    // // Add a new object with the 'stid' number to the 'VARIABLES' array
-    // wx_data['VARIABLES'].push({ stid: site });
 
     output_data[site] = wx_data; // or whatever you've created
   });
@@ -72,6 +66,7 @@ const getNWACobservations = async (
     return null;
   }
 
+  console.log('output_data:', output_data);
   return output_data;
 };
 
