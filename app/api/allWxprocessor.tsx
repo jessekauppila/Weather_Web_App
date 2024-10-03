@@ -50,6 +50,11 @@ async function processAllWxData(
       'Latitude',
       'id',
       'stid',
+      'elevation',
+      'time_zone',
+      'source',
+      'station_note',
+      'station',
     ]);
 
     let unitConversions: { [key: string]: string } = {};
@@ -105,7 +110,7 @@ async function processAllWxData(
           for (const stationObject of stationObjects) {
             const observations = stationObject.observations;
             const newStationInfo: {
-              [key: string]: string | (string | number)[];
+              [key: string]: string | (string | number)[] | any;
             } = {};
 
             for (const key of sortedKeys) {
@@ -119,7 +124,14 @@ async function processAllWxData(
                 newStationInfo[key] = stationObject.stid;
               } else if (key === 'id') {
                 newStationInfo[key] = stationObject.id;
-              } else {
+              } else if (key === 'elevation') {
+                newStationInfo[key] = stationObject.elevation;
+              } else if (key === 'time_zone') {
+                newStationInfo[key] = stationObject.time_zone;
+              } else if (key === 'source') {
+                newStationInfo[key] = stationObject.source;
+              }
+              else {
                 const observationValues = observations[key] || [];
                 newStationInfo[key] =
                   observationValues.length === 0
@@ -134,38 +146,10 @@ async function processAllWxData(
       }
     }
 
-    // if (Array.isArray(observationsData)) {
-    //   console.log('observationsData is an Array');
-    // } else if (
-    //   typeof observationsData === 'object' &&
-    //   observationsData !== null
-    // ) {
-    //   console.log('observationsData is an Object');
-    // } else {
-    //   console.log(
-    //     'observationsData is of type:',
-    //     typeof observationsData
-    //   );
-    // }
-
-    // Check if unitConversions is an array or an object
-    // if (Array.isArray(unitConversions)) {
-    //   console.log('unitConversions is an Array');
-    // } else if (
-    //   typeof unitConversions === 'object' &&
-    //   unitConversions !== null
-    // ) {
-    //   console.log('unitConversions is an Object');
-    // } else {
-    //   console.log(
-    //     'unitConversions is of type:',
-    //     typeof unitConversions
-    //   );
-    // }
-
-    // console.log('unitConversions:', unitConversions);
-    // console.log('observationsData:', observationsData);
-    console.log('observationData:', observationsData);
+    console.log(
+      'observationData:',
+      JSON.stringify(observationsData, null, 2)
+    );
     console.log('unitConversions:', unitConversions);
     return { observationsData, unitConversions };
   } catch (error) {

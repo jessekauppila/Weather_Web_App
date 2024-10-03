@@ -22,6 +22,8 @@ async function fetchHrWeatherData(
         const stationData = data[stationKey];
       }
     }
+    console.log('Full Data:', JSON.stringify(data, null, 2));
+
     //console.log('Data:', data);
     return data;
   } catch (error) {

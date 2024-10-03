@@ -66,7 +66,7 @@ const getNWACobservations = async (
     return null;
   }
 
-  console.log('output_data:', output_data);
+  //console.log('output_data:', output_data);
   return output_data;
 };
 
