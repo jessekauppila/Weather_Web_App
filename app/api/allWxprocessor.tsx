@@ -39,7 +39,6 @@ async function processAllWxData(
       'intermittent_snow',
       'precip_accum_one_hour',
       'relative_humidity',
-      'battery_voltage',
       // Add all other keys you want in the specific order
     ];
 
@@ -130,8 +129,7 @@ async function processAllWxData(
                 newStationInfo[key] = stationObject.time_zone;
               } else if (key === 'source') {
                 newStationInfo[key] = stationObject.source;
-              }
-              else {
+              } else {
                 const observationValues = observations[key] || [];
                 newStationInfo[key] =
                   observationValues.length === 0
