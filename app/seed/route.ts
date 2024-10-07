@@ -56,10 +56,11 @@ async function seedObservations() {
       snow_depth_24h DECIMAL(5,2),
       precip_accum_one_hour DECIMAL(5,2),
       relative_humidity DECIMAL(5,2),
-      battery_voltage DECIMAL(5,2),
+      battery_voltage DECIMAL(5,2),ß
       intermittent_snow DECIMAL(5,2),
       precipitation DECIMAL(5,2),
       wind_speed DECIMAL(5,2),
+      wind_speed_min DECIMAL(5,2),
       wind_gust DECIMAL(5,2),
       wind_direction DECIMAL(5,2),
       FOREIGN KEY (station_id) REFERENCES stations(id),

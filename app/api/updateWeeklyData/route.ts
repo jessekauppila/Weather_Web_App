@@ -20,19 +20,9 @@ async function handleRequest(request: NextRequest) {
   try {
     client = await db.connect();
 
-    // Get the column names from the observations table
-    const tableInfoResult = await client.sql`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'observations';
-    `;
-    const columnNames = tableInfoResult.rows.map(
-      (row) => row.column_name
-    );
-
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
+    const start_time_pst = moment(end_time_pst).subtract(1, 'hours');
 
     // Define station IDs
     const stids = [
@@ -114,9 +104,11 @@ async function handleRequest(request: NextRequest) {
         continue;
       }
 
-      // Helper functions (same as before)
+      // Helper function to safely get a value from an array or return null
       const safeGetArrayValue = (arr, index) =>
         Array.isArray(arr) && arr.length > index ? arr[index] : null;
+
+      // Helper function to safely parse a numeric value
       const safeParseFloat = (value) => {
         if (value === null || value === undefined || value === '') {
           return null;
@@ -137,101 +129,148 @@ async function handleRequest(request: NextRequest) {
           'YYYY-MM-DD HH:mm:ssZ'
         );
 
-        // Prepare the data object
-        const data = {
-          station_id: `(SELECT id FROM stations WHERE stid = ${observation.stid})`,
-          date_time: formattedDateTime,
-          air_temp: safeParseFloat(
-            safeGetArrayValue(observation.air_temp, i)
-          ),
-          wind_speed: safeParseFloat(
-            safeGetArrayValue(observation.wind_speed, i)
-          ),
-          wind_gust: safeParseFloat(
-            safeGetArrayValue(observation.wind_gust, i)
-          ),
-          wind_direction: safeParseFloat(
-            safeGetArrayValue(observation.wind_direction, i)
-          ),
-          snow_depth: safeParseFloat(
-            safeGetArrayValue(observation.snow_depth, i)
-          ),
-          snow_depth_24h: safeParseFloat(
-            safeGetArrayValue(observation.snow_depth_24h, i)
-          ),
-          intermittent_snow: safeGetArrayValue(
-            observation.intermittent_snow,
-            i
-          ),
-          precip_accum_one_hour: safeParseFloat(
-            safeGetArrayValue(observation.precip_accum_one_hour, i)
-          ),
-          relative_humidity: safeParseFloat(
-            safeGetArrayValue(observation.relative_humidity, i)
-          ),
-          battery_voltage: safeParseFloat(
-            safeGetArrayValue(observation.battery_voltage, i)
-          ),
-          wind_speed_min: safeParseFloat(
-            safeGetArrayValue(observation.wind_speed_min, i)
-          ),
-          solar_radiation: safeParseFloat(
-            safeGetArrayValue(observation.solar_radiation, i)
-          ),
-          equip_temperature: safeParseFloat(
-            safeGetArrayValue(observation.equip_temperature, i)
-          ),
-          pressure: safeParseFloat(
-            safeGetArrayValue(observation.pressure, i)
-          ),
-          wet_bulb: safeParseFloat(
-            safeGetArrayValue(observation.wet_bulb, i)
-          ),
-          soil_temperature_a: safeParseFloat(
-            safeGetArrayValue(observation.soil_temperature_a, i)
-          ),
-          soil_temperature_b: safeParseFloat(
-            safeGetArrayValue(observation.soil_temperature_b, i)
-          ),
-          soil_moisture_a: safeParseFloat(
-            safeGetArrayValue(observation.soil_moisture_a, i)
-          ),
-          soil_moisture_b: safeParseFloat(
-            safeGetArrayValue(observation.soil_moisture_b, i)
-          ),
-          soil_temperature_c: safeParseFloat(
-            safeGetArrayValue(observation.soil_temperature_c, i)
-          ),
-          soil_moisture_c: safeParseFloat(
-            safeGetArrayValue(observation.soil_moisture_c, i)
-          ),
-        };
-
-        // Filter out fields that don't exist in the table
-        const existingColumns = Object.keys(data).filter((key) =>
-          columnNames.includes(key)
+        // Get the corresponding values for this timestamp
+        const air_temp = safeParseFloat(
+          safeGetArrayValue(observation.air_temp, i)
         );
-        const values = existingColumns.map((key) => data[key]);
-
-        // Construct the SQL query dynamically
-        const insertColumns = existingColumns.join(', ');
-        const insertPlaceholders = existingColumns
-          .map((_, index) => `$${index + 1}`)
-          .join(', ');
-        const updateSet = existingColumns
-          .map((col) => `${col} = EXCLUDED.${col}`)
-          .join(', ');
-
-        const queryString = `
-          INSERT INTO observations (${insertColumns})
-          VALUES (${insertPlaceholders})
-          ON CONFLICT (station_id, date_time) 
-          DO UPDATE SET ${updateSet};
-        `;
+        const wind_speed = safeParseFloat(
+          safeGetArrayValue(observation.wind_speed, i)
+        );
+        const wind_gust = safeParseFloat(
+          safeGetArrayValue(observation.wind_gust, i)
+        );
+        const wind_direction = safeParseFloat(
+          safeGetArrayValue(observation.wind_direction, i)
+        );
+        const snow_depth = safeParseFloat(
+          safeGetArrayValue(observation.snow_depth, i)
+        );
+        const snow_depth_24h = safeParseFloat(
+          safeGetArrayValue(observation.snow_depth_24h, i)
+        );
+        const intermittent_snow = safeGetArrayValue(
+          observation.intermittent_snow,
+          i
+        );
+        const precip_accum_one_hour = safeParseFloat(
+          safeGetArrayValue(observation.precip_accum_one_hour, i)
+        );
+        const relative_humidity = safeParseFloat(
+          safeGetArrayValue(observation.relative_humidity, i)
+        );
+        const battery_voltage = safeParseFloat(
+          safeGetArrayValue(observation.battery_voltage, i)
+        );
+        const wind_speed_min = safeParseFloat(
+          safeGetArrayValue(observation.wind_speed_min, i)
+        );
+        const solar_radiation = safeParseFloat(
+          safeGetArrayValue(observation.solar_radiation, i)
+        );
+        const equip_temperature = safeParseFloat(
+          safeGetArrayValue(observation.equip_temperature, i)
+        );
+        const pressure = safeParseFloat(
+          safeGetArrayValue(observation.pressure, i)
+        );
+        const wet_bulb = safeParseFloat(
+          safeGetArrayValue(observation.wet_bulb, i)
+        );
+        const soil_temperature_a = safeParseFloat(
+          safeGetArrayValue(observation.soil_temperature_a, i)
+        );
+        const soil_temperature_b = safeParseFloat(
+          safeGetArrayValue(observation.soil_temperature_b, i)
+        );
+        const soil_moisture_a = safeParseFloat(
+          safeGetArrayValue(observation.soil_moisture_a, i)
+        );
+        const soil_moisture_b = safeParseFloat(
+          safeGetArrayValue(observation.soil_moisture_b, i)
+        );
+        const soil_temperature_c = safeParseFloat(
+          safeGetArrayValue(observation.soil_temperature_c, i)
+        );
+        const soil_moisture_c = safeParseFloat(
+          safeGetArrayValue(observation.soil_moisture_c, i)
+        );
 
         try {
-          // Use the sql tagged template literal with interpolation
-          await client.sql`${queryString}`.values(values);
+          await client.sql`
+            INSERT INTO observations (
+              station_id,
+              date_time,
+              air_temp,
+              wind_speed,
+              wind_gust,
+              wind_direction,
+              snow_depth,
+              snow_depth_24h,
+              intermittent_snow,
+              precip_accum_one_hour,
+              relative_humidity,
+              battery_voltage,
+              wind_speed_min,
+              solar_radiation,
+              equip_temperature,
+              pressure,
+              wet_bulb,
+              soil_temperature_a,
+              soil_temperature_b,
+              soil_moisture_a,
+              soil_moisture_b,
+              soil_temperature_c,
+              soil_moisture_c
+            )
+            VALUES (
+              (SELECT id FROM stations WHERE stid = ${observation.stid}),
+              ${formattedDateTime}::timestamp with time zone,
+              ${air_temp},
+              ${wind_speed},
+              ${wind_gust},
+              ${wind_direction},
+              ${snow_depth},
+              ${snow_depth_24h},
+              ${intermittent_snow},
+              ${precip_accum_one_hour},
+              ${relative_humidity},
+              ${battery_voltage},
+              ${wind_speed_min},
+              ${solar_radiation},
+              ${equip_temperature},
+              ${pressure},
+              ${wet_bulb},
+              ${soil_temperature_a},
+              ${soil_temperature_b},
+              ${soil_moisture_a},
+              ${soil_moisture_b},
+              ${soil_temperature_c},
+              ${soil_moisture_c}
+            )
+            ON CONFLICT (station_id, date_time) 
+            DO UPDATE SET
+              air_temp = EXCLUDED.air_temp,
+              wind_speed = EXCLUDED.wind_speed,
+              wind_gust = EXCLUDED.wind_gust,
+              wind_direction = EXCLUDED.wind_direction,
+              snow_depth = EXCLUDED.snow_depth,
+              snow_depth_24h = EXCLUDED.snow_depth_24h,
+              intermittent_snow = EXCLUDED.intermittent_snow,
+              precip_accum_one_hour = EXCLUDED.precip_accum_one_hour,
+              relative_humidity = EXCLUDED.relative_humidity,
+              battery_voltage = EXCLUDED.battery_voltage,
+              wind_speed_min = EXCLUDED.wind_speed_min,
+              solar_radiation = EXCLUDED.solar_radiation,
+              equip_temperature = EXCLUDED.equip_temperature,
+              pressure = EXCLUDED.pressure,
+              wet_bulb = EXCLUDED.wet_bulb,
+              soil_temperature_a = EXCLUDED.soil_temperature_a,
+              soil_temperature_b = EXCLUDED.soil_temperature_b,
+              soil_moisture_a = EXCLUDED.soil_moisture_a,
+              soil_moisture_b = EXCLUDED.soil_moisture_b,
+              soil_temperature_c = EXCLUDED.soil_temperature_c,
+              soil_moisture_c = EXCLUDED.soil_moisture_c;
+          `;
           console.log(
             `Inserted/Updated observation for station ${observation.stid} at ${formattedDateTime}`
           );
@@ -239,10 +278,32 @@ async function handleRequest(request: NextRequest) {
           console.error('Error inserting observation:', error);
           console.error(
             'Problematic observation:',
-            JSON.stringify(data)
+            JSON.stringify({
+              stid: observation.stid,
+              date_time: dateString,
+              air_temp,
+              wind_speed,
+              wind_gust,
+              wind_direction,
+              snow_depth,
+              snow_depth_24h,
+              intermittent_snow,
+              precip_accum_one_hour,
+              relative_humidity,
+              battery_voltage,
+              wind_speed_min,
+              solar_radiation,
+              equip_temperature,
+              pressure,
+              wet_bulb,
+              soil_temperature_a,
+              soil_temperature_b,
+              soil_moisture_a,
+              soil_moisture_b,
+              soil_temperature_c,
+              soil_moisture_c,
+            })
           );
-          console.error('Query:', queryString);
-          console.error('Values:', values);
         }
       }
     }
