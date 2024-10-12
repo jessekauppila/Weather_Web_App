@@ -83,12 +83,38 @@ async function handleRequest(request: NextRequest) {
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
     // Fetch weather data
-    const { observationsData } = await processAllWxData(
-      start_time_pst,
-      end_time_pst,
-      stids,
-      auth
-    );
+    let observationsData;
+    try {
+      const result = await retryOperation(() =>
+        processAllWxData(start_time_pst, end_time_pst, stids, auth)
+      );
+      observationsData = result.observationsData;
+      console.log(
+        'Fetched observations data:',
+        JSON.stringify(observationsData, null, 2)
+      );
+    } catch (error) {
+      console.error(
+        'Error fetching weather data after retries:',
+        error
+      );
+      return NextResponse.json(
+        {
+          error:
+            'Failed to fetch weather data after multiple attempts: ' +
+            error.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!observationsData || observationsData.length === 0) {
+      console.log('No weather data available');
+      return NextResponse.json(
+        { error: 'No weather data available' },
+        { status: 404 }
+      );
+    }
 
     for (const observation of observationsData) {
       console.log(
@@ -196,7 +222,10 @@ async function handleRequest(request: NextRequest) {
         );
 
         try {
-          await client.sql`
+          const insertResult = await client.sql`
+            WITH station_id AS (
+              SELECT id FROM stations WHERE stid = ${observation.stid}
+            )
             INSERT INTO observations (
               station_id,
               date_time,
@@ -222,31 +251,31 @@ async function handleRequest(request: NextRequest) {
               soil_temperature_c,
               soil_moisture_c
             )
-            VALUES (
-              (SELECT id FROM stations WHERE stid = ${observation.stid}),
+            SELECT
+              (SELECT id FROM station_id),
               ${formattedDateTime}::timestamp with time zone,
-              ${air_temp},
-              ${wind_speed},
-              ${wind_gust},
-              ${wind_direction},
-              ${snow_depth},
-              ${snow_depth_24h},
-              ${intermittent_snow},
-              ${precip_accum_one_hour},
-              ${relative_humidity},
-              ${battery_voltage},
-              ${wind_speed_min},
-              ${solar_radiation},
-              ${equip_temperature},
-              ${pressure},
-              ${wet_bulb},
-              ${soil_temperature_a},
-              ${soil_temperature_b},
-              ${soil_moisture_a},
-              ${soil_moisture_b},
-              ${soil_temperature_c},
-              ${soil_moisture_c}
-            )
+              NULLIF(${air_temp}, '')::DECIMAL(5,2),
+              NULLIF(${wind_speed}, '')::DECIMAL(5,2),
+              NULLIF(${wind_gust}, '')::DECIMAL(5,2),
+              NULLIF(${wind_direction}, '')::DECIMAL(5,2),
+              NULLIF(${snow_depth}, '')::DECIMAL(5,2),
+              NULLIF(${snow_depth_24h}, '')::DECIMAL(5,2),
+              NULLIF(${intermittent_snow}, '')::DECIMAL(5,2),
+              NULLIF(${precip_accum_one_hour}, '')::DECIMAL(5,2),
+              NULLIF(${relative_humidity}, '')::DECIMAL(5,2),
+              NULLIF(${battery_voltage}, '')::DECIMAL(5,2),
+              NULLIF(${wind_speed_min}, '')::DECIMAL(5,2),
+              NULLIF(${solar_radiation}, '')::DECIMAL(7,2),
+              NULLIF(${equip_temperature}, '')::DECIMAL(5,2),
+              NULLIF(${pressure}, '')::DECIMAL(7,2),
+              NULLIF(${wet_bulb}, '')::DECIMAL(5,2),
+              NULLIF(${soil_temperature_a}, '')::DECIMAL(5,2),
+              NULLIF(${soil_temperature_b}, '')::DECIMAL(5,2),
+              NULLIF(${soil_moisture_a}, '')::DECIMAL(5,2),
+              NULLIF(${soil_moisture_b}, '')::DECIMAL(5,2),
+              NULLIF(${soil_temperature_c}, '')::DECIMAL(5,2),
+              NULLIF(${soil_moisture_c}, '')::DECIMAL(5,2)
+            WHERE EXISTS (SELECT 1 FROM station_id)
             ON CONFLICT (station_id, date_time) 
             DO UPDATE SET
               air_temp = EXCLUDED.air_temp,
@@ -269,11 +298,18 @@ async function handleRequest(request: NextRequest) {
               soil_moisture_a = EXCLUDED.soil_moisture_a,
               soil_moisture_b = EXCLUDED.soil_moisture_b,
               soil_temperature_c = EXCLUDED.soil_temperature_c,
-              soil_moisture_c = EXCLUDED.soil_moisture_c;
+              soil_moisture_c = EXCLUDED.soil_moisture_c
           `;
-          console.log(
-            `Inserted/Updated observation for station ${observation.stid} at ${formattedDateTime}`
-          );
+          if (insertResult.rowCount === 0) {
+            console.warn(
+              `No matching station found for stid: ${observation.stid}`
+            );
+          } else {
+            console.log(
+              `Inserted/Updated observation for station ${observation.stid} at ${formattedDateTime}`
+            );
+          }
+          console.log('Insert result:', insertResult);
         } catch (error) {
           console.error('Error inserting observation:', error);
           console.error(
@@ -296,14 +332,9 @@ async function handleRequest(request: NextRequest) {
               equip_temperature,
               pressure,
               wet_bulb,
-              soil_temperature_a,
-              soil_temperature_b,
-              soil_moisture_a,
-              soil_moisture_b,
-              soil_temperature_c,
-              soil_moisture_c,
             })
           );
+          throw error; // Re-throw the error to be caught by the outer try-catch
         }
       }
     }
@@ -314,12 +345,27 @@ async function handleRequest(request: NextRequest) {
   } catch (error) {
     console.error('Error updating weekly data:', error);
     return NextResponse.json(
-      { error: 'Error updating weekly data' },
+      { error: 'Error updating weekly data: ' + error.message },
       { status: 500 }
     );
   } finally {
     if (client) {
       await client.release();
+    }
+  }
+}
+
+async function retryOperation(
+  operation,
+  maxRetries = 3,
+  delay = 1000
+) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }

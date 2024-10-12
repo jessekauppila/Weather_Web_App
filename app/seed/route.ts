@@ -1,4 +1,7 @@
-import bcrypt from 'bcrypt';
+// run by going to this URL when running the app locally:
+// http://localhost:3000/seed
+
+import { NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import { stations, observations } from '../lib/placeholder-data';
 
@@ -56,13 +59,23 @@ async function seedObservations() {
       snow_depth_24h DECIMAL(5,2),
       precip_accum_one_hour DECIMAL(5,2),
       relative_humidity DECIMAL(5,2),
-      battery_voltage DECIMAL(5,2),ß
+      battery_voltage DECIMAL(5,2),
       intermittent_snow DECIMAL(5,2),
       precipitation DECIMAL(5,2),
       wind_speed DECIMAL(5,2),
       wind_speed_min DECIMAL(5,2),
       wind_gust DECIMAL(5,2),
       wind_direction DECIMAL(5,2),
+      solar_radiation DECIMAL(7,2),
+      equip_temperature DECIMAL(5,2),
+      pressure DECIMAL(7,2),
+      wet_bulb DECIMAL(5,2),
+      soil_temperature_a DECIMAL(5,2),
+      soil_temperature_b DECIMAL(5,2),
+      soil_moisture_a DECIMAL(5,2),
+      soil_moisture_b DECIMAL(5,2),
+      soil_temperature_c DECIMAL(5,2),
+      soil_moisture_c DECIMAL(5,2),
       FOREIGN KEY (station_id) REFERENCES stations(id),
       UNIQUE (station_id, date_time)
     );
@@ -107,7 +120,6 @@ async function seedObservations() {
   } else {
     console.log('No observation data to insert');
   }
-
   console.log('Observations table seeded successfully');
 }
 
