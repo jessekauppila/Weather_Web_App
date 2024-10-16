@@ -2,6 +2,19 @@ import fetchHrWeatherData from './getHrWxWithID';
 import { WeatherData } from './fetchNWACweather';
 import moment from 'moment-timezone';
 
+interface StationObject {
+  name: string;
+  longitude: string;
+  latitude: string;
+  observations: Record<string, any[]>;
+  stid?: string;
+  id?: string;
+  elevation?: number;
+  time_zone?: string;
+  source?: string;
+  // Add any other properties that might be present in your station object
+}
+
 // type ObservationData = {
 //   name: string;
 //   longitude: string;
@@ -12,6 +25,7 @@ import moment from 'moment-timezone';
 //   elevation?: number; // Add this line if not already present
 //   // Add any other properties that might be present in your data
 // };
+let observationsData: any[] = [];
 
 async function processAllWxData(
   start_time_pst: moment.Moment,
@@ -28,7 +42,10 @@ async function processAllWxData(
       end_time_pst,
       stids,
       auth
-    )) as Record<string, WeatherData>; // Type assertion here
+    )) as Record<
+      string,
+      { STATION: StationObject[]; UNITS: Record<string, string> }
+    >;
 
     if (!data) {
       throw new Error('No data returned from fetchHrWeatherData');
@@ -84,73 +101,39 @@ async function processAllWxData(
 
       // Add a check for stationObjects
       if (stationObjects) {
-        for (const stationObject of stationObjects) {
+        for (const stationObject of stationObjects as StationObject[]) {
           const observations = stationObject.observations;
-          for (const observationKey in observations) {
-            if (observations.hasOwnProperty(observationKey)) {
-              availableKeys.add(observationKey);
+          const newStationInfo: {
+            [key: string]: string | (string | number)[] | any;
+          } = {};
+
+          for (const key of orderedKeys) {
+            if (key === 'Station Name') {
+              newStationInfo[key] = stationObject.name;
+            } else if (key === 'Longitude') {
+              newStationInfo[key] = stationObject.longitude;
+            } else if (key === 'Latitude') {
+              newStationInfo[key] = stationObject.latitude;
+            } else if (key === 'stid') {
+              newStationInfo[key] = stationObject.stid ?? '';
+            } else if (key === 'id') {
+              newStationInfo[key] = stationObject.id ?? '';
+            } else if (key === 'elevation') {
+              newStationInfo[key] = stationObject.elevation ?? 0;
+            } else if (key === 'time_zone') {
+              newStationInfo[key] = stationObject.time_zone ?? '';
+            } else if (key === 'source') {
+              newStationInfo[key] = stationObject.source ?? '';
+            } else {
+              const observationValues = observations[key] || [];
+              newStationInfo[key] =
+                observationValues.length === 0
+                  ? ['']
+                  : observationValues;
             }
           }
-        }
-      }
-    }
 
-    // Create the final sorted keys array
-    const sortedKeys = orderedKeys.filter((key) =>
-      availableKeys.has(key)
-    );
-
-    // Add any remaining keys from availableKeys that are not in orderedKeys
-    Array.from(availableKeys).forEach((key) => {
-      if (!sortedKeys.includes(key)) {
-        sortedKeys.push(key);
-      }
-    });
-
-    // Phase 2: Process data for each station
-    const observationsData: any[] = [];
-
-    for (const stationKey in data) {
-      if (data.hasOwnProperty(stationKey)) {
-        const stationData = data[stationKey];
-        const stationObjects = stationData.STATION;
-
-        // Add a check for stationObjects
-        if (stationObjects) {
-          for (const stationObject of stationObjects) {
-            const observations = stationObject.observations;
-            const newStationInfo: {
-              [key: string]: string | (string | number)[] | any;
-            } = {};
-
-            for (const key of sortedKeys) {
-              if (key === 'Station Name') {
-                newStationInfo[key] = stationObject.name;
-              } else if (key === 'Longitude') {
-                newStationInfo[key] = stationObject.longitude;
-              } else if (key === 'Latitude') {
-                newStationInfo[key] = stationObject.latitude;
-              } else if (key === 'stid') {
-                newStationInfo[key] = stationObject.stid;
-              } else if (key === 'id') {
-                newStationInfo[key] = stationObject.id;
-              } else if (key === 'elevation') {
-                newStationInfo[key] = stationObject.elevation;
-              } else if (key === 'time_zone') {
-                newStationInfo[key] = stationObject.time_zone;
-              } else if (key === 'source') {
-                newStationInfo[key] = stationObject.source;
-              } else {
-                const observationValues = observations[key] || [];
-                newStationInfo[key] =
-                  observationValues.length === 0
-                    ? ['']
-                    : observationValues;
-              }
-            }
-
-            observationsData.push(newStationInfo);
-          }
+          observationsData.push(newStationInfo);
         }
       }
     }
