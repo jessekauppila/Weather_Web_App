@@ -359,11 +359,11 @@ async function handleRequest(request: NextRequest) {
   }
 }
 
-async function retryOperation(
-  operation,
+async function retryOperation<T>(
+  operation: () => Promise<T>,
   maxRetries = 3,
   delay = 1000
-) {
+): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
@@ -372,4 +372,5 @@ async function retryOperation(
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+  throw new Error('Operation failed after max retries');
 }
