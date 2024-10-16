@@ -15,7 +15,7 @@ function wxTableDataDay(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
-  // console.log('wxTableDataDay input:', observationsData);
+  console.log('wxTableDataDay input:', observationsData);
   // console.log(
   //   'Type of wxTableDataDay input:',
   //   Array.isArray(observationsData)
@@ -374,7 +374,7 @@ function wxTableDataDay(
           averages[observationKey] = observationValues;
         }
       }
-      //console.log('averages :', averages);
+      console.log('averages before formatting:', averages);
 
       // if (Array.isArray(averages)) {
       //   console.log('averages is an Array');
@@ -425,24 +425,65 @@ function wxTableDataDay(
       // Edit the headers to make more useable! \\\
       ///////////\\\\\\\\\\\\ ///////////\\\\\\\\\\
 
-      // Process tableDataDay to transform keys
-      const formattedAveragesWithHeader: { [key: string]: any } = {};
-      Object.entries(formattedAverages).forEach(([key, value]) => {
-        const modifiedKey =
-          key === 'Station Name'
-            ? 'Station'
-            : key
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, (c) => c.toUpperCase());
-        formattedAveragesWithHeader[modifiedKey] = value;
-      });
+      function transformKey(key: string): string {
+        if (key === 'Station Name') {
+          console.log(`Found Station Name key: ${key}`);
+          return 'Station';
+        } else {
+          return key
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+        }
+      }
 
-      // console.log(
-      //   'formattedAveragesWithHeader :',
-      //   formattedAveragesWithHeader
-      // );
+      function formatAveragesWithHeader(formattedAverages: {
+        [key: string]: any;
+      }): { [key: string]: any } {
+        console.log(
+          'Input to formatAveragesWithHeader:',
+          formattedAverages
+        );
 
-      // console.log('formattedAverages :', formattedAveragesWithHeader);
+        const formattedAveragesWithHeader: { [key: string]: any } =
+          {};
+
+        // First, process the Station Name if it exists
+        if ('Station Name' in formattedAverages) {
+          formattedAveragesWithHeader['Station'] =
+            formattedAverages['Station Name'];
+          console.log(
+            `Setting Station: ${formattedAverages['Station Name']}`
+          );
+        }
+
+        // Then process all other keys
+        Object.entries(formattedAverages).forEach(([key, value]) => {
+          if (key !== 'Station Name' && key !== 'station') {
+            const modifiedKey = transformKey(key);
+            console.log(`Transforming key: ${key} -> ${modifiedKey}`);
+            formattedAveragesWithHeader[modifiedKey] = value;
+          }
+        });
+
+        console.log(
+          'Output of formatAveragesWithHeader:',
+          formattedAveragesWithHeader
+        );
+        return formattedAveragesWithHeader;
+      }
+
+      // Usage
+      console.log(
+        'formattedAverages before transformation:',
+        formattedAverages
+      );
+      const formattedAveragesWithHeader =
+        formatAveragesWithHeader(formattedAverages);
+      console.log(
+        'formattedAveragesWithHeader after transformation:',
+        formattedAveragesWithHeader
+      );
+
       return formattedAveragesWithHeader;
     }
   );
@@ -452,6 +493,11 @@ function wxTableDataDay(
     convertedDataWithDateRange.length > 0
       ? `Station Data: ${convertedDataWithDateRange[0]['Date Time']}`
       : 'Station Data';
+
+  console.log(
+    'convertedDataWithDateRange :',
+    convertedDataWithDateRange
+  );
 
   return { data: convertedDataWithDateRange, title };
 }
