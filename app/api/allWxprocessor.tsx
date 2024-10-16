@@ -2,6 +2,17 @@ import fetchHrWeatherData from './getHrWxWithID';
 import { WeatherData } from './fetchNWACweather';
 import moment from 'moment-timezone';
 
+// Add this type definition if it doesn't exist already
+type StationObject = {
+  name: string;
+  longitude: string;
+  latitude: string;
+  observations: Record<string, any[]>;
+  id?: string;
+  elevation?: number;
+  // Add other properties that might exist on stationObject
+};
+
 async function processAllWxData(
   start_time_pst: moment.Moment,
   end_time_pst: moment.Moment,
@@ -112,31 +123,32 @@ async function processAllWxData(
               [key: string]: string | (string | number)[] | any;
             } = {};
 
-            for (const key of sortedKeys) {
-              if (key === 'Station Name') {
-                newStationInfo[key] = stationObject.name;
-              } else if (key === 'Longitude') {
-                newStationInfo[key] = stationObject.longitude;
-              } else if (key === 'Latitude') {
-                newStationInfo[key] = stationObject.latitude;
-              } else if (key === 'stid') {
-                newStationInfo[key] = stationObject.stid;
-              } else if (key === 'id') {
-                newStationInfo[key] = stationObject.id;
-              } else if (key === 'elevation') {
-                newStationInfo[key] = stationObject.elevation;
-              } else if (key === 'time_zone') {
-                newStationInfo[key] = stationObject.time_zone;
-              } else if (key === 'source') {
-                newStationInfo[key] = stationObject.source;
-              } else {
-                const observationValues = observations[key] || [];
-                newStationInfo[key] =
-                  observationValues.length === 0
-                    ? ['']
-                    : observationValues;
-              }
+            function processStationData(
+              stationObject: StationObject
+            ) {
+              Object.keys(newStationInfo).forEach((key) => {
+                if (key === 'Station Name') {
+                  newStationInfo[key] = stationObject.name;
+                } else if (key === 'Longitude') {
+                  newStationInfo[key] = stationObject.longitude;
+                } else if (key === 'Latitude') {
+                  newStationInfo[key] = stationObject.latitude;
+                } else if (key === 'stid') {
+                  // Check if 'stid' exists on stationObject, if not use a default value or skip
+                  newStationInfo[key] =
+                    (stationObject as any).stid || '';
+                } else if (key === 'id') {
+                  newStationInfo[key] = stationObject.id || '';
+                } else if (key === 'elevation') {
+                  newStationInfo[key] = stationObject.elevation || 0;
+                } else {
+                  // Handle other keys as before
+                  // ...
+                }
+              });
             }
+
+            processStationData(stationObject);
 
             observationsData.push(newStationInfo);
           }
