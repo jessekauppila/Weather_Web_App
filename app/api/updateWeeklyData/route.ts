@@ -22,7 +22,7 @@ async function handleRequest(request: NextRequest) {
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(12, 'hours');
+    const start_time_pst = moment(end_time_pst).subtract(365, 'days');
 
     // Define station IDs
     const stids = [
