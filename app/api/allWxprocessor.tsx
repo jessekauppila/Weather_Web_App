@@ -155,5 +155,4 @@ async function processAllWxData(
     throw error;
   }
 }
-
 export default processAllWxData;
