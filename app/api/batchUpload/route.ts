@@ -282,7 +282,11 @@ async function handleRequest(request: NextRequest) {
   } catch (error) {
     console.error('Error updating yearly data:', error);
     return NextResponse.json(
-      { error: 'Error updating yearly data: ' + error.message },
+      {
+        error:
+          'Error updating yearly data: ' +
+          (error instanceof Error ? error.message : String(error)),
+      },
       { status: 500 }
     );
   } finally {
