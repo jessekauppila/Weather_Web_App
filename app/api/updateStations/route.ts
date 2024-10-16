@@ -95,7 +95,11 @@ async function handleRequest(request: NextRequest) {
     } catch (error) {
       console.error('Error fetching weather data:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch weather data: ' + error.message },
+        {
+          error:
+            'Failed to fetch weather data: ' +
+            (error instanceof Error ? error.message : String(error)),
+        },
         { status: 500 }
       );
     }
@@ -146,7 +150,11 @@ async function handleRequest(request: NextRequest) {
   } catch (error) {
     console.error('Error updating station data:', error);
     return NextResponse.json(
-      { error: 'Error updating station data: ' + error.message },
+      {
+        error:
+          'Error updating station data: ' +
+          (error instanceof Error ? error.message : String(error)),
+      },
       { status: 500 }
     );
   } finally {

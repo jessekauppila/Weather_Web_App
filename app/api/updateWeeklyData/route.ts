@@ -102,7 +102,7 @@ async function handleRequest(request: NextRequest) {
         {
           error:
             'Failed to fetch weather data after multiple attempts: ' +
-            error.message,
+            (error instanceof Error ? error.message : String(error)),
         },
         { status: 500 }
       );
@@ -131,11 +131,13 @@ async function handleRequest(request: NextRequest) {
       }
 
       // Helper function to safely get a value from an array or return null
-      const safeGetArrayValue = (arr, index) =>
+      const safeGetArrayValue = (arr: any[], index: number) =>
         Array.isArray(arr) && arr.length > index ? arr[index] : null;
 
       // Helper function to safely parse a numeric value
-      const safeParseFloat = (value) => {
+      const safeParseFloat = (
+        value: string | null | undefined
+      ): number | null => {
         if (value === null || value === undefined || value === '') {
           return null;
         }
@@ -344,8 +346,10 @@ async function handleRequest(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating weekly data:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Error updating weekly data: ' + error.message },
+      { error: 'Error updating weekly data: ' + errorMessage },
       { status: 500 }
     );
   } finally {

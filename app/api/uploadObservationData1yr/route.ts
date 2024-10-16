@@ -154,23 +154,35 @@ async function handleRequest(request: NextRequest) {
         }
 
         // Helper function to safely get a value from an array or return null
-        const safeGetArrayValue = (arr, index) =>
+        const safeGetArrayValue = (arr: any[], index: number) =>
           Array.isArray(arr) && arr.length > index
             ? arr[index]
             : null;
 
         // Helper function to safely parse a numeric value
-        const safeParseFloat = (value) => {
+        const safeParseFloat = (
+          value: string | number | null | undefined
+        ): number | null => {
           if (value === null || value === undefined || value === '') {
             return null;
           }
-          const parsed = parseFloat(value);
+          const parsed = parseFloat(value as string);
           return isNaN(parsed) ? null : parsed;
         };
 
-        const validateNumericField = (value, min, max) => {
-          const num = parseFloat(value);
-          return isNaN(num) || num < min || num > max ? null : num;
+        const validateNumericField = (
+          value: number | string | null,
+          min: number,
+          max: number
+        ): number | null => {
+          const num =
+            typeof value === 'string' ? parseFloat(value) : value;
+          return typeof num !== 'number' ||
+            isNaN(num) ||
+            num < min ||
+            num > max
+            ? null
+            : num;
         };
 
         for (let i = 0; i < observation.date_time.length; i++) {
@@ -391,8 +403,10 @@ async function handleRequest(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating weekly data:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Error updating weekly data: ' + error.message },
+      { error: 'Error updating weekly data: ' + errorMessage },
       { status: 500 }
     );
   } finally {
@@ -402,11 +416,11 @@ async function handleRequest(request: NextRequest) {
   }
 }
 
-async function retryOperation(
-  operation,
+async function retryOperation<T>(
+  operation: () => Promise<T>,
   maxRetries = 3,
   delay = 1000
-) {
+): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
@@ -415,6 +429,7 @@ async function retryOperation(
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+  throw new Error('Operation failed after max retries');
 }
 
 function validateWindGust(value: number | null): number | null {
