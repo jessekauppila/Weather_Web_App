@@ -107,6 +107,9 @@ async function processAllWxData(
             [key: string]: string | (string | number)[] | any;
           } = {};
 
+          // Ensure stid is included in newStationInfo
+          newStationInfo['stid'] = stationObject.stid || stationKey;
+
           for (const key of orderedKeys) {
             if (key === 'Station Name') {
               newStationInfo[key] = stationObject.name;
@@ -115,7 +118,8 @@ async function processAllWxData(
             } else if (key === 'Latitude') {
               newStationInfo[key] = stationObject.latitude;
             } else if (key === 'stid') {
-              newStationInfo[key] = stationObject.stid ?? '';
+              // This is now redundant, but we'll keep it for consistency
+              newStationInfo[key] = stationObject.stid || stationKey;
             } else if (key === 'id') {
               newStationInfo[key] = stationObject.id ?? '';
             } else if (key === 'elevation') {
