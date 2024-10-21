@@ -1,9 +1,13 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/seed
+// http://localhost:3000/api/seedUnits
 
 import { NextResponse } from 'next/server';
 import { db, VercelPoolClient } from '@vercel/postgres';
-import { stations, observations } from '../lib/placeholder-data';
+import {
+  stations,
+  observations,
+  units,
+} from '../../lib/placeholder-data';
 
 let client: VercelPoolClient;
 
@@ -125,6 +129,31 @@ const seedObservations = async () => {
   console.log('Observations table seeded successfully');
 };
 
+const seedUnits = async () => {
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS units (
+      id SERIAL PRIMARY KEY,
+      measurement VARCHAR(255) UNIQUE NOT NULL,
+      unit VARCHAR(255) NOT NULL
+    );
+  `;
+
+  console.log('Units table created or already exists');
+
+  if (units && units.length > 0) {
+    for (const unit of units) {
+      await client.sql`
+        INSERT INTO units (measurement, unit)
+        VALUES (${unit.measurement}, ${unit.unit})
+        ON CONFLICT (measurement) DO UPDATE SET
+          unit = EXCLUDED.unit;
+      `;
+    }
+  }
+
+  console.log('Units table seeded successfully');
+};
+
 export async function GET() {
   try {
     client = await db.connect();
@@ -133,14 +162,17 @@ export async function GET() {
 
     await seedStations();
     await seedObservations();
+    await seedUnits();
 
     console.log('Database seeding completed successfully');
 
-    return Response.json({ message: 'Database seeded successfully' });
+    return NextResponse.json({
+      message: 'Database seeded successfully',
+    });
   } catch (error) {
     console.error('Error during database seeding:', error);
     await client.sql`ROLLBACK`;
-    return Response.json(
+    return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
     );
