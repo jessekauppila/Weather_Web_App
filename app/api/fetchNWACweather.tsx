@@ -5,6 +5,7 @@ export interface WeatherData {
     name: string;
     longitude: string;
     latitude: string;
+    stid: string; // Add this line
     observations: Record<string, any[]>;
   }>;
 }
@@ -55,7 +56,13 @@ const getNWACobservations = async (
       return;
     }
 
-    output_data[site] = wx_data; // or whatever you've created
+    // Ensure the stid is added to each station in the STATION array
+    wx_data.STATION = wx_data.STATION?.map((station) => ({
+      ...station,
+      stid: site,
+    }));
+
+    output_data[site] = wx_data;
   });
 
   await Promise.all(requests);

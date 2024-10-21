@@ -22,7 +22,7 @@ async function handleRequest(request: NextRequest) {
 
     //for progress tracking...
     let totalProcessed = 0;
-    const totalToProcess = 365; // Total number of days to process
+    const totalToProcess = 7; // Total number of days to process
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
@@ -141,9 +141,14 @@ async function handleRequest(request: NextRequest) {
 
       for (const observation of observationsData) {
         console.log(
-          'Observation:',
+          'Processing observation:',
           JSON.stringify(observation, null, 2)
         );
+
+        if (!observation.stid) {
+          console.error('Observation missing stid:', observation);
+          continue; // Skip this observation and move to the next one
+        }
 
         if (!Array.isArray(observation.date_time)) {
           console.error(
@@ -154,22 +159,31 @@ async function handleRequest(request: NextRequest) {
         }
 
         // Helper function to safely get a value from an array or return null
-        const safeGetArrayValue = (arr, index) =>
+        const safeGetArrayValue = (
+          arr: any[],
+          index: number
+        ): any | null =>
           Array.isArray(arr) && arr.length > index
             ? arr[index]
             : null;
 
         // Helper function to safely parse a numeric value
-        const safeParseFloat = (value) => {
+        const safeParseFloat = (
+          value: string | number | null | undefined
+        ): number | null => {
           if (value === null || value === undefined || value === '') {
             return null;
           }
-          const parsed = parseFloat(value);
+          const parsed = parseFloat(value as string);
           return isNaN(parsed) ? null : parsed;
         };
 
-        const validateNumericField = (value, min, max) => {
-          const num = parseFloat(value);
+        const validateNumericField = (
+          value: string | number | null | undefined,
+          min: number,
+          max: number
+        ): number | null => {
+          const num = parseFloat(value as string);
           return isNaN(num) || num < min || num > max ? null : num;
         };
 
@@ -258,6 +272,9 @@ async function handleRequest(request: NextRequest) {
           );
 
           try {
+            console.log(
+              `Attempting to insert data for stid: ${observation.stid}`
+            );
             const insertResult = await client.sql`
               WITH station_id AS (
                 SELECT id FROM stations WHERE stid = ${
@@ -356,27 +373,9 @@ async function handleRequest(request: NextRequest) {
             console.error('Error inserting observation:', error);
             console.error(
               'Problematic observation:',
-              JSON.stringify({
-                stid: observation.stid,
-                date_time: dateString,
-                air_temp,
-                wind_speed,
-                wind_gust,
-                wind_direction,
-                snow_depth,
-                snow_depth_24h,
-                intermittent_snow,
-                precip_accum_one_hour,
-                relative_humidity,
-                battery_voltage,
-                wind_speed_min,
-                solar_radiation,
-                equip_temperature,
-                pressure,
-                wet_bulb,
-              })
+              JSON.stringify(observation, null, 2)
             );
-            throw error; // Re-throw the error to be caught by the outer try-catch
+            // Consider whether you want to throw here or continue processing other observations
           }
         }
       }
@@ -391,8 +390,10 @@ async function handleRequest(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating weekly data:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Error updating weekly data: ' + error.message },
+      { error: 'Error updating weekly data: ' + errorMessage },
       { status: 500 }
     );
   } finally {
@@ -403,7 +404,7 @@ async function handleRequest(request: NextRequest) {
 }
 
 async function retryOperation(
-  operation,
+  operation: () => Promise<any>,
   maxRetries = 3,
   delay = 1000
 ) {

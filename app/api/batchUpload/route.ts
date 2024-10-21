@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
+import { VercelPoolClient } from '@vercel/postgres';
 
 export async function GET(request: NextRequest) {
   return handleRequest(request);
@@ -282,7 +283,11 @@ async function handleRequest(request: NextRequest) {
   } catch (error) {
     console.error('Error updating yearly data:', error);
     return NextResponse.json(
-      { error: 'Error updating yearly data: ' + error.message },
+      {
+        error:
+          'Error updating yearly data: ' +
+          (error instanceof Error ? error.message : String(error)),
+      },
       { status: 500 }
     );
   } finally {
@@ -292,11 +297,11 @@ async function handleRequest(request: NextRequest) {
   }
 }
 
-async function retryOperation(
-  operation,
+async function retryOperation<T>(
+  operation: () => Promise<T>,
   maxRetries = 3,
   delay = 1000
-) {
+): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
@@ -305,6 +310,7 @@ async function retryOperation(
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+  throw new Error('Operation failed after max retries');
 }
 
 function validateWindGust(value: number | null): number | null {
@@ -321,7 +327,7 @@ function validateWindSpeed(value: number | null): number | null {
   return value;
 }
 
-async function insertBatch(client, batch) {
+async function insertBatch(client: VercelPoolClient, batch: any[]) {
   const columns = Object.keys(batch[0]).join(', ');
   const values = batch
     .map(

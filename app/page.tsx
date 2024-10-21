@@ -17,6 +17,9 @@ export default function Home() {
     data: any[];
     title: string;
   } | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<string | null>(
+    null
+  );
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -139,6 +142,47 @@ export default function Home() {
     fetchData();
   }, [submittedDate, selectedDate, stationIds, auth]);
 
+  useEffect(() => {
+    const checkAndRunUpdate = async () => {
+      const now = new Date();
+      console.log(`Checking for update at ${now.toLocaleString()}`);
+
+      const minutes = now.getMinutes();
+
+      if (minutes === 1 || minutes === 5 || minutes === 20) {
+        console.log(
+          `Running update at ${minutes} minute(s) past the hour`
+        );
+        try {
+          const response = await fetch('/api/updateDataLastHour', {
+            method: 'POST',
+          });
+          if (response.ok) {
+            setLastUpdateTime(now.toLocaleString());
+            console.log('Update successful at', now.toLocaleString());
+          } else {
+            console.error('Update failed:', await response.text());
+          }
+        } catch (error) {
+          console.error('Error running update:', error);
+        }
+      } else {
+        console.log(
+          `No update needed at ${minutes} minute(s) past the hour`
+        );
+      }
+    };
+
+    // Run the check immediately on component mount
+    checkAndRunUpdate();
+
+    // Then run the check every minute
+    const intervalId = setInterval(checkAndRunUpdate, 60000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
       <div className="flex flex-col items-center space-y-1">
@@ -173,6 +217,18 @@ export default function Home() {
       ) : (
         <p>No data available</p>
       )}
+
+      {/* Weather Data Update Status Widget, not working now, probably unnecessary */}
+      <div className="mt-8 p-4 bg-white rounded shadow">
+        <h2 className="text-lg font-semibold mb-2">
+          Weather Data Update Status
+        </h2>
+        {lastUpdateTime ? (
+          <p>Last update: {lastUpdateTime}</p>
+        ) : (
+          <p>No updates yet</p>
+        )}
+      </div>
     </main>
   );
 }

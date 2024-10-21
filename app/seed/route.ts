@@ -2,21 +2,21 @@
 // http://localhost:3000/seed
 
 import { NextResponse } from 'next/server';
-import { db } from '@vercel/postgres';
+import { db, VercelPoolClient } from '@vercel/postgres';
 import { stations, observations } from '../lib/placeholder-data';
 
-const client = await db.connect();
+let client: VercelPoolClient;
 
-async function testDatabaseConnection() {
+const testDatabaseConnection = async () => {
   try {
     const result = await client.sql`SELECT NOW();`;
     console.log('Database connection test result:', result);
   } catch (error) {
     console.error('Database connection test failed:', error);
   }
-}
+};
 
-async function seedStations() {
+const seedStations = async () => {
   await client.sql`
     CREATE TABLE IF NOT EXISTS stations (
       id UUID PRIMARY KEY,
@@ -46,9 +46,9 @@ async function seedStations() {
   }
 
   console.log('Stations table seeded successfully');
-}
+};
 
-async function seedObservations() {
+const seedObservations = async () => {
   await client.sql`
     CREATE TABLE IF NOT EXISTS observations (
       id SERIAL PRIMARY KEY,
@@ -87,7 +87,9 @@ async function seedObservations() {
     for (const obs of observations) {
       const columns = Object.keys(obs).filter((key) => key !== 'id');
       const values = columns.map((key) =>
-        obs[key] === undefined ? null : obs[key]
+        obs[key as keyof typeof obs] === undefined
+          ? null
+          : obs[key as keyof typeof obs]
       );
 
       const columnString = columns.join(', ');
@@ -121,24 +123,30 @@ async function seedObservations() {
     console.log('No observation data to insert');
   }
   console.log('Observations table seeded successfully');
-}
+};
 
 export async function GET() {
   try {
+    client = await db.connect();
     await testDatabaseConnection();
-    await client.sql`BEGIN`;
     console.log('Starting database seeding process');
 
     await seedStations();
     await seedObservations();
 
-    await client.sql`COMMIT`;
     console.log('Database seeding completed successfully');
 
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
     console.error('Error during database seeding:', error);
     await client.sql`ROLLBACK`;
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
+  } finally {
+    if (client) {
+      await client.release();
+    }
   }
 }
