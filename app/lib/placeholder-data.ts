@@ -66,4 +66,28 @@ const observations = [
   // ... (include all other measurements for Alpental Mid-Mountain)
 ];
 
-export { stations, observations };
+const units = [
+  { measurement: 'air_temp', unit: 'celsius' },
+  { measurement: 'battery_voltage', unit: 'volt' },
+  { measurement: 'equip_temperature', unit: 'celsius' },
+  { measurement: 'intermittent_snow', unit: 'meters' },
+  { measurement: 'precip_accum_one_hour', unit: 'meters' },
+  { measurement: 'pressure', unit: 'millibar' },
+  { measurement: 'relative_humidity', unit: '%' },
+  { measurement: 'snow_depth', unit: 'meters' },
+  { measurement: 'snow_depth_24h', unit: 'meters' },
+  { measurement: 'soil_moisture_a', unit: '' },
+  { measurement: 'soil_moisture_b', unit: '' },
+  { measurement: 'soil_moisture_c', unit: '' },
+  { measurement: 'soil_temperature_a', unit: 'celsius' },
+  { measurement: 'soil_temperature_b', unit: 'celsius' },
+  { measurement: 'soil_temperature_c', unit: 'celsius' },
+  { measurement: 'solar_radiation', unit: 'W/m**2' },
+  { measurement: 'wet_bulb', unit: 'celsius' },
+  { measurement: 'wind_direction', unit: 'degrees' },
+  { measurement: 'wind_gust', unit: 'm/s' },
+  { measurement: 'wind_speed', unit: 'm/s' },
+  { measurement: 'wind_speed_min', unit: 'm/s' },
+];
+
+export { stations, observations, units };
