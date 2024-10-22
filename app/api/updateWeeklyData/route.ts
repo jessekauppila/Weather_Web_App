@@ -1,6 +1,8 @@
 // run by going to this URL when running the app locally:
 // http://localhost:3000/api/updateWeeklyData
 
+//this is is used to update weekly or daily data to the database, its much slower than the batched version, but good for short periods of time
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
