@@ -23,6 +23,10 @@ function wxTableDataDay(
   //     : typeof observationsData
   // );
 
+  console.log(
+    'observationsData from wxTableDataDay:',
+    observationsData
+  );
   function isNoData(observationValues: any[]): boolean {
     return (
       observationValues.length === 0 ||
@@ -494,10 +498,10 @@ function wxTableDataDay(
       ? `Station Data: ${convertedDataWithDateRange[0]['Date Time']}`
       : 'Station Data';
 
-  // console.log(
-  //   'convertedDataWithDateRange :',
-  //   convertedDataWithDateRange
-  // );
+  console.log(
+    'convertedDataWithDateRange from wxTableDataDay:',
+    convertedDataWithDateRange
+  );
 
   return { data: convertedDataWithDateRange, title };
 }

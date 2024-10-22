@@ -3,7 +3,7 @@ import {
   formatAveragesData,
   UnitConversions,
   UnitConversionType,
-} from '../utils/formatAverages';
+} from '../utils/formatAveragesFromDB';
 
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
@@ -12,6 +12,11 @@ function wxTableDataDayFromDB(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
+  console.log(
+    'observationsData from wxTableDataDayFromDB:',
+    observationsData
+  );
+
   // Group observations by station
   const groupedObservations = observationsData.reduce((acc, obs) => {
     if (!acc[obs.stid]) {
@@ -29,7 +34,12 @@ function wxTableDataDayFromDB(
 
   const processedData = Object.entries(groupedObservations).map(
     ([stid, stationObs]) => {
-      const averages: { [key: string]: number | string } = { stid };
+      const averages: { [key: string]: number | string } = {
+        Stid: stid,
+        Station: stationObs[0].station_name,
+        Latitude: stationObs[0].latitude,
+        Longitude: stationObs[0].longitude,
+      };
 
       // Process each measurement type
       for (const [key, unit] of Object.entries(unitConversions)) {
@@ -45,13 +55,37 @@ function wxTableDataDayFromDB(
           const max = Math.max(...values);
           const min = Math.min(...values);
 
-          averages[key] = Number(avg.toFixed(2));
-          averages[`${key}_max`] = Number(max.toFixed(2));
-          averages[`${key}_min`] = Number(min.toFixed(2));
+          averages[
+            `Cur ${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())}`
+          ] = Number(avg.toFixed(2));
+          averages[
+            `${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())} Max`
+          ] = Number(max.toFixed(2));
+          averages[
+            `${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())} Min`
+          ] = Number(min.toFixed(2));
         } else {
-          averages[key] = '-';
-          averages[`${key}_max`] = '-';
-          averages[`${key}_min`] = '-';
+          averages[
+            `Cur ${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())}`
+          ] = '-';
+          averages[
+            `${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())} Max`
+          ] = '-';
+          averages[
+            `${key
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())} Min`
+          ] = '-';
         }
       }
 
@@ -59,12 +93,17 @@ function wxTableDataDayFromDB(
       const dateTimes = stationObs.map((obs) =>
         moment(obs.date_time)
       );
-      averages['start_date_time'] = dateTimes[0].format(
+      averages['Start Date Time'] = dateTimes[0].format(
         'MMM D, YYYY, h:mm a'
       );
-      averages['end_date_time'] = dateTimes[
+      averages['End Date Time'] = dateTimes[
         dateTimes.length - 1
       ].format('MMM D, YYYY, h:mm a');
+      averages['Date Time'] = `${dateTimes[0].format(
+        'h:mm a'
+      )} - ${dateTimes[dateTimes.length - 1].format(
+        'h:mm a, MMM D, YYYY'
+      )}`;
 
       return averages;
     }
@@ -75,11 +114,14 @@ function wxTableDataDayFromDB(
     formatAveragesData(averages, unitConversions as UnitConversions)
   );
 
-  console.log('formattedData:', formattedData);
+  console.log(
+    'formattedData from wxTableDataDayFromDB:',
+    formattedData
+  );
 
   const title =
     formattedData.length > 0
-      ? `Station Data: ${formattedData[0]['start_date_time']} - ${formattedData[0]['end_date_time']}`
+      ? `Station Data: ${formattedData[0]['Start Date Time']} - ${formattedData[0]['End Date Time']}`
       : 'Station Data';
 
   return { data: formattedData, title };
