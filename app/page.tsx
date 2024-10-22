@@ -212,7 +212,7 @@ export default function Home() {
           `Running update at ${minutes} minute(s) past the hour`
         );
         try {
-          const response = await fetch('/api/updateDataLastHour', {
+          const response = await fetch('/api/uploadDataLastHour', {
             method: 'POST',
           });
           if (response.ok) {
@@ -230,7 +230,6 @@ export default function Home() {
         );
       }
     };
-
     // Run the check immediately on component mount
     checkAndRunUpdate();
 
@@ -240,6 +239,37 @@ export default function Home() {
     // Clean up the interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  //this runs the uploadDataLastHour every 30 secs to check to make sure things are working correctly...
+  // useEffect(() => {
+  //   const checkAndRunUpdate = async () => {
+  //     const now = new Date();
+  //     console.log(`Checking for update at ${now.toLocaleString()}`);
+
+  //     try {
+  //       const response = await fetch('/api/uploadDataLastHour', {
+  //         method: 'POST',
+  //       });
+  //       if (response.ok) {
+  //         setLastUpdateTime(now.toLocaleString());
+  //         console.log('Update successful at', now.toLocaleString());
+  //       } else {
+  //         console.error('Update failed:', await response.text());
+  //       }
+  //     } catch (error) {
+  //       console.error('Error running update:', error);
+  //     }
+  //   };
+
+  //   // Run the check immediately on component mount
+  //   checkAndRunUpdate();
+
+  //   // Then run the check every 30 seconds
+  //   const intervalId = setInterval(checkAndRunUpdate, 30000);
+
+  //   // Clean up the interval on component unmount
+  //   return () => clearInterval(intervalId);
+  // }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">

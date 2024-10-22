@@ -1,5 +1,7 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/updateWeeklyData
+// http://localhost:3000/api/uploadDataLastHour
+
+//this is used to upload the last hour of data to the database, it is run a minute, 5 minutes, and 20 minutes after the hour
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -22,7 +24,7 @@ async function handleRequest(request: NextRequest) {
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
+    const start_time_pst = moment(end_time_pst).subtract(1, 'hours');
 
     // Define station IDs
     const stids = [
