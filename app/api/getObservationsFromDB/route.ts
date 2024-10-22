@@ -2,14 +2,47 @@ import { NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 
 export async function POST(request: Request) {
-  const { startDate, endDate, stationIds } = await request.json();
-
   try {
+    const { startDate, endDate, stationIds } = await request.json();
+    console.log('Received request:', {
+      startDate,
+      endDate,
+      stationIds,
+    });
+
     const client = await db.connect();
 
     // Query for observations
     const observationsQuery = `
-      SELECT o.*, s.stid
+      SELECT 
+        o.id as observation_id,
+        o.station_id,
+        o.date_time,
+        o.air_temp,
+        o.battery_voltage,
+        o.equip_temperature,
+        o.intermittent_snow,
+        o.precip_accum_one_hour,
+        o.pressure,
+        o.relative_humidity,
+        o.snow_depth,
+        o.snow_depth_24h,
+        o.soil_moisture_a,
+        o.soil_moisture_b,
+        o.soil_moisture_c,
+        o.soil_temperature_a,
+        o.soil_temperature_b,
+        o.soil_temperature_c,
+        o.solar_radiation,
+        o.wet_bulb,
+        o.wind_direction,
+        o.wind_gust,
+        o.wind_speed,
+        o.wind_speed_min,
+        s.stid,
+        s.station_name,
+        s.latitude,
+        s.longitude
       FROM observations o
       JOIN stations s ON o.station_id = s.id
       WHERE s.stid = ANY($1)
@@ -17,14 +50,26 @@ export async function POST(request: Request) {
       AND o.date_time < $3
       ORDER BY o.date_time ASC;
     `;
-    const observationsResult = await client.query(observationsQuery, [
+    console.log('Executing query:', observationsQuery);
+    console.log('Query parameters:', [
       stationIds,
       startDate,
       endDate,
     ]);
 
+    const observationsResult = await client.query(observationsQuery, [
+      stationIds,
+      startDate,
+      endDate,
+    ]);
+    console.log(
+      'Query result:',
+      observationsResult.rows.length,
+      'rows'
+    );
+
     // Query for units
-    const unitsQuery = `SELECT * FROM units;`;
+    const unitsQuery = `SELECT measurement, unit FROM units;`;
     const unitsResult = await client.query(unitsQuery);
 
     await client.release();
@@ -36,7 +81,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Database query error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal Server Error', details: error.message },
       { status: 500 }
     );
   }

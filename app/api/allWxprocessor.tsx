@@ -141,11 +141,11 @@ async function processAllWxData(
         }
       }
     }
-
-    //console.log(
-    //  'observationData:',
-    //  JSON.stringify(observationsData, null, 2)
-    //);
+    // console.log('observationData:', observationsData);
+    // console.log(
+    //   'observationData stringify:',
+    //   JSON.stringify(observationsData, null, 2)
+    // );
     //console.log('unitConversions:', unitConversions);
     return { observationsData, unitConversions };
   } catch (error) {

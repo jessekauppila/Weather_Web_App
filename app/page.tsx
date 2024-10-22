@@ -134,10 +134,14 @@ export default function Home() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch data from database');
+          const errorData = await response.json();
+          throw new Error(
+            `API error: ${response.status} ${errorData.error} - ${errorData.details}`
+          );
         }
 
         const result = await response.json();
+        console.log('API response:', result);
 
         const processedData = wxTableDataDayFromDB(
           result.observations,
@@ -147,7 +151,7 @@ export default function Home() {
         setObservationsData(processedData);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error in fetchDataFromDB:', error);
         setIsLoading(false);
       }
     };
@@ -155,50 +159,50 @@ export default function Home() {
     fetchDataFromDB();
   }, [submittedDate, selectedDate, stationIds]);
 
-  //Old useEffect for fetching data from the API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log('Selected Date:', selectedDate);
+  // //Old useEffect for fetching data from the API
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       console.log('Selected Date:', selectedDate);
 
-        const start_time_pdt = moment(selectedDate)
-          .tz('America/Los_Angeles')
-          .startOf('day')
-          .add(5, 'hours');
+  //       const start_time_pdt = moment(selectedDate)
+  //         .tz('America/Los_Angeles')
+  //         .startOf('day')
+  //         .add(5, 'hours');
 
-        const end_time_pdt = moment(start_time_pdt).add(1, 'day');
+  //       const end_time_pdt = moment(start_time_pdt).add(1, 'day');
 
-        console.log(
-          'Start time (PDT):',
-          start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-        );
-        console.log(
-          'End time (PDT):',
-          end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-        );
+  //       console.log(
+  //         'Start time (PDT):',
+  //         start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
+  //       );
+  //       console.log(
+  //         'End time (PDT):',
+  //         end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
+  //       );
 
-        const result = await processAllWxData(
-          start_time_pdt,
-          end_time_pdt,
-          stationIds,
-          auth
-        );
+  //       const result = await processAllWxData(
+  //         start_time_pdt,
+  //         end_time_pdt,
+  //         stationIds,
+  //         auth
+  //       );
 
-        const processedData = wxTableDataDay(
-          result.observationsData,
-          result.unitConversions
-        );
+  //       const processedData = wxTableDataDay(
+  //         result.observationsData,
+  //         result.unitConversions
+  //       );
 
-        setObservationsData(processedData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error:', error);
-        setIsLoading(false);
-      }
-    };
+  //       setObservationsData(processedData);
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-  }, [submittedDate, selectedDate, stationIds, auth]);
+  //   fetchData();
+  // }, [submittedDate, selectedDate, stationIds, auth]);
 
   useEffect(() => {
     const checkAndRunUpdate = async () => {
