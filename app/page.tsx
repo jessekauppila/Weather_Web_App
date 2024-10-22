@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import DayAveragesTable from './dayWxTable';
 import processAllWxData from '../app/api/allWxprocessor';
 import wxTableDataDay from './dayWxTableData';
+import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 //import { ObservationsData } from './types'; // Add this import
 
 export default function Home() {
@@ -98,6 +99,63 @@ export default function Home() {
     []
   );
 
+  //New useEffect for fetching data from the DB
+  useEffect(() => {
+    const fetchDataFromDB = async () => {
+      try {
+        console.log('Selected Date:', selectedDate);
+
+        const start_time_pdt = moment(selectedDate)
+          .tz('America/Los_Angeles')
+          .startOf('day')
+          .add(5, 'hours');
+
+        const end_time_pdt = moment(start_time_pdt).add(1, 'day');
+
+        console.log(
+          'Start time (PDT):',
+          start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
+        );
+        console.log(
+          'End time (PDT):',
+          end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
+        );
+
+        const response = await fetch('/api/getObservationsFromDB', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            startDate: start_time_pdt.toISOString(),
+            endDate: end_time_pdt.toISOString(),
+            stationIds: stationIds,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch data from database');
+        }
+
+        const result = await response.json();
+
+        const processedData = wxTableDataDayFromDB(
+          result.observations,
+          result.units
+        );
+
+        setObservationsData(processedData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchDataFromDB();
+  }, [submittedDate, selectedDate, stationIds]);
+
+  //Old useEffect for fetching data from the API
   useEffect(() => {
     const fetchData = async () => {
       try {

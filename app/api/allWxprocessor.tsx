@@ -142,47 +142,16 @@ async function processAllWxData(
       }
     }
 
-    console.log(
-      'observationData:',
-      JSON.stringify(observationsData, null, 2)
-    );
-    console.log('unitConversions:', unitConversions);
+    //console.log(
+    //  'observationData:',
+    //  JSON.stringify(observationsData, null, 2)
+    //);
+    //console.log('unitConversions:', unitConversions);
     return { observationsData, unitConversions };
   } catch (error) {
     console.error('Error in processAllWxData:', error);
     throw error;
   }
 }
-
-// function processStationData(stationObject: ObservationData): Record<string, any> {
-//   const newStationInfo: Record<string, any> = {
-//     'Station Name': '',
-//     'Longitude': '',
-//     'Latitude': '',
-//     'stid': '',
-//     'id': '',
-//     'elevation': 0,
-//     // Add other keys you want to include
-//   };
-
-//   Object.keys(newStationInfo).forEach((key) => {
-//     if (key === 'Station Name') {
-//       newStationInfo[key] = stationObject.name;
-//     } else if (key === 'Longitude') {
-//       newStationInfo[key] = stationObject.longitude;
-//     } else if (key === 'Latitude') {
-//       newStationInfo[key] = stationObject.latitude;
-//     } else if (key === 'stid') {
-//       newStationInfo[key] = stationObject.stid || '';
-//     } else if (key === 'id') {
-//       newStationInfo[key] = stationObject.id || '';
-//     } else if (key === 'elevation') {
-//       newStationInfo[key] = stationObject.elevation || 0;
-//     }
-//     // Add other cases as needed
-//   });
-
-//   return newStationInfo;
-// }
 
 export default processAllWxData;
