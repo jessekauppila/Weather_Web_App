@@ -1,3 +1,6 @@
+// this is activley used in the dayWxTableDataDayFromDB.tsx file to look for observations in the database
+// I might want to do the conversions directly to this file before they go to dayWxTableDataDayFromDB
+
 import { NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 
@@ -82,7 +85,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Database query error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      {
+        error: 'Internal Server Error',
+        details:
+          error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
