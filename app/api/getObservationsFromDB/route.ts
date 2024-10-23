@@ -42,7 +42,8 @@ export async function POST(request: Request) {
         s.stid,
         s.station_name,
         s.latitude,
-        s.longitude
+        s.longitude,
+        s.elevation
       FROM observations o
       JOIN stations s ON o.station_id = s.id
       WHERE s.stid = ANY($1)
