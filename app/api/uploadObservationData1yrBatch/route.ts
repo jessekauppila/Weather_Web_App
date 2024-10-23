@@ -403,8 +403,8 @@ async function handleRequest(request: NextRequest) {
   }
 }
 
-async function retryOperation(
-  operation: () => Promise<any>,
+async function retryOperation<T>(
+  operation: () => Promise<T>,
   maxRetries = 3,
   delay = 1000
 ): Promise<T> {
