@@ -1,3 +1,5 @@
+//maybe I should do the unit conversions in the DB query...
+
 import moment from 'moment-timezone';
 import {
   formatAveragesData,
