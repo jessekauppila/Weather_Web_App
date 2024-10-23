@@ -34,90 +34,256 @@ function wxTableDataDayFromDB(
 
   const processedData = Object.entries(groupedObservations).map(
     ([stid, stationObs]) => {
-      const averages: { [key: string]: number | string } = {
+      const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
         Station: stationObs[0].station_name,
-        Latitude: stationObs[0].latitude,
-        Longitude: stationObs[0].longitude,
+        Latitude: Number(stationObs[0].latitude),
+        Longitude: Number(stationObs[0].longitude),
       };
 
       // Process each measurement type
-      for (const [key, unit] of Object.entries(unitConversions)) {
-        if (key === 'date_time') continue;
+      const measurementKeys = [
+        'air_temp',
+        'precip_accum_one_hour',
+        'relative_humidity',
+        'snow_depth',
+        'snow_depth_24h',
+        'wind_speed',
+        'wind_gust',
+        'wind_direction',
+      ];
 
+      measurementKeys.forEach((key) => {
         const values = stationObs
-          .map((obs) => Number(obs[key]))
-          .filter((val) => !isNaN(val));
-
+          .map((obs) => obs[key])
+          .filter((val) => val !== null);
         if (values.length > 0) {
-          const sum = values.reduce((a, b) => a + b, 0);
-          const avg = sum / values.length;
-          const max = Math.max(...values);
-          const min = Math.min(...values);
-
-          averages[
-            `Cur ${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())}`
-          ] = Number(avg.toFixed(2));
-          averages[
-            `${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())} Max`
-          ] = Number(max.toFixed(2));
-          averages[
-            `${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())} Min`
-          ] = Number(min.toFixed(2));
-        } else {
-          averages[
-            `Cur ${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())}`
-          ] = '-';
-          averages[
-            `${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())} Max`
-          ] = '-';
-          averages[
-            `${key
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())} Min`
-          ] = '-';
+          averages[key] = values;
         }
+      });
+
+      // Special processing for certain fields
+      if (
+        averages['wind_speed'] &&
+        averages['wind_speed'].every((v) => v === '')
+      ) {
+        averages['wind_speed'] = [''];
       }
 
+      ['intermittent_snow', 'precipitation'].forEach((key) => {
+        averages[key] = [stationObs[0][key] || ''];
+      });
+
       // Process date_time
-      const dateTimes = stationObs.map((obs) =>
-        moment(obs.date_time)
-      );
-      averages['Start Date Time'] = dateTimes[0].format(
-        'MMM D, YYYY, h:mm a'
-      );
-      averages['End Date Time'] = dateTimes[
-        dateTimes.length - 1
-      ].format('MMM D, YYYY, h:mm a');
-      averages['Date Time'] = `${dateTimes[0].format(
-        'h:mm a'
-      )} - ${dateTimes[dateTimes.length - 1].format(
-        'h:mm a, MMM D, YYYY'
-      )}`;
+      averages['date_time'] = stationObs.map((obs) => obs.date_time);
 
       return averages;
     }
   );
 
   // Format the averages with unit labels
-  const formattedData = processedData.map((averages) =>
-    formatAveragesData(averages, unitConversions as UnitConversions)
-  );
+  const formattedData = processedData.map((averages) => {
+    const formatted: { [key: string]: any } = { ...averages };
 
-  console.log(
-    'formattedData from wxTableDataDayFromDB:',
-    formattedData
-  );
+    // Helper function to safely process numeric fields
+    const processNumericField = (
+      fieldName: string,
+      newFieldName: string,
+      unit: string,
+      decimalPlaces: number = 2,
+      processFunc?: (numbers: number[]) => number
+    ) => {
+      if (formatted[fieldName] && formatted[fieldName].length > 0) {
+        const numbers = formatted[fieldName]
+          .map((val) => parseFloat(val))
+          .filter((val) => !isNaN(val));
+        if (numbers.length > 0) {
+          const result = processFunc
+            ? processFunc(numbers)
+            : numbers[numbers.length - 1];
+          formatted[newFieldName] = `${result.toFixed(
+            decimalPlaces
+          )} ${unit}`;
+        } else {
+          formatted[newFieldName] = `-`;
+        }
+      } else {
+        formatted[newFieldName] = `-`;
+      }
+      delete formatted[fieldName];
+    };
+
+    // Process air temperature
+    processNumericField(
+      'air_temp',
+      'Air Temp Max',
+      '°F',
+      1,
+      (numbers) => Math.max(...numbers)
+    );
+    processNumericField(
+      'air_temp',
+      'Air Temp Min',
+      '°F',
+      1,
+      (numbers) => Math.min(...numbers)
+    );
+    processNumericField('air_temp', 'Cur Air Temp', '°F', 1);
+
+    // Process wind speed
+    if (
+      formatted['wind_speed'] &&
+      formatted['wind_speed'].length > 0
+    ) {
+      const windSpeedNumbers = formatted['wind_speed']
+        .map((speed) => parseFloat(speed))
+        .filter((speed) => !isNaN(speed));
+      if (windSpeedNumbers.length > 0) {
+        formatted['Wind Speed Avg'] = `${(
+          windSpeedNumbers.reduce((a, b) => a + b, 0) /
+          windSpeedNumbers.length
+        ).toFixed(1)} mph`;
+        formatted['Cur Wind Speed'] = `${windSpeedNumbers[
+          windSpeedNumbers.length - 1
+        ].toFixed(1)} mph`;
+      } else {
+        formatted['Wind Speed Avg'] = '-';
+        formatted['Cur Wind Speed'] = '-';
+      }
+    } else {
+      formatted['Wind Speed Avg'] = '-';
+      formatted['Cur Wind Speed'] = '-';
+    }
+
+    // Process wind gust
+    if (formatted['wind_gust'] && formatted['wind_gust'].length > 0) {
+      formatted['Max Wind Gust'] = `${Math.max(
+        ...formatted['wind_gust']
+      ).toFixed(1)} mph`;
+    } else {
+      formatted['Max Wind Gust'] = '-';
+    }
+    delete formatted['wind_gust'];
+
+    // Process wind direction
+    if (
+      formatted['wind_direction'] &&
+      formatted['wind_direction'].length > 0
+    ) {
+      // You might want to implement a function to convert degrees to compass direction
+      formatted['Wind Direction'] =
+        formatted['wind_direction'][
+          formatted['wind_direction'].length - 1
+        ];
+    } else {
+      formatted['Wind Direction'] = '-';
+    }
+    delete formatted['wind_direction'];
+
+    // Process precipitation
+    if (
+      formatted['precip_accum_one_hour'] &&
+      formatted['precip_accum_one_hour'].length > 0
+    ) {
+      const precipNumbers = formatted['precip_accum_one_hour']
+        .map((precip) => parseFloat(precip))
+        .filter((precip) => !isNaN(precip));
+      if (precipNumbers.length > 0) {
+        const totalPrecip = precipNumbers.reduce((a, b) => a + b, 0);
+        formatted['Precip Accum One Hour'] = `${totalPrecip.toFixed(
+          2
+        )} in`;
+      } else {
+        formatted['Precip Accum One Hour'] = '0.00 in';
+      }
+    } else {
+      formatted['Precip Accum One Hour'] = '0.00 in';
+    }
+    delete formatted['precip_accum_one_hour'];
+
+    // Process snow depth
+    if (formatted['snow_depth']) {
+      formatted['Snow Depth'] = `${(
+        formatted['snow_depth'][formatted['snow_depth'].length - 1] *
+        39.3701
+      ).toFixed(1)} in`;
+      formatted['Snow Depth Max'] = `${(
+        Math.max(...formatted['snow_depth']) * 39.3701
+      ).toFixed(1)} in`;
+    }
+    delete formatted['snow_depth'];
+
+    // Process 24h snow depth
+    if (
+      formatted['snow_depth_24h'] &&
+      formatted['snow_depth_24h'].length > 0
+    ) {
+      const numbers = formatted['snow_depth_24h']
+        .map((val) => parseFloat(val))
+        .filter((val) => !isNaN(val));
+      if (numbers.length > 0) {
+        const max = Math.max(...numbers);
+        const min = Math.min(...numbers);
+        formatted['Snow Depth 24h Total'] = `${(
+          (max - min) *
+          39.3701
+        ).toFixed(1)} in`;
+      } else {
+        formatted['Snow Depth 24h Total'] = `-`;
+      }
+    } else {
+      formatted['Snow Depth 24h Total'] = `-`;
+    }
+    delete formatted['snow_depth_24h'];
+
+    // Process relative humidity
+    processNumericField(
+      'relative_humidity',
+      'Relative Humidity',
+      '%',
+      2
+    );
+
+    // Process wind direction
+    if (
+      formatted['wind_direction'] &&
+      formatted['wind_direction'].length > 0
+    ) {
+      const lastDirection =
+        formatted['wind_direction'][
+          formatted['wind_direction'].length - 1
+        ];
+      formatted['Wind Direction'] =
+        lastDirection !== null ? lastDirection.toString() : '-';
+    } else {
+      formatted['Wind Direction'] = '-';
+    }
+    delete formatted['wind_direction'];
+
+    // Process date/time
+    if (formatted['date_time'] && formatted['date_time'].length > 0) {
+      const startTime = moment(formatted['date_time'][0]);
+      const endTime = moment(
+        formatted['date_time'][formatted['date_time'].length - 1]
+      );
+      formatted['Start Date Time'] = startTime.format(
+        'MMM D, YYYY, h:mm a'
+      );
+      formatted['End Date Time'] = endTime.format(
+        'MMM D, YYYY, h:mm a'
+      );
+      formatted['Date Time'] = `${startTime.format(
+        'h:mm a'
+      )} - ${endTime.format('h:mm a, MMM D, YYYY')}`;
+    } else {
+      formatted['Start Date Time'] = '-';
+      formatted['End Date Time'] = '-';
+      formatted['Date Time'] = '-';
+    }
+    delete formatted['date_time'];
+
+    return formatted;
+  });
 
   const title =
     formattedData.length > 0
