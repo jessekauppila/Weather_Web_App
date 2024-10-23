@@ -1,12 +1,12 @@
 import { mean } from 'd3';
 import moment from 'moment-timezone';
 
-import wxTableDataConversion from '../utils/wxTableDataConversion';
+import wxTableDataConversion from '../unused/utils/wxTableDataConversion';
 import {
   formatAveragesData,
   UnitConversions,
   UnitConversionType,
-} from '../utils/formatAverages';
+} from '../unused/utils/formatAverages';
 
 function wxTableDataDay(
   observationsData: Array<Record<string, any>>,

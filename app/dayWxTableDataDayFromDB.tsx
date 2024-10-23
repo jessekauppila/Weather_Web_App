@@ -3,7 +3,8 @@ import {
   formatAveragesData,
   UnitConversions,
   UnitConversionType,
-} from '../utils/formatAveragesFromDB';
+} from '../unused/utils/formatAveragesFromDB';
+import { convertObservationUnits } from './utils/unitConversions';
 
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
@@ -17,8 +18,15 @@ function wxTableDataDayFromDB(
     observationsData
   );
 
+  // Convert units for each observation
+  const convertedObsData = observationsData.map(
+    convertObservationUnits
+  );
+
+  console.log('Converted observations:', convertedObsData);
+
   // Group observations by station
-  const groupedObservations = observationsData.reduce((acc, obs) => {
+  const groupedObservations = convertedObsData.reduce((acc, obs) => {
     if (!acc[obs.stid]) {
       acc[obs.stid] = [];
     }
@@ -27,7 +35,7 @@ function wxTableDataDayFromDB(
   }, {} as Record<string, Array<Record<string, any>>>);
 
   // Convert units array to a more usable format
-  const unitConversions = units.reduce((acc, unit) => {
+  const unitConversionsMap = units.reduce((acc, unit) => {
     acc[unit.measurement] = unit.unit;
     return acc;
   }, {} as Record<string, string>);
@@ -88,27 +96,52 @@ function wxTableDataDayFromDB(
     // Helper function to safely process numeric fields
     const processNumericField = (
       fieldName: string,
-      newFieldName: string,
+      outputFields: { [key: string]: string },
       unit: string,
-      decimalPlaces: number = 2,
-      processFunc?: (numbers: number[]) => number
+      decimalPlaces: number = 0,
+      customProcessing?: (numbers: number[]) => {
+        [key: string]: number;
+      },
+      customFormatter?: (value: string, unit: string) => string
     ) => {
       if (formatted[fieldName] && formatted[fieldName].length > 0) {
         const numbers = formatted[fieldName]
           .map((val) => parseFloat(val))
           .filter((val) => !isNaN(val));
         if (numbers.length > 0) {
-          const result = processFunc
-            ? processFunc(numbers)
-            : numbers[numbers.length - 1];
-          formatted[newFieldName] = `${result.toFixed(
-            decimalPlaces
-          )} ${unit}`;
+          let results: { [key: string]: number };
+          if (customProcessing) {
+            results = customProcessing(numbers);
+          } else {
+            results = {
+              max: Math.max(...numbers),
+              min: Math.min(...numbers),
+              avg:
+                numbers.reduce((a, b) => a + b, 0) / numbers.length,
+              cur: numbers[numbers.length - 1],
+            };
+          }
+
+          Object.entries(outputFields).forEach(([key, outputKey]) => {
+            if (results[key] !== undefined) {
+              const formattedValue =
+                results[key].toFixed(decimalPlaces);
+              formatted[outputKey] = customFormatter
+                ? customFormatter(formattedValue, unit)
+                : `${formattedValue} ${unit}`.trim();
+            } else {
+              formatted[outputKey] = '-';
+            }
+          });
         } else {
-          formatted[newFieldName] = `-`;
+          Object.values(outputFields).forEach((outputKey) => {
+            formatted[outputKey] = '-';
+          });
         }
       } else {
-        formatted[newFieldName] = `-`;
+        Object.values(outputFields).forEach((outputKey) => {
+          formatted[outputKey] = '-';
+        });
       }
       delete formatted[fieldName];
     };
@@ -116,149 +149,118 @@ function wxTableDataDayFromDB(
     // Process air temperature
     processNumericField(
       'air_temp',
-      'Air Temp Max',
-      '°F',
-      1,
-      (numbers) => Math.max(...numbers)
+      {
+        max: 'Air Temp Max',
+        min: 'Air Temp Min',
+        cur: 'Cur Air Temp',
+      },
+      '°F'
     );
-    processNumericField(
-      'air_temp',
-      'Air Temp Min',
-      '°F',
-      1,
-      (numbers) => Math.min(...numbers)
-    );
-    processNumericField('air_temp', 'Cur Air Temp', '°F', 1);
 
     // Process wind speed
-    if (
-      formatted['wind_speed'] &&
-      formatted['wind_speed'].length > 0
-    ) {
-      const windSpeedNumbers = formatted['wind_speed']
-        .map((speed) => parseFloat(speed))
-        .filter((speed) => !isNaN(speed));
-      if (windSpeedNumbers.length > 0) {
-        formatted['Wind Speed Avg'] = `${(
-          windSpeedNumbers.reduce((a, b) => a + b, 0) /
-          windSpeedNumbers.length
-        ).toFixed(1)} mph`;
-        formatted['Cur Wind Speed'] = `${windSpeedNumbers[
-          windSpeedNumbers.length - 1
-        ].toFixed(1)} mph`;
-      } else {
-        formatted['Wind Speed Avg'] = '-';
-        formatted['Cur Wind Speed'] = '-';
-      }
-    } else {
-      formatted['Wind Speed Avg'] = '-';
-      formatted['Cur Wind Speed'] = '-';
-    }
+    processNumericField(
+      'wind_speed',
+      {
+        avg: 'Wind Speed Avg',
+        cur: 'Cur Wind Speed',
+      },
+      'mph'
+    );
 
     // Process wind gust
-    if (formatted['wind_gust'] && formatted['wind_gust'].length > 0) {
-      formatted['Max Wind Gust'] = `${Math.max(
-        ...formatted['wind_gust']
-      ).toFixed(1)} mph`;
-    } else {
-      formatted['Max Wind Gust'] = '-';
-    }
-    delete formatted['wind_gust'];
-
-    // Process wind direction
-    if (
-      formatted['wind_direction'] &&
-      formatted['wind_direction'].length > 0
-    ) {
-      // You might want to implement a function to convert degrees to compass direction
-      formatted['Wind Direction'] =
-        formatted['wind_direction'][
-          formatted['wind_direction'].length - 1
-        ];
-    } else {
-      formatted['Wind Direction'] = '-';
-    }
-    delete formatted['wind_direction'];
+    processNumericField('wind_gust', { max: 'Max Wind Gust' }, 'mph');
 
     // Process precipitation
-    if (
-      formatted['precip_accum_one_hour'] &&
-      formatted['precip_accum_one_hour'].length > 0
-    ) {
-      const precipNumbers = formatted['precip_accum_one_hour']
-        .map((precip) => parseFloat(precip))
-        .filter((precip) => !isNaN(precip));
-      if (precipNumbers.length > 0) {
-        const totalPrecip = precipNumbers.reduce((a, b) => a + b, 0);
-        formatted['Precip Accum One Hour'] = `${totalPrecip.toFixed(
-          2
-        )} in`;
-      } else {
-        formatted['Precip Accum One Hour'] = '0.00 in';
-      }
-    } else {
-      formatted['Precip Accum One Hour'] = '0.00 in';
-    }
-    delete formatted['precip_accum_one_hour'];
+    processNumericField(
+      'precip_accum_one_hour',
+      { sum: 'Precip Accum One Hour' },
+      'in',
+      1,
+      (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
+    );
 
     // Process snow depth
-    if (formatted['snow_depth']) {
-      formatted['Snow Depth'] = `${(
-        formatted['snow_depth'][formatted['snow_depth'].length - 1] *
-        39.3701
-      ).toFixed(1)} in`;
-      formatted['Snow Depth Max'] = `${(
-        Math.max(...formatted['snow_depth']) * 39.3701
-      ).toFixed(1)} in`;
-    }
-    delete formatted['snow_depth'];
+    processNumericField(
+      'snow_depth',
+      {
+        cur: 'Snow Depth',
+        max: 'Snow Depth Max',
+      },
+      'in',
+      1,
+      (numbers) => ({
+        cur: numbers[numbers.length - 1] * 39.3701,
+        max: Math.max(...numbers) * 39.3701,
+      })
+    );
 
     // Process 24h snow depth
-    if (
-      formatted['snow_depth_24h'] &&
-      formatted['snow_depth_24h'].length > 0
-    ) {
-      const numbers = formatted['snow_depth_24h']
-        .map((val) => parseFloat(val))
-        .filter((val) => !isNaN(val));
-      if (numbers.length > 0) {
-        const max = Math.max(...numbers);
-        const min = Math.min(...numbers);
-        formatted['Snow Depth 24h Total'] = `${(
-          (max - min) *
-          39.3701
-        ).toFixed(1)} in`;
-      } else {
-        formatted['Snow Depth 24h Total'] = `-`;
-      }
-    } else {
-      formatted['Snow Depth 24h Total'] = `-`;
-    }
-    delete formatted['snow_depth_24h'];
+    processNumericField(
+      'snow_depth_24h',
+      { total: 'Snow Depth 24h Total' },
+      'in',
+      1,
+      (numbers) => ({
+        total:
+          (Math.max(...numbers) - Math.min(...numbers)) * 39.3701,
+      })
+    );
 
     // Process relative humidity
     processNumericField(
       'relative_humidity',
-      'Relative Humidity',
+      { cur: 'Relative Humidity' },
       '%',
-      2
+      0,
+      undefined,
+      (value, unit) => `${value}${unit}` // Custom formatter for Relative Humidity
     );
 
-    // Process wind direction
-    if (
-      formatted['wind_direction'] &&
-      formatted['wind_direction'].length > 0
-    ) {
-      const lastDirection =
-        formatted['wind_direction'][
-          formatted['wind_direction'].length - 1
-        ];
-      formatted['Wind Direction'] =
-        lastDirection !== null ? lastDirection.toString() : '-';
-    } else {
-      formatted['Wind Direction'] = '-';
+    function degreeToCompass(degree: number): string {
+      // A utility function to convert degrees to compass directions
+      const directions = [
+        'N',
+        'NNE',
+        'NE',
+        'ENE',
+        'E',
+        'ESE',
+        'SE',
+        'SSE',
+        'S',
+        'SSW',
+        'SW',
+        'WSW',
+        'W',
+        'WNW',
+        'NW',
+        'NNW',
+      ];
+      const index = Math.round(degree / 22.5) % 16;
+      return directions[index];
     }
-    delete formatted['wind_direction'];
+
+    // Process wind direction
+    processNumericField(
+      'wind_direction',
+      { avg: 'Wind Direction' },
+      '',
+      0,
+      (numbers) => {
+        const sum = numbers.reduce((a, b) => a + b, 0);
+        const avg = (sum / numbers.length) % 360; // Ensure the result is between 0 and 359
+        return { avg: avg };
+      }
+    );
+
+    // Convert average wind direction to compass direction
+    if (
+      formatted['Wind Direction'] &&
+      formatted['Wind Direction'] !== '-'
+    ) {
+      const avgDirection = parseFloat(formatted['Wind Direction']);
+      formatted['Wind Direction'] = degreeToCompass(avgDirection);
+    }
 
     // Process date/time
     if (formatted['date_time'] && formatted['date_time'].length > 0) {
@@ -284,6 +286,11 @@ function wxTableDataDayFromDB(
 
     return formatted;
   });
+
+  console.log(
+    'formattedData from wxTableDataDayFromDB:',
+    formattedData
+  );
 
   const title =
     formattedData.length > 0
