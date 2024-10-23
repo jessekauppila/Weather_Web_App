@@ -64,8 +64,8 @@ function wxTableDataDayFromDB(
 
       measurementKeys.forEach((key) => {
         const values = stationObs
-          .map((obs) => obs[key])
-          .filter((val) => val !== null);
+          .map((obs: Record<string, any>) => obs[key])
+          .filter((val: any): val is number | string => val !== null);
         if (values.length > 0) {
           averages[key] = values;
         }
@@ -73,7 +73,7 @@ function wxTableDataDayFromDB(
 
       // Special processing for certain fields
       if (
-        averages['wind_speed'] &&
+        Array.isArray(averages['wind_speed']) &&
         averages['wind_speed'].every((v) => v === '')
       ) {
         averages['wind_speed'] = [''];
@@ -84,7 +84,9 @@ function wxTableDataDayFromDB(
       });
 
       // Process date_time
-      averages['date_time'] = stationObs.map((obs) => obs.date_time);
+      averages['date_time'] = stationObs.map(
+        (obs: Record<string, any>) => obs.date_time
+      );
 
       return averages;
     }
@@ -107,8 +109,8 @@ function wxTableDataDayFromDB(
     ) => {
       if (formatted[fieldName] && formatted[fieldName].length > 0) {
         const numbers = formatted[fieldName]
-          .map((val) => parseFloat(val))
-          .filter((val) => !isNaN(val));
+          .map((val: string | number) => parseFloat(val.toString()))
+          .filter((val: number) => !isNaN(val));
         if (numbers.length > 0) {
           let results: { [key: string]: number };
           if (customProcessing) {
@@ -118,7 +120,8 @@ function wxTableDataDayFromDB(
               max: Math.max(...numbers),
               min: Math.min(...numbers),
               avg:
-                numbers.reduce((a, b) => a + b, 0) / numbers.length,
+                numbers.reduce((a: number, b: number) => a + b, 0) /
+                numbers.length,
               cur: numbers[numbers.length - 1],
             };
           }
