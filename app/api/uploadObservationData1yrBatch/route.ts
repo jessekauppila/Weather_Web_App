@@ -392,11 +392,8 @@ async function handleRequest(request: NextRequest) {
     console.error('Error updating weekly data:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Error updating weekly data: ' + errorMessage },
-      { error: 'Error updating weekly data: ' + errorMessage },
+      { error: 'Internal Server Error', details: errorMessage },
       { status: 500 }
     );
   } finally {
