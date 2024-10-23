@@ -17,8 +17,11 @@ interface DayAveragesTableProps {
 // Define the header structure for known categories
 const knownCategories = [
   {
-    category: '',
-    columns: ['Station'],
+    category: 'Station',
+    columns: [
+      { key: 'Station', displayName: 'Name' },
+      'Elevation',
+    ] as Column[],
   },
   {
     category: 'Temperatures',
@@ -44,6 +47,8 @@ const knownCategories = [
   },
   { category: 'RH', columns: ['Relative Humidity'] },
 ];
+
+type Column = string | { key: string; displayName: string };
 
 function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -147,13 +152,23 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
     const headerRowUpdate = headerRowEnter.merge(headerRow as any);
 
     const headerCells = headerRowUpdate
-      .selectAll<HTMLTableHeaderCellElement, string>('th')
-      .data(headers);
+      .selectAll<HTMLTableHeaderCellElement, Column>('th')
+      .data(headerStructure.flatMap((category) => category.columns));
+
     headerCells
       .enter()
       .append('th')
       .merge(headerCells as any)
-      .text((d) => d);
+      .text((d) => {
+        if (typeof d === 'string') {
+          return d;
+        } else if (d && typeof d === 'object' && 'displayName' in d) {
+          return d.displayName;
+        } else {
+          return ''; // or some default value
+        }
+      });
+
     headerCells.exit().remove();
 
     // Body
@@ -177,12 +192,14 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
 
     // Update the cells creation part
     const cells = rowsUpdate
-      .selectAll<
-        HTMLTableDataCellElement,
-        { key: string; value: string | number }
-      >('td')
+      .selectAll<HTMLTableDataCellElement, any>('td')
       .data((d) =>
-        headers.map((header) => ({ key: header, value: d[header] }))
+        headerStructure.flatMap((category) =>
+          category.columns.map((col) => {
+            const key = typeof col === 'string' ? col : col.key;
+            return { key, value: d[key] };
+          })
+        )
       );
     cells
       .enter()

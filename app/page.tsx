@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 import DayAveragesTable from './dayWxTable';
 import processAllWxData from '../app/api/allWxprocessor';
-import wxTableDataDay from './dayWxTableData';
+import wxTableDataDay from '../unused/dayWxTableData';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 //import { ObservationsData } from './types'; // Add this import
 

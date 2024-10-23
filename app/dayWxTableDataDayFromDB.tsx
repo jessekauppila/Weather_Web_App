@@ -47,6 +47,7 @@ function wxTableDataDayFromDB(
         Station: stationObs[0].station_name,
         Latitude: Number(stationObs[0].latitude),
         Longitude: Number(stationObs[0].longitude),
+        Elevation: Number(stationObs[0].elevation),
       };
 
       // Process each measurement type
