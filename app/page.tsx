@@ -5,14 +5,14 @@ import moment from 'moment-timezone';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 import DayAveragesTable from './dayWxTable';
-import processAllWxData from '../app/api/allWxprocessor';
-import wxTableDataDay from '../unused/dayWxTableData';
+// import processAllWxData from '../app/api/allWxprocessor';
+// import wxTableDataDay from '../unused/dayWxTableData';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 //import { ObservationsData } from './types'; // Add this import
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [submittedDate, setSubmittedDate] = useState(new Date());
+  // const [submittedDate, setSubmittedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [observationsData, setObservationsData] = useState<{
     data: any[];
@@ -28,9 +28,9 @@ export default function Home() {
     setSelectedDate(new Date(event.target.value));
   };
 
-  const handleSubmit = () => {
-    setSubmittedDate(selectedDate);
-  };
+  // const handleSubmit = () => {
+  //   setSubmittedDate(selectedDate);
+  // };
 
   const handlePrevDay = () => {
     setSelectedDate((prevDate) => subDays(prevDate, 1));
@@ -40,7 +40,7 @@ export default function Home() {
     setSelectedDate((prevDate) => addDays(prevDate, 1));
   };
 
-  const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
+  //const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
   const stationIds = useMemo(
     () => [
       '1',
@@ -116,6 +116,7 @@ export default function Home() {
           'Start time (PDT):',
           start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
         );
+
         console.log(
           'End time (PDT):',
           end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
@@ -157,7 +158,7 @@ export default function Home() {
     };
 
     fetchDataFromDB();
-  }, [submittedDate, selectedDate, stationIds]);
+  }, [selectedDate, stationIds]);
 
   // //Old useEffect for fetching data from the API
   // useEffect(() => {
@@ -279,7 +280,10 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
       <div className="flex flex-col items-center space-y-1">
         <div className="flex space-x-4">
-          <button onClick={handlePrevDay} className="my-button">
+          <button
+            onClick={handlePrevDay}
+            className="my-button text-xs"
+          >
             Previous Day
           </button>
           <input
@@ -288,16 +292,19 @@ export default function Home() {
             onChange={handleDateChange}
             className="my-button"
           />
-          <button onClick={handleNextDay} className="my-button">
+          <button
+            onClick={handleNextDay}
+            className="my-button text-xs"
+          >
             Next Day
           </button>
         </div>
         <div className="flex space-x-1"></div>
-        <div className="flex space-x-1">
+        {/* <div className="flex space-x-1">
           <button onClick={handleSubmit} className="my-button">
             Submit Selected Date
           </button>
-        </div>
+        </div> */}
       </div>
 
       {isLoading ? (
@@ -311,7 +318,7 @@ export default function Home() {
       )}
 
       {/* Weather Data Update Status Widget, not working now, probably unnecessary */}
-      <div className="mt-8 p-4 bg-white rounded shadow">
+      {/* <div className="mt-8 p-4 bg-white rounded shadow">
         <h2 className="text-lg font-semibold mb-2">
           Weather Data Update Status
         </h2>
@@ -320,7 +327,7 @@ export default function Home() {
         ) : (
           <p>No updates yet</p>
         )}
-      </div>
+      </div> */}
     </main>
   );
 }
