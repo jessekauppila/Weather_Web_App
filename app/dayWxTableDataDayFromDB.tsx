@@ -1,11 +1,6 @@
 //maybe I should do the unit conversions in the DB query...
 
 import moment from 'moment-timezone';
-import {
-  formatAveragesData,
-  UnitConversions,
-  UnitConversionType,
-} from '../unused/utils/formatAveragesFromDB';
 import { convertObservationUnits } from './utils/unitConversions';
 
 function wxTableDataDayFromDB(
@@ -20,10 +15,8 @@ function wxTableDataDayFromDB(
     observationsData
   );
 
-  // Convert units for each observation
-  const convertedObsData = observationsData.map(
-    convertObservationUnits
-  );
+  // The data is already converted, so we can use it directly
+  const convertedObsData = observationsData;
 
   console.log('Converted observations:', convertedObsData);
 
