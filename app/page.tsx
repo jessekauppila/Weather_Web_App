@@ -40,7 +40,7 @@ export default function Home() {
     setSelectedDate((prevDate) => addDays(prevDate, 1));
   };
 
-  //const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
+  //const auth: string = 'xxxxxxxxxxxxx';
   const stationIds = useMemo(
     () => [
       '1',

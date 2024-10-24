@@ -18,8 +18,6 @@ function wxTableDataDayFromDB(
   // The data is already converted, so we can use it directly
   const convertedObsData = observationsData;
 
-  console.log('Converted observations:', convertedObsData);
-
   // Group observations by station
   const groupedObservations = convertedObsData.reduce((acc, obs) => {
     if (!acc[obs.stid]) {
