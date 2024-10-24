@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
+import { convertObservationUnits } from '../../utils/unitConversions'; // Adjust the import path as needed
 
 export async function POST(request: Request) {
   try {
@@ -78,8 +79,15 @@ export async function POST(request: Request) {
 
     await client.release();
 
+    // Convert units for each observation
+    const convertedObservations = observationsResult.rows.map(
+      convertObservationUnits
+    );
+
+    console.log('Query result converted:', convertedObservations);
+
     return NextResponse.json({
-      observations: observationsResult.rows,
+      observations: convertedObservations,
       units: unitsResult.rows,
     });
   } catch (error) {
