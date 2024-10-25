@@ -28,7 +28,7 @@ export function convertObservationUnits(
   ['precip_accum_one_hour', 'snow_depth', 'snow_depth_24h'].forEach(
     (key) => {
       if (converted[key] !== null) {
-        converted[key] = converted[key] / 25.4;
+        converted[key] = converted[key] * 39.3701;
       }
     }
   );
