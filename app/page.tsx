@@ -2,11 +2,10 @@
 
 import { format, addDays, subDays } from 'date-fns';
 import moment from 'moment-timezone';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import DayAveragesTable from './dayWxTable';
-// import processAllWxData from '../app/api/allWxprocessor';
-// import wxTableDataDay from '../unused/dayWxTableData';
+
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 //import { ObservationsData } from './types'; // Add this import
 
@@ -21,6 +20,11 @@ export default function Home() {
   const [lastUpdateTime, setLastUpdateTime] = useState<string | null>(
     null
   );
+  const [stations, setStations] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [selectedStation, setSelectedStation] = useState<string>('');
+  const [stationIds, setStationIds] = useState<string[]>([]);
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -40,87 +44,40 @@ export default function Home() {
     setSelectedDate((prevDate) => addDays(prevDate, 1));
   };
 
-  //const auth: string = 'xxxxxxxxxxxxx';
-  const stationIds = useMemo(
-    () => [
-      '1',
-      '14',
-      '11',
-      '12',
-      '13',
-      '14',
-      '17',
-      '18',
-      '19',
-      '2',
-      '20',
-      '21',
-      '22',
-      '23',
-      '24',
-      '25',
-      '26',
-      '27',
-      '28',
-      '29',
-      '3',
-      '30',
-      '31',
-      '32',
-      '33',
-      '34',
-      '35',
-      '36',
-      '37',
-      '39',
-      '4',
-      '40',
-      '41',
-      '42',
-      '43',
-      '44',
-      '45',
-      '46',
-      '47',
-      '48',
-      '49',
-      '5',
-      '50',
-      '51',
-      '53',
-      '54',
-      '56',
-      '57',
-      '6',
-      '7',
-      '8',
-      '9',
-    ],
-    []
-  );
+  //Fetch the stations from the DB and then use the station ids to fetch the observations from the DB
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const response = await fetch('/api/getStations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch stations');
+        }
+        const data = await response.json();
+        const mappedStations = data.map((station: any) => ({
+          id: station.stid,
+          name: station.station_name,
+        }));
+        setStations(mappedStations);
+        // Set stationIds to include all station IDs initially
+        setStationIds(mappedStations.map((station) => station.id));
+      } catch (error) {
+        console.error('Error fetching stations:', error);
+      }
+    };
 
-  //New useEffect for fetching data from the DB
+    fetchStations();
+  }, []);
+
+  //Fetch the observations from the DB
   useEffect(() => {
     const fetchDataFromDB = async () => {
       try {
-        console.log('Selected Date:', selectedDate);
-
         const start_time_pdt = moment(selectedDate)
           .tz('America/Los_Angeles')
           .startOf('day')
           .add(5, 'hours');
 
         const end_time_pdt = moment(start_time_pdt).add(1, 'day');
-
-        console.log(
-          'Start time (PDT):',
-          start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-        );
-
-        console.log(
-          'End time (PDT):',
-          end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-        );
 
         const response = await fetch('/api/getObservationsFromDB', {
           method: 'POST',
@@ -142,7 +99,6 @@ export default function Home() {
         }
 
         const result = await response.json();
-        console.log('API response:', result);
 
         const processedData = wxTableDataDayFromDB(
           result.observations,
@@ -160,51 +116,7 @@ export default function Home() {
     fetchDataFromDB();
   }, [selectedDate, stationIds]);
 
-  // //Old useEffect for fetching data from the API
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       console.log('Selected Date:', selectedDate);
-
-  //       const start_time_pdt = moment(selectedDate)
-  //         .tz('America/Los_Angeles')
-  //         .startOf('day')
-  //         .add(5, 'hours');
-
-  //       const end_time_pdt = moment(start_time_pdt).add(1, 'day');
-
-  //       console.log(
-  //         'Start time (PDT):',
-  //         start_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-  //       );
-  //       console.log(
-  //         'End time (PDT):',
-  //         end_time_pdt.format('YYYY-MM-DD HH:mm:ss z')
-  //       );
-
-  //       const result = await processAllWxData(
-  //         start_time_pdt,
-  //         end_time_pdt,
-  //         stationIds,
-  //         auth
-  //       );
-
-  //       const processedData = wxTableDataDay(
-  //         result.observationsData,
-  //         result.unitConversions
-  //       );
-
-  //       setObservationsData(processedData);
-  //       setIsLoading(false);
-  //     } catch (error) {
-  //       console.error('Error:', error);
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [submittedDate, selectedDate, stationIds, auth]);
-
+  //Check to see if it's time to run the uploadDataLastHour API call
   useEffect(() => {
     const checkAndRunUpdate = async () => {
       const now = new Date();
@@ -212,7 +124,12 @@ export default function Home() {
 
       const minutes = now.getMinutes();
 
-      if (minutes === 1 || minutes === 5 || minutes === 20) {
+      if (
+        minutes === 1 ||
+        minutes === 5 ||
+        minutes === 20 ||
+        minutes === 30
+      ) {
         console.log(
           `Running update at ${minutes} minute(s) past the hour`
         );
@@ -245,36 +162,19 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
-  //this runs the uploadDataLastHour every 30 secs to check to make sure things are working correctly...
-  // useEffect(() => {
-  //   const checkAndRunUpdate = async () => {
-  //     const now = new Date();
-  //     console.log(`Checking for update at ${now.toLocaleString()}`);
+  const handleStationChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const selectedStationId = e.target.value;
+    setSelectedStation(selectedStationId);
 
-  //     try {
-  //       const response = await fetch('/api/uploadDataLastHour', {
-  //         method: 'POST',
-  //       });
-  //       if (response.ok) {
-  //         setLastUpdateTime(now.toLocaleString());
-  //         console.log('Update successful at', now.toLocaleString());
-  //       } else {
-  //         console.error('Update failed:', await response.text());
-  //       }
-  //     } catch (error) {
-  //       console.error('Error running update:', error);
-  //     }
-  //   };
-
-  //   // Run the check immediately on component mount
-  //   checkAndRunUpdate();
-
-  //   // Then run the check every 30 seconds
-  //   const intervalId = setInterval(checkAndRunUpdate, 30000);
-
-  //   // Clean up the interval on component unmount
-  //   return () => clearInterval(intervalId);
-  // }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
+    if (selectedStationId) {
+      setStationIds([selectedStationId]);
+    } else {
+      // If "All Stations" is selected, include all station IDs
+      setStationIds(stations.map((station) => station.id));
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
@@ -300,17 +200,27 @@ export default function Home() {
           </button>
         </div>
         <div className="flex space-x-1"></div>
-        {/* <div className="flex space-x-1">
-          <button onClick={handleSubmit} className="my-button">
-            Submit Selected Date
-          </button>
-        </div> */}
+
+        {/* New dropdown for station selection */}
+        <select
+          value={selectedStation}
+          onChange={handleStationChange}
+          className="my-button text-xs mb-4"
+        >
+          <option value="">All Stations</option>
+          {stations.map((station) => (
+            <option key={station.id} value={station.id}>
+              {station.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isLoading ? (
-        <p>Loading...</p>
+        <p className="text-gray-500 mt-4">Loading...</p>
       ) : observationsData ? (
         <>
+          {console.log('All observationsData:', observationsData)}
           <DayAveragesTable dayAverages={observationsData} />
         </>
       ) : (
@@ -332,57 +242,33 @@ export default function Home() {
   );
 }
 
-//all stid's for station data....
-// '1',
-// '14',
-// '11',
-// '12',
-// '13',
-// '14',
-// '17',
-// '18',
-// '19',
-// '2',
-// '20',
-// '21',
-// '22',
-// '23',
-// '24',
-// '25',
-// '26',
-// '27',
-// '28',
-// '29',
-// '3',
-// '30',
-// '31',
-// '32',
-// '33',
-// '34',
-// '35',
-// '36',
-// '37',
-// '39',
-// '4',
-// '40',
-// '41',
-// '42',
-// '43',
-// '44',
-// '45',
-// '46',
-// '47',
-// '48',
-// '49',
-// '5',
-// '50',
-// '51',
-// '53',
-// '54',
-// '56',
-// '57',
-// '6',
-// '7',
-// '8',
-// '9',
-// ];
+//this runs the uploadDataLastHour every 30 secs to check to make sure things are working correctly...
+// useEffect(() => {
+//   const checkAndRunUpdate = async () => {
+//     const now = new Date();
+//     console.log(`Checking for update at ${now.toLocaleString()}`);
+
+//     try {
+//       const response = await fetch('/api/uploadDataLastHour', {
+//         method: 'POST',
+//       });
+//       if (response.ok) {
+//         setLastUpdateTime(now.toLocaleString());
+//         console.log('Update successful at', now.toLocaleString());
+//       } else {
+//         console.error('Update failed:', await response.text());
+//       }
+//     } catch (error) {
+//       console.error('Error running update:', error);
+//     }
+//   };
+
+//   // Run the check immediately on component mount
+//   checkAndRunUpdate();
+
+//   // Then run the check every 30 seconds
+//   const intervalId = setInterval(checkAndRunUpdate, 30000);
+
+//   // Clean up the interval on component unmount
+//   return () => clearInterval(intervalId);
+// }, []); // Empty dependency array means this effect runs once on mount and sets up the interval

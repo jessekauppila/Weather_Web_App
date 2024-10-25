@@ -1,7 +1,6 @@
 //maybe I should do the unit conversions in the DB query...
 
 import moment from 'moment-timezone';
-import { convertObservationUnits } from './utils/unitConversions';
 
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
@@ -186,8 +185,8 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => ({
-        cur: numbers[numbers.length - 1] * 39.3701,
-        max: Math.max(...numbers) * 39.3701,
+        cur: numbers[numbers.length - 1],
+        max: Math.max(...numbers),
       })
     );
 
@@ -198,8 +197,7 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => ({
-        total:
-          (Math.max(...numbers) - Math.min(...numbers)) * 39.3701,
+        total: Math.max(...numbers) - Math.min(...numbers),
       })
     );
 
