@@ -59,7 +59,9 @@ export default function Home() {
         }));
         setStations(mappedStations);
         // Set stationIds to include all station IDs initially
-        setStationIds(mappedStations.map((station) => station.id));
+        setStationIds(
+          mappedStations.map((station: any) => station.id)
+        );
       } catch (error) {
         console.error('Error fetching stations:', error);
       }
