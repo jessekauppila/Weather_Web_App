@@ -3,20 +3,25 @@
 import { format, addDays, subDays } from 'date-fns';
 import moment from 'moment-timezone';
 import React, { useState, useEffect } from 'react';
-
 import DayAveragesTable from './dayWxTable';
-
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
+import HourWxTable from './hourWxTable';
+import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 //import { ObservationsData } from './types'; // Add this import
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   // const [submittedDate, setSubmittedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
-  const [observationsData, setObservationsData] = useState<{
+  const [observationsDataDay, setObservationsDataDay] = useState<{
     data: any[];
     title: string;
   } | null>(null);
+  const [observationsDataHour, setObservationsDataHour] = useState<{
+    data: any[];
+    title: string;
+  } | null>(null);
+
   const [lastUpdateTime, setLastUpdateTime] = useState<string | null>(
     null
   );
@@ -102,12 +107,20 @@ export default function Home() {
 
         const result = await response.json();
 
-        const processedData = wxTableDataDayFromDB(
+        const processedDataDay = wxTableDataDayFromDB(
           result.observations,
           result.units
         );
 
-        setObservationsData(processedData);
+        setObservationsDataDay(processedDataDay);
+
+        const processedDataHour = hourWxTableDataFromDB(
+          result.observations,
+          result.units
+        );
+
+        setObservationsDataHour(processedDataHour);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error in fetchDataFromDB:', error);
@@ -220,13 +233,19 @@ export default function Home() {
 
       {isLoading ? (
         <p className="text-gray-500 mt-4">Loading...</p>
-      ) : observationsData ? (
-        <>
-          {console.log('All observationsData:', observationsData)}
-          <DayAveragesTable dayAverages={observationsData} />
-        </>
       ) : (
-        <p>No data available</p>
+        <div className="space-y-8">
+          {observationsDataDay && (
+            <div className="mt-4">
+              <DayAveragesTable dayAverages={observationsDataDay} />
+            </div>
+          )}
+          {observationsDataHour && (
+            <div className="mt-4">
+              <HourWxTable hourAverages={observationsDataHour} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Weather Data Update Status Widget, not working now, probably unnecessary */}

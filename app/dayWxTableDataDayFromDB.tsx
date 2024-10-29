@@ -10,7 +10,7 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   console.log(
-    'observationsData from wxTableDataDayFromDB:',
+    'observationsData from wxTableDataDay:',
     observationsData
   );
 
