@@ -11,7 +11,9 @@ import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  // const [submittedDate, setSubmittedDate] = useState(new Date());
+  const [timeRange, setTimeRange] = useState(1); // Default to 1 day
+  const [useCustomEndDate, setUseCustomEndDate] = useState(false);
+  const [endDate, setEndDate] = useState(addDays(new Date(), 1));
   const [isLoading, setIsLoading] = useState(true);
   const [observationsDataDay, setObservationsDataDay] = useState<{
     data: any[];
@@ -37,9 +39,24 @@ export default function Home() {
     setSelectedDate(new Date(event.target.value));
   };
 
-  // const handleSubmit = () => {
-  //   setSubmittedDate(selectedDate);
-  // };
+  const handleTimeRangeChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = event.target.value;
+    if (value === 'custom') {
+      setUseCustomEndDate(true);
+    } else {
+      setUseCustomEndDate(false);
+      setTimeRange(Number(value));
+      setEndDate(addDays(selectedDate, Number(value)));
+    }
+  };
+
+  const handleEndDateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setEndDate(new Date(event.target.value));
+  };
 
   const handlePrevDay = () => {
     setSelectedDate((prevDate) => subDays(prevDate, 1));
@@ -84,7 +101,9 @@ export default function Home() {
           .startOf('day')
           .add(5, 'hours');
 
-        const end_time_pdt = moment(start_time_pdt).add(1, 'day');
+        const end_time_pdt = useCustomEndDate
+          ? moment(endDate).tz('America/Los_Angeles').endOf('day')
+          : moment(start_time_pdt).add(timeRange, 'days');
 
         const response = await fetch('/api/getObservationsFromDB', {
           method: 'POST',
@@ -129,7 +148,13 @@ export default function Home() {
     };
 
     fetchDataFromDB();
-  }, [selectedDate, stationIds]);
+  }, [
+    selectedDate,
+    timeRange,
+    endDate,
+    useCustomEndDate,
+    stationIds,
+  ]);
 
   //Check to see if it's time to run the uploadDataLastHour API call
   useEffect(() => {
@@ -194,6 +219,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
       <div className="flex flex-col items-center space-y-1">
+        {/* First date picker section */}
         <div className="flex space-x-4">
           <button
             onClick={handlePrevDay}
@@ -214,7 +240,32 @@ export default function Home() {
             Next Day
           </button>
         </div>
+
         <div className="flex space-x-1"></div>
+
+        {/* Add this new section for time range selection */}
+        <div className="flex items-center space-x-2">
+          <select
+            value={useCustomEndDate ? 'custom' : timeRange}
+            onChange={handleTimeRangeChange}
+            className="my-button text-xs"
+          >
+            <option value="1">1 Day</option>
+            <option value="3">3 Days</option>
+            <option value="7">7 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+
+          {useCustomEndDate && (
+            <input
+              type="date"
+              value={format(endDate, 'yyyy-MM-dd')}
+              onChange={handleEndDateChange}
+              className="my-button"
+              min={format(selectedDate, 'yyyy-MM-dd')}
+            />
+          )}
+        </div>
 
         {/* New dropdown for station selection */}
         <select
@@ -240,7 +291,7 @@ export default function Home() {
               <DayAveragesTable dayAverages={observationsDataDay} />
             </div>
           )}
-          {observationsDataHour && (
+          {observationsDataHour && selectedStation && (
             <div className="mt-4">
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
