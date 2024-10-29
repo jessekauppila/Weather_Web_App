@@ -58,14 +58,15 @@ function hourWxTableDataFromDB(
     };
   });
 
-  const title =
-    formattedData.length > 0
-      ? `Hourly Data: ${moment(observationsData[0].date_time).format(
-          'MMM D, YYYY'
-        )}`
-      : 'Hourly Data';
+  const formattedDate = moment(observationsData[0].date_time).format(
+    'MMM D, YYYY'
+  );
+  const stationName = observationsData[0]?.station_name || '';
 
-  return { data: formattedData, title };
+  return {
+    data: formattedData,
+    title: `Hourly Data for ${stationName}: ${formattedDate}`,
+  };
 }
 
 export default hourWxTableDataFromDB;

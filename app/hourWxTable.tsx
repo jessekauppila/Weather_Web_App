@@ -15,19 +15,12 @@ interface DayAveragesTableProps {
 // Similar to dayWxTable.tsx but with modified column structure for hourly data
 const knownCategories = [
   {
-    category: 'Station',
-    columns: [
-      { key: 'Station', displayName: 'Name' },
-      'Elevation',
-    ] as Column[],
-  },
-  {
     category: 'Time',
-    columns: ['Hour'], // Add specific time column
+    columns: ['Hour', 'Station', 'Elevation'],
   },
   {
     category: 'Temperatures',
-    columns: ['Air Temp'], // Single temperature reading instead of min/max
+    columns: ['Air Temp'],
   },
   {
     category: 'Winds',

@@ -118,14 +118,14 @@ body {
 
 .weatherTable th,
 .weatherTable td {
-  border: 0.5px solid #5a7ac2; /* Restore this line */
+  border: 0.5px solid #bebebe; /* Restore this line */
   padding: 6px;
   text-align: center;
 }
 
-/* Increase specificity for header styles */
+/* Changes the color of the header */
 .weatherTable thead th {
-  border: 0.5px solid #49597f;
+  border: 0.5px solid #5670ae;
   font-size: 10px;
   font-weight: bold;
 }
@@ -163,4 +163,31 @@ body {
   font-weight: bold;
   font-size: 14px; /* Adjust size as needed */
   caption-side: top; /* Ensure the caption is at the top of the table */
+}
+
+/* Update the weatherTable td styles */
+.weatherTable td {
+  background-color: #edd7ae; /* Light pastel yellow */
+  color: #797979; /* Darker text color for better readability */
+}
+
+/* Alternate row colors for data cells */
+.weatherTable tr:nth-child(even) td {
+  background-color: #ebca8c; /* Slightly darker pastel yellow */
+  color: #797979; /* Darker text color for better readability */
+}
+
+/* Keep the Station and Elevation cells blue */
+.weatherTable td:nth-child(1),
+.weatherTable td:nth-child(2) {
+  background-color: cornflowerblue;
+  color: lightgrey;
+  border: 0.5px solid #5670ae;
+}
+
+/* Keep the Station and Elevation cells blue for even rows too */
+.weatherTable tr:nth-child(even) td:nth-child(1),
+.weatherTable tr:nth-child(even) td:nth-child(2) {
+  background-color: #79a1ed;
+  color: lightgrey;
 }
