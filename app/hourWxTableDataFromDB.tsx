@@ -36,25 +36,36 @@ function hourWxTableDataFromDB(
     observationsData
   );
 
-  const formatValue = (value: any): string | number => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'number') return value.toFixed(1);
-    return value;
-  };
-
   // Instead of grouping and averaging, process each observation individually
   const formattedData = observationsData.map((obs) => {
+    const formatValueWithUnit = (
+      value: any,
+      unit: string
+    ): string => {
+      if (value === null || value === undefined) return '-';
+      if (typeof value === 'number')
+        return `${value.toFixed(1)} ${unit}`;
+      return value;
+    };
+
     return {
       Station: obs.station_name,
       Elevation: `${obs.elevation} ft`,
+      Day: moment(obs.date_time).format('MMM D'),
       Hour: moment(obs.date_time).format('h:mm A'),
-      'Air Temp': `${formatValue(obs.air_temp)} °F`,
-      'Wind Speed': `${formatValue(obs.wind_speed)} mph`,
-      'Wind Gust': `${formatValue(obs.wind_gust)} mph`,
+      'Air Temp': formatValueWithUnit(obs.air_temp, '°F'),
+      'Wind Speed': formatValueWithUnit(obs.wind_speed, 'mph'),
+      'Wind Gust': formatValueWithUnit(obs.wind_gust, 'mph'),
       'Wind Direction': degreeToCompass(obs.wind_direction),
-      'Snow Depth': `${formatValue(obs.snow_depth)} in`,
-      'Precip Accum': `${formatValue(obs.precip_accum_one_hour)} in`,
-      'Relative Humidity': `${formatValue(obs.relative_humidity)}%`,
+      'Snow Depth': formatValueWithUnit(obs.snow_depth, 'in'),
+      'Precip Accum': formatValueWithUnit(
+        obs.precip_accum_one_hour,
+        'in'
+      ),
+      'Relative Humidity': formatValueWithUnit(
+        obs.relative_humidity,
+        '%'
+      ),
     };
   });
 

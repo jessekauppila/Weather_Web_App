@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 
 interface HourlyAverage {
@@ -15,8 +15,15 @@ interface DayAveragesTableProps {
 // Similar to dayWxTable.tsx but with modified column structure for hourly data
 const knownCategories = [
   {
+    category: 'Station',
+    columns: [
+      { key: 'Station', displayName: 'Name' }, // Change this line
+      'Elevation',
+    ] as Column[],
+  },
+  {
     category: 'Time',
-    columns: ['Hour', 'Station', 'Elevation'],
+    columns: ['Day', 'Hour'],
   },
   {
     category: 'Temperatures',
@@ -39,6 +46,17 @@ type Column = string | { key: string; displayName: string };
 
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [sortedData, setSortedData] = useState(hourAverages.data);
+
+  // Add sorting function
+  useEffect(() => {
+    const sorted = [...hourAverages.data].sort((a, b) => {
+      const stationA = String(a.Station).toLowerCase();
+      const stationB = String(b.Station).toLowerCase();
+      return stationA.localeCompare(stationB);
+    });
+    setSortedData(sorted);
+  }, [hourAverages.data]);
 
   // Memoize the header structure to avoid recalculating on every render
   const headerStructure = useMemo(() => {
@@ -65,11 +83,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   }, [hourAverages.data]);
 
   useEffect(() => {
-    if (
-      !hourAverages.data ||
-      hourAverages.data.length === 0 ||
-      !ref.current
-    )
+    if (!sortedData || sortedData.length === 0 || !ref.current)
       return;
 
     // Derive headers from headerStructure
@@ -167,7 +181,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
 
     const rows = tbodyUpdate
       .selectAll<HTMLTableRowElement, HourlyAverage>('tr')
-      .data(hourAverages.data);
+      .data(sortedData);
     const rowsEnter = rows
       .enter()
       .append('tr')
@@ -194,7 +208,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
-  }, [hourAverages, headerStructure]);
+  }, [sortedData, headerStructure]);
 
   return (
     <div className="table-container">
