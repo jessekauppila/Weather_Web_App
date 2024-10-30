@@ -281,21 +281,13 @@ input[type='datetime-local']:focus {
     width: 100vw; /* Full viewport width */
   }
 
-  /* Make the first two columns (Station and Elevation) sticky */
+  /* Make the first column (Station) sticky */
   .weatherTable td:nth-child(1),
-  .weatherTable td:nth-child(2),
-  .weatherTable th:nth-child(1),
-  .weatherTable th:nth-child(2) {
+  .weatherTable th:nth-child(1) {
     position: sticky;
     left: 0;
     z-index: 1;
     background-color: cornflowerblue; /* Match your existing color */
-  }
-
-  /* Second column needs to be positioned after the first */
-  .weatherTable td:nth-child(2),
-  .weatherTable th:nth-child(2) {
-    left: 120px; /* Adjust based on your first column width */
   }
 
   /* Ensure headers stay on top */
@@ -307,6 +299,5 @@ input[type='datetime-local']:focus {
   .weatherTable td,
   .weatherTable th {
     padding: 4px 8px;
-    white-space: nowrap;
   }
 }
