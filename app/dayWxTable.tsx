@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
+import { Tooltip } from 'react-tooltip';
 
 interface DayAverage {
   [key: string]: string | number;
@@ -13,6 +14,32 @@ interface DayAveragesTableProps {
     title: string;
   };
 }
+
+// Add this near the top of your file
+const measurementDescriptions: Record<string, string> = {
+  'Cur Air Temp':
+    'Current Air Temperature - The most recent temperature during selected period',
+  'Air Temp Min':
+    'Minimum Air Temperature - The lowest temperature during selected period',
+  'Air Temp Max':
+    'Maximum Air Temperature - The highest temperature during selected period',
+  'Wind Speed Avg':
+    'Average Wind Speed - Average of wind speed readings during selected period',
+  'Cur Wind Speed':
+    'Current Wind Speed - The most recent wind speed reading',
+  'Max Wind Gust':
+    'Maximum Wind Gust - The highest wind speed recorded',
+  'Wind Direction':
+    'Predominant Wind Direction - The average of all wind direction readings',
+  'Total Snow Depth Change':
+    'Net Change in Snow Depth - The difference between final and initial readings',
+  '24h Snow Accumulation':
+    'Total New Snow - Calculated using the difference between the highest and lowest snow depth during selected period using filtered measurements to remove outliers ',
+  'Precip Accum One Hour':
+    'Total Liquid Precipitation - Sum of hourly precipitation readings',
+  'Relative Humidity':
+    'Current Relative Humidity - The most recent humidity reading',
+};
 
 // Define the header structure for known categories
 const knownCategories = [
@@ -159,13 +186,18 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
       .enter()
       .append('th')
       .merge(headerCells as any)
+      .attr('data-tooltip-id', 'measurement-tooltip')
+      .attr('data-tooltip-content', (d) => {
+        const key = typeof d === 'string' ? d : d.displayName;
+        return measurementDescriptions[key] || '';
+      })
       .text((d) => {
         if (typeof d === 'string') {
           return d;
         } else if (d && typeof d === 'object' && 'displayName' in d) {
           return d.displayName;
         } else {
-          return ''; // or some default value
+          return '';
         }
       });
 
@@ -212,6 +244,11 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
   return (
     <div className="table-container">
       <div ref={ref}></div>
+      <Tooltip
+        id="measurement-tooltip"
+        place="top"
+        className="measurement-tooltip"
+      />
     </div>
   );
 }
