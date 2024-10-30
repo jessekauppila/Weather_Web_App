@@ -2,6 +2,36 @@
 
 import moment from 'moment-timezone';
 
+function calculateMean(snowDepths: number[]): number {
+  return (
+    snowDepths.reduce((acc, value) => acc + value, 0) /
+    snowDepths.length
+  );
+}
+
+function calculateStandardDeviation(
+  snowDepths: number[],
+  mean: number
+): number {
+  const variance =
+    snowDepths.reduce(
+      (acc, value) => acc + Math.pow(value - mean, 2),
+      0
+    ) / snowDepths.length;
+  return Math.sqrt(variance);
+}
+
+function filterOutliers(
+  snowDepths: number[],
+  threshold = 1
+): number[] {
+  const mean = calculateMean(snowDepths);
+  const stdDev = calculateStandardDeviation(snowDepths, mean);
+  return snowDepths.filter(
+    (value) => Math.abs(value - mean) <= threshold * stdDev
+  );
+}
+
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
   units: Array<Record<string, string>>
@@ -179,26 +209,40 @@ function wxTableDataDayFromDB(
     processNumericField(
       'snow_depth',
       {
-        cur: 'Snow Depth',
-        max: 'Snow Depth Max',
+        avg: 'Total Snow Depth Change',
+        //max: 'Snow Depth Max',
       },
       'in',
       1,
-      (numbers) => ({
-        cur: numbers[numbers.length - 1],
-        max: Math.max(...numbers),
-      })
+      (numbers) => {
+        const firstValue = numbers[0];
+        const lastValue = numbers[numbers.length - 1];
+        const change = lastValue - firstValue;
+        return {
+          avg: change,
+          max: Math.max(...numbers),
+        };
+      },
+      (value, unit) => {
+        const num = parseFloat(value);
+        return num > 0 ? `+${value} ${unit}` : `${value} ${unit}`;
+      }
     );
 
     // Process 24h snow depth
     processNumericField(
       'snow_depth_24h',
-      { total: 'Snow Depth 24h Total' },
+      { total: '24h Snow Accumulation' },
       'in',
       1,
-      (numbers) => ({
-        total: Math.max(...numbers) - Math.min(...numbers),
-      })
+      (numbers) => {
+        const filteredNumbers = filterOutliers(numbers);
+        return {
+          total:
+            Math.max(...filteredNumbers) -
+            Math.min(...filteredNumbers),
+        };
+      }
     );
 
     // Process relative humidity
@@ -289,8 +333,8 @@ function wxTableDataDayFromDB(
 
   const title =
     formattedData.length > 0
-      ? `Station Data: ${formattedData[0]['Start Date Time']} - ${formattedData[0]['End Date Time']}`
-      : 'Station Data';
+      ? `Composite Data: ${formattedData[0]['Start Date Time']} - ${formattedData[0]['End Date Time']}`
+      : 'Composite Data';
 
   return { data: formattedData, title };
 }

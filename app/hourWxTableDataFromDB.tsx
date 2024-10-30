@@ -57,7 +57,8 @@ function hourWxTableDataFromDB(
       'Wind Speed': formatValueWithUnit(obs.wind_speed, 'mph'),
       'Wind Gust': formatValueWithUnit(obs.wind_gust, 'mph'),
       'Wind Direction': degreeToCompass(obs.wind_direction),
-      'Snow Depth': formatValueWithUnit(obs.snow_depth, 'in'),
+      'Total Snow Depth': formatValueWithUnit(obs.snow_depth, 'in'),
+      '24h Snow Depth': formatValueWithUnit(obs.snow_depth_24h, 'in'),
       'Precip Accum': formatValueWithUnit(
         obs.precip_accum_one_hour,
         'in'
@@ -69,14 +70,18 @@ function hourWxTableDataFromDB(
     };
   });
 
-  const formattedDate = moment(observationsData[0].date_time).format(
-    'MMM D, YYYY'
+  // Get the first and last dates from the observations with times
+  const startDate = moment(observationsData[0].date_time).format(
+    'MMM D, YYYY h:mm A'
   );
+  const endDate = moment(
+    observationsData[observationsData.length - 1].date_time
+  ).format('MMM D, YYYY h:mm A');
   const stationName = observationsData[0]?.station_name || '';
 
   return {
     data: formattedData,
-    title: `Hourly Data for ${stationName}: ${formattedDate}`,
+    title: `${stationName} Hourly Data: ${startDate} to ${endDate}`,
   };
 }
 

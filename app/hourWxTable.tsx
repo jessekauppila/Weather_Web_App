@@ -35,7 +35,7 @@ const knownCategories = [
   },
   {
     category: 'Precipitation',
-    columns: ['Snow Depth', 'Precip Accum'],
+    columns: ['Total Snow Depth', '24h Snow Depth', 'Precip Accum'],
   },
   { category: 'RH', columns: ['Relative Humidity'] },
 ];
