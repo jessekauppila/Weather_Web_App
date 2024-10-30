@@ -160,14 +160,11 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .enter()
       .append('th')
       .merge(headerCells as any)
-      .text((d) => {
+      .text((d: Column) => {
         if (typeof d === 'string') {
           return d;
-        } else if (d && typeof d === 'object' && 'displayName' in d) {
-          return d.displayName;
-        } else {
-          return ''; // or some default value
         }
+        return d.displayName;
       });
 
     headerCells.exit().remove();
