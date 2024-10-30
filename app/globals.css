@@ -99,6 +99,7 @@ body {
   overflow-x: auto;
   border: 1px solid #ccc;
   width: 100%;
+  position: relative;
 }
 
 .weatherTable {
@@ -244,6 +245,6 @@ body {
 }
 
 /* Prevent layout shift during transition */
-.table-container {
-  min-height: 200px; /* Adjust based on your table's typical height */
+.table-container:not(:empty) {
+  min-height: 150px;
 }
