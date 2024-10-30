@@ -95,9 +95,9 @@ body {
 /* Weather Table Styles */
 .table-container {
   width: 100%;
-  margin-bottom: 1rem;
-  overflow-y: auto;
-  overflow-x: auto;
+  max-height: 70vh; /* Adjust this value to control table height */
+  overflow-y: auto; /* This adds vertical scrolling */
+  overflow-x: auto; /* This adds horizontal scrolling if needed */
 }
 
 .weatherTable {
@@ -245,4 +245,28 @@ body {
 /* Prevent layout shift during transition */
 .table-container {
   position: relative;
+}
+
+/* Add these styles after your existing classes */
+select,
+button {
+  @apply rounded-lg border-none; /* rounded-lg gives an 8px border radius */
+}
+
+/* Optional: Add a subtle focus style */
+select:focus,
+button:focus {
+  @apply outline-none ring-2 ring-opacity-20 ring-gray-400;
+}
+
+/* Style all form inputs, including date pickers */
+input[type='date'],
+input[type='datetime-local'] {
+  @apply rounded-lg border-none;
+}
+
+/* Optional: Add the same focus style as other elements */
+input[type='date']:focus,
+input[type='datetime-local']:focus {
+  @apply outline-none ring-2 ring-opacity-20 ring-gray-400;
 }
