@@ -181,7 +181,7 @@ body {
 .weatherTable td:nth-child(2) {
   background-color: cornflowerblue;
   color: lightgrey;
-  border: 0.5px solid #5670ae;
+  border: 0.5px solid #6e90cf;
 }
 
 /* Keep the Station and Elevation cells blue for even rows too */
