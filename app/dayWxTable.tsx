@@ -242,8 +242,7 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
   }, [dayAverages, headerStructure]);
 
   return (
-    <div className="table-container">
-      <div ref={ref}></div>
+    <div className="table-container" ref={ref}>
       <Tooltip
         id="measurement-tooltip"
         place="top"

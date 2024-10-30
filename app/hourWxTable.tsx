@@ -193,7 +193,8 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .selectAll<HTMLTableDataCellElement, any>('td')
       .data((d) =>
         headerStructure.flatMap((category) =>
-          category.columns.map((col) => {
+          category.columns.map((col: Column) => {
+            // Add the type annotation here
             const key = typeof col === 'string' ? col : col.key;
             return { key, value: d[key] };
           })
@@ -207,11 +208,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
     cells.exit().remove();
   }, [sortedData, headerStructure]);
 
-  return (
-    <div className="table-container">
-      <div ref={ref}></div>
-    </div>
-  );
+  return <div className="table-container" ref={ref}></div>;
 }
 
 export default HourWxTable;
