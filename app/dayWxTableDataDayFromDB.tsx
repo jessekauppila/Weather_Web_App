@@ -2,7 +2,6 @@
 
 import moment from 'moment-timezone';
 
-
 function calculateMean(snowDepths: number[]): number {
   return (
     snowDepths.reduce((acc, value) => acc + value, 0) /
@@ -334,8 +333,24 @@ function wxTableDataDayFromDB(
 
   const title =
     formattedData.length > 0
-      ? `Composite Data: ${formattedData[0]['Start Date Time']} - ${formattedData[0]['End Date Time']}`
-      : 'Composite Data';
+      ? (() => {
+          const startMoment = moment(
+            formattedData[0]['Start Date Time']
+          );
+          const endMoment = moment(formattedData[0]['End Date Time']);
+          const startDate = startMoment.format('MMM D');
+          const endDate = endMoment.format('MMM D');
+          const startTime = startMoment.format('h:mm A');
+          const endTime = endMoment.format('h:mm A');
+
+          const timeRange =
+            startDate === endDate
+              ? `${startDate}, ${startTime} - ${endTime}`
+              : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
+
+          return `Summary - ${timeRange}`;
+        })()
+      : 'Summary -';
 
   return { data: formattedData, title };
 }

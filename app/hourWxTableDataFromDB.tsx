@@ -84,18 +84,27 @@ function hourWxTableDataFromDB(
     };
   });
 
-  // Get the first and last dates from the observations with times
-  const startDate = moment(observationsData[0].date_time).format(
-    'MMM D, YYYY h:mm A'
-  );
-  const endDate = moment(
+  // Get the dates and format them
+  const startMoment = moment(observationsData[0].date_time);
+  const endMoment = moment(
     observationsData[observationsData.length - 1].date_time
-  ).format('MMM D, YYYY h:mm A');
+  );
+  const startDate = startMoment.format('MMM D');
+  const endDate = endMoment.format('MMM D');
+  const startTime = startMoment.format('h:mm A');
+  const endTime = endMoment.format('h:mm A');
   const stationName = observationsData[0]?.station_name || '';
+
+  // Create title based on whether dates are the same
+  const timeRange =
+    startDate === endDate
+      ? `${startDate}, ${startTime} - ${endTime}`
+      : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
 
   return {
     data: formattedData,
-    title: `${stationName}, Hourly Data: ${startDate} - ${endDate}`,
+    // title: `${stationName}, Hourly: ${timeRange}`,
+    title: `Hourly - ${stationName}`,
   };
 }
 

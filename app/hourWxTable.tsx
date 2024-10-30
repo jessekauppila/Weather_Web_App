@@ -14,13 +14,13 @@ interface DayAveragesTableProps {
 
 // Similar to dayWxTable.tsx but with modified column structure for hourly data
 const knownCategories = [
-  {
-    category: 'Station',
-    columns: [
-      { key: 'Station', displayName: 'Name' }, // Change this line
-      'Elevation',
-    ] as Column[],
-  },
+  // {
+  //   category: 'Station',
+  //   columns: [
+  //     { key: 'Station', displayName: 'Name' }, // Change this line
+  //     'Elevation',
+  //   ] as Column[],
+  // },
   {
     category: 'Time',
     columns: ['Day', 'Hour'],

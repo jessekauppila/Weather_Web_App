@@ -310,23 +310,14 @@ export default function Home() {
           <p className="text-gray-500">Loading...</p>
         </div>
       ) : (
-        <div
-          className={`
-            transition-all duration-300 ease-in-out
-            ${
-              isStationChanging || isPending
-                ? 'opacity-0'
-                : 'opacity-100'
-            }
-          `}
-        >
+        <div className="tables-wrapper">
           {observationsDataDay && (
-            <div className="mt-4">
+            <div className="table-container mt-4">
               <DayAveragesTable dayAverages={observationsDataDay} />
             </div>
           )}
           {observationsDataHour && selectedStation && (
-            <div className="mt-4">
+            <div className="table-container mt-4">
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}
