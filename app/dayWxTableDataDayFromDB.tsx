@@ -331,6 +331,13 @@ function wxTableDataDayFromDB(
     formattedData
   );
 
+  // Sort the formattedData array by station name
+  formattedData.sort((a, b) => {
+    const stationA = String(a.Station).toLowerCase();
+    const stationB = String(b.Station).toLowerCase();
+    return stationA.localeCompare(stationB);
+  });
+
   const title =
     formattedData.length > 0
       ? (() => {
