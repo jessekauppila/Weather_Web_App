@@ -31,6 +31,14 @@ function hourWxTableDataFromDB(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
+  // Add safety check
+  if (!observationsData || observationsData.length === 0) {
+    return {
+      data: [],
+      title: 'No data available',
+    };
+  }
+
   console.log(
     'observationsData from hourWxTableData:',
     observationsData
@@ -43,9 +51,15 @@ function hourWxTableDataFromDB(
       unit: string
     ): string => {
       if (value === null || value === undefined) return '-';
-      if (typeof value === 'number')
-        return `${value.toFixed(1)} ${unit}`;
-      return value;
+      if (typeof value === 'number' || !isNaN(Number(value))) {
+        const numValue = Number(value);
+        // Special handling for temperature, humidity, and wind speeds
+        if (unit === '°F' || unit === '%' || unit === 'mph') {
+          return `${Math.round(numValue)}${unit}`;
+        }
+        return `${numValue.toFixed(1)} ${unit}`;
+      }
+      return '-';
     };
 
     return {
@@ -54,8 +68,8 @@ function hourWxTableDataFromDB(
       Day: moment(obs.date_time).format('MMM D'),
       Hour: moment(obs.date_time).format('h:mm A'),
       'Air Temp': formatValueWithUnit(obs.air_temp, '°F'),
-      'Wind Speed': formatValueWithUnit(obs.wind_speed, 'mph'),
-      'Wind Gust': formatValueWithUnit(obs.wind_gust, 'mph'),
+      'Wind Speed': formatValueWithUnit(obs.wind_speed, ' mph'),
+      'Wind Gust': formatValueWithUnit(obs.wind_gust, ' mph'),
       'Wind Direction': degreeToCompass(obs.wind_direction),
       'Total Snow Depth': formatValueWithUnit(obs.snow_depth, 'in'),
       '24h Snow Depth': formatValueWithUnit(obs.snow_depth_24h, 'in'),
