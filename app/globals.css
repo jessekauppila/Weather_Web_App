@@ -270,3 +270,43 @@ input[type='date']:focus,
 input[type='datetime-local']:focus {
   @apply outline-none ring-2 ring-opacity-20 ring-gray-400;
 }
+
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+  .table-container {
+    max-height: 80vh; /* Larger viewing area on mobile */
+    font-size: 12px; /* Slightly smaller text */
+    margin: 0;
+    padding: 0;
+    width: 100vw; /* Full viewport width */
+  }
+
+  /* Make the first two columns (Station and Elevation) sticky */
+  .weatherTable td:nth-child(1),
+  .weatherTable td:nth-child(2),
+  .weatherTable th:nth-child(1),
+  .weatherTable th:nth-child(2) {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: cornflowerblue; /* Match your existing color */
+  }
+
+  /* Second column needs to be positioned after the first */
+  .weatherTable td:nth-child(2),
+  .weatherTable th:nth-child(2) {
+    left: 120px; /* Adjust based on your first column width */
+  }
+
+  /* Ensure headers stay on top */
+  .weatherTable thead th {
+    z-index: 2;
+  }
+
+  /* Adjust cell padding for mobile */
+  .weatherTable td,
+  .weatherTable th {
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+}
