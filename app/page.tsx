@@ -312,13 +312,13 @@ export default function Home() {
       ) : (
         <div
           className={`
-          transition-all duration-300 ease-in-out
-          ${
-            isStationChanging || isPending
-              ? 'opacity-0'
-              : 'opacity-100'
-          }
-        `}
+            transition-all duration-300 ease-in-out
+            ${
+              isStationChanging || isPending
+                ? 'opacity-0'
+                : 'opacity-100'
+            }
+          `}
         >
           {observationsDataDay && (
             <div className="mt-4">
