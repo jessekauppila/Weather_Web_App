@@ -2,6 +2,7 @@
 
 import moment from 'moment-timezone';
 
+
 function calculateMean(snowDepths: number[]): number {
   return (
     snowDepths.reduce((acc, value) => acc + value, 0) /

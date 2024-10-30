@@ -118,7 +118,7 @@ body {
 
 .weatherTable th,
 .weatherTable td {
-  border: 0.5px solid #bebebe; /* Restore this line */
+  border: 0.2px solid #dccba9;
   padding: 6px;
   text-align: center;
 }
@@ -190,4 +190,20 @@ body {
 .weatherTable tr:nth-child(even) td:nth-child(2) {
   background-color: #79a1ed;
   color: lightgrey;
+}
+
+.measurement-tooltip {
+  max-width: 300px !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  color: #797979 !important;
+  border-radius: 4px !important;
+  z-index: 1000 !important;
+}
+
+/* For getting the tooltip to show above the table */
+.table-container {
+  position: relative;
 }
