@@ -2,7 +2,7 @@
 
 import { format, addDays, subDays } from 'date-fns';
 import moment from 'moment-timezone';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
@@ -32,6 +32,9 @@ export default function Home() {
   >([]);
   const [selectedStation, setSelectedStation] = useState<string>('');
   const [stationIds, setStationIds] = useState<string[]>([]);
+
+  // Add loading state for station change
+  const [isStationChanging, setIsStationChanging] = useState(false);
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -203,19 +206,25 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleStationChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedStationId = e.target.value;
-    setSelectedStation(selectedStationId);
+  // Modify the handleStationChange function
+  const handleStationChange = useCallback(
+    async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setIsStationChanging(true);
+      const selectedStationId = e.target.value;
+      setSelectedStation(selectedStationId);
 
-    if (selectedStationId) {
-      setStationIds([selectedStationId]);
-    } else {
-      // If "All Stations" is selected, include all station IDs
-      setStationIds(stations.map((station) => station.id));
-    }
-  };
+      // Use requestAnimationFrame to defer state update
+      requestAnimationFrame(() => {
+        if (selectedStationId) {
+          setStationIds([selectedStationId]);
+        } else {
+          setStationIds(stations.map((station) => station.id));
+        }
+        setIsStationChanging(false);
+      });
+    },
+    [stations]
+  );
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
@@ -283,17 +292,19 @@ export default function Home() {
         </select>
       </div>
 
-      {isLoading ? (
-        <p className="text-gray-500 mt-4">Loading...</p>
+      {isLoading || isStationChanging ? (
+        <div className="flex items-center justify-center mt-4">
+          <p className="text-gray-500">Loading...</p>
+        </div>
       ) : (
         <div className="space-y-8">
           {observationsDataDay && (
-            <div className="mt-4">
+            <div className="mt-4 transition-opacity duration-300 ease-in-out">
               <DayAveragesTable dayAverages={observationsDataDay} />
             </div>
           )}
           {observationsDataHour && selectedStation && (
-            <div className="mt-4">
+            <div className="mt-4 transition-opacity duration-300 ease-in-out">
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}

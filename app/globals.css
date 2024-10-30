@@ -207,3 +207,11 @@ body {
 .table-container {
   position: relative;
 }
+
+.transition-opacity {
+  opacity: 1;
+}
+
+.transition-opacity.loading {
+  opacity: 0.5;
+}
