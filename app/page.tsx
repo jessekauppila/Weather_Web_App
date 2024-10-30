@@ -2,7 +2,12 @@
 
 import { format, addDays, subDays } from 'date-fns';
 import moment from 'moment-timezone';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useTransition,
+} from 'react';
 import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
@@ -35,6 +40,8 @@ export default function Home() {
 
   // Add loading state for station change
   const [isStationChanging, setIsStationChanging] = useState(false);
+
+  const [isPending, startTransition] = useTransition();
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -208,20 +215,26 @@ export default function Home() {
 
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
-    async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
       setIsStationChanging(true);
       const selectedStationId = e.target.value;
+
+      // Immediate UI update
       setSelectedStation(selectedStationId);
 
-      // Use requestAnimationFrame to defer state update
-      requestAnimationFrame(() => {
+      // Defer the expensive state update
+      startTransition(() => {
         if (selectedStationId) {
           setStationIds([selectedStationId]);
         } else {
           setStationIds(stations.map((station) => station.id));
         }
-        setIsStationChanging(false);
       });
+
+      // Clear loading state after a brief delay
+      setTimeout(() => {
+        setIsStationChanging(false);
+      }, 300);
     },
     [stations]
   );
@@ -297,14 +310,23 @@ export default function Home() {
           <p className="text-gray-500">Loading...</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div
+          className={`
+          transition-all duration-300 ease-in-out
+          ${
+            isStationChanging || isPending
+              ? 'opacity-0'
+              : 'opacity-100'
+          }
+        `}
+        >
           {observationsDataDay && (
-            <div className="mt-4 transition-opacity duration-300 ease-in-out">
+            <div className="mt-4">
               <DayAveragesTable dayAverages={observationsDataDay} />
             </div>
           )}
           {observationsDataHour && selectedStation && (
-            <div className="mt-4 transition-opacity duration-300 ease-in-out">
+            <div className="mt-4">
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}

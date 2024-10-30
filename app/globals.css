@@ -215,3 +215,35 @@ body {
 .transition-opacity.loading {
   opacity: 0.5;
 }
+
+/* Smooth transition styles */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+/* Optional: Add transform to make transition feel smoother */
+.transform {
+  transform: translateY(0);
+}
+
+.translate-y-4 {
+  transform: translateY(1rem);
+}
+
+/* Prevent layout shift during transition */
+.table-container {
+  min-height: 200px; /* Adjust based on your table's typical height */
+}

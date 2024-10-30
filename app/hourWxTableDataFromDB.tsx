@@ -95,7 +95,7 @@ function hourWxTableDataFromDB(
 
   return {
     data: formattedData,
-    title: `${stationName} Hourly Data: ${startDate} to ${endDate}`,
+    title: `${stationName}, Hourly Data: ${startDate} - ${endDate}`,
   };
 }
 
