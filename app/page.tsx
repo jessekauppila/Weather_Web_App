@@ -305,7 +305,7 @@ export default function Home() {
         </select>
       </div>
 
-      {isLoading || isStationChanging ? (
+      {isLoading || isStationChanging || isPending ? (
         <div className="flex items-center justify-center mt-4">
           <p className="text-gray-500">Loading...</p>
         </div>
