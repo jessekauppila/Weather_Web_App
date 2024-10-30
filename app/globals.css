@@ -94,12 +94,10 @@ body {
 
 /* Weather Table Styles */
 .table-container {
-  max-height: 800px;
+  width: 100%;
+  margin-bottom: 1rem;
   overflow-y: auto;
   overflow-x: auto;
-  border: 1px solid #ccc;
-  width: 100%;
-  position: relative;
 }
 
 .weatherTable {
@@ -245,6 +243,6 @@ body {
 }
 
 /* Prevent layout shift during transition */
-.table-container:not(:empty) {
-  min-height: 150px;
+.table-container {
+  position: relative;
 }
