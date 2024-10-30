@@ -39,9 +39,9 @@ const knownCategories = [
   {
     category: 'Estimated Precipitation',
     columns: [
-      'Snow Depth',
-      'Snow Depth Max',
-      'Snow Depth 24h Total',
+      'Total Snow Depth Change',
+      //'Snow Depth Max',
+      '24h Snow Accumulation',
       'Precip Accum One Hour',
     ],
   },

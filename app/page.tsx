@@ -48,7 +48,8 @@ export default function Home() {
     } else {
       setUseCustomEndDate(false);
       setTimeRange(Number(value));
-      setEndDate(addDays(selectedDate, Number(value)));
+      setSelectedDate(subDays(new Date(), Number(value) - 1));
+      setEndDate(new Date());
     }
   };
 
