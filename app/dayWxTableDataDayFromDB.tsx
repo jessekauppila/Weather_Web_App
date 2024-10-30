@@ -335,9 +335,14 @@ function wxTableDataDayFromDB(
     formattedData.length > 0
       ? (() => {
           const startMoment = moment(
-            formattedData[0]['Start Date Time']
+            formattedData[0]['Start Date Time'],
+            'MMM D, YYYY, h:mm a'
           );
-          const endMoment = moment(formattedData[0]['End Date Time']);
+          const endMoment = moment(
+            formattedData[0]['End Date Time'],
+            'MMM D, YYYY, h:mm a'
+          );
+
           const startDate = startMoment.format('MMM D');
           const endDate = endMoment.format('MMM D');
           const startTime = startMoment.format('h:mm A');

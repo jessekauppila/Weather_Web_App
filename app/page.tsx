@@ -86,10 +86,13 @@ export default function Home() {
           throw new Error('Failed to fetch stations');
         }
         const data = await response.json();
-        const mappedStations = data.map((station: any) => ({
-          id: station.stid,
-          name: station.station_name,
-        }));
+        const mappedStations = data
+          .map((station: any) => ({
+            id: station.stid,
+            name: station.station_name,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
         setStations(mappedStations);
         // Set stationIds to include all station IDs initially
         setStationIds(
