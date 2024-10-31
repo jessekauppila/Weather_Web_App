@@ -1,5 +1,5 @@
 import fetchHrWeatherData from './getHrWxWithID';
-import { WeatherData } from './fetchNWACweather';
+//import { WeatherData } from './fetchNWACweather';
 import moment from 'moment-timezone';
 
 interface StationObject {
@@ -26,6 +26,17 @@ interface StationObject {
 //   // Add any other properties that might be present in your data
 // };
 let observationsData: any[] = [];
+
+// Add this helper function
+const validatePrecipitation = (
+  value: number | null
+): number | null => {
+  if (value === null) return null;
+  // Ensure precipitation is not negative
+  if (value < 0) return 0;
+  // Round to 2 decimal places
+  return Math.round(value * 100) / 100;
+};
 
 async function processAllWxData(
   start_time_pst: moment.Moment,
@@ -128,6 +139,13 @@ async function processAllWxData(
               newStationInfo[key] = stationObject.time_zone ?? '';
             } else if (key === 'source') {
               newStationInfo[key] = stationObject.source ?? '';
+            } else if (key === 'precip_accum_one_hour') {
+              const precipValues = observations[key] || [];
+              newStationInfo[key] = precipValues.map((value) => {
+                const parsed = parseFloat(value);
+                // Check if the value is a valid number and not negative
+                return !isNaN(parsed) && parsed >= 0 ? parsed : null;
+              });
             } else {
               const observationValues = observations[key] || [];
               newStationInfo[key] =
@@ -147,6 +165,27 @@ async function processAllWxData(
     //   JSON.stringify(observationsData, null, 2)
     // );
     //console.log('unitConversions:', unitConversions);
+
+    const logAllKeys = (data: any) => {
+      const allKeys = new Set<string>();
+      for (const stationKey in data) {
+        const stationData = data[stationKey];
+        if (stationData.STATION) {
+          stationData.STATION.forEach((station: StationObject) => {
+            Object.keys(station.observations).forEach((key) => {
+              allKeys.add(key);
+            });
+          });
+        }
+      }
+      console.log(
+        'All available observation keys:',
+        Array.from(allKeys)
+      );
+    };
+
+    logAllKeys(data);
+
     return { observationsData, unitConversions };
   } catch (error) {
     console.error('Error in processAllWxData:', error);
