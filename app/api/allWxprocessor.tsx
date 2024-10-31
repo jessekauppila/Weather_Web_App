@@ -1,3 +1,5 @@
+//one of the main functions used to process hourly weather data
+
 import fetchHrWeatherData from './getHrWxWithID';
 //import { WeatherData } from './fetchNWACweather';
 import moment from 'moment-timezone';
