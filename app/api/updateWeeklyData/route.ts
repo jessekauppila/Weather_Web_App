@@ -3,6 +3,14 @@
 
 //this is is used to update weekly or daily data to the database, its much slower than the batched version, but good for short periods of time
 
+//Not I modified this to use the stationsTest and observationsTest tables for testing
+// try {
+//   const insertResult = await client.sql`
+//     WITH station_id AS (
+//       SELECT id FROM stationsTest WHERE stid = ${observation.stid}
+//     )
+//     INSERT INTO observationsTest (
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
@@ -24,7 +32,7 @@ async function handleRequest(request: NextRequest) {
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
+    const start_time_pst = moment(end_time_pst).subtract(36, 'hours');
 
     // Define station IDs
     const stids = [
@@ -91,10 +99,10 @@ async function handleRequest(request: NextRequest) {
         processAllWxData(start_time_pst, end_time_pst, stids, auth)
       );
       observationsData = result.observationsData;
-      console.log(
-        'Fetched observations data:',
-        JSON.stringify(observationsData, null, 2)
-      );
+      // console.log(
+      //   'Fetched observations data:',
+      //   JSON.stringify(observationsData, null, 2)
+      // );
     } catch (error) {
       console.error(
         'Error fetching weather data after retries:',
@@ -118,11 +126,28 @@ async function handleRequest(request: NextRequest) {
       );
     }
 
+    console.log(
+      'Available keys in first observation:',
+      Object.keys(observationsData[0])
+    );
+
+    // Also log a sample of the precipitation data
+    const sampleObservation = observationsData[0];
+    console.log('Precipitation data sample:', {
+      keys: Object.keys(sampleObservation),
+      precip: sampleObservation.precip_accum_one_hour,
+      precipitation: sampleObservation.precipitation, // Check if this key exists
+      precip_accum: sampleObservation.precip_accum, // Check if this key exists
+      // Log any other potential precipitation-related keys
+    });
+
     for (const observation of observationsData) {
-      console.log(
-        'Observation:',
-        JSON.stringify(observation, null, 2)
-      );
+      //////////// THIS LOG SHOULD PROBABLY GO BACK IN, SUPER USEFUL //////////////////
+
+      // console.log(
+      //   'Observation:',
+      //   JSON.stringify(observation, null, 2)
+      // );
 
       if (!Array.isArray(observation.date_time)) {
         console.error(
@@ -133,17 +158,46 @@ async function handleRequest(request: NextRequest) {
       }
 
       // Helper function to safely get a value from an array or return null
-      const safeGetArrayValue = (arr: any[], index: number) =>
-        Array.isArray(arr) && arr.length > index ? arr[index] : null;
+      const safeGetArrayValue = (
+        arr: any[],
+        index: number,
+        fieldName: string
+      ) => {
+        //   console.log('Array value:', {
+        //     field: fieldName,
+        //     value:
+        //       Array.isArray(arr) && arr.length > index
+        //         ? arr[index]
+        //         : null,
+        //     arrayLength: arr?.length,
+        //     fullArray: Array.isArray(arr)
+        //       ? arr.map((value, idx) => ({
+        //           index: idx,
+        //           value: value,
+        //           timestamp: observation.date_time[idx],
+        //         }))
+        //       : 'not an array',
+        //   }
+        // );
+        return Array.isArray(arr) && arr.length > index
+          ? arr[index]
+          : null;
+      };
 
       // Helper function to safely parse a numeric value
       const safeParseFloat = (
-        value: string | null | undefined
+        value: string | null | undefined | any[]
       ): number | null => {
         if (value === null || value === undefined || value === '') {
           return null;
         }
-        const parsed = parseFloat(value);
+        // Handle arrays by taking first element or returning null
+        if (Array.isArray(value)) {
+          return value.length > 0
+            ? parseFloat(String(value[0]))
+            : null;
+        }
+        const parsed = parseFloat(String(value));
         return isNaN(parsed) ? null : parsed;
       };
 
@@ -161,76 +215,157 @@ async function handleRequest(request: NextRequest) {
 
         // Get the corresponding values for this timestamp
         const air_temp = safeParseFloat(
-          safeGetArrayValue(observation.air_temp, i)
+          safeGetArrayValue(observation.air_temp, i, 'air_temp')
         );
         const wind_speed = safeParseFloat(
-          safeGetArrayValue(observation.wind_speed, i)
+          safeGetArrayValue(observation.wind_speed, i, 'wind_speed')
         );
         const wind_gust = safeParseFloat(
-          safeGetArrayValue(observation.wind_gust, i)
+          safeGetArrayValue(observation.wind_gust, i, 'wind_gust')
         );
         const wind_direction = safeParseFloat(
-          safeGetArrayValue(observation.wind_direction, i)
+          safeGetArrayValue(
+            observation.wind_direction,
+            i,
+            'wind_direction'
+          )
         );
         const snow_depth = safeParseFloat(
-          safeGetArrayValue(observation.snow_depth, i)
+          safeGetArrayValue(observation.snow_depth, i, 'snow_depth')
         );
         const snow_depth_24h = safeParseFloat(
-          safeGetArrayValue(observation.snow_depth_24h, i)
+          safeGetArrayValue(
+            observation.snow_depth_24h,
+            i,
+            'snow_depth_24h'
+          )
         );
-        const intermittent_snow = safeGetArrayValue(
-          observation.intermittent_snow,
-          i
+        const intermittent_snow = safeParseFloat(
+          safeGetArrayValue(
+            observation.intermittent_snow,
+            i,
+            'intermittent_snow'
+          )
         );
         const precip_accum_one_hour = safeParseFloat(
-          safeGetArrayValue(observation.precip_accum_one_hour, i)
+          safeGetArrayValue(
+            observation.precip_accum_one_hour,
+            i,
+            'precip_accum_one_hour'
+          )
         );
         const relative_humidity = safeParseFloat(
-          safeGetArrayValue(observation.relative_humidity, i)
+          safeGetArrayValue(
+            observation.relative_humidity,
+            i,
+            'relative_humidity'
+          )
         );
         const battery_voltage = safeParseFloat(
-          safeGetArrayValue(observation.battery_voltage, i)
+          safeGetArrayValue(
+            observation.battery_voltage,
+            i,
+            'battery_voltage'
+          )
         );
         const wind_speed_min = safeParseFloat(
-          safeGetArrayValue(observation.wind_speed_min, i)
+          safeGetArrayValue(
+            observation.wind_speed_min,
+            i,
+            'wind_speed_min'
+          )
         );
         const solar_radiation = safeParseFloat(
-          safeGetArrayValue(observation.solar_radiation, i)
+          safeGetArrayValue(
+            observation.solar_radiation,
+            i,
+            'solar_radiation'
+          )
         );
         const equip_temperature = safeParseFloat(
-          safeGetArrayValue(observation.equip_temperature, i)
+          safeGetArrayValue(
+            observation.equip_temperature,
+            i,
+            'equip_temperature'
+          )
         );
         const pressure = safeParseFloat(
-          safeGetArrayValue(observation.pressure, i)
+          safeGetArrayValue(observation.pressure, i, 'pressure')
         );
         const wet_bulb = safeParseFloat(
-          safeGetArrayValue(observation.wet_bulb, i)
+          safeGetArrayValue(observation.wet_bulb, i, 'wet_bulb')
         );
         const soil_temperature_a = safeParseFloat(
-          safeGetArrayValue(observation.soil_temperature_a, i)
+          safeGetArrayValue(
+            observation.soil_temperature_a,
+            i,
+            'soil_temperature_a'
+          )
         );
         const soil_temperature_b = safeParseFloat(
-          safeGetArrayValue(observation.soil_temperature_b, i)
+          safeGetArrayValue(
+            observation.soil_temperature_b,
+            i,
+            'soil_temperature_b'
+          )
         );
         const soil_moisture_a = safeParseFloat(
-          safeGetArrayValue(observation.soil_moisture_a, i)
+          safeGetArrayValue(
+            observation.soil_moisture_a,
+            i,
+            'soil_moisture_a'
+          )
         );
         const soil_moisture_b = safeParseFloat(
-          safeGetArrayValue(observation.soil_moisture_b, i)
+          safeGetArrayValue(
+            observation.soil_moisture_b,
+            i,
+            'soil_moisture_b'
+          )
         );
         const soil_temperature_c = safeParseFloat(
-          safeGetArrayValue(observation.soil_temperature_c, i)
+          safeGetArrayValue(
+            observation.soil_temperature_c,
+            i,
+            'soil_temperature_c'
+          )
         );
         const soil_moisture_c = safeParseFloat(
-          safeGetArrayValue(observation.soil_moisture_c, i)
+          safeGetArrayValue(
+            observation.soil_moisture_c,
+            i,
+            'soil_moisture_c'
+          )
         );
+
+        // Check the raw data coming from the API
+        // console.log('Raw precip observation data:', {
+        //   index: i,
+        //   value: observation.precip_accum_one_hour[i],
+        //   type: typeof observation.precip_accum_one_hour[i],
+        // fullArray: observation.precip_accum_one_hour.map(
+        //   (value, idx) => ({
+        //     index: idx,
+        //     value: value,
+        //     timestamp: observation.date_time[idx],
+        //   })
+        // ),
+        // });
+
+        console.log('Values before insert:', {
+          precip_accum_one_hour,
+          raw_value: observation.precip_accum_one_hour[i],
+          parsed_value: safeParseFloat(
+            safeGetArrayValue(observation.precip_accum_one_hour, i)
+          ),
+        });
 
         try {
           const insertResult = await client.sql`
             WITH station_id AS (
-              SELECT id FROM stations WHERE stid = ${observation.stid}
+              SELECT id FROM stationsTest WHERE stid = ${observation.stid}
             )
-            INSERT INTO observations (
+            INSERT INTO observationsTest (
               station_id,
               date_time,
               air_temp,
@@ -265,7 +400,7 @@ async function handleRequest(request: NextRequest) {
               NULLIF(${snow_depth}, '')::DECIMAL(5,2),
               NULLIF(${snow_depth_24h}, '')::DECIMAL(5,2),
               NULLIF(${intermittent_snow}, '')::DECIMAL(5,2),
-              NULLIF(${precip_accum_one_hour}, '')::DECIMAL(5,2),
+              ${precip_accum_one_hour}::NUMERIC::DECIMAL(5,4),
               NULLIF(${relative_humidity}, '')::DECIMAL(5,2),
               NULLIF(${battery_voltage}, '')::DECIMAL(5,2),
               NULLIF(${wind_speed_min}, '')::DECIMAL(5,2),
@@ -313,7 +448,7 @@ async function handleRequest(request: NextRequest) {
               `Inserted/Updated observation for station ${observation.stid} at ${formattedDateTime}`
             );
           }
-          console.log('Insert result:', insertResult);
+          // console.log('Insert result:', insertResult);
         } catch (error) {
           console.error('Error inserting observation:', error);
           console.error(

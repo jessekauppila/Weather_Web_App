@@ -49,6 +49,12 @@ const getNWACobservations = async (
     }));
 
     output_data[site] = wx_data;
+
+    console.log(
+      'Raw precipitation data for station:',
+      site,
+      response.data.STATION?.[0]?.observations?.precip_accum_one_hour
+    );
   });
 
   await Promise.all(requests);
