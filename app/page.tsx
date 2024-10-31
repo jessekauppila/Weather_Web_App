@@ -14,6 +14,11 @@ import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 //import { ObservationsData } from './types'; // Add this import
 
+interface Station {
+  id: string;
+  name: string;
+}
+
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timeRange, setTimeRange] = useState(1); // Default to 1 day
@@ -91,7 +96,9 @@ export default function Home() {
             id: station.stid,
             name: station.station_name,
           }))
-          .sort((a, b) => a.name.localeCompare(b.name));
+          .sort((a: Station, b: Station) =>
+            a.name.localeCompare(b.name)
+          );
 
         setStations(mappedStations);
         // Set stationIds to include all station IDs initially
