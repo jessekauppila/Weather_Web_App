@@ -3,7 +3,10 @@
 
 //this is is used to update weekly or daily data to the database, its much slower than the batched version, but good for short periods of time
 
-//Not I modified this to use the stationsTest and observationsTest tables for testing
+//!!!!!!!!!!! Note I modified this to use the stationsTest and observationsTest tables for testing !!!!!!!!!!!!
+
+//Also used for checking precip accumulation values so lots of console logs for that....
+
 // try {
 //   const insertResult = await client.sql`
 //     WITH station_id AS (
@@ -356,7 +359,11 @@ async function handleRequest(request: NextRequest) {
           precip_accum_one_hour,
           raw_value: observation.precip_accum_one_hour[i],
           parsed_value: safeParseFloat(
-            safeGetArrayValue(observation.precip_accum_one_hour, i)
+            safeGetArrayValue(
+              observation.precip_accum_one_hour,
+              i,
+              'precip_accum_one_hour'
+            )
           ),
         });
 
