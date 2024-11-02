@@ -1,6 +1,8 @@
 // this is activley used in the dayWxTableDataDayFromDB.tsx file to look for observations in the database
 // I might want to do the conversions directly to this file before they go to dayWxTableDataDayFromDB
 
+// http://localhost:3000/api/getObservationsFromDB
+
 import { NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import { convertObservationUnits } from '../../utils/unitConversions'; // Adjust the import path as needed
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
         o.wind_gust,
         o.wind_speed,
         o.wind_speed_min,
+        o.precipitation,
         s.stid,
         s.station_name,
         s.latitude,

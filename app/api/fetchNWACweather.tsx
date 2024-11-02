@@ -53,7 +53,17 @@ const getNWACobservations = async (
     console.log(
       'Raw precipitation data for station:',
       site,
-      response.data.STATION?.[0]?.observations?.precip_accum_one_hour
+      {
+        precipitation: response.data.STATION?.[0]?.observations?.precipitation,
+      }
+    );
+
+    console.log(
+      'Raw precip_accum_one_hour data for station:',
+      site,
+      {
+        precip_accum_one_hour: response.data.STATION?.[0]?.observations?.precip_accum_one_hour
+      }
     );
   });
 

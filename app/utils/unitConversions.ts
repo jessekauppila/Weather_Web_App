@@ -25,13 +25,16 @@ export function convertObservationUnits(
   });
 
   // Precipitation and snow depth conversions (mm to in)
-  ['precip_accum_one_hour', 'snow_depth', 'snow_depth_24h'].forEach(
-    (key) => {
-      if (converted[key] !== null) {
-        converted[key] = converted[key] * 39.3701;
-      }
+  [
+    'precipitation',
+    'precip_accum_one_hour',
+    'snow_depth',
+    'snow_depth_24h',
+  ].forEach((key) => {
+    if (converted[key] !== null) {
+      converted[key] = converted[key] * 39.3701;
     }
-  );
+  });
 
   // Pressure conversion (hPa to inHg)
   if (converted.pressure !== null) {
