@@ -1,5 +1,5 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/updateWeeklyData
+// http://localhost:3000/api/batchUpload
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -22,10 +22,10 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 365;
+    const totalToProcess = 2;
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(365, 'days');
-    const chunk_size = 7;
+    const start_time_pst = moment(end_time_pst).subtract(2, 'days');
+    const chunk_size = 1;
     const stids = [
       '1',
       '14',
@@ -105,7 +105,36 @@ async function handleRequest(request: NextRequest) {
         const result = await retryOperation(() =>
           processAllWxData(chunk_start, chunk_end, stids, auth)
         );
+
+        console.log(
+          'Result from processAllWxData:',
+          JSON.stringify(result, null, 2)
+        );
+
+        if (!result || typeof result !== 'object') {
+          console.error(
+            'Invalid result from processAllWxData:',
+            result
+          );
+          continue;
+        }
+
         observationsData = result.observationsData;
+
+        if (!Array.isArray(observationsData)) {
+          console.error(
+            'observationsData is not an array:',
+            observationsData
+          );
+          continue;
+        }
+
+        if (observationsData.length === 0) {
+          console.log(
+            'No observations data returned for this time period'
+          );
+          continue;
+        }
 
         totalProcessed += chunk_size;
         const progressPercentage =
@@ -125,148 +154,193 @@ async function handleRequest(request: NextRequest) {
         continue;
       }
 
-      if (!observationsData || observationsData.length === 0) {
-        console.log(
-          `No weather data available for chunk ${days_processed} to ${
-            days_processed + chunk_size
-          }`
-        );
-        continue;
-      }
-
       const batchSize = 1000; // Adjust this value based on your database performance
       let batch = [];
 
       for (const observation of observationsData) {
-        const dateStrings = observation.date_time;
-        for (let i = 0; i < dateStrings.length; i++) {
-          const dateString = dateStrings[i];
-          if (!dateString || dateString === '') {
-            console.warn(
-              `Skipping invalid date_time for station ${observation.stid}`
+        try {
+          // Log the full observation data
+          console.log(
+            'Full observation data:',
+            JSON.stringify(observation, null, 2)
+          );
+
+          // Check each array property before processing
+          const arrays = {
+            date_time: observation.date_time,
+            air_temp: observation.air_temp,
+            wind_speed: observation.wind_speed,
+            wind_gust: observation.wind_gust,
+            // ... add other properties you're accessing
+          };
+
+          // Validate all arrays have same length
+          const arrayLengths = Object.entries(arrays).map(
+            ([key, arr]) => ({
+              key,
+              length: Array.isArray(arr) ? arr.length : null,
+            })
+          );
+
+          console.log('Array lengths:', arrayLengths);
+
+          // Verify observation object and required properties
+          if (!observation) {
+            console.error('Invalid observation:', observation);
+            continue;
+          }
+
+          const dateStrings = observation.date_time;
+          if (!dateStrings) {
+            console.error(
+              'Missing date_time for observation:',
+              observation
             );
             continue;
           }
 
-          const observationData = {
-            station_id: observation.stid,
-            date_time: dateString,
-            air_temp: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.air_temp, i)
-              )
-            ),
-            wind_speed: validateWindSpeed(
-              safeParseFloat(
-                safeGetArrayValue(observation.wind_speed, i)
-              )
-            ),
-            wind_gust: validateWindGust(
-              safeParseFloat(
-                safeGetArrayValue(observation.wind_gust, i)
-              )
-            ),
-            wind_direction: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.wind_direction, i)
-              )
-            ),
-            snow_depth: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.snow_depth, i)
-              )
-            ),
-            snow_depth_24h: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.snow_depth_24h, i)
-              )
-            ),
-            intermittent_snow: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.intermittent_snow, i)
-              )
-            ),
-            precip_accum_one_hour: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(
-                  observation.precip_accum_one_hour,
-                  i
+          console.log('Processing observation:', {
+            stid: observation.stid,
+            dateStringsLength: dateStrings?.length,
+            hasDateStrings: !!dateStrings,
+          });
+
+          for (let i = 0; i < dateStrings.length; i++) {
+            const dateString = dateStrings[i];
+            if (!dateString || dateString === '') {
+              console.warn(
+                `Skipping invalid date_time for station ${observation.stid}`
+              );
+              continue;
+            }
+
+            const observationData = {
+              station_id: observation.stid,
+              date_time: dateString,
+              air_temp: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.air_temp, i)
                 )
-              )
-            ),
-            relative_humidity: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.relative_humidity, i)
-              )
-            ),
-            battery_voltage: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.battery_voltage, i)
-              )
-            ),
-            wind_speed_min: validateWindSpeed(
-              safeParseFloat(
-                safeGetArrayValue(observation.wind_speed_min, i)
-              )
-            ),
-            solar_radiation: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.solar_radiation, i)
-              )
-            ),
-            equip_temperature: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.equip_temperature, i)
-              )
-            ),
-            pressure: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.pressure, i)
-              )
-            ),
-            wet_bulb: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.wet_bulb, i)
-              )
-            ),
-            soil_temperature_a: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_temperature_a, i)
-              )
-            ),
-            soil_temperature_b: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_temperature_b, i)
-              )
-            ),
-            soil_moisture_a: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_moisture_a, i)
-              )
-            ),
-            soil_moisture_b: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_moisture_b, i)
-              )
-            ),
-            soil_temperature_c: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_temperature_c, i)
-              )
-            ),
-            soil_moisture_c: validateValue(
-              safeParseFloat(
-                safeGetArrayValue(observation.soil_moisture_c, i)
-              )
-            ),
-          };
+              ),
+              wind_speed: validateWindSpeed(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_speed, i)
+                )
+              ),
+              wind_gust: validateWindGust(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_gust, i)
+                )
+              ),
+              wind_direction: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_direction, i)
+                )
+              ),
+              snow_depth: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.snow_depth, i)
+                )
+              ),
+              snow_depth_24h: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.snow_depth_24h, i)
+                )
+              ),
+              intermittent_snow: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.intermittent_snow, i)
+                )
+              ),
+              precip_accum_one_hour: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(
+                    observation.precip_accum_one_hour,
+                    i
+                  )
+                )
+              ),
+              relative_humidity: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.relative_humidity, i)
+                )
+              ),
+              battery_voltage: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.battery_voltage, i)
+                )
+              ),
+              wind_speed_min: validateWindSpeed(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_speed_min, i)
+                )
+              ),
+              solar_radiation: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.solar_radiation, i)
+                )
+              ),
+              equip_temperature: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.equip_temperature, i)
+                )
+              ),
+              pressure: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.pressure, i)
+                )
+              ),
+              wet_bulb: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wet_bulb, i)
+                )
+              ),
+              soil_temperature_a: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_a, i)
+                )
+              ),
+              soil_temperature_b: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_b, i)
+                )
+              ),
+              soil_moisture_a: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_a, i)
+                )
+              ),
+              soil_moisture_b: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_b, i)
+                )
+              ),
+              soil_temperature_c: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_c, i)
+                )
+              ),
+              soil_moisture_c: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_c, i)
+                )
+              ),
+            };
 
-          batch.push(observationData);
+            batch.push(observationData);
 
-          if (batch.length >= batchSize) {
-            await insertBatch(client, batch);
-            batch = [];
+            if (batch.length >= batchSize) {
+              await insertBatch(client, batch);
+              batch = [];
+            }
           }
+        } catch (error) {
+          console.error(
+            'Error processing observation:',
+            error,
+            observation
+          );
+          continue;
         }
       }
 
@@ -286,7 +360,13 @@ async function handleRequest(request: NextRequest) {
       {
         error:
           'Error updating yearly data: ' +
-          (error instanceof Error ? error.message : String(error)),
+          (error instanceof Error
+            ? error.message
+            : JSON.stringify(
+                error,
+                Object.getOwnPropertyNames(error)
+              )),
+        details: error,
       },
       { status: 500 }
     );
@@ -417,11 +497,26 @@ function safeParseFloat(value: string | null): number | null {
   return isNaN(parsed) ? null : parsed;
 }
 
-function safeGetArrayValue(arr: any[] | null, index: number): any {
-  if (arr === null || index < 0 || index >= arr.length) {
+function safeGetArrayValue(
+  arr: any[] | null | undefined,
+  index: number
+): any {
+  if (!arr) {
+    console.warn('Array is null or undefined in safeGetArrayValue');
+    return null;
+  }
+  if (!Array.isArray(arr)) {
+    console.warn('Value is not an array in safeGetArrayValue:', arr);
+    return null;
+  }
+  if (index < 0 || index >= arr.length) {
+    console.warn(
+      `Index ${index} out of bounds for array of length ${arr.length}`
+    );
     return null;
   }
   return arr[index];
+  //return arr?.[index] ?? null;
 }
 
 function clampNumericValue(
