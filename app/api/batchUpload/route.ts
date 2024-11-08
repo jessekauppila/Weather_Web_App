@@ -22,9 +22,9 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 365;
+    const totalToProcess = 7;
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(365, 'days');
+    const start_time_pst = moment(end_time_pst).subtract(7, 'days');
     const chunk_size = 7;
     const stids = [
       '1',
