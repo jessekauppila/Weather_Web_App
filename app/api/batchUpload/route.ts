@@ -1,5 +1,5 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/updateWeeklyData
+// http://localhost:3000/api/batchUpload
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -105,7 +105,18 @@ async function handleRequest(request: NextRequest) {
         const result = await retryOperation(() =>
           processAllWxData(chunk_start, chunk_end, stids, auth)
         );
+        
+        if (!result) {
+          console.error('processAllWxData returned null or undefined result');
+          continue;
+        }
+        
         observationsData = result.observationsData;
+        
+        if (!observationsData) {
+          console.error('No observationsData in result:', result);
+          continue;
+        }
 
         totalProcessed += chunk_size;
         const progressPercentage =
