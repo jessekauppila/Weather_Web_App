@@ -31,12 +31,14 @@ const measurementDescriptions: Record<string, string> = {
     'Maximum Wind Gust - The highest wind speed recorded',
   'Wind Direction':
     'Predominant Wind Direction - The average of all wind direction readings',
-  'Total Snow Depth Change':
-    'Net Change in Snow Depth - The difference between final and initial readings',
+  'Snow Depth Change':
+    'Net Change in Snow Depth - The difference between final and initial readings, filtering out values greater than twice the standard deviation',
   '24h Snow Accumulation':
-    'Total New Snow - Calculated using the difference between the highest and lowest snow depth during selected period using filtered measurements to remove outliers ',
+    'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation and values less than -1',
   'Precip Accum One Hour':
     'Total Liquid Precipitation - Sum of hourly precipitation readings',
+  // 'Precipitation':
+  //   'Total Liquid Precipitation - Sum of hourly precipitation readings',
   'Relative Humidity':
     'Current Relative Humidity - The most recent humidity reading',
 };

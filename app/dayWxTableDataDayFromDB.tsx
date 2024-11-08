@@ -23,13 +23,60 @@ function calculateStandardDeviation(
 
 function filterOutliers(
   snowDepths: number[],
-  threshold = 1
+  threshold = 2
 ): number[] {
+  if (snowDepths.length === 0) return [];
+
   const mean = calculateMean(snowDepths);
   const stdDev = calculateStandardDeviation(snowDepths, mean);
-  return snowDepths.filter(
-    (value) => Math.abs(value - mean) <= threshold * stdDev
-  );
+
+  console.log('Outlier detection:', {
+    mean,
+    stdDev,
+    threshold,
+    thresholdValue: threshold * stdDev,
+  });
+
+  return snowDepths.filter((value) => {
+    const deviation = Math.abs(value - mean);
+    const isValid = deviation <= threshold * stdDev;
+    if (!isValid) {
+      console.log(
+        `Removing outlier: ${value} (deviation: ${deviation})`
+      );
+    }
+    return isValid;
+  });
+}
+
+function calculateSnowDepthAccumulation(data: any[]) {
+  const results = [];
+  let snowTotal = 0;
+  const recentHours = [];
+
+  for (let i = 0; i < data.length; i++) {
+    const current = data[i];
+    const previous = data[i - 1] || {
+      snow_depth: current.snow_depth,
+    };
+
+    const new_snow = Math.max(
+      0,
+      current.snow_depth - previous.snow_depth
+    );
+
+    snowTotal += new_snow;
+    recentHours.push(new_snow);
+
+    results.push({
+      date_time: current.date_time,
+      snow_depth: current.snow_depth,
+      new_snow,
+      snow_total: snowTotal,
+    });
+  }
+
+  return results;
 }
 
 function wxTableDataDayFromDB(
@@ -236,12 +283,29 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => {
-        const filteredNumbers = filterOutliers(numbers);
-        return {
-          total:
-            Math.max(...filteredNumbers) -
-            Math.min(...filteredNumbers),
-        };
+        console.log('Raw snow_depth data:', numbers);
+
+        const filteredSnowDepths = filterOutliers(
+          numbers.filter((n) => !isNaN(n)),
+          2
+        );
+        console.log('Filtered snow depths:', filteredSnowDepths);
+
+        const data = (averages.date_time as string[])
+          .map((date_time: string, index: number) => ({
+            date_time,
+            snow_depth: filteredSnowDepths[index],
+          }))
+          .filter((d) => d.snow_depth !== undefined);
+        console.log('Processed data points:', data);
+
+        const results = calculateSnowDepthAccumulation(data);
+        console.log('Accumulation results:', results);
+
+        const total = results[results.length - 1]?.snow_total ?? 0;
+        console.log('Final total:', total);
+
+        return { total };
       }
     );
 
