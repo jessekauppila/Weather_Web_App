@@ -12,6 +12,7 @@ import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
+import HourWxSnowGraph from './hourWxSnowGraph';
 //import { ObservationsData } from './types'; // Add this import
 
 interface Station {
@@ -328,6 +329,7 @@ export default function Home() {
           )}
           {observationsDataHour && selectedStation && (
             <div className="table-container mt-4">
+              <HourWxSnowGraph hourAverages={observationsDataHour} />
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}
