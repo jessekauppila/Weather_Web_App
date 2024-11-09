@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   return handleRequest(request);
 }
 
-export async function handleRequest(req: NextRequest) {
+async function handleRequest(req: NextRequest) {
   let client;
 
   try {
