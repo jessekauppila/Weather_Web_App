@@ -186,7 +186,7 @@ export default function Home() {
       const minutes = now.getMinutes();
 
       if (
-        minutes === 1 /||
+        minutes === 1 //||
         // minutes === 5 ||
         // minutes === 20 ||
         // minutes === 30
