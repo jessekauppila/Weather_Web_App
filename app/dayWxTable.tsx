@@ -28,14 +28,14 @@ const measurementDescriptions: Record<string, string> = {
   'Cur Wind Speed':
     'Current Wind Speed - The most recent wind speed reading',
   'Max Wind Gust':
-    'Maximum Wind Gust - The highest wind speed recorded',
+    'Maximum Wind Gust - The highest wind speed recorded during selected period',
   'Wind Direction':
     'Predominant Wind Direction - The average of all wind direction readings',
   'Snow Depth Change':
     'Net Change in Snow Depth - The difference between final and initial readings, filtering out values greater than twice the standard deviation',
   '24h Snow Accumulation':
     'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation and values less than -1',
-  'Precip Accum One Hour':
+  'Precip Accum':
     'Total Liquid Precipitation - Sum of hourly precipitation readings',
   // 'Precipitation':
   //   'Total Liquid Precipitation - Sum of hourly precipitation readings',
@@ -68,10 +68,10 @@ const knownCategories = [
   {
     category: 'Estimated Precipitation',
     columns: [
-      'Total Snow Depth Change',
+      'Snow Depth Change',
       //'Snow Depth Max',
       '24h Snow Accumulation',
-      'Precip Accum One Hour',
+      'Precip Accum',
     ],
   },
   { category: 'RH', columns: ['Relative Humidity'] },
@@ -188,7 +188,7 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
       .enter()
       .append('th')
       .merge(headerCells as any)
-      .attr('data-tooltip-id', 'measurement-tooltip')
+      .attr('data-tooltip-id', 'daily-measurement-tooltip')
       .attr('data-tooltip-content', (d) => {
         const key = typeof d === 'string' ? d : d.displayName;
         return measurementDescriptions[key] || '';
@@ -246,7 +246,7 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
   return (
     <div className="table-container" ref={ref}>
       <Tooltip
-        id="measurement-tooltip"
+        id="daily-measurement-tooltip"
         place="top"
         className="measurement-tooltip"
       />
