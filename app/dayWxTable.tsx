@@ -31,7 +31,7 @@ const measurementDescriptions: Record<string, string> = {
     'Maximum Wind Gust - The highest wind speed recorded during selected period',
   'Wind Direction':
     'Predominant Wind Direction - The average of all wind direction readings',
-  'Snow Depth Change':
+  'Total Snow Depth Change':
     'Net Change in Snow Depth - The difference between final and initial readings, filtering out values greater than twice the standard deviation',
   '24h Snow Accumulation':
     'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation and values less than -1',
@@ -68,7 +68,7 @@ const knownCategories = [
   {
     category: 'Estimated Precipitation',
     columns: [
-      'Snow Depth Change',
+      'Total Snow Depth Change',
       //'Snow Depth Max',
       '24h Snow Accumulation',
       'Precip Accum',
