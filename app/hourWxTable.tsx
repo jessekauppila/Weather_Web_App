@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as d3 from 'd3';
+import { Tooltip } from 'react-tooltip';
 
 interface HourlyAverage {
   [key: string]: string | number;
@@ -43,6 +44,23 @@ const knownCategories = [
 // Rest of the component similar to DayAveragesTable
 
 type Column = string | { key: string; displayName: string };
+
+const measurementDescriptions: Record<string, string> = {
+  Time: 'Local time of the measurement',
+  'Air Temp': 'Air Temperature in degrees Fahrenheit',
+  'Wind Speed': 'Average Wind Speed in miles per hour',
+  'Wind Gust':
+    'Maximum Wind Gust in miles per hour during the measurement period',
+  'Wind Direction':
+    'Wind Direction in degrees (0-360, where 0/360 is North)',
+  'Total Snow Depth':
+    'Total depth of snow on the ground in inches. (This the depth of the snow pack from the surface of the snow to the ground.) (This is susceptible to sensor errors particularly in the summer.)',
+  '24h Snow Depth':
+    'Change in snow depth. (Snowboard cleared in the morning to provide record of hourly snow accumulation.) (This is susceptible to sensor errors particularly in the summer.)',
+  'Precip Accum':
+    'Liquid precipitation accumulated during the hour in inches',
+  'Relative Humidity': 'Relative Humidity as a percentage (0-100%)',
+};
 
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -101,13 +119,18 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .attr('class', 'weatherTable');
     const tableUpdate = tableEnter.merge(table as any);
 
-    // Update the caption text
+    // Update the caption text with unique tooltip ID
     tableUpdate
       .selectAll('caption')
       .data([null])
       .join('caption')
       .text(hourAverages.title)
-      .style('caption-side', 'top');
+      .style('caption-side', 'top')
+      .attr('data-tooltip-id', 'hourly-measurement-tooltip')
+      .attr(
+        'data-tooltip-content',
+        'Hourly weather station data, no filtering, only converted from metric to imperial'
+      );
 
     // Headers
     const thead = tableUpdate
@@ -160,6 +183,11 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .enter()
       .append('th')
       .merge(headerCells as any)
+      .attr('data-tooltip-id', 'hourly-measurement-tooltip')
+      .attr(
+        'data-tooltip-content',
+        (d) => measurementDescriptions[d] || ''
+      )
       .text((d: Column) => {
         if (typeof d === 'string') {
           return d;
@@ -208,7 +236,15 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
     cells.exit().remove();
   }, [sortedData, headerStructure]);
 
-  return <div className="table-container" ref={ref}></div>;
+  return (
+    <div className="table-container" ref={ref}>
+      <Tooltip
+        id="hourly-measurement-tooltip"
+        place="top"
+        className="measurement-tooltip"
+      />
+    </div>
+  );
 }
 
 export default HourWxTable;
