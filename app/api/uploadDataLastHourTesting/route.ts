@@ -34,64 +34,64 @@ async function handleRequest(request: NextRequest) {
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(36, 'hours');
+    const start_time_pst = moment(end_time_pst).subtract(1, 'hours');
 
     // Define station IDs
     const stids = [
       '4',
       '5',
       '6',
-      // '1',
-      // '11',
-      // '12',
-      // '13',
-      // '14',
-      // '17',
-      // '18',
-      // '19',
-      // '2',
-      // '20',
-      // '21',
-      // '22',
-      // '23',
-      // '24',
-      // '25',
-      // '26',
-      // '27',
-      // '28',
-      // '29',
-      // '3',
-      // '30',
-      // '31',
-      // '32',
-      // '33',
-      // '34',
-      // '35',
-      // '36',
-      // '37',
-      // '39',
-      // '4',
-      // '40',
-      // '41',
-      // '42',
-      // '43',
-      // '44',
-      // '45',
-      // '46',
-      // '47',
-      // '48',
-      // '49',
-      // '5',
-      // '50',
-      // '51',
-      // '53',
-      // '54',
-      // '56',
-      // '57',
-      // '6',
-      // '7',
-      // '8',
-      // '9',
+      '1',
+      '11',
+      '12',
+      '13',
+      '14',
+      '17',
+      '18',
+      '19',
+      '2',
+      '20',
+      '21',
+      '22',
+      '23',
+      '24',
+      '25',
+      '26',
+      '27',
+      '28',
+      '29',
+      '3',
+      '30',
+      '31',
+      '32',
+      '33',
+      '34',
+      '35',
+      '36',
+      '37',
+      '39',
+      '4',
+      '40',
+      '41',
+      '42',
+      '43',
+      '44',
+      '45',
+      '46',
+      '47',
+      '48',
+      '49',
+      '5',
+      '50',
+      '51',
+      '53',
+      '54',
+      '56',
+      '57',
+      '6',
+      '7',
+      '8',
+      '9',
     ];
 
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
@@ -274,7 +274,7 @@ async function handleRequest(request: NextRequest) {
             WITH station_id AS (
               SELECT id FROM stations WHERE stid = ${observation.stid}
             )
-            INSERT INTO observationsTest (
+            INSERT INTO observations (
               station_id,
               date_time,
               air_temp,
@@ -403,7 +403,7 @@ async function handleRequest(request: NextRequest) {
     // Keep your existing precipitation summary
     const precipSummary = await client.sql`
       SELECT s.stid, s.station_name, o.date_time, o.precip_accum_one_hour 
-      FROM observationsTest o
+      FROM observations o
       JOIN stations s ON s.id = o.station_id
       WHERE o.date_time >= ${start_time_pst.toISOString()}
       ORDER BY s.stid, o.date_time;
