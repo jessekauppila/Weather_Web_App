@@ -27,6 +27,9 @@ function filterOutliers(
 ): number[] {
   if (snowDepths.length === 0) return [];
 
+  // First filter out invalid negative values
+  snowDepths = snowDepths.filter((value) => value > -1);
+
   const mean = calculateMean(snowDepths);
   const stdDev = calculateStandardDeviation(snowDepths, mean);
 
@@ -252,6 +255,15 @@ function wxTableDataDayFromDB(
       (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
     );
 
+    // Process precipitation
+    processNumericField(
+      'precipitation',
+      { sum: 'Precipitation' },
+      'in',
+      1,
+      (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
+    );
+
     // Process snow depth
     processNumericField(
       'snow_depth',
@@ -262,12 +274,21 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => {
-        const firstValue = numbers[0];
-        const lastValue = numbers[numbers.length - 1];
+        console.log('Raw snow_depth data:', numbers);
+
+        const filteredSnowDepths = filterOutliers(
+          numbers.filter((n) => !isNaN(n)),
+          2
+        );
+        console.log('Filtered snow depth h:', filteredSnowDepths);
+
+        const firstValue = filteredSnowDepths[0];
+        const lastValue =
+          filteredSnowDepths[filteredSnowDepths.length - 1];
         const change = lastValue - firstValue;
         return {
           avg: change,
-          max: Math.max(...numbers),
+          max: Math.max(...filteredSnowDepths),
         };
       },
       (value, unit) => {
@@ -283,13 +304,13 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => {
-        console.log('Raw snow_depth data:', numbers);
+        console.log('Raw snow_depth-24h data:', numbers);
 
         const filteredSnowDepths = filterOutliers(
           numbers.filter((n) => !isNaN(n)),
           2
         );
-        console.log('Filtered snow depths:', filteredSnowDepths);
+        console.log('Filtered snow depths 24 h:', filteredSnowDepths);
 
         const data = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({

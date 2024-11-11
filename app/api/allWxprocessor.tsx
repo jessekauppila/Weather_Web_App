@@ -17,28 +17,28 @@ interface StationObject {
   // Add any other properties that might be present in your station object
 }
 
-// type ObservationData = {
-//   name: string;
-//   longitude: string;
-//   latitude: string;
-//   observations: Record<string, any[]>;
-//   stid?: string; // Add this line
-//   id?: string; // Add this line if not already present
-//   elevation?: number; // Add this line if not already present
-//   // Add any other properties that might be present in your data
-// };
+type observationData = {
+  name: string;
+  longitude: string;
+  latitude: string;
+  observations: Record<string, any[]>;
+  stid?: string; // Add this line
+  id?: string; // Add this line if not already present
+  elevation?: number; // Add this line if not already present
+  // Add any other properties that might be present in your data
+};
 let observationsData: any[] = [];
 
 // Add this helper function
-const validatePrecipitation = (
-  value: number | null
-): number | null => {
-  if (value === null) return null;
-  // Ensure precipitation is not negative
-  if (value < 0) return 0;
-  // Round to 2 decimal places
-  return Math.round(value * 100) / 100;
-};
+// const validatePrecipitation = (
+//   value: number | null
+// ): number | null => {
+//   if (value === null) return null;
+//   // Ensure precipitation is not negative
+//   if (value < 0) return 0;
+//   // Round to 2 decimal places
+//   return Math.round(value * 100) / 100;
+// };
 
 async function processAllWxData(
   start_time_pst: moment.Moment,
@@ -48,6 +48,9 @@ async function processAllWxData(
 ): Promise<{
   observationsData: any[];
   unitConversions: Record<string, string>;
+  
+  //added this to get all the keys from the data
+  allKeys: string[];
 }> {
   try {
     const data = (await fetchHrWeatherData(
@@ -83,19 +86,19 @@ async function processAllWxData(
       // Add all other keys you want in the specific order
     ];
 
-    // Use a Set to collect all available keys from the data
-    let availableKeys = new Set<string>([
-      'Station Name',
-      'Longitude',
-      'Latitude',
-      'id',
-      'stid',
-      'elevation',
-      'time_zone',
-      'source',
-      'station_note',
-      'station',
-    ]);
+    // // Use a Set to collect all available keys from the data
+    // let availableKeys = new Set<string>([
+    //   'Station Name',
+    //   'Longitude',
+    //   'Latitude',
+    //   'id',
+    //   'stid',
+    //   'elevation',
+    //   'time_zone',
+    //   'source',
+    //   'station_note',
+    //   'station',
+    // ]);
 
     let unitConversions: { [key: string]: string } = {};
 
@@ -141,13 +144,14 @@ async function processAllWxData(
               newStationInfo[key] = stationObject.time_zone ?? '';
             } else if (key === 'source') {
               newStationInfo[key] = stationObject.source ?? '';
-            } else if (key === 'precip_accum_one_hour') {
+            } else if (key === 'precipitation') {
               const precipValues = observations[key] || [];
-              newStationInfo[key] = precipValues.map((value) => {
+              console.log('Raw precipitation values:', precipValues);
+              newStationInfo[key] = precipValues.map(value => {
                 const parsed = parseFloat(value);
-                // Check if the value is a valid number and not negative
                 return !isNaN(parsed) && parsed >= 0 ? parsed : null;
               });
+              console.log('Processed precipitation values:', newStationInfo[key]);
             } else {
               const observationValues = observations[key] || [];
               newStationInfo[key] =
@@ -180,15 +184,13 @@ async function processAllWxData(
           });
         }
       }
-      console.log(
-        'All available observation keys:',
-        Array.from(allKeys)
-      );
+      console.log('All available observation keys:', Array.from(allKeys));
+      return allKeys;
     };
 
-    logAllKeys(data);
-
-    return { observationsData, unitConversions };
+    const allKeys = logAllKeys(data);
+    //return { observationsData, unitConversions };
+    return { observationsData, unitConversions, allKeys: Array.from(allKeys) };
   } catch (error) {
     console.error('Error in processAllWxData:', error);
     throw error;

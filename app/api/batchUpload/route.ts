@@ -1,5 +1,6 @@
 // run by going to this URL when running the app locally:
 // http://localhost:3000/api/batchUpload
+// http://localhost:3000/api/batchUpload
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
