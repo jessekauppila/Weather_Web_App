@@ -34,8 +34,8 @@ const measurementDescriptions: Record<string, string> = {
   'Total Snow Depth Change':
     'Net Change in Snow Depth - The difference between final and initial readings, filtering out values greater than twice the standard deviation',
   '24h Snow Accumulation':
-    'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation and values less than -1',
-  'Precip Accum':
+    'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation, filtered out values less than -1',
+  'Precip Accum One Hour':
     'Total Liquid Precipitation - Sum of hourly precipitation readings',
   // 'Precipitation':
   //   'Total Liquid Precipitation - Sum of hourly precipitation readings',
@@ -71,7 +71,8 @@ const knownCategories = [
       'Total Snow Depth Change',
       //'Snow Depth Max',
       '24h Snow Accumulation',
-      'Precip Accum',
+      'Precip Accum One Hour',
+      'Precipitation',
     ],
   },
   { category: 'RH', columns: ['Relative Humidity'] },

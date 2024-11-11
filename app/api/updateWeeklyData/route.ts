@@ -38,59 +38,61 @@ async function handleRequest(request: NextRequest) {
     const start_time_pst = moment(end_time_pst).subtract(36, 'hours');
 
     // Define station IDs
-    const stids = [
+    const stids: string[] = [
       '1',
-      '14',
-      '11',
-      '12',
-      '13',
-      '14',
-      '17',
-      '18',
-      '19',
-      '2',
-      '20',
-      '21',
-      '22',
-      '23',
-      '24',
-      '25',
-      '26',
-      '27',
-      '28',
-      '29',
-      '3',
-      '30',
-      '31',
-      '32',
-      '33',
-      '34',
-      '35',
-      '36',
-      '37',
-      '39',
+'11',
       '4',
-      '40',
-      '41',
-      '42',
-      '43',
-      '44',
-      '45',
-      '46',
-      '47',
-      '48',
-      '49',
       '5',
-      '50',
-      '51',
-      '53',
-      '54',
-      '56',
-      '57',
       '6',
-      '7',
-      '8',
-      '9',
+      // '12',
+      // '13',
+      // '14',
+      // '17',
+      // '18',
+      // '19',
+      // '2',
+      // '20',
+      // '21',
+      // '22',
+      // '23',
+      // '24',
+      // '25',
+      // '26',
+      // '27',
+      // '28',
+      // '29',
+      // '3',
+      // '30',
+      // '31',
+      // '32',
+      // '33',
+      // '34',
+      // '35',
+      // '36',
+      // '37',
+      // '39',
+      // '4',
+      // '40',
+      // '41',
+      // '42',
+      // '43',
+      // '44',
+      // '45',
+      // '46',
+      // '47',
+      // '48',
+      // '49',
+      // '5',
+      // '50',
+      // '51',
+      // '53',
+      // '54',
+      // '56',
+      // '57',
+      // '6',
+      // '7',
+      // '8',
+      // '9',
     ];
 
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
@@ -340,6 +342,13 @@ async function handleRequest(request: NextRequest) {
             'soil_moisture_c'
           )
         );
+        const precipitation = safeParseFloat(
+          safeGetArrayValue(
+            observation.precipitation,
+            i,
+            'precipitation'
+          )
+        );
 
         // Check the raw data coming from the API
         // console.log('Raw precip observation data:', {
@@ -395,7 +404,8 @@ async function handleRequest(request: NextRequest) {
               soil_moisture_a,
               soil_moisture_b,
               soil_temperature_c,
-              soil_moisture_c
+              soil_moisture_c,
+              precipitation
             )
             SELECT
               (SELECT id FROM station_id),
@@ -420,7 +430,8 @@ async function handleRequest(request: NextRequest) {
               NULLIF(${soil_moisture_a}, '')::DECIMAL(5,2),
               NULLIF(${soil_moisture_b}, '')::DECIMAL(5,2),
               NULLIF(${soil_temperature_c}, '')::DECIMAL(5,2),
-              NULLIF(${soil_moisture_c}, '')::DECIMAL(5,2)
+              NULLIF(${soil_moisture_c}, '')::DECIMAL(5,2),
+              NULLIF(${precipitation}, '')::DECIMAL(5,2)
             WHERE EXISTS (SELECT 1 FROM station_id)
             ON CONFLICT (station_id, date_time) 
             DO UPDATE SET
@@ -444,7 +455,9 @@ async function handleRequest(request: NextRequest) {
               soil_moisture_a = EXCLUDED.soil_moisture_a,
               soil_moisture_b = EXCLUDED.soil_moisture_b,
               soil_temperature_c = EXCLUDED.soil_temperature_c,
-              soil_moisture_c = EXCLUDED.soil_moisture_c
+              soil_moisture_c = EXCLUDED.soil_moisture_c,
+              precipitation = EXCLUDED.precipitation
+
           `;
           if (insertResult.rowCount === 0) {
             console.warn(
@@ -478,6 +491,7 @@ async function handleRequest(request: NextRequest) {
               equip_temperature,
               pressure,
               wet_bulb,
+              precipitation
             })
           );
           throw error; // Re-throw the error to be caught by the outer try-catch
