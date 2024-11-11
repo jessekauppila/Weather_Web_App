@@ -8,6 +8,16 @@ import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
 
+// Add this validation helper function at the top of the file
+function validateNumericValue(value: number | null, maxValue: number): number | null {
+  if (value === null) return null;
+  if (Math.abs(value) > maxValue) {
+    console.warn(`Value ${value} exceeds maximum ${maxValue}, setting to null`);
+    return null;
+  }
+  return value;
+}
+
 export async function GET(request: NextRequest) {
   return handleRequest(request);
 }
@@ -233,6 +243,32 @@ async function handleRequest(request: NextRequest) {
           safeGetArrayValue(observation.precipitation, i)
         );
 
+        // Before the SQL insert, add validation:
+        const validatedData = {
+          air_temp: validateNumericValue(air_temp, 999.99),
+          wind_speed: validateNumericValue(wind_speed, 999.99),
+          wind_gust: validateNumericValue(wind_gust, 999.99),
+          wind_direction: validateNumericValue(wind_direction, 360),
+          snow_depth: validateNumericValue(snow_depth, 9999.99), // Increased max for snow depth
+          snow_depth_24h: validateNumericValue(snow_depth_24h, 999.99),
+          intermittent_snow: validateNumericValue(intermittent_snow, 999.99),
+          precip_accum_one_hour: validateNumericValue(precip_accum_one_hour, 99.999999),
+          relative_humidity: validateNumericValue(relative_humidity, 100),
+          battery_voltage: validateNumericValue(battery_voltage, 999.99),
+          wind_speed_min: validateNumericValue(wind_speed_min, 999.99),
+          solar_radiation: validateNumericValue(solar_radiation, 9999.99),
+          equip_temperature: validateNumericValue(equip_temperature, 999.99),
+          pressure: validateNumericValue(pressure, 9999.99),
+          wet_bulb: validateNumericValue(wet_bulb, 999.99),
+          soil_temperature_a: validateNumericValue(soil_temperature_a, 999.99),
+          soil_temperature_b: validateNumericValue(soil_temperature_b, 999.99),
+          soil_moisture_a: validateNumericValue(soil_moisture_a, 999.99),
+          soil_moisture_b: validateNumericValue(soil_moisture_b, 999.99),
+          soil_temperature_c: validateNumericValue(soil_temperature_c, 999.99),
+          soil_moisture_c: validateNumericValue(soil_moisture_c, 999.99),
+          precipitation: validateNumericValue(precipitation, 999.9999)
+        };
+
         try {
           const insertResult = await client.sql`
             WITH station_id AS (
@@ -267,28 +303,28 @@ async function handleRequest(request: NextRequest) {
             SELECT
               (SELECT id FROM station_id),
               ${formattedDateTime}::timestamp with time zone,
-              NULLIF(${air_temp}, '')::DECIMAL(5,2),
-              NULLIF(${wind_speed}, '')::DECIMAL(5,2),
-              NULLIF(${wind_gust}, '')::DECIMAL(5,2),
-              NULLIF(${wind_direction}, '')::DECIMAL(5,2),
-              NULLIF(${snow_depth}, '')::DECIMAL(5,2),
-              NULLIF(${snow_depth_24h}, '')::DECIMAL(5,2),
-              NULLIF(${intermittent_snow}, '')::DECIMAL(5,2),
-              NULLIF(${precip_accum_one_hour}, '')::DECIMAL(5,6),
-              NULLIF(${relative_humidity}, '')::DECIMAL(5,2),
-              NULLIF(${battery_voltage}, '')::DECIMAL(5,2),
-              NULLIF(${wind_speed_min}, '')::DECIMAL(5,2),
-              NULLIF(${solar_radiation}, '')::DECIMAL(7,2),
-              NULLIF(${equip_temperature}, '')::DECIMAL(5,2),
-              NULLIF(${pressure}, '')::DECIMAL(7,2),
-              NULLIF(${wet_bulb}, '')::DECIMAL(5,2),
-              NULLIF(${soil_temperature_a}, '')::DECIMAL(5,2),
-              NULLIF(${soil_temperature_b}, '')::DECIMAL(5,2),
-              NULLIF(${soil_moisture_a}, '')::DECIMAL(5,2),
-              NULLIF(${soil_moisture_b}, '')::DECIMAL(5,2),
-              NULLIF(${soil_temperature_c}, '')::DECIMAL(5,2),
-              NULLIF(${soil_moisture_c}, '')::DECIMAL(5,2),
-              NULLIF(${precipitation}, '')::DECIMAL(5,4)
+              NULLIF(${validatedData.air_temp}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.wind_speed}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.wind_gust}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.wind_direction}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.snow_depth}, '')::DECIMAL(10,2),
+              NULLIF(${validatedData.snow_depth_24h}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.intermittent_snow}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.precip_accum_one_hour}, '')::DECIMAL(8,6),
+              NULLIF(${validatedData.relative_humidity}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.battery_voltage}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.wind_speed_min}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.solar_radiation}, '')::DECIMAL(10,2),
+              NULLIF(${validatedData.equip_temperature}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.pressure}, '')::DECIMAL(10,2),
+              NULLIF(${validatedData.wet_bulb}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_temperature_a}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_temperature_b}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_moisture_a}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_moisture_b}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_temperature_c}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.soil_moisture_c}, '')::DECIMAL(8,2),
+              NULLIF(${validatedData.precipitation}, '')::DECIMAL(8,4)
             WHERE EXISTS (SELECT 1 FROM station_id)
             ON CONFLICT (station_id, date_time) 
             DO UPDATE SET
