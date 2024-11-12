@@ -317,114 +317,101 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
-      <div className="flex flex-col items-center space-y-1">
+    <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
+      <div className="w-full max-w-6xl space-y-4">
+        <div className="flex flex-col items-center">
+          <div className="flex flex-col space-y-4 bg-[cornflowerblue] p-4 rounded-xl shadow-md">
+            {/* Top row with date controls */}
+            <div className="flex items-center justify-center space-x-4">
+              <select
+                value={useCustomEndDate ? 'custom' : timeRange}
+                onChange={handleTimeRangeChange}
+                className="neumorphic-button dropdown h-10"
+              >
+                <option value="1">1 Day</option>
+                <option value="3">Past 3 Days</option>
+                <option value="7">Past 7 Days</option>
+                <option value="14">Past 14 Days</option>
+                <option value="30">Past 30 Days</option>
+                <option value="custom">Custom Range</option>
+              </select>
 
-        {/* Time range selector on its own line */}
-        <div className="flex space-x-4">
-          <select
-            value={useCustomEndDate ? 'custom' : timeRange}
-            onChange={handleTimeRangeChange}
-            className="my-button text-xs"
-          >
-            <option value="1">1 Day</option>
-            <option value="3">Past 3 Days</option>
-            <option value="7">Past 7 Days</option>
-            <option value="14">Past 14 Days</option>
-            <option value="30">Past 30 Days</option>
-            <option value="custom">Custom Range</option>
-          </select>
+              <div className="flex items-center space-x-2">
+                {isOneDay && (
+                  <button onClick={handlePrevDay} className="neumorphic-button nav-button h-10 w-10">
+                    &lt;
+                  </button>
+                )}
+                
+                <input
+                  type="date"
+                  value={format(selectedDate, 'yyyy-MM-dd')}
+                  onChange={handleDateChange}
+                  className="neumorphic-button date-picker h-10"
+                />
+                
+                {isOneDay && (
+                  <button onClick={handleNextDay} className="neumorphic-button nav-button h-10 w-10">
+                    &gt;
+                  </button>
+                )}
+
+                {!isOneDay && (
+                  <input
+                    type="date"
+                    value={format(endDate, 'yyyy-MM-dd')}
+                    onChange={handleEndDateChange}
+                    className="neumorphic-button date-picker h-10"
+                    min={format(selectedDate, 'yyyy-MM-dd')}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Bottom row with station selector */}
+            {selectedStation && (
+              <div className="flex justify-center">
+                <select
+                  value={selectedStation}
+                  onChange={handleStationChange}
+                  className="neumorphic-button dropdown h-10"
+                >
+                  <option value="">All Stations</option>
+                  {stations.map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Date picker section */}
-        <div className="flex items-center space-x-2">
-          {isOneDay && (
-            <button onClick={handlePrevDay} className="my-button text-lg px-3">
-              &lt;
-            </button>
-          )}
-          
-          <input
-            type="date"
-            value={format(selectedDate, 'yyyy-MM-dd')}
-            onChange={handleDateChange}
-            className="my-button"
-          />
-          
-          {isOneDay && (
-            <button onClick={handleNextDay} className="my-button text-lg px-3">
-              &gt;
-            </button>
-          )}
+        {!isLoading && !isStationChanging && !isPending && (
+          <div className="w-full max-w-6xl space-y-4">
 
-          {!isOneDay && (
-            <input
-              type="date"
-              value={format(endDate, 'yyyy-MM-dd')}
-              onChange={handleEndDateChange}
-              className="my-button"
-              min={format(selectedDate, 'yyyy-MM-dd')}
-            />
-          )}
-        </div>
+            {observationsDataHour && selectedStation && (
+              <HourWxSnowGraph 
+                hourAverages={observationsDataHour} 
+              />
+            )}
 
-        <div className="flex space-x-1"></div>
-
-        {/* Add this new section for time range selection */}
-        <div className="flex items-center space-x-2">
-        </div>
-
-        {/* Station dropdown - only show when a station is selected */}
-        {selectedStation && (
-          <select
-            value={selectedStation}
-            onChange={handleStationChange}
-            className="my-button text-xs mb-4"
-          >
-            <option value="">All Stations</option>
-            {stations.map((station) => (
-              <option key={station.id} value={station.id}>
-                {station.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      {isLoading || isStationChanging || isPending ? (
-        <div className="flex items-center justify-center mt-4">
-          <p className="text-gray-500">Loading...</p>
-        </div>
-      ) : (
-        <div className="tables-wrapper">
-          {observationsDataDay && (
-            <div className="table-container mt-4">
+            {observationsDataDay && (
               <DayAveragesTable 
                 dayAverages={observationsDataDay} 
                 onStationClick={handleStationClick}
               />
-            </div>
-          )}
-          {observationsDataHour && selectedStation && (
-            <div className="table-container mt-4">
-              <HourWxSnowGraph hourAverages={observationsDataHour} />
-              <HourWxTable hourAverages={observationsDataHour} />
-            </div>
-          )}
-        </div>
-      )}
+            )}
 
-      {/* Weather Data Update Status Widget, not working now, probably unnecessary */}
-      {/* <div className="mt-8 p-4 bg-white rounded shadow">
-        <h2 className="text-lg font-semibold mb-2">
-          Weather Data Update Status
-        </h2>
-        {lastUpdateTime ? (
-          <p>Last update: {lastUpdateTime}</p>
-        ) : (
-          <p>No updates yet</p>
+            {observationsDataHour && selectedStation && (
+              <HourWxTable 
+                hourAverages={observationsDataHour} 
+              />
+            )}
+          </div>
         )}
-      </div> */}
+      </div>
     </main>
   );
 }
