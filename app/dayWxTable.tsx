@@ -243,11 +243,22 @@ function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps
         )
       );
 
+
+      
     const cellsEnter = cells
       .enter()
       .append('td')
       .merge(cells as any)
-      .attr('class', d => d.isStation ? 'cursor-pointer hover:text-blue-600 hover:underline' : '')
+      .attr('class', d => d.isStation ? 
+        // Basic styling
+        'cursor-pointer ' +         
+        'neumorphic-cell ' +       // Add the neumorphic cell class
+        
+        // Animation
+        'transition-all ' +        
+        'duration-300'             
+        : ''
+      )
       .on('click', (event, d) => {
         if (d.isStation && d.stid) {
           console.log('Clicked station:', d.stid);
