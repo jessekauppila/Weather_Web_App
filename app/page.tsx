@@ -329,7 +329,7 @@ export default function Home() {
           )}
           {observationsDataHour && selectedStation && (
             <div className="table-container mt-4">
-              <HourWxSnowGraph hourAverages={observationsDataHour} />
+                    {/* <HourWxSnowGraph hourAverages={observationsDataHour} />*/}
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}

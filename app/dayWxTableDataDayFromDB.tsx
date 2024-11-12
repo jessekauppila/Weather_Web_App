@@ -21,35 +21,118 @@ function calculateStandardDeviation(
   return Math.sqrt(variance);
 }
 
+interface SnowDataPoint {
+  date_time: string;
+  snow_depth: number;
+}
+
+
+// This is designg for 
 function filterOutliers(
-  snowDepths: number[],
-  threshold = 2
-): number[] {
-  if (snowDepths.length === 0) return [];
+  data: SnowDataPoint[],
+  threshold = 10,          // Minimum reliable snow depth (inches)
+  maxPositiveChange = 3,   // Maximum allowed positive hourly change (inches)
+  maxNegativeChange = 10,  // Maximum allowed negative hourly change (inches)
+  windowSize = 12,         // Hours for rolling average
+  useEarlySeasonFilter = true  // New parameter to control early season filtering
+): SnowDataPoint[] {
+  if (data.length === 0) return [];
 
-  // First filter out invalid negative values
-  snowDepths = snowDepths.filter((value) => value > -1);
+  // Sort data by date_time
+  const sortedData = [...data].sort((a, b) => 
+    new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+  );
 
-  const mean = calculateMean(snowDepths);
-  const stdDev = calculateStandardDeviation(snowDepths, mean);
+  console.log('Input data points:', sortedData.map(d => ({
+    time: d.date_time,
+    depth: d.snow_depth
+  })));
 
-  console.log('Outlier detection:', {
-    mean,
-    stdDev,
-    threshold,
-    thresholdValue: threshold * stdDev,
-  });
+  // Step 1: Calculate rolling average
+  const calculateRollingAverage = (index: number): number => {
+    const windowStart = Math.max(0, index - windowSize + 1);
+    const windowValues = sortedData
+      .slice(windowStart, index + 1)
+      .map(d => d.snow_depth)
+      .filter(d => !isNaN(d));
+    
+    return windowValues.length > 0
+      ? windowValues.reduce((sum, val) => sum + val, 0) / windowValues.length
+      : 0;
+  };
 
-  return snowDepths.filter((value) => {
-    const deviation = Math.abs(value - mean);
-    const isValid = deviation <= threshold * stdDev;
-    if (!isValid) {
-      console.log(
-        `Removing outlier: ${value} (deviation: ${deviation})`
-      );
+  // Apply early season filtering
+  const filteredData = sortedData.map((point, index) => ({
+    ...point,
+    rollingAvg: calculateRollingAverage(index)
+  }));
+
+  let validSnowStarted = false;
+  const result: SnowDataPoint[] = [];
+  let previousValidDepth: number | null = null;
+
+  for (let i = 0; i < filteredData.length; i++) {
+    const current = filteredData[i];
+    
+    // Only apply early season filtering if enabled
+    if (useEarlySeasonFilter) {
+      if (!validSnowStarted && current.rollingAvg > threshold) {
+        validSnowStarted = true;
+      }
+
+      if (!validSnowStarted) {
+        result.push({
+          date_time: current.date_time,
+          snow_depth: NaN
+        });
+        continue;
+      }
     }
-    return isValid;
+
+    // Check for unrealistic hourly changes
+    const hourlyChange = previousValidDepth !== null 
+      ? current.snow_depth - previousValidDepth
+      : 0;
+
+    if (hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange) {
+      console.log(`Removing outlier at ${current.date_time}: ${current.snow_depth} inches (change: ${hourlyChange.toFixed(2)} inches)`);
+      result.push({
+        date_time: current.date_time,
+        snow_depth: NaN
+      });
+    } else {
+      result.push({
+        date_time: current.date_time,
+        snow_depth: current.snow_depth
+      });
+      previousValidDepth = current.snow_depth;
+    }
+  }
+
+  const validPoints = result.filter(d => !isNaN(d.snow_depth));
+  const filteredOutPoints = result.filter(d => isNaN(d.snow_depth));
+  
+  console.log('Filtering summary:', {
+    originalPoints: data.length,
+    validPoints: validPoints.length,
+    filteredOutPoints: filteredOutPoints.length,
+    threshold,
+    maxPositiveChange,
+    maxNegativeChange,
+    windowSize
   });
+
+  console.log('Valid data points:', validPoints.map(d => ({
+    time: d.date_time,
+    depth: d.snow_depth
+  })));
+
+  console.log('Filtered out points:', filteredOutPoints.map(d => ({
+    time: d.date_time,
+    depth: 'filtered'
+  })));
+
+  return result;
 }
 
 function calculateSnowDepthAccumulation(data: any[]) {
@@ -269,26 +352,43 @@ function wxTableDataDayFromDB(
       'snow_depth',
       {
         avg: 'Total Snow Depth Change',
-        //max: 'Snow Depth Max',
       },
       'in',
       1,
       (numbers) => {
         console.log('Raw snow_depth data:', numbers);
 
-        const filteredSnowDepths = filterOutliers(
-          numbers.filter((n) => !isNaN(n)),
-          2
-        );
-        console.log('Filtered snow depth h:', filteredSnowDepths);
+        // Create data points with timestamps
+        const dataPoints = (averages.date_time as string[])
+          .map((date_time: string, index: number) => ({
+            date_time,
+            snow_depth: numbers[index]
+          }))
+          .filter(d => !isNaN(d.snow_depth));
 
-        const firstValue = filteredSnowDepths[0];
-        const lastValue =
-          filteredSnowDepths[filteredSnowDepths.length - 1];
+        // Apply the new filtering
+        const filteredData = filterOutliers(
+          dataPoints,
+          10,  // 10 inches threshold
+          3,   // 3 inches max hourly change
+          10,  // 10 inches max negative change
+          12,  // window size
+          true // use early season filtering
+        );
+
+        const filteredDepths = filteredData
+          .map(d => d.snow_depth)
+          .filter(d => !isNaN(d));
+
+        console.log('Filtered snow depths:', filteredDepths);
+
+        const firstValue = filteredDepths[0] || 0;
+        const lastValue = filteredDepths[filteredDepths.length - 1] || 0;
         const change = lastValue - firstValue;
+
         return {
           avg: change,
-          max: Math.max(...filteredSnowDepths),
+          max: Math.max(...filteredDepths)
         };
       },
       (value, unit) => {
@@ -307,17 +407,24 @@ function wxTableDataDayFromDB(
         console.log('Raw snow_depth-24h data:', numbers);
 
         const filteredSnowDepths = filterOutliers(
-          numbers.filter((n) => !isNaN(n)),
-          2
-        );
-        console.log('Filtered snow depths 24 h:', filteredSnowDepths);
+          numbers.map((snow_depth, index) => ({
+            date_time: (averages.date_time as string[])[index],
+            snow_depth
+          })),
+          10,   // threshold (won't be used)
+          3,    // 3 inches max hourly change
+          10,   // 10 inches max negative change
+          12,   // window size
+          false // disable early season filtering
+        ).map(point => point.snow_depth);
+        console.log('Filtered snow depths 24h:', filteredSnowDepths);
 
         const data = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({
             date_time,
             snow_depth: filteredSnowDepths[index],
           }))
-          .filter((d) => d.snow_depth !== undefined);
+          .filter((d) => !isNaN(d.snow_depth));
         console.log('Processed data points:', data);
 
         const results = calculateSnowDepthAccumulation(data);
