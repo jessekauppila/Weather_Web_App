@@ -47,19 +47,19 @@ type Column = string | { key: string; displayName: string };
 
 const measurementDescriptions: Record<string, string> = {
   Time: 'Local time of the measurement',
-  'Air Temp': 'Air Temperature in degrees Fahrenheit',
-  'Wind Speed': 'Average Wind Speed in miles per hour',
+  'Air Temp': 'Air temperature each hour in degrees Fahrenheit',
+  'Wind Speed': 'Wind speed each hour in miles per hour',
   'Wind Gust':
-    'Maximum Wind Gust in miles per hour during the measurement period',
+    'Maximum wind gust over measurement period in miles per hour',
   'Wind Direction':
-    'Wind Direction in degrees (0-360, where 0/360 is North)',
+    'Wind direction in degrees (0 is North, 90 is East, 180 is South, 270 is West)',
   'Total Snow Depth':
     'Total depth of snow on the ground in inches. (This the depth of the snow pack from the surface of the snow to the ground.) (This is susceptible to sensor errors particularly in the summer.)',
   '24h Snow Depth':
-    'Change in snow depth. (Snowboard cleared in the morning to provide record of hourly snow accumulation.) (This is susceptible to sensor errors particularly in the summer.)',
+    'Record of hourly snow accumulation. (Snow board cleared in the morning to provide record of hourly snow accumulation.)',
   'Precip Accum':
-    'Liquid precipitation accumulated during the hour in inches',
-  'Relative Humidity': 'Relative Humidity as a percentage (0-100%)',
+    'Liquid precipitation accumulated during the hour in inches. Also known as "snow water equivalent".',
+  'Relative Humidity': 'Relative humidity as a percentage (0-100%)',
 };
 
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
@@ -129,7 +129,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .attr('data-tooltip-id', 'hourly-measurement-tooltip')
       .attr(
         'data-tooltip-content',
-        'Hourly weather station data, no filtering, only converted from metric to imperial'
+        'Raw weather station data'
       );
 
     // Headers

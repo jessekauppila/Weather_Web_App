@@ -49,6 +49,54 @@ export default function Home() {
 
   const [isPending, startTransition] = useTransition();
 
+  const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
+
+  const predefinedRanges = [
+    {
+      label: '1 Day',
+      value: () => {
+        setIsOneDay(true);
+        const end = new Date();
+        const start = new Date();
+        return [start, end];
+      }
+    },
+    {
+      label: '3 Days',
+      value: () => {
+        setIsOneDay(false);
+        const end = new Date();
+        const start = subDays(new Date(), 2);
+        return [start, end];
+      }
+    },
+    {
+      label: '7 Days',
+      value: () => {
+        setIsOneDay(false);
+        const end = new Date();
+        const start = subDays(new Date(), 6);
+        return [start, end];
+      }
+    },
+    {
+      label: '14 Days',
+      value: () => {
+        setIsOneDay(false);
+        const end = new Date();
+        const start = subDays(new Date(), 13);
+        return [start, end];
+      }
+    },
+    {
+      label: 'Custom Range',
+      value: () => {
+        setIsOneDay(false);
+        return [selectedDate, endDate];
+      }
+    }
+  ];
+
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -61,11 +109,13 @@ export default function Home() {
     const value = event.target.value;
     if (value === 'custom') {
       setUseCustomEndDate(true);
+      setIsOneDay(false);
     } else {
       setUseCustomEndDate(false);
       setTimeRange(Number(value));
       setSelectedDate(subDays(new Date(), Number(value) - 1));
       setEndDate(new Date());
+      setIsOneDay(value === '1');
     }
   };
 
@@ -250,47 +300,64 @@ export default function Home() {
     [stations]
   );
 
+  // In your main Home component, add this handler
+  const handleStationClick = (stationId: string) => {
+    console.log('handleStationClick called with:', stationId); // Debug log
+    setIsStationChanging(true);
+    setSelectedStation(stationId);
+    
+    startTransition(() => {
+      console.log('Setting stationIds to:', [stationId]); // Debug log
+      setStationIds([stationId]);
+    });
+
+    setTimeout(() => {
+      setIsStationChanging(false);
+    }, 300);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
       <div className="flex flex-col items-center space-y-1">
-        {/* First date picker section */}
+
+        {/* Time range selector on its own line */}
         <div className="flex space-x-4">
-          <button
-            onClick={handlePrevDay}
-            className="my-button text-xs"
-          >
-            Previous Day
-          </button>
-          <input
-            type="date"
-            value={format(selectedDate, 'yyyy-MM-dd')}
-            onChange={handleDateChange}
-            className="my-button"
-          />
-          <button
-            onClick={handleNextDay}
-            className="my-button text-xs"
-          >
-            Next Day
-          </button>
-        </div>
-
-        <div className="flex space-x-1"></div>
-
-        {/* Add this new section for time range selection */}
-        <div className="flex items-center space-x-2">
           <select
             value={useCustomEndDate ? 'custom' : timeRange}
             onChange={handleTimeRangeChange}
             className="my-button text-xs"
           >
             <option value="1">1 Day</option>
-            <option value="3">3 Days</option>
-            <option value="7">7 Days</option>
+            <option value="3">Past 3 Days</option>
+            <option value="7">Past 7 Days</option>
+            <option value="14">Past 14 Days</option>
+            <option value="30">Past 30 Days</option>
             <option value="custom">Custom Range</option>
           </select>
+        </div>
 
-          {useCustomEndDate && (
+        {/* Date picker section */}
+        <div className="flex items-center space-x-2">
+          {isOneDay && (
+            <button onClick={handlePrevDay} className="my-button text-lg px-3">
+              &lt;
+            </button>
+          )}
+          
+          <input
+            type="date"
+            value={format(selectedDate, 'yyyy-MM-dd')}
+            onChange={handleDateChange}
+            className="my-button"
+          />
+          
+          {isOneDay && (
+            <button onClick={handleNextDay} className="my-button text-lg px-3">
+              &gt;
+            </button>
+          )}
+
+          {!isOneDay && (
             <input
               type="date"
               value={format(endDate, 'yyyy-MM-dd')}
@@ -299,6 +366,12 @@ export default function Home() {
               min={format(selectedDate, 'yyyy-MM-dd')}
             />
           )}
+        </div>
+
+        <div className="flex space-x-1"></div>
+
+        {/* Add this new section for time range selection */}
+        <div className="flex items-center space-x-2">
         </div>
 
         {/* New dropdown for station selection */}
@@ -324,12 +397,15 @@ export default function Home() {
         <div className="tables-wrapper">
           {observationsDataDay && (
             <div className="table-container mt-4">
-              <DayAveragesTable dayAverages={observationsDataDay} />
+              <DayAveragesTable 
+                dayAverages={observationsDataDay} 
+                onStationClick={handleStationClick}
+              />
             </div>
           )}
           {observationsDataHour && selectedStation && (
             <div className="table-container mt-4">
-                    {/* <HourWxSnowGraph hourAverages={observationsDataHour} />*/}
+              <HourWxSnowGraph hourAverages={observationsDataHour} />
               <HourWxTable hourAverages={observationsDataHour} />
             </div>
           )}
