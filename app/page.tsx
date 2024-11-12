@@ -374,19 +374,21 @@ export default function Home() {
         <div className="flex items-center space-x-2">
         </div>
 
-        {/* New dropdown for station selection */}
-        <select
-          value={selectedStation}
-          onChange={handleStationChange}
-          className="my-button text-xs mb-4"
-        >
-          <option value="">All Stations</option>
-          {stations.map((station) => (
-            <option key={station.id} value={station.id}>
-              {station.name}
-            </option>
-          ))}
-        </select>
+        {/* Station dropdown - only show when a station is selected */}
+        {selectedStation && (
+          <select
+            value={selectedStation}
+            onChange={handleStationChange}
+            className="my-button text-xs mb-4"
+          >
+            <option value="">All Stations</option>
+            {stations.map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {isLoading || isStationChanging || isPending ? (
