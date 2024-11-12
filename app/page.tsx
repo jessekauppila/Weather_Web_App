@@ -153,9 +153,8 @@ export default function Home() {
 
         setStations(mappedStations);
         // Set stationIds to include all station IDs initially
-        setStationIds(
-          mappedStations.map((station: any) => station.id)
-        );
+        const allStationIds = mappedStations.map((station: any) => station.id);
+        setStationIds(allStationIds);
       } catch (error) {
         console.error('Error fetching stations:', error);
       }
@@ -279,20 +278,17 @@ export default function Home() {
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setIsStationChanging(true);
       const selectedStationId = e.target.value;
-
-      // Immediate UI update
       setSelectedStation(selectedStationId);
 
-      // Defer the expensive state update
       startTransition(() => {
-        if (selectedStationId) {
-          setStationIds([selectedStationId]);
+        // If "All Stations" is selected (empty string)
+        if (!selectedStationId) {
+          setStationIds(stations.map(station => station.id));
         } else {
-          setStationIds(stations.map((station) => station.id));
+          setStationIds([selectedStationId]);
         }
       });
 
-      // Clear loading state after a brief delay
       setTimeout(() => {
         setIsStationChanging(false);
       }, 300);
@@ -300,15 +296,19 @@ export default function Home() {
     [stations]
   );
 
-  // In your main Home component, add this handler
+  // In your main Home component, modify this handler
   const handleStationClick = (stationId: string) => {
     console.log('handleStationClick called with:', stationId); // Debug log
     setIsStationChanging(true);
     setSelectedStation(stationId);
     
     startTransition(() => {
-      console.log('Setting stationIds to:', [stationId]); // Debug log
       setStationIds([stationId]);
+      // Automatically change to 7-day view when clicking a station
+      setTimeRange(7);
+      setIsOneDay(false);
+      setSelectedDate(subDays(new Date(), 6)); // Start date 6 days ago
+      setEndDate(new Date()); // End date today
     });
 
     setTimeout(() => {
@@ -369,7 +369,8 @@ export default function Home() {
             </div>
 
             {/* Bottom row with station selector */}
-            {selectedStation && (
+            {/* Station selector - show when a station is selected or after clicking from table */}
+            {(selectedStation || stationIds.length === 1) && (
               <div className="flex justify-center">
                 <select
                   value={selectedStation}
