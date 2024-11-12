@@ -333,3 +333,29 @@ input[type='datetime-local']:focus {
 .grid path {
   stroke-width: 0;
 }
+
+/* NOT USING THIS DATE PICKER */
+/* .react-datepicker-wrapper {
+  width: auto;
+}
+
+.react-datepicker__input-container input {
+  @apply px-3 py-2 border rounded-md;
+}
+
+.react-datepicker {
+  @apply shadow-lg border-gray-200;
+}
+
+.react-datepicker__header {
+  @apply bg-gray-50;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range {
+  @apply bg-blue-500 text-white;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply bg-blue-200;
+} */

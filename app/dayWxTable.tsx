@@ -10,9 +10,10 @@ interface DayAverage {
 
 interface DayAveragesTableProps {
   dayAverages: {
-    data: DayAverage[];
+    data: any[];
     title: string;
   };
+  onStationClick: (stationId: string) => void;
 }
 
 // Add this near the top of your file
@@ -80,7 +81,7 @@ const knownCategories = [
 
 type Column = string | { key: string; displayName: string };
 
-function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
+function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure to avoid recalculating on every render
@@ -232,17 +233,31 @@ function DayAveragesTable({ dayAverages }: DayAveragesTableProps) {
         headerStructure.flatMap((category) =>
           category.columns.map((col) => {
             const key = typeof col === 'string' ? col : col.key;
-            return { key, value: d[key] };
+            return {
+              key,
+              value: d[key],
+              isStation: key === 'Station',
+              stid: d.Stid
+            };
           })
         )
       );
-    cells
+
+    const cellsEnter = cells
       .enter()
       .append('td')
       .merge(cells as any)
-      .text((d) => d.value);
+      .attr('class', d => d.isStation ? 'cursor-pointer hover:text-blue-600 hover:underline' : '')
+      .on('click', (event, d) => {
+        if (d.isStation && d.stid) {
+          console.log('Clicked station:', d.stid);
+          onStationClick(d.stid);
+        }
+      })
+      .text(d => d.value);
+
     cells.exit().remove();
-  }, [dayAverages, headerStructure]);
+  }, [dayAverages, headerStructure, onStationClick]);
 
   return (
     <div className="table-container" ref={ref}>
