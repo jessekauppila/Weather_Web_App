@@ -284,6 +284,11 @@ export default function Home() {
         // If "All Stations" is selected (empty string)
         if (!selectedStationId) {
           setStationIds(stations.map(station => station.id));
+          // Set to 1-day view when selecting "All Stations"
+          setTimeRange(1);
+          setIsOneDay(true);
+          setSelectedDate(new Date()); // Reset to today
+          setEndDate(new Date());
         } else {
           setStationIds([selectedStationId]);
         }
