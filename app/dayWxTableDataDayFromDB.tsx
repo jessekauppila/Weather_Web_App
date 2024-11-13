@@ -529,31 +529,29 @@ function wxTableDataDayFromDB(
     return stationA.localeCompare(stationB);
   });
 
-  const title =
-    formattedData.length > 0
-      ? (() => {
-          const startMoment = moment(
-            formattedData[0]['Start Date Time'],
-            'MMM D, YYYY, h:mm a'
-          );
-          const endMoment = moment(
-            formattedData[0]['End Date Time'],
-            'MMM D, YYYY, h:mm a'
-          );
+  const title = formattedData.length > 0
+    ? (() => {
+        const startMoment = moment(
+          formattedData[0]['Start Date Time'],
+          'MMM D, YYYY, h:mm a'
+        );
+        const endMoment = moment(
+          formattedData[formattedData.length - 1]['End Date Time'],
+          'MMM D, YYYY, h:mm a'
+        );
 
-          const startDate = startMoment.format('MMM D');
-          const endDate = endMoment.format('MMM D');
-          const startTime = startMoment.format('h:mm A');
-          const endTime = endMoment.format('h:mm A');
+        const startDate = startMoment.format('MMM D');
+        const endDate = endMoment.format('MMM D');
+        const startTime = startMoment.format('h:mm A');
+        const endTime = endMoment.format('h:mm A');
 
-          const timeRange =
-            startDate === endDate
-              ? `${startDate}, ${startTime} - ${endTime}`
-              : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
-
-          return `Summary - ${timeRange}`;
-        })()
-      : 'Summary -';
+        if (options.mode === 'daily') {
+          return `Daily - ${startDate}, ${startTime} to ${endDate}, ${endTime}`;
+        } else {
+          return `Summary - ${startDate}, ${startTime} to ${endDate}, ${endTime}`;
+        }
+      })()
+    : options.mode === 'daily' ? 'Daily -' : 'Summary -';
 
   return { data: formattedData, title };
 }
