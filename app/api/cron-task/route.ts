@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Runtime config
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-
-// Cron config using the correct format
-export const config = {
-  schedule: '1,10,30 * * * *'
-};
+// Use Node.js runtime instead of edge
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const currentTime = new Date();
