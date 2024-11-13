@@ -12,7 +12,7 @@ import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import DayWxSnowGraph from './DayWxSnowGraph';
+import DayWxSnowGraph from './dayWxSnowGraph';
 //import { ObservationsData } from './types'; // Add this import
 
 interface Station {
@@ -465,7 +465,7 @@ export default function Home() {
             />
           )}
 
-          {observationsDataDay && selectedStation && (
+          {observationsDataDay && selectedStation && stationIds.length === 1 && (
             <DayWxSnowGraph 
               dayAverages={observationsDataDay} 
             />
