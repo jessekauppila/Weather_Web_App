@@ -2,7 +2,15 @@
   "crons": [
     {
       "path": "/api/cron-task",
-      "schedule": "1 10 30 * * * *"
+      "schedule": "1 * * * *"
+    },
+    {
+      "path": "/api/cron-task",
+      "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/cron-task",
+      "schedule": "30 * * * *"
     }
   ]
 }
