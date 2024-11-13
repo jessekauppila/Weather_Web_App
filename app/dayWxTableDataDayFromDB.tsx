@@ -1,31 +1,10 @@
 //maybe I should do the unit conversions in the DB query...
 
 import moment from 'moment-timezone';
-
-function calculateMean(snowDepths: number[]): number {
-  return (
-    snowDepths.reduce((acc, value) => acc + value, 0) /
-    snowDepths.length
-  );
-}
-
-function calculateStandardDeviation(
-  snowDepths: number[],
-  mean: number
-): number {
-  const variance =
-    snowDepths.reduce(
-      (acc, value) => acc + Math.pow(value - mean, 2),
-      0
-    ) / snowDepths.length;
-  return Math.sqrt(variance);
-}
-
 interface SnowDataPoint {
   date_time: string;
   snow_depth: number;
 }
-
 
 // This is designg for 
 function filterOutliers(
