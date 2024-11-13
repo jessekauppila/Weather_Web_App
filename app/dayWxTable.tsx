@@ -14,6 +14,7 @@ interface DayAveragesTableProps {
     title: string;
   };
   onStationClick: (stationId: string) => void;
+  mode: 'summary' | 'daily';
 }
 
 // Add this near the top of your file
@@ -45,48 +46,68 @@ const measurementDescriptions: Record<string, string> = {
 };
 
 // Define the header structure for known categories
-const knownCategories = [
-  {
-    category: 'Station',
-    columns: [
-      { key: 'Station', displayName: 'Name' },
-      'Elevation',
-    ] as Column[],
-  },
-  {
-    category: 'Temperatures',
-    columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
-  },
-  {
-    category: 'Winds',
-    columns: [
-      'Cur Wind Speed',
-      'Wind Speed Avg',
-      'Max Wind Gust',
-      'Wind Direction',
-    ],
-  },
-  {
-    category: 'Estimated Precipitation',
-    columns: [
-      'Total Snow Depth Change',
-      //'Snow Depth Max',
-      '24h Snow Accumulation',
-      'Precip Accum One Hour',
-      'Precipitation',
-    ],
-  },
-  { category: 'RH', columns: ['Relative Humidity'] },
-];
+const getKnownCategories = (mode: 'summary' | 'daily') => {
+  console.log('Current mode in table code:', mode);
+
+  const commonCategories = [
+    {
+      category: 'Temperatures',
+      columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
+    },
+    {
+      category: 'Winds',
+      columns: [
+        'Cur Wind Speed',
+        'Wind Speed Avg',
+        'Max Wind Gust',
+        'Wind Direction',
+      ],
+    },
+    {
+      category: 'Estimated Precipitation',
+      columns: [
+        'Total Snow Depth Change',
+        '24h Snow Accumulation',
+        'Precip Accum One Hour',
+        'Precipitation',
+      ],
+    },
+    { category: 'RH', columns: ['Relative Humidity'] },
+  ];
+
+  if (mode === 'summary') {
+    console.log('Returning summary categories');
+    return [
+      {
+        category: 'Station',
+        columns: [
+          { key: 'Station', displayName: 'Name' },
+          'Elevation',
+        ] as Column[],
+      },
+      ...commonCategories,
+    ];
+  } else {
+    console.log('Returning daily categories');
+    return [
+      {
+        category: '',
+        columns: ['Date'] as Column[],
+      },
+      ...commonCategories,
+    ];
+  }
+};
 
 type Column = string | { key: string; displayName: string };
 
-function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps) {
+function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
+  console.log('Table mode in table code:', mode);
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure to avoid recalculating on every render
   const headerStructure = useMemo(() => {
-    if (dayAverages.data.length === 0) return knownCategories;
+    if (dayAverages.data.length === 0) return getKnownCategories(mode);
 
     // Get all unique keys from the data
     const allKeys = Array.from(
@@ -95,7 +116,7 @@ function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps
 
     // Get all keys already included in the known categories
     const includedKeys = new Set(
-      knownCategories.flatMap((category) => category.columns)
+      getKnownCategories(mode).flatMap((category) => category.columns)
     );
 
     // Find keys not yet included
@@ -103,10 +124,10 @@ function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps
 
     // Add the 'Other' category with remaining columns
     return [
-      ...knownCategories,
+      ...getKnownCategories(mode),
       //{ category: 'Other', columns: otherKeys },
     ];
-  }, [dayAverages.data]);
+  }, [dayAverages.data, mode]);
 
   useEffect(() => {
     if (
@@ -136,8 +157,9 @@ function DayAveragesTable({ dayAverages, onStationClick }: DayAveragesTableProps
       .selectAll('caption')
       .data([null])
       .join('caption')
-      .text(dayAverages.title)
-      .style('caption-side', 'top');
+      .html(dayAverages.title.replace('\n', '<br/>'))
+      .style('caption-side', 'top')
+      .style('white-space', 'pre-line');
 
     // Headers
     const thead = tableUpdate
