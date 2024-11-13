@@ -9,6 +9,7 @@ import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
 
 export async function GET(request: NextRequest) {
+  console.log('Upload endpoint called at:', new Date().toISOString());
   return handleRequest(request);
 }
 
@@ -20,11 +21,16 @@ async function handleRequest(request: NextRequest) {
   let client;
 
   try {
+    console.log('Starting data upload process');
     client = await db.connect();
 
     // Set time range for the last week
     const end_time_pst = moment().tz('America/Los_Angeles');
     const start_time_pst = moment(end_time_pst).subtract(1, 'hours');
+    console.log('Time range:', {
+      start: start_time_pst.format(),
+      end: end_time_pst.format()
+    });
 
     // Define station IDs
     const stids = [
@@ -117,6 +123,9 @@ async function handleRequest(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    let successCount = 0;
+    let errorCount = 0;
 
     for (const observation of observationsData) {
       console.log(
@@ -314,6 +323,7 @@ async function handleRequest(request: NextRequest) {
             );
           }
           console.log('Insert result:', insertResult);
+          successCount++;
         } catch (error) {
           console.error('Error inserting observation:', error);
           console.error(
@@ -339,21 +349,25 @@ async function handleRequest(request: NextRequest) {
             })
           );
           throw error; // Re-throw the error to be caught by the outer try-catch
+          errorCount++;
         }
       }
     }
 
     return NextResponse.json({
-      message: 'Weekly data updated successfully',
+      message: 'Data update completed',
+      stats: {
+        processed: observationsData.length,
+        success: successCount,
+        errors: errorCount
+      }
     });
   } catch (error) {
-    console.error('Error updating weekly data:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { error: 'Error updating weekly data: ' + errorMessage },
-      { status: 500 }
-    );
+    console.error('Error in handleRequest:', error);
+    return NextResponse.json({ 
+      error: 'Error updating data',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   } finally {
     if (client) {
       await client.release();
