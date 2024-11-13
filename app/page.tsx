@@ -54,6 +54,8 @@ export default function Home() {
   // Add state for table mode
   const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
 
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   const predefinedRanges = [
     {
       label: '1 Day',
@@ -287,33 +289,33 @@ export default function Home() {
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setIsStationChanging(true);
+      setIsTransitioning(true);  // Start transition
       const selectedStationId = e.target.value;
-      setSelectedStation(selectedStationId);
-
-      console.log('Current table mode:', tableMode); // Log current mode before change
-
+      
       startTransition(() => {
         if (!selectedStationId) {
-          console.log('🔄 Switching FROM', tableMode, 'TO summary mode - All Stations selected');
+          setSelectedStation('');
           setStationIds(stations.map(station => station.id));
           setTableMode('summary');
           setTimeRange(1);
           setIsOneDay(true);
           setSelectedDate(new Date());
           setEndDate(new Date());
+          setUseCustomEndDate(false);
         } else {
-          console.log('🔄 Switching FROM', tableMode, 'TO daily mode - Single station:', selectedStationId);
+          setSelectedStation(selectedStationId);
           setStationIds([selectedStationId]);
           setTableMode('daily');
         }
       });
 
+      // Use a slightly longer timeout to ensure smooth transition
       setTimeout(() => {
+        setIsTransitioning(false);
         setIsStationChanging(false);
-      }, 300);
+      }, 500);
     },
-    [stations, tableMode] // Added tableMode to dependencies
+    [stations]
   );
 
   // In your main Home component, modify this handler
@@ -439,7 +441,7 @@ export default function Home() {
           </div>
         </div>
 
-        {!isLoading && !isStationChanging && !isPending && (
+        {!isLoading && !isTransitioning && !isPending && (
           <div className="w-full max-w-6xl space-y-4">
 
             {/* {observationsDataHour && selectedStation && (
