@@ -43,6 +43,8 @@ const measurementDescriptions: Record<string, string> = {
   //   'Total Liquid Precipitation - Sum of hourly precipitation readings',
   'Relative Humidity':
     'Current Relative Humidity - The most recent humidity reading',
+  'Total Snow Depth':
+    'Current Snow Depth - The last snow depth reading',
 };
 
 // Define the header structure for known categories
@@ -66,6 +68,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
     {
       category: 'Estimated Precipitation',
       columns: [
+        'Total Snow Depth',
         'Total Snow Depth Change',
         '24h Snow Accumulation',
         'Precip Accum One Hour',
