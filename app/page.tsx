@@ -56,6 +56,9 @@ export default function Home() {
 
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Add a new state for component visibility
+  const [isComponentVisible, setIsComponentVisible] = useState(true);
+
   const predefinedRanges = [
     {
       label: '1 Day',
@@ -289,31 +292,36 @@ export default function Home() {
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setIsTransitioning(true);  // Start transition
+      setIsComponentVisible(false);  // Hide components before transition
+      setIsTransitioning(true);
       const selectedStationId = e.target.value;
       
-      startTransition(() => {
-        if (!selectedStationId) {
-          setSelectedStation('');
-          setStationIds(stations.map(station => station.id));
-          setTableMode('summary');
-          setTimeRange(1);
-          setIsOneDay(true);
-          setSelectedDate(new Date());
-          setEndDate(new Date());
-          setUseCustomEndDate(false);
-        } else {
-          setSelectedStation(selectedStationId);
-          setStationIds([selectedStationId]);
-          setTableMode('daily');
-        }
-      });
-
-      // Use a slightly longer timeout to ensure smooth transition
+      // Short delay before state changes
       setTimeout(() => {
-        setIsTransitioning(false);
-        setIsStationChanging(false);
-      }, 500);
+        startTransition(() => {
+          if (!selectedStationId) {
+            setSelectedStation('');
+            setStationIds(stations.map(station => station.id));
+            setTableMode('summary');
+            setTimeRange(1);
+            setIsOneDay(true);
+            setSelectedDate(new Date());
+            setEndDate(new Date());
+            setUseCustomEndDate(false);
+          } else {
+            setSelectedStation(selectedStationId);
+            setStationIds([selectedStationId]);
+            setTableMode('daily');
+          }
+        });
+
+        // Show components after state changes
+        setTimeout(() => {
+          setIsComponentVisible(true);
+          setIsTransitioning(false);
+          setIsStationChanging(false);
+        }, 100);
+      }, 100);
     },
     [stations]
   );
@@ -441,30 +449,27 @@ export default function Home() {
           </div>
         </div>
 
-        {!isLoading && !isTransitioning && !isPending && (
-          <div className="w-full max-w-6xl space-y-4">
+        <div 
+          className={`w-full max-w-6xl space-y-4 transition-opacity duration-200 ${
+            isComponentVisible && !isLoading && !isPending 
+              ? 'opacity-100' 
+              : 'opacity-0'
+          }`}
+        >
+          {observationsDataDay && (
+            <DayAveragesTable 
+              dayAverages={observationsDataDay} 
+              onStationClick={handleStationClick}
+              mode={tableMode}
+            />
+          )}
 
-            {/* {observationsDataHour && selectedStation && (
-              <HourWxSnowGraph 
-                hourAverages={observationsDataHour} 
-              />
-            )} */}
-
-            {observationsDataDay && (
-              <DayAveragesTable 
-                dayAverages={observationsDataDay} 
-                onStationClick={handleStationClick}
-                mode={tableMode}
-              />
-            )}
-
-            {observationsDataHour && selectedStation && (
-              <HourWxTable 
-                hourAverages={observationsDataHour} 
-              />
-            )}
-          </div>
-        )}
+          {observationsDataHour && selectedStation && (
+            <HourWxTable 
+              hourAverages={observationsDataHour} 
+            />
+          )}
+        </div>
       </div>
     </main>
   );
