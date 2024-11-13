@@ -1,9 +1,16 @@
+//this is
+
 import { NextRequest, NextResponse } from 'next/server';
 
-export const config = {
-  runtime: 'edge',
-  cron: '1,10,30 * * * *'  // UTC timezone
-};
+// New way to specify runtime and cron config
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const maxDuration = 300;  // 5 minutes in seconds
+
+// Cron schedule using a separate config object
+export const preferredRegion = 'auto';
+export const schedule = '1,10,30 * * * *';
 
 export async function GET(req: NextRequest) {
   const currentTime = new Date();
