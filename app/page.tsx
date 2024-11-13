@@ -244,50 +244,51 @@ export default function Home() {
   ]);
 
   //Check to see if it's time to run the uploadDataLastHour API call
-  useEffect(() => {
-    const checkAndRunUpdate = async () => {
-      const now = new Date();
-      console.log(`Checking for update at ${now.toLocaleString()}`);
+  //Taking away this client side cron job for now, instead using Vercel's built in tools
+  // useEffect(() => {
+  //   const checkAndRunUpdate = async () => {
+  //     const now = new Date();
+  //     console.log(`Checking for update at ${now.toLocaleString()}`);
 
-      const minutes = now.getMinutes();
+  //     const minutes = now.getMinutes();
 
-      if (
-        minutes === 1 //||
-        // minutes === 5 ||
-        // minutes === 20 ||
-        // minutes === 30
-      ) {
-        console.log(
-          `Running update at ${minutes} minute(s) past the hour`
-        );
-        try {
-          const response = await fetch('/api/uploadDataLastHour', {
-            method: 'POST',
-          });
-          if (response.ok) {
-            setLastUpdateTime(now.toLocaleString());
-            console.log('Update successful at', now.toLocaleString());
-          } else {
-            console.error('Update failed:', await response.text());
-          }
-        } catch (error) {
-          console.error('Error running update:', error);
-        }
-      } else {
-        console.log(
-          `No update needed at ${minutes} minute(s) past the hour`
-        );
-      }
-    };
-    // Run the check immediately on component mount
-    checkAndRunUpdate();
+  //     if (
+  //       minutes === 1 //||
+  //       // minutes === 5 ||
+  //       // minutes === 20 ||
+  //       // minutes === 30
+  //     ) {
+  //       console.log(
+  //         `Running update at ${minutes} minute(s) past the hour`
+  //       );
+  //       try {
+  //         const response = await fetch('/api/uploadDataLastHour', {
+  //           method: 'POST',
+  //         });
+  //         if (response.ok) {
+  //           setLastUpdateTime(now.toLocaleString());
+  //           console.log('Update successful at', now.toLocaleString());
+  //         } else {
+  //           console.error('Update failed:', await response.text());
+  //         }
+  //       } catch (error) {
+  //         console.error('Error running update:', error);
+  //       }
+  //     } else {
+  //       console.log(
+  //         `No update needed at ${minutes} minute(s) past the hour`
+  //       );
+  //     }
+  //   };
+  //   // Run the check immediately on component mount
+  //   checkAndRunUpdate();
 
-    // Then run the check every minute
-    const intervalId = setInterval(checkAndRunUpdate, 60000);
+  //   // Then run the check every minute
+  //   const intervalId = setInterval(checkAndRunUpdate, 60000);
 
-    // Clean up the interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
+  //   // Clean up the interval on component unmount
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
