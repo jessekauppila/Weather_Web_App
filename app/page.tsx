@@ -452,6 +452,7 @@ export default function Home() {
               <DayAveragesTable 
                 dayAverages={observationsDataDay} 
                 onStationClick={handleStationClick}
+                mode={tableMode}
               />
             )}
 

@@ -493,6 +493,11 @@ function wxTableDataDayFromDB(
     }
     delete formatted['date_time'];
 
+    if (options.mode === 'daily') {
+      const dateTime = moment(Array.isArray(averages.date_time) ? averages.date_time[0] : averages.date_time);
+      formatted['Date'] = dateTime.format('MMM D');
+    }
+
     return formatted;
   });
 
@@ -524,8 +529,12 @@ function wxTableDataDayFromDB(
         const startTime = startMoment.format('h:mm A');
         const endTime = endMoment.format('h:mm A');
 
+        const stationInfo = options.mode === 'daily' 
+          ? `${formattedData[0].Station} - ${formattedData[0].Elevation}\n` 
+          : '';
+
         if (options.mode === 'daily') {
-          return `Daily - ${startDate}, ${startTime} to ${endDate}, ${endTime}`;
+          return `${stationInfo}${startDate}, ${startTime} - ${endDate}, ${endTime}`;
         } else {
           return `Summary - ${startDate}, ${startTime} to ${endDate}, ${endTime}`;
         }
