@@ -514,3 +514,21 @@ input[type='datetime-local']:focus {
   box-shadow: none;
   border-radius: 0;
 }
+
+/* Add this to your existing styles */
+.weatherTable td:nth-child(3) {
+  background-color: cornflowerblue;
+  color: lightgrey;
+  border: 0.5px solid #6e90cf;
+}
+
+.weatherTable tr:nth-child(even) td:nth-child(3) {
+  background-color: #79a1ed;
+  color: lightgrey;
+}
+
+/* Only apply when in daily mode */
+.weatherTable.daily-mode td:nth-child(3) {
+  background-color: cornflowerblue;
+  color: lightgrey;
+}
