@@ -51,6 +51,9 @@ export default function Home() {
 
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
 
+  // Add state for table mode
+  const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
+
   const predefinedRanges = [
     {
       label: '1 Day',
@@ -197,10 +200,17 @@ export default function Home() {
 
         const result = await response.json();
 
+        console.log('Processing data with mode:', tableMode);
         const processedDataDay = wxTableDataDayFromDB(
           result.observations,
-          result.units
+          result.units,
+          {
+            mode: tableMode,
+            startHour: 5,
+            endHour: 4
+          }
         );
+        console.log('Processed data result:', processedDataDay);
 
         setObservationsDataDay(processedDataDay);
 
@@ -225,6 +235,7 @@ export default function Home() {
     endDate,
     useCustomEndDate,
     stationIds,
+    tableMode
   ]);
 
   //Check to see if it's time to run the uploadDataLastHour API call
@@ -280,17 +291,21 @@ export default function Home() {
       const selectedStationId = e.target.value;
       setSelectedStation(selectedStationId);
 
+      console.log('Current table mode:', tableMode); // Log current mode before change
+
       startTransition(() => {
-        // If "All Stations" is selected (empty string)
         if (!selectedStationId) {
+          console.log('🔄 Switching FROM', tableMode, 'TO summary mode - All Stations selected');
           setStationIds(stations.map(station => station.id));
-          // Set to 1-day view when selecting "All Stations"
+          setTableMode('summary');
           setTimeRange(1);
           setIsOneDay(true);
-          setSelectedDate(new Date()); // Reset to today
+          setSelectedDate(new Date());
           setEndDate(new Date());
         } else {
+          console.log('🔄 Switching FROM', tableMode, 'TO daily mode - Single station:', selectedStationId);
           setStationIds([selectedStationId]);
+          setTableMode('daily');
         }
       });
 
@@ -298,28 +313,58 @@ export default function Home() {
         setIsStationChanging(false);
       }, 300);
     },
-    [stations]
+    [stations, tableMode] // Added tableMode to dependencies
   );
 
   // In your main Home component, modify this handler
   const handleStationClick = (stationId: string) => {
-    console.log('handleStationClick called with:', stationId); // Debug log
+    console.log('handleStationClick called with:', stationId);
+    
+    // Find the station name for the selected ID
+    const selectedStationObj = stations.find(station => station.id === stationId);
+    console.log('Selected station object:', selectedStationObj);
+
     setIsStationChanging(true);
-    setSelectedStation(stationId);
     
     startTransition(() => {
+      // Update all related state in one transition
+      setSelectedStation(stationId);
       setStationIds([stationId]);
-      // Automatically change to 7-day view when clicking a station
+      setTableMode('daily'); // Explicitly set to daily mode
       setTimeRange(7);
       setIsOneDay(false);
-      setSelectedDate(subDays(new Date(), 6)); // Start date 6 days ago
-      setEndDate(new Date()); // End date today
+      
+      const newStartDate = subDays(new Date(), 6);
+      const newEndDate = new Date();
+      
+      console.log('Updating state with:', {
+        stationId,
+        tableMode: 'daily',
+        startDate: newStartDate,
+        endDate: newEndDate,
+        timeRange: 7
+      });
+      
+      setSelectedDate(newStartDate);
+      setEndDate(newEndDate);
     });
 
     setTimeout(() => {
       setIsStationChanging(false);
     }, 300);
   };
+
+  // Add this effect after your other useEffects
+  useEffect(() => {
+    console.log('selectedStation changed to:', selectedStation);
+    if (selectedStation) {
+      console.log('🔄 Switching to daily mode - Station selected:', selectedStation);
+      setTableMode('daily');
+    } else {
+      console.log('🔄 Switching to summary mode - No station selected');
+      setTableMode('summary');
+    }
+  }, [selectedStation]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
@@ -397,11 +442,11 @@ export default function Home() {
         {!isLoading && !isStationChanging && !isPending && (
           <div className="w-full max-w-6xl space-y-4">
 
-            {observationsDataHour && selectedStation && (
+            {/* {observationsDataHour && selectedStation && (
               <HourWxSnowGraph 
                 hourAverages={observationsDataHour} 
               />
-            )}
+            )} */}
 
             {observationsDataDay && (
               <DayAveragesTable 

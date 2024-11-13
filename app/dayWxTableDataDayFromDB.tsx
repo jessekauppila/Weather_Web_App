@@ -43,10 +43,10 @@ function filterOutliers(
     new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
   );
 
-  console.log('Input data points:', sortedData.map(d => ({
-    time: d.date_time,
-    depth: d.snow_depth
-  })));
+  // console.log('Input data points:', sortedData.map(d => ({
+  //   time: d.date_time,
+  //   depth: d.snow_depth
+  // })));
 
   // Step 1: Calculate rolling average
   const calculateRollingAverage = (index: number): number => {
@@ -95,7 +95,7 @@ function filterOutliers(
       : 0;
 
     if (hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange) {
-      console.log(`Removing outlier at ${current.date_time}: ${current.snow_depth} inches (change: ${hourlyChange.toFixed(2)} inches)`);
+      //console.log(`Removing outlier at ${current.date_time}: ${current.snow_depth} inches (change: ${hourlyChange.toFixed(2)} inches)`);
       result.push({
         date_time: current.date_time,
         snow_depth: NaN
@@ -112,25 +112,25 @@ function filterOutliers(
   const validPoints = result.filter(d => !isNaN(d.snow_depth));
   const filteredOutPoints = result.filter(d => isNaN(d.snow_depth));
   
-  console.log('Filtering summary:', {
-    originalPoints: data.length,
-    validPoints: validPoints.length,
-    filteredOutPoints: filteredOutPoints.length,
-    threshold,
-    maxPositiveChange,
-    maxNegativeChange,
-    windowSize
-  });
+  // console.log('Filtering summary:', {
+  //   originalPoints: data.length,
+  //   validPoints: validPoints.length,
+  //   filteredOutPoints: filteredOutPoints.length,
+  //   threshold,
+  //   maxPositiveChange,
+  //   maxNegativeChange,
+  //   windowSize
+  // });
 
-  console.log('Valid data points:', validPoints.map(d => ({
-    time: d.date_time,
-    depth: d.snow_depth
-  })));
+  // console.log('Valid data points:', validPoints.map(d => ({
+  //   time: d.date_time,
+  //   depth: d.snow_depth
+  // })));
 
-  console.log('Filtered out points:', filteredOutPoints.map(d => ({
-    time: d.date_time,
-    depth: 'filtered'
-  })));
+  // console.log('Filtered out points:', filteredOutPoints.map(d => ({
+  //   time: d.date_time,
+  //   depth: 'filtered'
+  // })));
 
   return result;
 }
@@ -165,29 +165,28 @@ function calculateSnowDepthAccumulation(data: any[]) {
   return results;
 }
 
+// Add a new interface for configuration options
+interface WxTableOptions {
+  mode: 'summary' | 'daily';  // Controls whether to summarize or show daily data
+  startHour?: number;         // Optional: hour to start each day (default: 5)
+  endHour?: number;          // Optional: hour to end each day (default: 4)
+}
+
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
-  units: Array<Record<string, string>>
+  units: Array<Record<string, string>>,
+  options: WxTableOptions = { mode: 'summary' }  // Default to current behavior
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
-  console.log(
-    'observationsData from wxTableDataDay:',
-    observationsData
-  );
+  const startHour = options.startHour ?? 5;  // Default to 5am
+  const endHour = options.endHour ?? 4;      // Default to 4am
 
-  // The data is already converted, so we can use it directly
-  const convertedObsData = observationsData;
-
-  // Group observations by station
-  const groupedObservations = convertedObsData.reduce((acc, obs) => {
-    if (!acc[obs.stid]) {
-      acc[obs.stid] = [];
-    }
-    acc[obs.stid].push(obs);
-    return acc;
-  }, {} as Record<string, Array<Record<string, any>>>);
+  // Group observations either by station (summary mode) or by day (daily mode)
+  const groupedObservations = options.mode === 'summary' 
+    ? groupByStation(observationsData)
+    : groupByDay(observationsData, startHour, endHour);
 
   // Convert units array to a more usable format
   const unitConversionsMap = units.reduce((acc, unit) => {
@@ -356,7 +355,7 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => {
-        console.log('Raw snow_depth data:', numbers);
+        //console.log('Raw snow_depth data:', numbers);
 
         // Create data points with timestamps
         const dataPoints = (averages.date_time as string[])
@@ -380,7 +379,7 @@ function wxTableDataDayFromDB(
           .map(d => d.snow_depth)
           .filter(d => !isNaN(d));
 
-        console.log('Filtered snow depths:', filteredDepths);
+        //console.log('Filtered snow depths:', filteredDepths);
 
         const firstValue = filteredDepths[0] || 0;
         const lastValue = filteredDepths[filteredDepths.length - 1] || 0;
@@ -404,7 +403,7 @@ function wxTableDataDayFromDB(
       'in',
       1,
       (numbers) => {
-        console.log('Raw snow_depth-24h data:', numbers);
+        //console.log('Raw snow_depth-24h data:', numbers);
 
         const filteredSnowDepths = filterOutliers(
           numbers.map((snow_depth, index) => ({
@@ -417,7 +416,7 @@ function wxTableDataDayFromDB(
           12,   // window size
           false // disable early season filtering
         ).map(point => point.snow_depth);
-        console.log('Filtered snow depths 24h:', filteredSnowDepths);
+        //console.log('Filtered snow depths 24h:', filteredSnowDepths);
 
         const data = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({
@@ -425,13 +424,13 @@ function wxTableDataDayFromDB(
             snow_depth: filteredSnowDepths[index],
           }))
           .filter((d) => !isNaN(d.snow_depth));
-        console.log('Processed data points:', data);
+        //console.log('Processed data points:', data);
 
         const results = calculateSnowDepthAccumulation(data);
-        console.log('Accumulation results:', results);
+        //console.log('Accumulation results:', results);
 
         const total = results[results.length - 1]?.snow_total ?? 0;
-        console.log('Final total:', total);
+        //console.log('Final total:', total);
 
         return { total };
       }
@@ -518,10 +517,10 @@ function wxTableDataDayFromDB(
     return formatted;
   });
 
-  console.log(
-    'formattedData from wxTableDataDayFromDB:',
-    formattedData
-  );
+  // console.log(
+  //   'formattedData from wxTableDataDayFromDB:',
+  //   formattedData
+  // );
 
   // Sort the formattedData array by station name
   formattedData.sort((a, b) => {
@@ -557,6 +556,38 @@ function wxTableDataDayFromDB(
       : 'Summary -';
 
   return { data: formattedData, title };
+}
+
+// Helper function to group by station (current behavior)
+function groupByStation(data: Array<Record<string, any>>) {
+  return data.reduce((acc, obs) => {
+    if (!acc[obs.stid]) {
+      acc[obs.stid] = [];
+    }
+    acc[obs.stid].push(obs);
+    return acc;
+  }, {} as Record<string, Array<Record<string, any>>>);
+}
+
+// Helper function to group by day
+function groupByDay(
+  data: Array<Record<string, any>>, 
+  startHour: number,
+  endHour: number
+) {
+  return data.reduce((acc, obs) => {
+    const datetime = moment(obs.date_time);
+    if (datetime.hour() < startHour) {
+      datetime.subtract(1, 'day');
+    }
+    const dayKey = datetime.format('YYYY-MM-DD');
+    
+    if (!acc[dayKey]) {
+      acc[dayKey] = [];
+    }
+    acc[dayKey].push(obs);
+    return acc;
+  }, {} as Record<string, Array<Record<string, any>>>);
 }
 
 export default wxTableDataDayFromDB;
