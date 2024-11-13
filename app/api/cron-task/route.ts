@@ -1,16 +1,13 @@
-//this is
-
 import { NextRequest, NextResponse } from 'next/server';
 
-// New way to specify runtime and cron config
+// Runtime config
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const maxDuration = 300;  // 5 minutes in seconds
 
-// Cron schedule using a separate config object
-export const preferredRegion = 'auto';
-export const schedule = '1,10,30 * * * *';
+// Cron config using the correct format
+export const config = {
+  schedule: '1,10,30 * * * *'
+};
 
 export async function GET(req: NextRequest) {
   const currentTime = new Date();
