@@ -325,17 +325,16 @@ function wxTableDataDayFromDB(
       (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
     );
 
-    // Process snow depth to see total snow depth change
+    // Process snow depth for both total and change
     processNumericField(
       'snow_depth',
       {
-        avg: 'Total Snow Depth Change',
+        total: 'Total Snow Depth',      // New column for current depth
+        change: 'Total Snow Depth Change'  // Existing column for change
       },
       'in',
       1,
       (numbers) => {
-        //console.log('Raw snow_depth data:', numbers);
-
         // Create data points with timestamps
         const dataPoints = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({
@@ -344,7 +343,7 @@ function wxTableDataDayFromDB(
           }))
           .filter(d => !isNaN(d.snow_depth));
 
-        // Apply the new filtering
+        // Apply the filtering
         const filteredData = filterSnowDepthOutliers(
           dataPoints,
           10,  // 10 inches threshold
@@ -357,73 +356,18 @@ function wxTableDataDayFromDB(
         const filteredDepths = filteredData
           .map(d => d.snow_depth)
           .filter(d => !isNaN(d));
-
-        //console.log('Filtered snow depths:', filteredDepths);
 
         const firstValue = filteredDepths[0] || 0;
         const lastValue = filteredDepths[filteredDepths.length - 1] || 0;
         const change = lastValue - firstValue;
 
         return {
-          avg: change,
+          total: lastValue,        // Current snow depth
+          change: change,          // Change in snow depth
           max: Math.max(...filteredDepths)
         };
       },
-      (value, unit) => {
-        const num = parseFloat(value);
-        return num > 0 ? `+${value} ${unit}` : `${value} ${unit}`;
-      }
-    );
-
-
-    // Process snow depth to see total snow depth change
-    processNumericField(
-      'snow_depth',
-      {
-        avg: 'Total Snow Depth',
-      },
-      'in',
-      1,
-      (numbers) => {
-        //console.log('Raw snow_depth data:', numbers);
-
-        // Create data points with timestamps
-        const dataPoints = (averages.date_time as string[])
-          .map((date_time: string, index: number) => ({
-            date_time,
-            snow_depth: numbers[index]
-          }))
-          .filter(d => !isNaN(d.snow_depth));
-
-        // Apply the new filtering
-        const filteredData = filterSnowDepthOutliers(
-          dataPoints,
-          10,  // 10 inches threshold
-          3,   // 3 inches max hourly change
-          10,  // 10 inches max negative change
-          12,  // window size
-          true // use early season filtering
-        );
-
-        const filteredDepths = filteredData
-          .map(d => d.snow_depth)
-          .filter(d => !isNaN(d));
-
-        //console.log('Filtered snow depths:', filteredDepths);
-
-        //const firstValue = filteredDepths[0] || 0;
-        const lastValue = filteredDepths[filteredDepths.length - 1] || 0;
-        //const change = lastValue - firstValue;
-
-        return {
-          avg: lastValue,
-          max: Math.max(...filteredDepths)
-        };
-      },
-      (value, unit) => {
-        const num = parseFloat(value);
-        return num > 0 ? `+${value} ${unit}` : `${value} ${unit}`;
-      }
+      (value, unit) => `${value} ${unit}`
     );
 
     // Process 24h snow depth
