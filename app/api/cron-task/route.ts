@@ -1,3 +1,5 @@
+//This cron job is controlled by vercel.json
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Use Node.js runtime instead of edge
