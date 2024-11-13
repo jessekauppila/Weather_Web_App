@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const config = {
   runtime: 'edge',
-  cron: '1,10,30 * * * *'
+  cron: '1,10,30 * * * *'  // UTC timezone
 };
 
-export default async function handler(req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const currentTime = new Date();
+  
   try {
-    console.log('Starting cron job execution at:', new Date().toISOString());
+    console.log(`[CRON] Job started at ${currentTime.toISOString()} UTC`);
     
     const apiUrl = new URL('/api/uploadDataLastHour', req.url);
+    console.log(`[CRON] Calling API endpoint: ${apiUrl.toString()}`);
     
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -20,19 +23,19 @@ export default async function handler(req: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      throw new Error(`[CRON] HTTP error! status: ${response.status}, body: ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('Cron job result:', result);
+    console.log('[CRON] Job result:', result);
     
     return NextResponse.json({
       success: true,
       message: 'Cron job executed successfully',
-      timestamp: new Date().toISOString()
+      timestamp: currentTime.toISOString()
     });
   } catch (error) {
-    console.error('Cron job failed:', error);
+    console.error('[CRON] Job failed:', error);
     return NextResponse.json(
       { 
         error: 'Cron job execution failed',
