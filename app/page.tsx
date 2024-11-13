@@ -12,7 +12,7 @@ import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import HourWxSnowGraph from './hourWxSnowGraph';
+import DayWxSnowGraph from './DayWxSnowGraph';
 //import { ObservationsData } from './types'; // Add this import
 
 interface Station {
@@ -465,6 +465,12 @@ export default function Home() {
             />
           )}
 
+          {observationsDataDay && selectedStation && (
+            <DayWxSnowGraph 
+              dayAverages={observationsDataDay} 
+            />
+          )}
+
           {observationsDataHour && selectedStation && (
             <HourWxTable 
               hourAverages={observationsDataHour} 
@@ -505,4 +511,6 @@ export default function Home() {
 
 //   // Clean up the interval on component unmount
 //   return () => clearInterval(intervalId);
+// }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
+
 // }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
