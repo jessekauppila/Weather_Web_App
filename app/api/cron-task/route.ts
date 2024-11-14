@@ -1,18 +1,17 @@
+//http://localhost:3000/api/cron-task/
+
 //This cron job is controlled by vercel.json
 import { NextRequest, NextResponse } from 'next/server'
 
-export const config = {
-  runtime: 'edge',
-}
+export const runtime = 'edge'
 
-export default async function handler(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const timestamp = new Date().toISOString();
   console.log(`[CRON] Started at ${timestamp}`);
   
   try {
     console.log(`[CRON] Job started at ${timestamp} UTC`);
     
-
     const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
     const apiUrl = `${baseUrl}/api/uploadDataLastHour`;
     //const apiUrl = new URL('/api/uploadDataLastHour', req.url);
