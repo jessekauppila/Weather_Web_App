@@ -104,11 +104,11 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .selectAll('text')
       .style('fill', 'black');
 
-    // Update temperature label to grey
+    // Update temperature label position
     svg.append('text')
-      .attr('transform', `rotate(-90) translate(${-height/2},${width + 45})`)
+      .attr('transform', `rotate(-90) translate(${-height/2},${width + 40})`)
       .style('text-anchor', 'middle')
-      .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
+      .style('fill', 'rgb(128, 128, 128)')
       .text('Temperature (°F)');
 
     // Create scales with separate domains for line and bars
