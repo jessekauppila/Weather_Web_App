@@ -50,7 +50,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     const containerWidth = svgRef.current?.parentElement?.clientWidth || 800;
     const margin = { top: 30, right: 60, bottom: 50, left: 60 };
     const width = containerWidth - margin.left - margin.right;
-    const height = 300; // Reduced from 400 to 300
+    const height = 400; // Define fixed height before using it
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -89,11 +89,11 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .selectAll('text')
       .style('fill', 'black');
 
-    // Add temperature label
+    // Update temperature label to grey
     svg.append('text')
       .attr('transform', `rotate(-90) translate(${-height/2},${width + 45})`)
       .style('text-anchor', 'middle')
-      .style('fill', 'black')
+      .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
       .text('Temperature (°F)');
 
     // Create scales with separate domains for line and bars
@@ -119,6 +119,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(xScale)
+        .tickValues(data.map(d => d.date))
         .tickFormat((d) => moment(d as Date).format('MM/DD')))
       .selectAll('text')
       .style('text-anchor', 'middle')
@@ -130,14 +131,14 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .selectAll('text')
       .style('fill', 'black');
 
-    // Add y-axis label
+    // Update snow depth label to blue
     svg.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('y', -margin.left)
       .attr('x', -height / 2)
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
-      .style('fill', 'black')
+      .style('fill', 'blue') // Match the blue of the snow depth line
       .text('Snow Depth (inches)');
 
     // Add x-axis label
@@ -170,12 +171,10 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
 
     // Position bars
     svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-depth-bars')
-      .data(data.slice(-1)) // Only use the last day
       .attr('x', d => xScale(d.date) - (individualBarWidth + barGap/2))
       .attr('width', individualBarWidth);
 
     svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-accum-bars')
-      .data(data.slice(-1)) // Only use the last day
       .attr('x', d => xScale(d.date) + barGap/2)
       .attr('width', individualBarWidth);
 
@@ -261,7 +260,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
 
     // Update container height
     d3.select(svgRef.current)
-      .attr('height', height + margin.top + margin.bottom); // Removed the +40 that was adding extra space
+      .attr('height', height + margin.top + margin.bottom + 40); // Adjusted for single-line legend
 
     // Define the temperature area generator
     const tempArea = d3.area<(typeof data)[0]>()
@@ -306,11 +305,21 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .attr('stroke-dasharray', '2,2')
       .attr('d', tempMaxLine);
 
+    // Remove any existing tooltips first
+    d3.selectAll('.snow-accum-tooltip').remove();
+
     // Add tooltip elements
-    const tooltip = d3.select(svgRef.current?.parentNode as Element)
+    const tooltip = d3.select('body') // Attach to body instead of SVG parent
       .append('div')
       .attr('class', 'snow-accum-tooltip')
-      .style('opacity', 0);
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('pointer-events', 'none')
+      .style('background', 'white')
+      .style('border', '1px solid #ddd')
+      .style('border-radius', '4px')
+      .style('padding', '8px')
+      .style('z-index', '1000'); // Ensure tooltip appears above other elements
 
     // Add vertical line for tooltip
     const verticalLine = svg.append('line')
@@ -342,10 +351,11 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
         tooltip
           .style('opacity', 1)
           .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 10}px`)
+          .style('top', `${event.pageY - 100}px`)
           .html(`
             <div class="tooltip-content">
               <strong>${d3.timeFormat('%B %d')(d.date)}</strong><br/>
+              <span>Total Snow Depth: ${d.totalSnowDepth}″</span><br/>
               <span>Snow Accumulation: ${d.snowDepth24h}″</span><br/>
               <span>Hourly Precip (SWE): ${d.precipHour}″</span><br/>
               <span>Temperature: ${d.tempMin}°F - ${d.tempMax}°F</span>
