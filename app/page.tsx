@@ -457,17 +457,20 @@ export default function Home() {
               : 'opacity-0'
           }`}
         >
+
+        {observationsDataDay && selectedStation && stationIds.length === 1 && (
+            <>
+              <DayWxSnowGraph 
+                dayAverages={observationsDataDay} 
+              />
+            </>
+          )}
+
           {observationsDataDay && (
             <DayAveragesTable 
               dayAverages={observationsDataDay} 
               onStationClick={handleStationClick}
               mode={tableMode}
-            />
-          )}
-
-          {observationsDataDay && selectedStation && stationIds.length === 1 && (
-            <DayWxSnowGraph 
-              dayAverages={observationsDataDay} 
             />
           )}
 

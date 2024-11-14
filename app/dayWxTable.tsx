@@ -49,7 +49,7 @@ const measurementDescriptions: Record<string, string> = {
 
 // Define the header structure for known categories
 const getKnownCategories = (mode: 'summary' | 'daily') => {
-  console.log('Current mode in table code:', mode);
+  //console.log('Current mode in table code:', mode);
 
   const commonCategories = [
     {
@@ -79,7 +79,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
   ];
 
   if (mode === 'summary') {
-    console.log('Returning summary categories');
+    //console.log('Returning summary categories');
     return [
       {
         category: 'Station',
@@ -91,7 +91,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
       ...commonCategories,
     ];
   } else {
-    console.log('Returning daily categories');
+   // console.log('Returning daily categories');
     return [
       {
         category: '',
@@ -105,7 +105,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
 type Column = string | { key: string; displayName: string };
 
 function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
-  console.log('Table mode in table code:', mode);
+  //console.log('Table mode in table code:', mode);
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure to avoid recalculating on every render

@@ -2,115 +2,159 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import moment from 'moment-timezone';
 
-interface DailyAverage {
+interface DayAverage {
   [key: string]: string | number;
 }
 
-interface SnowGraphProps {
+interface DayAveragesProps {
   dayAverages: {
-    data: DailyAverage[];
+    data: DayAverage[];
     title: string;
   };
 }
 
-function DayWxSnowGraph({ dayAverages }: SnowGraphProps) {
+function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
+    // Clear the entire SVG before drawing new data
+    if (svgRef.current) {
+      d3.select(svgRef.current).selectAll('*').remove();
+    }
+
     if (!dayAverages.data.length || !svgRef.current) return;
 
-    // Clear previous graph
-    d3.select(svgRef.current).selectAll('*').remove();
-
-    // Process data and filter out invalid values
+    // Process data with validation and logging
     const data = dayAverages.data
-      .map((d) => ({
-        date: moment(d.Day, 'MMM D').toDate(),
-        totalSnowDepth: parseFloat(String(d['Total Snow Depth']).replace(' in', '')) || 0,
-        snowDepth24h: parseFloat(String(d['24h Snow Depth']).replace(' in', '')) || 0,
-        precipHour: parseFloat(String(d['Precip Accum One Hour']).replace(' in', '')) || 0
-      }))
-      .filter(d => d.totalSnowDepth >= 0 || d.snowDepth24h >= 0 || d.precipHour >= 0);
+      .map((d) => {
+        const date = new Date(d.Date);
+        const totalSnowDepth = parseFloat(String(d['Total Snow Depth']).replace(' in', ''));
+        const snowDepth24h = parseFloat(String(d['24h Snow Accumulation']).replace(' in', ''));
+        const precipHour = parseFloat(String(d['Precip Accum One Hour']).replace(' in', ''));
+        const tempMin = parseFloat(String(d['Air Temp Min']).replace(' °F', ''));
+        const tempMax = parseFloat(String(d['Air Temp Max']).replace(' °F', ''));
 
-    // Don't render if no valid data
-    if (data.length === 0) return;
+        return {
+          date,
+          totalSnowDepth: isNaN(totalSnowDepth) ? 0 : totalSnowDepth,
+          snowDepth24h: isNaN(snowDepth24h) ? 0 : snowDepth24h,
+          precipHour: isNaN(precipHour) ? 0 : precipHour,
+          tempMin: isNaN(tempMin) ? 0 : tempMin,
+          tempMax: isNaN(tempMax) ? 0 : tempMax
+        };
+      })
+      .filter(d => d.date && !isNaN(d.date.getTime()))
+      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
 
-    // Setup dimensions
-    const margin = { top: 40, right: 80, bottom: 60, left: 60 };
-    const width = 800 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    // Adjust dimensions to ensure graph fits within bounds
+    const containerWidth = svgRef.current?.parentElement?.clientWidth || 800;
+    const margin = { top: 30, right: 60, bottom: 50, left: 60 };
+    const width = containerWidth - margin.left - margin.right;
+    const height = 300; // Reduced from 400 to 300
 
-    // Create SVG
+    // Update scales with padding
+    const xScale = d3.scaleTime()
+      .domain(d3.extent(data, d => d.date) as [Date, Date])
+      .range([0, width])
+      .nice();
+
+    // Add padding to temperature scale
+    const yScaleTemp = d3.scaleLinear()
+      .domain([
+        Math.min(10, d3.min(data, d => d.tempMin) || 10),
+        Math.max(80, d3.max(data, d => d.tempMax) || 80)
+      ])
+      .range([height, 0])
+      .nice();
+
+    // Create SVG first
     const svg = d3.select(svgRef.current)
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Create scales with separate domains for line and bars
-    const xScale = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date) as [Date, Date])
-      .range([0, width]);
+    // Add white background
+    svg.append('rect')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .attr('x', -margin.left)
+      .attr('y', -margin.top)
+      .attr('fill', 'white');
 
-    const yScaleSnowDepth = d3.scaleLinear()
+    // Now add temperature axis and label
+    svg.append('g')
+      .attr('transform', `translate(${width}, 0)`)
+      .call(d3.axisRight(yScaleTemp))
+      .selectAll('text')
+      .style('fill', 'black');
+
+    // Add temperature label
+    svg.append('text')
+      .attr('transform', `rotate(-90) translate(${-height/2},${width + 45})`)
+      .style('text-anchor', 'middle')
+      .style('fill', 'black')
+      .text('Temperature (°F)');
+
+    // Create scales with separate domains for line and bars
+    const yScaleLine = d3.scaleLinear()
       .domain([0, d3.max(data, d => d.totalSnowDepth) || 0])
       .range([height, 0]);
 
-    const yScaleAccum = d3.scaleLinear()
+    const yScaleBars = d3.scaleLinear()
       .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipHour)) || 0])
       .range([height, 0]);
 
     // Add grid lines
     svg.append('g')
       .attr('class', 'grid')
-      .call(d3.axisLeft(yScaleSnowDepth)
+      .call(d3.axisLeft(yScaleLine)
         .tickSize(-width)
         .tickFormat(() => '')
       )
       .style('stroke-dasharray', '2,2')
-      .style('stroke-opacity', 0.2);
+      .style('stroke', '#ccc');
 
-    // Add X axis with more frequent ticks
+    // Add axes with black text
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(xScale)
-        .ticks(d3.timeDay.every(1))
-        .tickFormat(d => moment(d as Date).format('MM/DD')))
+        .tickFormat((d) => moment(d as Date).format('MM/DD')))
       .selectAll('text')
-      .style('text-anchor', 'end')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
-      .attr('transform', 'rotate(-45)');
+      .style('text-anchor', 'middle')
+      .style('fill', 'black');
 
-    // Add Y axis for snow depth (left)
+    // Add y-axis for total snow depth (left)
     svg.append('g')
-      .call(d3.axisLeft(yScaleSnowDepth))
-      .append('text')
-      .attr('fill', 'black')
-      .attr('y', -40)
-      .attr('x', -height / 2)
+      .call(d3.axisLeft(yScaleLine))
+      .selectAll('text')
+      .style('fill', 'black');
+
+    // Add y-axis label
+    svg.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('text-anchor', 'middle')
-      .text('Total Snow Depth (in)');
+      .attr('y', -margin.left)
+      .attr('x', -height / 2)
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .style('fill', 'black')
+      .text('Snow Depth (inches)');
 
-    // Add Y axis for accumulation (right)
-    svg.append('g')
-      .attr('transform', `translate(${width},0)`)
-      .call(d3.axisRight(yScaleAccum))
-      .append('text')
-      .attr('fill', 'black')
-      .attr('y', -40)
-      .attr('x', height / 2)
-      .attr('transform', `rotate(90,0,0)`)
-      .attr('text-anchor', 'middle')
-      .text('24h Accumulation (in)');
+    // Add x-axis label
+    svg.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + margin.bottom - 5)
+      .style('text-anchor', 'middle')
+      .style('fill', 'black')
+      .text('');
 
-    // Create line for Total Snow Depth
+    // Create line for total snow depth
     const line = d3.line<(typeof data)[0]>()
       .x(d => xScale(d.date))
-      .y(d => yScaleSnowDepth(d.totalSnowDepth));
+      .y(d => yScaleLine(d.totalSnowDepth))
+      .curve(d3.curveMonotoneX); // Add curve interpolation
 
-    // Add total snow depth line
+    // Add the line
     svg.append('path')
       .datum(data)
       .attr('fill', 'none')
@@ -118,105 +162,202 @@ function DayWxSnowGraph({ dayAverages }: SnowGraphProps) {
       .attr('stroke-width', 2)
       .attr('d', line);
 
-    // Add bars
-    const barWidth = Math.min(30, width / data.length / 3);
+    // Adjust bar dimensions
+    const totalBarWidth = width / data.length * 0.8; // 80% of available space per date
+    const individualBarWidth = totalBarWidth * 0.4; // 40% of total bar space
+    const pairGap = totalBarWidth * 0.2; // 20% gap between pairs
+    const barGap = totalBarWidth * 0.05; // 5% gap between bars in a pair
 
-    // Add 24h snow depth bars
+    // Position bars
+    svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-depth-bars')
+      .data(data.slice(-1)) // Only use the last day
+      .attr('x', d => xScale(d.date) - (individualBarWidth + barGap/2))
+      .attr('width', individualBarWidth);
+
+    svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-accum-bars')
+      .data(data.slice(-1)) // Only use the last day
+      .attr('x', d => xScale(d.date) + barGap/2)
+      .attr('width', individualBarWidth);
+
+    // Add value labels
+    const addValueLabels = (selection: d3.Selection<any, any, any, any>) => {
+      selection.append('text')
+        .attr('x', d => parseFloat(d3.select(selection.node()).attr('x')) + individualBarWidth/2)
+        .attr('y', d => yScaleBars(d.value) - 5)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(0,0,0,0.6)')
+        .text(d => d.value.toFixed(1));
+    };
+
+    // Add freezing line
+    svg.append('line')
+      .attr('x1', 0)
+      .attr('x2', width)
+      .attr('y1', yScaleTemp(32))
+      .attr('y2', yScaleTemp(32))
+      .attr('stroke', '#A0A0A0')
+      .attr('stroke-width', 1)
+      .attr('stroke-dasharray', '4,4')
+      .attr('opacity', 0.7);
+
+    // Then add your bars code here (it will layer on top)
     svg.selectAll('.snow-bars')
       .data(data)
       .enter()
       .append('rect')
       .attr('class', 'snow-bars')
-      .attr('x', d => xScale(d.date) - barWidth - 2)
-      .attr('y', d => yScaleAccum(d.snowDepth24h))
-      .attr('width', barWidth)
-      .attr('height', d => height - yScaleAccum(d.snowDepth24h))
+      .attr('x', d => xScale(d.date) - (individualBarWidth + barGap/2))
+      .attr('y', d => yScaleBars(d.snowDepth24h))
+      .attr('width', individualBarWidth)
+      .attr('height', d => height - yScaleBars(d.snowDepth24h))
       .attr('fill', '#4169E1')
       .attr('opacity', 0.7);
 
-    // Add hourly precip bars
     svg.selectAll('.precip-bars')
       .data(data)
       .enter()
       .append('rect')
       .attr('class', 'precip-bars')
-      .attr('x', d => xScale(d.date) + 2)
-      .attr('y', d => yScaleAccum(d.precipHour))
-      .attr('width', barWidth)
-      .attr('height', d => height - yScaleAccum(d.precipHour))
+      .attr('x', d => xScale(d.date) + barGap/2)
+      .attr('y', d => yScaleBars(d.precipHour))
+      .attr('width', individualBarWidth)
+      .attr('height', d => height - yScaleBars(d.precipHour))
       .attr('fill', '#82EEFD')
       .attr('opacity', 0.7);
 
-    // Add tooltip
-    const tooltip = d3.select('body').append('div')
-      .attr('class', 'tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('background-color', 'white')
-      .style('border', '1px solid #ddd')
-      .style('padding', '10px')
-      .style('border-radius', '4px')
-      .style('pointer-events', 'none');
-
-    // Add invisible overlay for tooltip
-    svg.append('rect')
-      .attr('width', width)
-      .attr('height', height)
-      .style('fill', 'none')
-      .style('pointer-events', 'all')
-      .on('mousemove', function(event) {
-        const [mouseX] = d3.pointer(event, this);
-        const x0 = xScale.invert(mouseX);
-        const bisect = d3.bisector((d: (typeof data)[0]) => d.date).left;
-        const i = bisect(data, x0, 1);
-        const d0 = data[i - 1];
-        const d1 = data[i];
-        if (!d0 || !d1) return;
-        const d = x0.getTime() - d0.date.getTime() > d1.date.getTime() - x0.getTime() ? d1 : d0;
-
-        tooltip.transition()
-          .duration(200)
-          .style('opacity', .9);
-        tooltip.html(`
-          <div style="font-weight: bold">${moment(d.date).format('MM/DD/YYYY')}</div>
-          <div>Total Snow Depth: ${d.totalSnowDepth.toFixed(1)} in</div>
-          <div>24h Snow: ${d.snowDepth24h.toFixed(1)} in</div>
-          <div>Hourly Precip: ${d.precipHour.toFixed(2)} in</div>
-        `)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 28) + 'px');
-      })
-      .on('mouseout', function() {
-        tooltip.transition()
-          .duration(500)
-          .style('opacity', 0);
-      });
-
-    // Add legend
+    // Update legend to single line
+    const legendWidth = width;
     const legend = svg.append('g')
       .attr('font-family', 'sans-serif')
-      .attr('font-size', 10)
-      .attr('text-anchor', 'end')
-      .selectAll('g')
-      .data(['Total Snow Depth', '24h Snow', 'Hourly Precip'])
-      .enter()
-      .append('g')
-      .attr('transform', (d, i) => `translate(${width + 60},${i * 20})`);
+      .attr('font-size', 12)
+      .attr('text-anchor', 'start')
+      .attr('transform', `translate(0,${height + 30})`);
 
-    legend.append('rect')
-      .attr('x', -19)
-      .attr('width', 19)
-      .attr('height', 19)
-      .attr('fill', (d, i) => i === 0 ? 'blue' : i === 1 ? '#4169E1' : '#82EEFD')
-      .attr('opacity', d => d === 'Total Snow Depth' ? 1 : 0.7);
+    const legendItems = [
+      'Total Snow Depth',
+      'Snow Accumulation',
+      'Hourly Precipitation (SWE)',
+      'Temperature Range'
+    ];
 
-    legend.append('text')
-      .attr('x', -24)
-      .attr('y', 9.5)
-      .attr('dy', '0.32em')
-      .text(d => d);
+    const itemWidth = legendWidth / legendItems.length;
 
-  }, [dayAverages]);
+    legendItems.forEach((text, i) => {
+      const g = legend.append('g')
+        .attr('transform', `translate(${i * itemWidth + itemWidth/2 - 40},0)`);
+      
+      g.append('rect')
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', i === 0 ? 'blue' : i === 1 ? '#4169E1' : i === 2 ? '#82EEFD' : 'rgba(128, 128, 128, 0.1)')
+        .attr('opacity', i === 0 ? 1 : 0.7);
+
+      g.append('text')
+        .attr('x', 20)
+        .attr('y', 12)
+        .style('fill', 'black')
+        .text(text);
+    });
+
+    // Update container height
+    d3.select(svgRef.current)
+      .attr('height', height + margin.top + margin.bottom); // Removed the +40 that was adding extra space
+
+    // Define the temperature area generator
+    const tempArea = d3.area<(typeof data)[0]>()
+      .x(d => xScale(d.date))
+      .y0(d => yScaleTemp(d.tempMin))
+      .y1(d => yScaleTemp(d.tempMax))
+      .curve(d3.curveMonotoneX);
+
+    // Add the temperature range area
+    svg.append('path')
+      .datum(data)
+      .attr('fill', 'rgba(128, 128, 128, 0.1)')
+      .attr('stroke', 'none')
+      .attr('d', tempArea);
+
+    // Add the min temperature line
+    const tempMinLine = d3.line<(typeof data)[0]>()
+      .x(d => xScale(d.date))
+      .y(d => yScaleTemp(d.tempMin))
+      .curve(d3.curveMonotoneX);
+
+    // Add the max temperature line
+    const tempMaxLine = d3.line<(typeof data)[0]>()
+      .x(d => xScale(d.date))
+      .y(d => yScaleTemp(d.tempMax))
+      .curve(d3.curveMonotoneX);
+
+    // Add both temperature lines
+    svg.append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#808080') // Lighter gray
+      .attr('stroke-width', 0.5) // Thinner line
+      .attr('stroke-dasharray', '2,2')
+      .attr('d', tempMinLine);
+
+    svg.append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#808080') // Lighter gray
+      .attr('stroke-width', 0.5) // Thinner line
+      .attr('stroke-dasharray', '2,2')
+      .attr('d', tempMaxLine);
+
+    // Add tooltip elements
+    const tooltip = d3.select(svgRef.current?.parentNode as Element)
+      .append('div')
+      .attr('class', 'snow-accum-tooltip')
+      .style('opacity', 0);
+
+    // Add vertical line for tooltip
+    const verticalLine = svg.append('line')
+      .attr('class', 'tooltip-line')
+      .style('stroke', '#999')
+      .style('stroke-width', '1px')
+      .style('opacity', 0);
+
+    // Add mouse move handlers
+    svg.append('rect')
+      .attr('class', 'overlay')
+      .attr('width', width)
+      .attr('height', height)
+      .style('opacity', 0)
+      .on('mousemove', function(event) {
+        const [xPos] = d3.pointer(event);
+        const date = xScale.invert(xPos);
+        const bisect = d3.bisector((d: any) => d.date).left;
+        const index = bisect(data, date);
+        const d = data[index];
+
+        verticalLine
+          .attr('x1', xScale(d.date))
+          .attr('x2', xScale(d.date))
+          .attr('y1', 0)
+          .attr('y2', height)
+          .style('opacity', 1);
+
+        tooltip
+          .style('opacity', 1)
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 10}px`)
+          .html(`
+            <div class="tooltip-content">
+              <strong>${d3.timeFormat('%B %d')(d.date)}</strong><br/>
+              <span>Snow Accumulation: ${d.snowDepth24h}″</span><br/>
+              <span>Hourly Precip (SWE): ${d.precipHour}″</span><br/>
+              <span>Temperature: ${d.tempMin}°F - ${d.tempMax}°F</span>
+            </div>
+          `);
+      })
+      .on('mouseleave', function() {
+        verticalLine.style('opacity', 0);
+        tooltip.style('opacity', 0);
+      });
+
+  }, [dayAverages]); // This ensures the graph updates when dayAverages changes
 
   return (
     <div className="graph-container bg-white p-4 rounded-xl shadow-md">
