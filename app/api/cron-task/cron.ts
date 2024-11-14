@@ -12,7 +12,10 @@ export default async function handler(req: NextRequest) {
   try {
     console.log(`[CRON] Job started at ${timestamp} UTC`);
     
-    const apiUrl = new URL('/api/uploadDataLastHour', req.url);
+
+    const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/uploadDataLastHour`;
+    //const apiUrl = new URL('/api/uploadDataLastHour', req.url);
     console.log(`[CRON] Calling API endpoint: ${apiUrl.toString()}`);
     
     const response = await fetch(apiUrl, {
