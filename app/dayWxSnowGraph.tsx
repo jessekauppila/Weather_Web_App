@@ -15,14 +15,33 @@ interface DayAveragesProps {
 
 function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Prevent React from re-rendering the SVG
+  const shouldComponentUpdate = () => false;
 
   useEffect(() => {
-    // Clear the entire SVG before drawing new data
+    // Clear any existing content
     if (svgRef.current) {
       d3.select(svgRef.current).selectAll('*').remove();
     }
 
-    if (!dayAverages.data.length || !svgRef.current) return;
+    if (!dayAverages.data.length || !svgRef.current || !containerRef.current) return;
+
+    // Get container dimensions and set margins
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = 400; // Fixed height
+    const margin = { top: 30, right: 60, bottom: 50, left: 60 };
+    const width = containerWidth - margin.left - margin.right;
+    const height = containerHeight - margin.top - margin.bottom;
+
+    // // Create SVG with proper dimensions
+    // const svg = d3.select(svgRef.current)
+    //   .attr('width', containerWidth)
+    //   .attr('height', containerHeight)
+    //   .append('g')
+    //   .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Process data with validation and logging
     const data = dayAverages.data
@@ -46,11 +65,6 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .filter(d => d.date && !isNaN(d.date.getTime()))
       .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
 
-    // Adjust dimensions to ensure graph fits within bounds
-    const containerWidth = svgRef.current?.parentElement?.clientWidth || 800;
-    const margin = { top: 30, right: 60, bottom: 50, left: 60 };
-    const width = containerWidth - margin.left - margin.right;
-    const height = 400; // Define fixed height before using it
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -70,7 +84,8 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     // Create SVG first
     const svg = d3.select(svgRef.current)
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      //.attr('height', height + margin.top + margin.bottom)
+      .attr('height', containerHeight)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -370,9 +385,24 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
   }, [dayAverages]); // This ensures the graph updates when dayAverages changes
 
   return (
-    <div className="graph-container bg-white p-4 rounded-xl shadow-md">
+    <div 
+      ref={containerRef} 
+      className="graph-container bg-white p-4 rounded-xl shadow-md"
+      style={{ 
+        width: '100%',
+        height: '500px',//was 300px
+        overflow: 'hidden'
+      }}
+    >
       <h3 className="text-center font-bold mb-4">{dayAverages.title}</h3>
-      <svg ref={svgRef}></svg>
+      <svg 
+        ref={svgRef}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: 'calc(100% - 2rem)'
+        }}
+      />
     </div>
   );
 }
