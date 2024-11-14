@@ -1,15 +1,16 @@
 //This cron job is controlled by vercel.json
+import { NextRequest, NextResponse } from 'next/server'
 
-import { NextRequest, NextResponse } from 'next/server';
+export const config = {
+  runtime: 'edge',
+}
 
-// Use Node.js runtime instead of edge
-export const runtime = 'nodejs';
-
-export async function GET(req: NextRequest) {
-  const currentTime = new Date();
+export default async function handler(req: NextRequest) {
+  const timestamp = new Date().toISOString();
+  console.log(`[CRON] Started at ${timestamp}`);
   
   try {
-    console.log(`[CRON] Job started at ${currentTime.toISOString()} UTC`);
+    console.log(`[CRON] Job started at ${timestamp} UTC`);
     
     const apiUrl = new URL('/api/uploadDataLastHour', req.url);
     console.log(`[CRON] Calling API endpoint: ${apiUrl.toString()}`);
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Cron job executed successfully',
-      timestamp: currentTime.toISOString()
+      timestamp: timestamp
     });
   } catch (error) {
     console.error('[CRON] Job failed:', error);
