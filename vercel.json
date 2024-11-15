@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron-task/cron",
+      "path": "/api/batchUploadLastHour",
       "schedule": "* * * * *"
     }
   ]
