@@ -3,6 +3,8 @@
 
 //this is used to upload the last hour of data to the database, it is run a minute, 5 minutes, and 20 minutes after the hour
 
+// THIS IS NOT USED ANYMORE, DOESN'T UPLOAD PECIPITATION DATA
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
@@ -271,9 +273,9 @@ async function handleRequest(request: NextRequest) {
               NULLIF(${wind_speed}, '')::DECIMAL(5,2),
               NULLIF(${wind_gust}, '')::DECIMAL(5,2),
               NULLIF(${wind_direction}, '')::DECIMAL(5,2),
-              NULLIF(${snow_depth}, '')::DECIMAL(5,2),
-              NULLIF(${snow_depth_24h}, '')::DECIMAL(5,2),
-              NULLIF(${intermittent_snow}, '')::DECIMAL(5,2),
+              NULLIF(${snow_depth}, '')::DECIMAL(7,2),
+              NULLIF(${snow_depth_24h}, '')::DECIMAL(7,2),
+              NULLIF(${intermittent_snow}, '')::DECIMAL(7,2),
               NULLIF(${precip_accum_one_hour}, '')::DECIMAL(5,2),
               NULLIF(${relative_humidity}, '')::DECIMAL(5,2),
               NULLIF(${battery_voltage}, '')::DECIMAL(5,2),
