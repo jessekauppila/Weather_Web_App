@@ -1,4 +1,4 @@
-//http://localhost:3000/api/cron-task/
+//http://localhost:3000/api/cron-task/cron
 
 //This cron job is controlled by vercel.json
 import { NextRequest, NextResponse } from 'next/server'
