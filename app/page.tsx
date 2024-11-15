@@ -13,7 +13,7 @@ import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import DayWxSnowGraph from './dayWxSnowGraph';
-//import { ObservationsData } from './types'; // Add this import
+import StationUpdateStatus from './components/StationUpdateStatus';//import { ObservationsData } from './types'; // Add this import
 
 interface Station {
   id: string;
@@ -480,6 +480,8 @@ export default function Home() {
             />
           )}
         </div>
+
+        {/* <StationUpdateStatus /> */}
       </div>
     </main>
   );
