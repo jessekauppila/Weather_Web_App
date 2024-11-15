@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     console.log(`[CRON] Job started at ${timestamp} UTC`);
     
     const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
-    const apiUrl = `${baseUrl}/api/uploadDataLastHour`;
+    const apiUrl = `${baseUrl}/api/batchUploadLastHour`;
     //const apiUrl = new URL('/api/uploadDataLastHour', req.url);
     console.log(`[CRON] Calling API endpoint: ${apiUrl.toString()}`);
     
