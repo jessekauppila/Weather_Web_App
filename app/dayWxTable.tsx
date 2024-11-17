@@ -38,7 +38,7 @@ const measurementDescriptions: Record<string, string> = {
   '24h Snow Accumulation':
     'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation, filtered out values less than -1',
   'Precip Accum One Hour':
-    'Total Liquid Precipitation - Sum of hourly precipitation readings',
+    'Total Liquid Precipitation - Sum of hourly precipitation readings over the selected period',
   // 'Precipitation':
   //   'Total Liquid Precipitation - Sum of hourly precipitation readings',
   'Relative Humidity':
@@ -71,9 +71,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
         'Total Snow Depth',
         'Total Snow Depth Change',
         '24h Snow Accumulation',
-        'Precip Accum One Hour',
-        'Precipitation',
-      ],
+        'Precip Accum One Hour'      ],
     },
     { category: 'RH', columns: ['Relative Humidity'] },
   ];

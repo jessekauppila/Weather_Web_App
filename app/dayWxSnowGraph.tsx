@@ -100,20 +100,22 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     // Now add temperature axis and label
     svg.append('g')
       .attr('transform', `translate(${width}, 0)`)
-      .call(d3.axisRight(yScaleTemp))
+      .call(d3.axisRight(yScaleTemp)
+        .tickFormat(d => `${d}°F`))  // Add °F to temperature labels
       .selectAll('text')
-      .style('fill', 'black');
+      .style('fill', '#808080');
 
-    // Update temperature label position
+    // Update temperature label to grey
     svg.append('text')
-      .attr('transform', `rotate(-90) translate(${-height/2},${width + 40})`)
+      .attr('transform', `rotate(-90) translate(${-height/2},${width + 45})`)
       .style('text-anchor', 'middle')
-      .style('fill', 'rgb(128, 128, 128)')
+      .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
       .text('Temperature (°F)');
 
     // Create scales with separate domains for line and bars
+    const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
     const yScaleLine = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.totalSnowDepth) || 0])
+      .domain([0, maxSnowDepth > 30 ? maxSnowDepth : 12])  // Use 12in if under 30in, otherwise use data max
       .range([height, 0]);
 
     const yScaleBars = d3.scaleLinear()
@@ -142,9 +144,10 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
 
     // Add y-axis for total snow depth (left)
     svg.append('g')
-      .call(d3.axisLeft(yScaleLine))
+      .call(d3.axisLeft(yScaleLine)
+        .tickFormat(d => d + ' in'))  // Add this line to format the actual axis ticks
       .selectAll('text')
-      .style('fill', 'black');
+      .style('fill', 'blue');
 
     // Update snow depth label to blue
     svg.append('text')
@@ -154,7 +157,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('fill', 'blue') // Match the blue of the snow depth line
-      .text('Snow Depth (inches)');
+      //.text('Snow Depth');
 
     // Add x-axis label
     svg.append('text')
@@ -382,6 +385,27 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
         tooltip.style('opacity', 0);
       });
 
+    // Add snow depth label along the line
+    svg.append('text')
+      .attr('x', width - width)  // Position it just after the end of the line
+      .attr('y', (height / 2) -20)  // Center it vertically with the snow depth line
+      .attr('dy', '0.3em')  // Small vertical adjustment
+      .style('fill', 'blue')  // Match the line color
+      .style('font-size', '12px')
+      .text('Snow Depth');
+
+    // Add temperature range label
+    svg.append('text')
+      .attr('x', width - 120)  // Position it just after the end of the area
+      .attr('y', yScaleTemp(d3.mean([
+        d3.min(data, d => d.tempMin) ?? 0,
+        d3.max(data, d => d.tempMax) ?? 0
+      ]) ?? 0))  // Use nullish coalescing to provide fallback
+      .attr('dy', '0.3em')
+      .style('fill', '#808080')  // Match the temperature line color
+      .style('font-size', '12px')
+      .text('Temperature Range');
+
   }, [dayAverages]); // This ensures the graph updates when dayAverages changes
 
   return (
@@ -390,7 +414,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       className="graph-container bg-white p-4 rounded-xl shadow-md"
       style={{ 
         width: '100%',
-        height: '500px',//was 300px
+        height: '500px',//was 300
         overflow: 'hidden'
       }}
     >

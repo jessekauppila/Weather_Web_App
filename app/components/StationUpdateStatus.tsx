@@ -6,6 +6,7 @@ interface StationStatus {
   name: string;
   hasApiData: boolean;
   hasDbData: boolean;
+  created_at: string;
 }
 
 export default function StationUpdateStatus() {
@@ -17,28 +18,21 @@ export default function StationUpdateStatus() {
       try {
         const response = await fetch('/api/batchUploadLastHour');
         const data = await response.json();
-        console.log('Station status data:', data.stationStatus);
         
-        if (data.stationStatus) {
-          // Filter to only show stations that were actually updated
-          const updatedStations = data.stationStatus.filter(
-            (station: StationStatus) => station.hasApiData && station.hasDbData
-          );
-          
-          if (updatedStations.length > 0) {
-            setUpdateStatus(updatedStations);
-            setLastUpdateTime(new Date().toLocaleString());
-          }
-        }
+        // Sort the data in reverse chronological order
+        const sortedData = [...data.stationStatus].sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
+        setUpdateStatus(sortedData);
+        setLastUpdateTime(new Date().toLocaleTimeString());
       } catch (error) {
         console.error('Error checking updates:', error);
       }
     };
 
-    // Check immediately and then every minute
     checkUpdates();
-    const interval = setInterval(checkUpdates, 60000);
-
+    const interval = setInterval(checkUpdates, 60000); // Check every minute
     return () => clearInterval(interval);
   }, []);
 
