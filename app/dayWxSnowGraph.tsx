@@ -36,12 +36,6 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     const width = containerWidth - margin.left - margin.right;
     const height = containerHeight - margin.top - margin.bottom;
 
-    // // Create SVG with proper dimensions
-    // const svg = d3.select(svgRef.current)
-    //   .attr('width', containerWidth)
-    //   .attr('height', containerHeight)
-    //   .append('g')
-    //   .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Process data with validation and logging
     const data = dayAverages.data
@@ -187,14 +181,40 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     const pairGap = totalBarWidth * 0.2; // 20% gap between pairs
     const barGap = totalBarWidth * 0.05; // 5% gap between bars in a pair
 
-    // Position bars
-    svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-depth-bars')
-      .attr('x', d => xScale(d.date) - (individualBarWidth + barGap/2))
-      .attr('width', individualBarWidth);
+    // Define bar area margins
+    const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 500px on each side
+    
+    // Create bar-specific scale with reduced width
+    const barAreaWidth = width - (barMargin.left + barMargin.right);
+    const xScaleBars = d3.scaleTime()
+      .domain(d3.extent(data, d => d.date) as [Date, Date])
+      .range([barMargin.left, barMargin.left + barAreaWidth])
+      .nice();
 
-    svg.selectAll<SVGRectElement, (typeof data)[0]>('.snow-accum-bars')
-      .attr('x', d => xScale(d.date) + barGap/2)
-      .attr('width', individualBarWidth);
+    // Use xScaleBars for the bars
+    svg.selectAll('.snow-bars')
+      .data(data.filter(d => d.snowDepth24h > 0))
+      .enter()
+      .append('rect')
+      .attr('class', 'snow-bars')
+      .attr('x', d => xScaleBars(d.date) - (individualBarWidth + barGap/2))
+      .attr('y', d => yScaleBars(d.snowDepth24h))
+      .attr('width', individualBarWidth)
+      .attr('height', d => height - yScaleBars(d.snowDepth24h))
+      .attr('fill', '#4169E1')
+      .attr('opacity', 0.7);
+
+    svg.selectAll('.precip-bars')
+      .data(data.filter(d => d.precipHour > 0))
+      .enter()
+      .append('rect')
+      .attr('class', 'precip-bars')
+      .attr('x', d => xScaleBars(d.date) + barGap/2)
+      .attr('y', d => yScaleBars(d.precipHour))
+      .attr('width', individualBarWidth)
+      .attr('height', d => height - yScaleBars(d.precipHour))
+      .attr('fill', '#82EEFD')
+      .attr('opacity', 0.7);
 
     // Add value labels
     const addValueLabels = (selection: d3.Selection<any, any, any, any>) => {
@@ -215,31 +235,6 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .attr('stroke', '#A0A0A0')
       .attr('stroke-width', 1)
       .attr('stroke-dasharray', '4,4')
-      .attr('opacity', 0.7);
-
-    // Then add your bars code here (it will layer on top)
-    svg.selectAll('.snow-bars')
-      .data(data.filter(d => d.snowDepth24h > 0))  // Only show non-zero values
-      .enter()
-      .append('rect')
-      .attr('class', 'snow-bars')
-      .attr('x', d => xScale(d.date) - (individualBarWidth + barGap/2))
-      .attr('y', d => yScaleBars(d.snowDepth24h))
-      .attr('width', individualBarWidth)
-      .attr('height', d => height - yScaleBars(d.snowDepth24h))
-      .attr('fill', '#4169E1')
-      .attr('opacity', 0.7);
-
-    svg.selectAll('.precip-bars')
-      .data(data.filter(d => d.precipHour > 0))  // Only show non-zero values
-      .enter()
-      .append('rect')
-      .attr('class', 'precip-bars')
-      .attr('x', d => xScale(d.date) + barGap/2)
-      .attr('y', d => yScaleBars(d.precipHour))
-      .attr('width', individualBarWidth)
-      .attr('height', d => height - yScaleBars(d.precipHour))
-      .attr('fill', '#82EEFD')
       .attr('opacity', 0.7);
 
     // Update legend to single line
