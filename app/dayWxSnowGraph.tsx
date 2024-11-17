@@ -115,7 +115,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
     // Create scales with separate domains for line and bars
     const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
     const yScaleLine = d3.scaleLinear()
-      .domain([0, maxSnowDepth > 30 ? maxSnowDepth : 12])  // Use 12in if under 30in, otherwise use data max
+      .domain([0, Math.max(12, maxSnowDepth)])  // Use 12in or data max, whichever is larger
       .range([height, 0]);
 
     const yScaleBars = d3.scaleLinear()
@@ -219,7 +219,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
 
     // Then add your bars code here (it will layer on top)
     svg.selectAll('.snow-bars')
-      .data(data)
+      .data(data.filter(d => d.snowDepth24h > 0))  // Only show non-zero values
       .enter()
       .append('rect')
       .attr('class', 'snow-bars')
@@ -231,7 +231,7 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
       .attr('opacity', 0.7);
 
     svg.selectAll('.precip-bars')
-      .data(data)
+      .data(data.filter(d => d.precipHour > 0))  // Only show non-zero values
       .enter()
       .append('rect')
       .attr('class', 'precip-bars')
