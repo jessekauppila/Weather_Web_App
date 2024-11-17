@@ -288,7 +288,14 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
           onStationClick(d.stid);
         }
       })
-      .text(d => d.value);
+      .text(d => {
+        // Special formatting for Precip Accum One Hour
+        if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
+          const value = parseFloat(d.value);
+          return `${value.toFixed(2)} in`;
+        }
+        return d.value;
+      });
 
     cells.exit().remove();
   }, [dayAverages, headerStructure, onStationClick]);

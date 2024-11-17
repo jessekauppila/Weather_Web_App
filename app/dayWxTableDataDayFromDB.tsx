@@ -316,14 +316,14 @@ function wxTableDataDayFromDB(
       (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
     );
 
-    // Process precipitation
-    processNumericField(
-      'precipitation',
-      { sum: 'Precipitation' },
-      'in',
-      1,
-      (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
-    );
+    // // Process precipitation
+    // processNumericField(
+    //   'precipitation',
+    //   { sum: 'Precipitation' },
+    //   'in',
+    //   1,
+    //   (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
+    // );
 
     // Process snow depth for both total and change
     processNumericField(
