@@ -313,7 +313,7 @@ function wxTableDataDayFromDB(
       { sum: 'Precip Accum One Hour' },
       'in',
       1,
-      (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
+      (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
     );
 
     // // Process precipitation
