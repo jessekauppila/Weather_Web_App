@@ -551,3 +551,55 @@ input[type='datetime-local']:focus {
   border-radius: 4px !important;
   z-index: 1000 !important;
 }
+
+/* Specific styles for hourly table */
+/* .weatherTable.hourly-table tr.even-row {
+  background-color: #ffffff;
+}
+
+.weatherTable.hourly-table tr.odd-row {
+  background-color: #f8f8f8;
+}
+
+.weatherTable.hourly-table tr:hover {
+  background-color: #f0f0f0;
+} */
+
+/* Update borders for hourly table cells */
+.weatherTable.hourly-table tr:nth-child(even) td:nth-child(n+3) {
+  background-color: #fffeec;
+  color: #333333;
+  border: 0.5px solid #c5e6ff; /* Light gray border for white areas */
+}
+
+/* Update borders for hourly table cells */
+.weatherTable.hourly-table tr:nth-child(odd) td:nth-child(n+3) {
+  color: #333333;
+  border: 0.5px solid #c5e6ff; /* Light gray border for white areas */
+}
+
+/* Update the weatherTable td styles for hourly table */
+.weatherTable.hourly-table td {
+  background-color: #ffffff; /* White background instead of yellow */
+  color: #333333; /* Darker text color for better readability */
+}
+
+/* Alternate row colors for data cells in hourly table */
+.weatherTable.hourly-table tr:nth-child(even) td {
+  background-color: #f8f8f8; /* Light gray for even rows */
+  color: #333333;
+}
+
+/* Keep the Time columns (Day and Hour) blue */
+.weatherTable.hourly-table td:nth-child(1),
+.weatherTable.hourly-table td:nth-child(2) {
+  background-color: cornflowerblue;
+  color: lightgrey;
+}
+
+/* Keep the Time columns blue for even rows too */
+.weatherTable.hourly-table tr:nth-child(even) td:nth-child(1),
+.weatherTable.hourly-table tr:nth-child(even) td:nth-child(2) {
+  background-color: #79a1ed;
+  color: lightgrey;
+}

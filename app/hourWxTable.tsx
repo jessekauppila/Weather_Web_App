@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
+import moment from 'moment';
 
 interface HourlyAverage {
   [key: string]: string | number;
@@ -66,12 +67,12 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [sortedData, setSortedData] = useState(hourAverages.data);
 
-  // Add sorting function
+  // Update sorting function
   useEffect(() => {
     const sorted = [...hourAverages.data].sort((a, b) => {
-      const stationA = String(a.Station).toLowerCase();
-      const stationB = String(b.Station).toLowerCase();
-      return stationA.localeCompare(stationB);
+      const dateA = moment(a.Day + ' ' + a.Hour, 'MMM D h:mm A');
+      const dateB = moment(b.Day + ' ' + b.Hour, 'MMM D h:mm A');
+      return dateB.valueOf() - dateA.valueOf(); // Reverse chronological order
     });
     setSortedData(sorted);
   }, [hourAverages.data]);
@@ -116,7 +117,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
     const tableEnter = table
       .enter()
       .append('table')
-      .attr('class', 'weatherTable');
+      .attr('class', 'weatherTable hourly-table');
     const tableUpdate = tableEnter.merge(table as any);
 
     // Update the caption text with unique tooltip ID

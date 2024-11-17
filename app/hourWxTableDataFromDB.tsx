@@ -96,7 +96,7 @@ function hourWxTableDataFromDB(
   return {
     data: formattedData,
     // title: `${stationName}, Hourly: ${timeRange}`,
-    title: `Hourly - ${stationName}`,
+    title: `Raw Hourly Station Data - ${stationName}`,
   };
 }
 
