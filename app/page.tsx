@@ -1,6 +1,6 @@
 'use client';
 
-import { format, addDays, subDays, startOfDay, setHours } from 'date-fns';
+import { format, addDays, subDays, startOfDay, setHours, setMinutes } from 'date-fns';
 import moment from 'moment-timezone';
 import React, {
   useState,
@@ -23,10 +23,35 @@ interface Station {
 }
 
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [timeRange, setTimeRange] = useState(1); // Default to 1 day
+  // Get current time in PDT
+  const currentMoment = moment().tz('America/Los_Angeles');
+  const currentHour = currentMoment.hour();
+  const currentMinute = currentMoment.minute();
+
+  // Initialize selectedDate based on DayRangeType
+  const getInitialDate = (initialDayRangeType: DayRangeType) => {
+    const baseDate = new Date();
+    
+    switch (initialDayRangeType) {
+      case DayRangeType.MIDNIGHT:
+        return startOfDay(baseDate);
+      case DayRangeType.CURRENT:
+        return setHours(
+          setMinutes(baseDate, currentMinute),
+          currentHour
+        );
+      case DayRangeType.FORECAST:
+        return setHours(startOfDay(baseDate), 5);
+      default:
+        return startOfDay(baseDate);
+    }
+  };
+
+  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
+  const [selectedDate, setSelectedDate] = useState(() => getInitialDate(DayRangeType.MIDNIGHT));
+  const [timeRange, setTimeRange] = useState(1);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
-  const [endDate, setEndDate] = useState(addDays(new Date(), 1));
+  const [endDate, setEndDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [observationsDataDay, setObservationsDataDay] = useState<{
     data: any[];
@@ -61,86 +86,52 @@ export default function Home() {
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
 
-  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.FORECAST);
+  // Add these state variables near your other state declarations
+  const [startHour, setStartHour] = useState<number>(0);
+  const [endHour, setEndHour] = useState<number>(0);
 
-  // Add state for hours
-  const [startHour, setStartHour] = useState(5); // Default to forecast mode
-  const [endHour, setEndHour] = useState(4);
-
-  // this for a drop down time range menu!
+  // Modify calculateTimeRange to return hours as well
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
     const baseMoment = moment(date).tz('America/Los_Angeles');
     
     switch (type) {
       case DayRangeType.MIDNIGHT:
         return {
-          startHour: 0,  // Midnight
-          endHour: 0     // Midnight next day
+          start: baseMoment.clone().startOf('day'),
+          end: baseMoment.clone().endOf('day'),
+          startHour: 0,
+          endHour: 24
         };
         
       case DayRangeType.CURRENT:
-        const currentHour = moment().tz('America/Los_Angeles').hour();
+        const currentMoment = moment().tz('America/Los_Angeles');
+        const currentHour = currentMoment.hour();
+        const currentMinute = currentMoment.minute();
+        
         return {
+          start: baseMoment.clone()
+            .hour(currentHour)
+            .minute(currentMinute)
+            .second(0),
+          end: baseMoment.clone()
+            .add(1, 'day')
+            .hour(currentHour)
+            .minute(currentMinute)
+            .second(0),
           startHour: currentHour,
           endHour: currentHour
-        };
-        
-      case DayRangeType.FORECAST:
-        return {
-          startHour: 5,  // 13Z
-          endHour: 4     // 12Z next day
         };
     }
   };
 
-  // Update time calculation
-  const { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
+  // Update time calculation to include hours
+  const { start: start_time_pdt, end: end_time_pdt, startHour: calculatedStartHour, endHour: calculatedEndHour } = calculateTimeRange(selectedDate, dayRangeType);
 
-  const predefinedRanges = [
-    {
-      label: '1 Day',
-      value: () => {
-        setIsOneDay(true);
-        const end = new Date();
-        const start = new Date();
-        return [start, end];
-      }
-    },
-    {
-      label: '3 Days',
-      value: () => {
-        setIsOneDay(false);
-        const end = new Date();
-        const start = subDays(new Date(), 2);
-        return [start, end];
-      }
-    },
-    {
-      label: '7 Days',
-      value: () => {
-        setIsOneDay(false);
-        const end = new Date();
-        const start = subDays(new Date(), 6);
-        return [start, end];
-      }
-    },
-    {
-      label: '14 Days',
-      value: () => {
-        setIsOneDay(false);
-        const end = new Date();
-        const start = subDays(new Date(), 13);
-        return [start, end];
-      }
-    },
-    {
-      label: 'Custom Range',
-      value: () => {
-        setIsOneDay(false);
-        return [selectedDate, endDate];
-      }
-    }
-  ];
+  // Add effect to update hours when time range changes
+  useEffect(() => {
+    setStartHour(calculatedStartHour);
+    setEndHour(calculatedEndHour);
+  }, [calculatedStartHour, calculatedEndHour]);
 
   const handleDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -249,41 +240,17 @@ export default function Home() {
   useEffect(() => {
     const fetchDataFromDB = async () => {
       try {
-        // Adjust fetch time range based on dayRangeType
-        let start_time_pdt, end_time_pdt;
+        let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
         
-        switch (dayRangeType) {
-          case DayRangeType.MIDNIGHT:
-            start_time_pdt = moment(selectedDate)
-              .tz('America/Los_Angeles')
-              .startOf('day');
-            end_time_pdt = moment(endDate)
-              .tz('America/Los_Angeles')
-              .endOf('day');
-            break;
-            
-          case DayRangeType.CURRENT:
-            start_time_pdt = moment()
-              .tz('America/Los_Angeles')
-              .subtract(24, 'hours');
-            end_time_pdt = moment()
-              .tz('America/Los_Angeles');
-            break;
-            
-          case DayRangeType.FORECAST:
-            start_time_pdt = moment(selectedDate)
-              .tz('America/Los_Angeles')
-              .hour(5).minute(0).second(0);
-            end_time_pdt = moment(endDate)
-              .tz('America/Los_Angeles')
-              .add(1, 'day')
-              .hour(4).minute(59).second(59);
-            break;
+        // Only override the calculated times for multi-day views
+        if (timeRange !== 1) {
+          start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
+          end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
         }
 
-        console.log('Fetching data with range:', {
-          start: start_time_pdt.format(),
-          end: end_time_pdt.format()
+        console.log('Raw start and end times:', {
+          start: start_time_pdt.toISOString(),
+          end: end_time_pdt.toISOString()
         });
 
         const response = await fetch('/api/getObservationsFromDB', {
@@ -314,10 +281,19 @@ export default function Home() {
           {
             mode: tableMode,
             startHour: startHour,
-            endHour: endHour
+            endHour: endHour,
+            dayRangeType: dayRangeType,
+            start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+            end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
           }
         );
-        console.log('Processed data result:', processedDataDay);
+
+        console.log('Processing options:', {
+          startHour,
+          endHour,
+          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        });
 
         setObservationsDataDay(processedDataDay);
 
@@ -336,7 +312,16 @@ export default function Home() {
     };
 
     fetchDataFromDB();
-  }, [selectedDate, endDate, stationIds, tableMode, dayRangeType, startHour, endHour]);
+  }, [
+    selectedDate, 
+    endDate, 
+    stationIds, 
+    tableMode, 
+    dayRangeType, 
+    startHour, 
+    endHour, 
+    timeRange
+  ]);
 
 
 
@@ -394,7 +379,6 @@ export default function Home() {
       setTableMode('daily');
       setTimeRange(7);
       setIsOneDay(false);
-      setDayRangeType(DayRangeType.FORECAST);
       
       // Set date range to last 7 days
       const newEndDate = new Date();
@@ -422,29 +406,7 @@ export default function Home() {
     }
   }, [selectedStation]);
 
-  // Separate handler for day time range type (Midnight/Current/Forecast)
-  const handleDayRangeChange = (newRange: DayRangeType) => {
-    setDayRangeType(newRange);
-    // Only update the time of day, not the date range
-    const currentDate = selectedDate; // Use existing selected date
-    
-    switch (newRange) {
-      case DayRangeType.MIDNIGHT:
-        // Keep current date, just reset to midnight
-        setSelectedDate(startOfDay(currentDate));
-        break;
-        
-      case DayRangeType.CURRENT:
-        // Keep current date, set to current time
-        setSelectedDate(currentDate);
-        break;
-        
-      case DayRangeType.FORECAST:
-        // Keep current date, set to 5am
-        setSelectedDate(setHours(startOfDay(currentDate), 5));
-        break;
-    }
-  };
+
 
   // Update calculateCurrentTimeRange to be more precise
   const calculateCurrentTimeRange = () => {
@@ -492,7 +454,7 @@ export default function Home() {
                   className="neumorphic-button dropdown h-10"
                 >
                   <option value={DayRangeType.MIDNIGHT}>Daily: Midnight to Midnight (default)</option>
-                  <option value={DayRangeType.CURRENT}>Daily: Current Time to Current Time - 24h</option>
+                  <option value={DayRangeType.CURRENT}>Daily: Current Hour to Current Hour</option>
                   <option value={DayRangeType.FORECAST}>Daily: 13Z - 12Z (forecasters)</option>
                 </select>
               </div>
