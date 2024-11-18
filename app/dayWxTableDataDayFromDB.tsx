@@ -1,5 +1,7 @@
 //maybe I should do the unit conversions in the DB query...
 
+
+
 import moment from 'moment-timezone';
 interface SnowDataPoint {
   date_time: string;
@@ -126,22 +128,25 @@ function calculateSnowDepthAccumulation(data: any[]) {
 }
 
 // Add a new interface for configuration options
-interface WxTableOptions {
-  mode: 'summary' | 'daily';  // Controls whether to summarize or show daily data
-  startHour?: number;         // Optional: hour to start each day (default: 5)
-  endHour?: number;          // Optional: hour to end each day (default: 4)
-}
+// interface WxTableOptions {
+//   mode: 'summary' | 'daily';  // Controls whether to summarize or show daily data
+//   startHour?: number;         // Optional: hour to start each day (default: 5)
+//   endHour?: number;          // Optional: hour to end each day (default: 4)
+// }
+
+// Import the interface from types.ts
+import { WxTableOptions } from './types';
 
 function wxTableDataDayFromDB(
   observationsData: Array<Record<string, any>>,
   units: Array<Record<string, string>>,
-  options: WxTableOptions = { mode: 'summary' }  // Default to current behavior
+  options: WxTableOptions  // Now using the imported interface
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
-  const startHour = options.startHour ?? 0;  // Changed from 12 to 0 (midnight)
-  const endHour = options.endHour ?? 0;      // Changed from 4 to 0 (midnight)
+  const startHour = options.startHour;
+  const endHour = options.endHour;
 
   // Group observations either by station (summary mode) or by day (daily mode)
   const groupedObservations = options.mode === 'summary' 
@@ -491,28 +496,18 @@ function wxTableDataDayFromDB(
 
   const title = formattedData.length > 0
     ? (() => {
-        const startMoment = moment(
-          formattedData[0]['Start Date Time'],
-          'MMM D, YYYY, h:mm a'
-        );
-        const endMoment = moment(
-          formattedData[formattedData.length - 1]['End Date Time'],
-          'MMM D, YYYY, h:mm a'
-        );
-
-        const startDate = startMoment.format('MMM D');
-        const endDate = endMoment.format('MMM D');
-        const startTime = startMoment.format('h:mm A');
-        const endTime = endMoment.format('h:mm A');
+        // Get the actual end time from the data
+        const lastDataPoint = formattedData[0]['End Date Time'];
+        const endTimeDisplay = moment(options.end).format('MMM D, h:mm A');
 
         const stationInfo = options.mode === 'daily' 
           ? `${formattedData[0].Station} - ${formattedData[0].Elevation}\n` 
           : '';
 
         if (options.mode === 'daily') {
-          return `${stationInfo}${startDate}, ${startTime} - ${endDate}, ${endTime}`;
+          return `${stationInfo}${moment(options.start).format('MMM D, h:mm A')} - ${endTimeDisplay}`;
         } else {
-          return `Summary - ${startDate}, ${startTime} to ${endDate}, ${endTime}`;
+          return `Summary - ${moment(options.start).format('MMM D, h:mm A')} to ${endTimeDisplay}`;
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';

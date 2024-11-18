@@ -28,9 +28,18 @@ export const DAY_RANGE_OPTIONS: DayRangeOption[] = [
     label: 'Daily: Current Time to Current Time',
     description: '(24h rolling)'
   },
-  {
-    id: DayRangeType.FORECAST,
-    label: 'Daily: 13Z - 12Z',
-    description: '(forecasters)'
-  }
+  // {
+  //   id: DayRangeType.FORECAST,
+  //   label: 'Daily: UTC',
+  //   description: '(forecasters)'
+  // }
 ];
+
+export interface WxTableOptions {
+  mode: 'summary' | 'daily';
+  startHour: number;
+  endHour: number;
+  dayRangeType: DayRangeType;
+  start: string;
+  end: string;
+}
