@@ -1,6 +1,6 @@
 'use client';
 
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, startOfDay, setHours } from 'date-fns';
 import moment from 'moment-timezone';
 import React, {
   useState,
@@ -14,6 +14,8 @@ import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import StationUpdateStatus from './components/StationUpdateStatus';//import { ObservationsData } from './types'; // Add this import
+import { DayRangeType } from './types';
+import { DayRangeSelect } from './components/DayRangeSelect';
 
 interface Station {
   id: string;
@@ -58,6 +60,40 @@ export default function Home() {
 
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
+
+  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.FORECAST);
+
+  // Add state for hours
+  const [startHour, setStartHour] = useState(5); // Default to forecast mode
+  const [endHour, setEndHour] = useState(4);
+
+  // this for a drop down time range menu!
+  const calculateTimeRange = (date: Date, type: DayRangeType) => {
+    const baseMoment = moment(date).tz('America/Los_Angeles');
+    
+    switch (type) {
+      case DayRangeType.MIDNIGHT:
+        return {
+          start: baseMoment.clone().startOf('day'),
+          end: baseMoment.clone().endOf('day')
+        };
+        
+      case DayRangeType.CURRENT:
+        return {
+          start: moment().tz('America/Los_Angeles').subtract(24, 'hours'),
+          end: moment().tz('America/Los_Angeles')
+        };
+        
+      case DayRangeType.FORECAST:
+        return {
+          start: baseMoment.clone().hour(5).minute(0).second(0),
+          end: baseMoment.clone().add(1, 'day').hour(4).minute(59).second(59)
+        };
+    }
+  };
+
+  // Update time calculation
+  const { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
 
   const predefinedRanges = [
     {
@@ -115,15 +151,52 @@ export default function Home() {
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const value = event.target.value;
+    console.log('Time range changed to:', value);
+    
     if (value === 'custom') {
       setUseCustomEndDate(true);
       setIsOneDay(false);
     } else {
       setUseCustomEndDate(false);
       setTimeRange(Number(value));
-      setSelectedDate(subDays(new Date(), Number(value) - 1));
-      setEndDate(new Date());
-      setIsOneDay(value === '1');
+      
+      const newEndDate = new Date();
+      let newStartDate: Date;
+      
+      switch (value) {
+        case '1':
+          newStartDate = new Date();
+          setIsOneDay(true);
+          break;
+        case '3':
+          newStartDate = subDays(newEndDate, 2);
+          setIsOneDay(false);
+          break;
+        case '7':
+          newStartDate = subDays(newEndDate, 6);
+          setIsOneDay(false);
+          break;
+        case '14':
+          newStartDate = subDays(newEndDate, 13);
+          setIsOneDay(false);
+          break;
+        case '30':
+          newStartDate = subDays(newEndDate, 29);
+          setIsOneDay(false);
+          break;
+        default:
+          newStartDate = new Date();
+          setIsOneDay(true);
+      }
+
+      console.log('Setting dates:', {
+        start: newStartDate,
+        end: newEndDate
+      });
+
+      setSelectedDate(newStartDate);
+      setEndDate(newEndDate);
+      setUseCustomEndDate(true); // Make sure we're using the custom end date
     }
   };
 
@@ -177,12 +250,16 @@ export default function Home() {
       try {
         const start_time_pdt = moment(selectedDate)
           .tz('America/Los_Angeles')
-          .startOf('day')
-          .add(5, 'hours');
+          .startOf('day');
 
-        const end_time_pdt = useCustomEndDate
-          ? moment(endDate).tz('America/Los_Angeles').endOf('day')
-          : moment(start_time_pdt).add(timeRange, 'days');
+        const end_time_pdt = moment(endDate)
+          .tz('America/Los_Angeles')
+          .endOf('day');
+
+        console.log('Fetching data with range:', {
+          start: start_time_pdt.format(),
+          end: end_time_pdt.format()
+        });
 
         const response = await fetch('/api/getObservationsFromDB', {
           method: 'POST',
@@ -211,8 +288,8 @@ export default function Home() {
           result.units,
           {
             mode: tableMode,
-            startHour: 5,
-            endHour: 4
+            startHour,
+            endHour
           }
         );
         console.log('Processed data result:', processedDataDay);
@@ -234,61 +311,9 @@ export default function Home() {
     };
 
     fetchDataFromDB();
-  }, [
-    selectedDate,
-    timeRange,
-    endDate,
-    useCustomEndDate,
-    stationIds,
-    tableMode
-  ]);
+  }, [selectedDate, endDate, stationIds, tableMode]);
 
-  //Check to see if it's time to run the uploadDataLastHour API call
-  //Taking away this client side cron job for now, instead using Vercel's built in tools
-  // useEffect(() => {
-  //   const checkAndRunUpdate = async () => {
-  //     const now = new Date();
-  //     console.log(`Checking for update at ${now.toLocaleString()}`);
 
-  //     const minutes = now.getMinutes();
-
-  //     if (
-  //       minutes === 1 //||
-  //       // minutes === 5 ||
-  //       // minutes === 20 ||
-  //       // minutes === 30
-  //     ) {
-  //       console.log(
-  //         `Running update at ${minutes} minute(s) past the hour`
-  //       );
-  //       try {
-  //         const response = await fetch('/api/uploadDataLastHour', {
-  //           method: 'POST',
-  //         });
-  //         if (response.ok) {
-  //           setLastUpdateTime(now.toLocaleString());
-  //           console.log('Update successful at', now.toLocaleString());
-  //         } else {
-  //           console.error('Update failed:', await response.text());
-  //         }
-  //       } catch (error) {
-  //         console.error('Error running update:', error);
-  //       }
-  //     } else {
-  //       console.log(
-  //         `No update needed at ${minutes} minute(s) past the hour`
-  //       );
-  //     }
-  //   };
-  //   // Run the check immediately on component mount
-  //   checkAndRunUpdate();
-
-  //   // Then run the check every minute
-  //   const intervalId = setInterval(checkAndRunUpdate, 60000);
-
-  //   // Clean up the interval on component unmount
-  //   return () => clearInterval(intervalId);
-  // }, []);
 
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
@@ -341,23 +366,18 @@ export default function Home() {
       // Update all related state in one transition
       setSelectedStation(stationId);
       setStationIds([stationId]);
-      setTableMode('daily'); // Explicitly set to daily mode
+      setTableMode('daily');
       setTimeRange(7);
       setIsOneDay(false);
+      setDayRangeType(DayRangeType.FORECAST);
       
-      const newStartDate = subDays(new Date(), 6);
+      // Set date range to last 7 days
       const newEndDate = new Date();
-      
-      console.log('Updating state with:', {
-        stationId,
-        tableMode: 'daily',
-        startDate: newStartDate,
-        endDate: newEndDate,
-        timeRange: 7
-      });
+      const newStartDate = subDays(newEndDate, 6);
       
       setSelectedDate(newStartDate);
       setEndDate(newEndDate);
+      setUseCustomEndDate(true);
     });
 
     setTimeout(() => {
@@ -377,6 +397,61 @@ export default function Home() {
     }
   }, [selectedStation]);
 
+  // Separate handler for day time range type (Midnight/Current/Forecast)
+  const handleDayRangeChange = (newRange: DayRangeType) => {
+    setDayRangeType(newRange);
+    // Only update the time of day, not the date range
+    const currentDate = selectedDate; // Use existing selected date
+    
+    switch (newRange) {
+      case DayRangeType.MIDNIGHT:
+        // Keep current date, just reset to midnight
+        setSelectedDate(startOfDay(currentDate));
+        break;
+        
+      case DayRangeType.CURRENT:
+        // Keep current date, set to current time
+        setSelectedDate(currentDate);
+        break;
+        
+      case DayRangeType.FORECAST:
+        // Keep current date, set to 5am
+        setSelectedDate(setHours(startOfDay(currentDate), 5));
+        break;
+    }
+  };
+
+  // Update calculateCurrentTimeRange to be more precise
+  const calculateCurrentTimeRange = () => {
+    if (useCustomEndDate && timeRange !== 1 && timeRange !== 3 && timeRange !== 7 && timeRange !== 14 && timeRange !== 30) {
+      return 'custom';
+    }
+    return timeRange.toString();
+  };
+
+  // Add the handler for time-of-day changes
+  const handleDayRangeTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newType = event.target.value as DayRangeType;
+    setDayRangeType(newType);
+    
+    // Update startHour and endHour in your wxTableDataDayFromDB call
+    switch (newType) {
+      case DayRangeType.MIDNIGHT:
+        setStartHour(0);
+        setEndHour(0);
+        break;
+      case DayRangeType.CURRENT:
+        const currentHour = new Date().getHours();
+        setStartHour(currentHour);
+        setEndHour(currentHour);
+        break;
+      case DayRangeType.FORECAST:
+        setStartHour(5);
+        setEndHour(4);
+        break;
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
       <div className="w-full max-w-6xl space-y-4">
@@ -385,7 +460,7 @@ export default function Home() {
             {/* Top row with date controls */}
             <div className="flex items-center justify-center space-x-4">
               <select
-                value={useCustomEndDate ? 'custom' : timeRange}
+                value={calculateCurrentTimeRange()}
                 onChange={handleTimeRangeChange}
                 className="neumorphic-button dropdown h-10"
               >
@@ -397,35 +472,53 @@ export default function Home() {
                 <option value="custom">Custom Range</option>
               </select>
 
-              <div className="flex items-center space-x-2">
-                {isOneDay && (
-                  <button onClick={handlePrevDay} className="neumorphic-button nav-button h-10 w-10">
-                    &lt;
-                  </button>
-                )}
-                
-                <input
-                  type="date"
-                  value={format(selectedDate, 'yyyy-MM-dd')}
-                  onChange={handleDateChange}
-                  className="neumorphic-button date-picker h-10"
-                />
-                
-                {isOneDay && (
-                  <button onClick={handleNextDay} className="neumorphic-button nav-button h-10 w-10">
-                    &gt;
-                  </button>
-                )}
+              <div className="flex items-center space-x-4">
+                <select
+                  value={dayRangeType}
+                  onChange={handleDayRangeTypeChange}
+                  className="neumorphic-button dropdown h-10"
+                >
+                  <option value={DayRangeType.MIDNIGHT}>Daily: Midnight to Midnight (default)</option>
+                  <option value={DayRangeType.CURRENT}>Daily: Current Time to Current Time - 24h</option>
+                  <option value={DayRangeType.FORECAST}>Daily: 13Z - 12Z (forecasters)</option>
+                </select>
+              </div>
 
-                {!isOneDay && (
+              <div className="flex gap-4 items-center">
+                <DayRangeSelect 
+                  value={dayRangeType} 
+                  onChange={handleDayRangeChange} 
+                />
+                <div className="flex items-center space-x-2">
+                  {isOneDay && (
+                    <button onClick={handlePrevDay} className="neumorphic-button nav-button h-10 w-10">
+                      &lt;
+                    </button>
+                  )}
+                  
                   <input
                     type="date"
-                    value={format(endDate, 'yyyy-MM-dd')}
-                    onChange={handleEndDateChange}
+                    value={format(selectedDate, 'yyyy-MM-dd')}
+                    onChange={handleDateChange}
                     className="neumorphic-button date-picker h-10"
-                    min={format(selectedDate, 'yyyy-MM-dd')}
                   />
-                )}
+                  
+                  {isOneDay && (
+                    <button onClick={handleNextDay} className="neumorphic-button nav-button h-10 w-10">
+                      &gt;
+                    </button>
+                  )}
+
+                  {!isOneDay && (
+                    <input
+                      type="date"
+                      value={format(endDate, 'yyyy-MM-dd')}
+                      onChange={handleEndDateChange}
+                      className="neumorphic-button date-picker h-10"
+                      min={format(selectedDate, 'yyyy-MM-dd')}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -486,36 +579,3 @@ export default function Home() {
     </main>
   );
 }
-
-//this runs the uploadDataLastHour every 30 secs to check to make sure things are working correctly...
-// useEffect(() => {
-//   const checkAndRunUpdate = async () => {
-//     const now = new Date();
-//     console.log(`Checking for update at ${now.toLocaleString()}`);
-
-//     try {
-//       const response = await fetch('/api/uploadDataLastHour', {
-//         method: 'POST',
-//       });
-//       if (response.ok) {
-//         setLastUpdateTime(now.toLocaleString());
-//         console.log('Update successful at', now.toLocaleString());
-//       } else {
-//         console.error('Update failed:', await response.text());
-//       }
-//     } catch (error) {
-//       console.error('Error running update:', error);
-//     }
-//   };
-
-//   // Run the check immediately on component mount
-//   checkAndRunUpdate();
-
-//   // Then run the check every 30 seconds
-//   const intervalId = setInterval(checkAndRunUpdate, 30000);
-
-//   // Clean up the interval on component unmount
-//   return () => clearInterval(intervalId);
-// }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
-
-// }, []); // Empty dependency array means this effect runs once on mount and sets up the interval
