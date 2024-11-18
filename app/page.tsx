@@ -13,9 +13,7 @@ import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import DayWxSnowGraph from './dayWxSnowGraph';
-import StationUpdateStatus from './components/StationUpdateStatus';//import { ObservationsData } from './types'; // Add this import
 import { DayRangeType } from './types';
-import { DayRangeSelect } from './components/DayRangeSelect';
 
 interface Station {
   id: string;
@@ -25,33 +23,7 @@ interface Station {
 export default function Home() {
   // Get current time in PDT
   const currentMoment = moment().tz('America/Los_Angeles');
-  const currentHour = currentMoment.hour();
-  const currentMinute = currentMoment.minute();
 
-  // Initialize selectedDate based on DayRangeType
-  const getInitialDate = (initialDayRangeType: DayRangeType) => {
-    const baseDate = new Date();
-    
-    switch (initialDayRangeType) {
-      case DayRangeType.MIDNIGHT:
-        return startOfDay(baseDate);
-      case DayRangeType.CURRENT:
-        return setHours(
-          setMinutes(baseDate, currentMinute),
-          currentHour
-        );
-      case DayRangeType.FORECAST:
-        return setHours(startOfDay(baseDate), 5);
-      default:
-        return startOfDay(baseDate);
-    }
-  };
-
-  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
-  const [selectedDate, setSelectedDate] = useState(() => getInitialDate(DayRangeType.MIDNIGHT));
-  const [timeRange, setTimeRange] = useState(1);
-  const [useCustomEndDate, setUseCustomEndDate] = useState(false);
-  const [endDate, setEndDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [observationsDataDay, setObservationsDataDay] = useState<{
     data: any[];
@@ -62,9 +34,6 @@ export default function Home() {
     title: string;
   } | null>(null);
 
-  const [lastUpdateTime, setLastUpdateTime] = useState<string | null>(
-    null
-  );
   const [stations, setStations] = useState<
     Array<{ id: string; name: string }>
   >([]);
@@ -73,26 +42,25 @@ export default function Home() {
 
   // Add loading state for station change
   const [isStationChanging, setIsStationChanging] = useState(false);
-
   const [isPending, startTransition] = useTransition();
-
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
 
   // Add state for table mode
   const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
-
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
 
-  // Add these state variables near your other state declarations
-  const [startHour, setStartHour] = useState<number>(0);
-  const [endHour, setEndHour] = useState<number>(0);
-
-  // Modify calculateTimeRange to return hours as well
+  /**
+   * Calculates the start and end times based on the selected date and range type
+   * @param date - The base date to calculate the range from
+   * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
+   * @returns Object containing start time, end time, and corresponding hours
+   */
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
     const baseMoment = moment(date).tz('America/Los_Angeles');
+    const currentMoment = moment().tz('America/Los_Angeles');
     
     switch (type) {
       case DayRangeType.MIDNIGHT:
@@ -104,7 +72,6 @@ export default function Home() {
         };
         
       case DayRangeType.CURRENT:
-        const currentMoment = moment().tz('America/Los_Angeles');
         const currentHour = currentMoment.hour();
         const currentMinute = currentMoment.minute();
         
@@ -121,23 +88,57 @@ export default function Home() {
           startHour: currentHour,
           endHour: currentHour
         };
+      case DayRangeType.FORECAST:
+        const FORECAST_START_HOUR = 5;  // 5am PDT (13Z)
+        const FORECAST_END_HOUR = 4;    // 4am PDT next day (12Z)
+        
+        return {
+          start: baseMoment.clone().startOf('day').hour(FORECAST_START_HOUR),
+          end: baseMoment.clone().add(1, 'day').startOf('day').hour(FORECAST_END_HOUR),
+          startHour: FORECAST_START_HOUR,
+          endHour: FORECAST_END_HOUR
+        };
     }
   };
 
-  // Update time calculation to include hours
-  const { start: start_time_pdt, end: end_time_pdt, startHour: calculatedStartHour, endHour: calculatedEndHour } = calculateTimeRange(selectedDate, dayRangeType);
+  // Initialize selectedDate using calculateTimeRange
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const baseDate = new Date();
+    const { start } = calculateTimeRange(baseDate, DayRangeType.MIDNIGHT);
+    return start.toDate();
+  });
 
-  // Add effect to update hours when time range changes
-  useEffect(() => {
-    setStartHour(calculatedStartHour);
-    setEndHour(calculatedEndHour);
-  }, [calculatedStartHour, calculatedEndHour]);
-
-  const handleDateChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSelectedDate(new Date(event.target.value));
-  };
+    // Remove unused state variables
+    const [timeRange, setTimeRange] = useState(1);
+    const [useCustomEndDate, setUseCustomEndDate] = useState(false);
+    const [endDate, setEndDate] = useState(new Date());
+  
+    // Add these state variables near your other state declarations
+    const [startHour, setStartHour] = useState<number>(0);
+    const [endHour, setEndHour] = useState<number>(0);
+  
+    // Add state for day range type
+    const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
+  
+    // Now the time calculation will work
+    const { 
+      start: start_time_pdt, 
+      end: end_time_pdt, 
+      startHour: calculatedStartHour, 
+      endHour: calculatedEndHour 
+    } = calculateTimeRange(selectedDate, dayRangeType);
+  
+    // Add effect to update hours when time range changes
+    useEffect(() => {
+      setStartHour(calculatedStartHour);
+      setEndHour(calculatedEndHour);
+    }, [calculatedStartHour, calculatedEndHour]);
+  
+    const handleDateChange = (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      setSelectedDate(new Date(event.target.value));
+    };
 
   const handleTimeRangeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
