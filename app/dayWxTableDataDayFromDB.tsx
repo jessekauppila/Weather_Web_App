@@ -91,25 +91,6 @@ function filterSnowDepthOutliers(
   const validPoints = result.filter(d => !isNaN(d.snow_depth));
   const filteredOutPoints = result.filter(d => isNaN(d.snow_depth));
   
-  // console.log('Filtering summary:', {
-  //   originalPoints: data.length,
-  //   validPoints: validPoints.length,
-  //   filteredOutPoints: filteredOutPoints.length,
-  //   threshold,
-  //   maxPositiveChange,
-  //   maxNegativeChange,
-  //   windowSize
-  // });
-
-  // console.log('Valid data points:', validPoints.map(d => ({
-  //   time: d.date_time,
-  //   depth: d.snow_depth
-  // })));
-
-  // console.log('Filtered out points:', filteredOutPoints.map(d => ({
-  //   time: d.date_time,
-  //   depth: 'filtered'
-  // })));
 
   return result;
 }
@@ -159,8 +140,8 @@ function wxTableDataDayFromDB(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
-  const startHour = options.startHour ?? 5;  // Default to 5am
-  const endHour = options.endHour ?? 4;      // Default to 4am
+  const startHour = options.startHour ?? 0;  // Changed from 12 to 0 (midnight)
+  const endHour = options.endHour ?? 0;      // Changed from 4 to 0 (midnight)
 
   // Group observations either by station (summary mode) or by day (daily mode)
   const groupedObservations = options.mode === 'summary' 
@@ -558,9 +539,6 @@ function groupByDay(
 ) {
   return data.reduce((acc, obs) => {
     const datetime = moment(obs.date_time);
-    if (datetime.hour() < startHour) {
-      datetime.subtract(1, 'day');
-    }
     const dayKey = datetime.format('YYYY-MM-DD');
     
     if (!acc[dayKey]) {
