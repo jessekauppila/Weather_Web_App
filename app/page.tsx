@@ -74,20 +74,21 @@ export default function Home() {
     switch (type) {
       case DayRangeType.MIDNIGHT:
         return {
-          start: baseMoment.clone().startOf('day'),
-          end: baseMoment.clone().endOf('day')
+          startHour: 0,  // Midnight
+          endHour: 0     // Midnight next day
         };
         
       case DayRangeType.CURRENT:
+        const currentHour = moment().tz('America/Los_Angeles').hour();
         return {
-          start: moment().tz('America/Los_Angeles').subtract(24, 'hours'),
-          end: moment().tz('America/Los_Angeles')
+          startHour: currentHour,
+          endHour: currentHour
         };
         
       case DayRangeType.FORECAST:
         return {
-          start: baseMoment.clone().hour(5).minute(0).second(0),
-          end: baseMoment.clone().add(1, 'day').hour(4).minute(59).second(59)
+          startHour: 5,  // 13Z
+          endHour: 4     // 12Z next day
         };
     }
   };
@@ -248,13 +249,37 @@ export default function Home() {
   useEffect(() => {
     const fetchDataFromDB = async () => {
       try {
-        const start_time_pdt = moment(selectedDate)
-          .tz('America/Los_Angeles')
-          .startOf('day');
-
-        const end_time_pdt = moment(endDate)
-          .tz('America/Los_Angeles')
-          .endOf('day');
+        // Adjust fetch time range based on dayRangeType
+        let start_time_pdt, end_time_pdt;
+        
+        switch (dayRangeType) {
+          case DayRangeType.MIDNIGHT:
+            start_time_pdt = moment(selectedDate)
+              .tz('America/Los_Angeles')
+              .startOf('day');
+            end_time_pdt = moment(endDate)
+              .tz('America/Los_Angeles')
+              .endOf('day');
+            break;
+            
+          case DayRangeType.CURRENT:
+            start_time_pdt = moment()
+              .tz('America/Los_Angeles')
+              .subtract(24, 'hours');
+            end_time_pdt = moment()
+              .tz('America/Los_Angeles');
+            break;
+            
+          case DayRangeType.FORECAST:
+            start_time_pdt = moment(selectedDate)
+              .tz('America/Los_Angeles')
+              .hour(5).minute(0).second(0);
+            end_time_pdt = moment(endDate)
+              .tz('America/Los_Angeles')
+              .add(1, 'day')
+              .hour(4).minute(59).second(59);
+            break;
+        }
 
         console.log('Fetching data with range:', {
           start: start_time_pdt.format(),
@@ -288,8 +313,8 @@ export default function Home() {
           result.units,
           {
             mode: tableMode,
-            startHour,
-            endHour
+            startHour: startHour,
+            endHour: endHour
           }
         );
         console.log('Processed data result:', processedDataDay);
@@ -311,7 +336,7 @@ export default function Home() {
     };
 
     fetchDataFromDB();
-  }, [selectedDate, endDate, stationIds, tableMode]);
+  }, [selectedDate, endDate, stationIds, tableMode, dayRangeType, startHour, endHour]);
 
 
 
@@ -429,27 +454,15 @@ export default function Home() {
     return timeRange.toString();
   };
 
-  // Add the handler for time-of-day changes
+  // Simplified handler - only updates the type and hours
   const handleDayRangeTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = event.target.value as DayRangeType;
     setDayRangeType(newType);
     
-    // Update startHour and endHour in your wxTableDataDayFromDB call
-    switch (newType) {
-      case DayRangeType.MIDNIGHT:
-        setStartHour(0);
-        setEndHour(0);
-        break;
-      case DayRangeType.CURRENT:
-        const currentHour = new Date().getHours();
-        setStartHour(currentHour);
-        setEndHour(currentHour);
-        break;
-      case DayRangeType.FORECAST:
-        setStartHour(5);
-        setEndHour(4);
-        break;
-    }
+    // Update hours based on the selected type
+    const { startHour, endHour } = calculateTimeRange(selectedDate, newType);
+    setStartHour(startHour);
+    setEndHour(endHour);
   };
 
   return (
@@ -485,10 +498,10 @@ export default function Home() {
               </div>
 
               <div className="flex gap-4 items-center">
-                <DayRangeSelect 
+                {/* <DayRangeSelect 
                   value={dayRangeType} 
                   onChange={handleDayRangeChange} 
-                />
+                /> */}
                 <div className="flex items-center space-x-2">
                   {isOneDay && (
                     <button onClick={handlePrevDay} className="neumorphic-button nav-button h-10 w-10">
