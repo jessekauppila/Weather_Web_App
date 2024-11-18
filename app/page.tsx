@@ -52,6 +52,9 @@ export default function Home() {
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
 
+  // Move this up, before calculateTimeRange
+  const [timeRange, setTimeRange] = useState(1);
+
   /**
    * Calculates the start and end times based on the selected date and range type
    * @param date - The base date to calculate the range from
@@ -59,61 +62,79 @@ export default function Home() {
    * @returns Object containing start time, end time, and corresponding hours
    */
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
-    const baseMoment = moment(date).tz('America/Los_Angeles');
+    const endMoment = moment(date).tz('America/Los_Angeles');
     const currentMoment = moment().tz('America/Los_Angeles');
     
+    console.log('calculateTimeRange input:', {
+      date,
+      type,
+      endMoment: endMoment.format('YYYY-MM-DD HH:mm:ss'),
+      currentMoment: currentMoment.format('YYYY-MM-DD HH:mm:ss')
+    });
+
     switch (type) {
       case DayRangeType.MIDNIGHT:
-        return {
-          start: baseMoment.clone().startOf('day'),
-          end: baseMoment.clone().endOf('day'),
+        const midnightResult = {
+          start: endMoment.clone().subtract(timeRange, 'days').startOf('day'),
+          end: endMoment.clone().endOf('day'),
           startHour: 0,
-          endHour: 24
+          endHour: 23
         };
+
+        console.log('MIDNIGHT type calculation:', {
+          startTime: midnightResult.start.format('YYYY-MM-DD HH:mm:ss'),
+          endTime: midnightResult.end.format('YYYY-MM-DD HH:mm:ss'),
+          startHour: midnightResult.startHour,
+          endHour: midnightResult.endHour
+        });
+
+        return midnightResult;
         
       case DayRangeType.CURRENT:
         const currentHour = currentMoment.hour();
         const currentMinute = currentMoment.minute();
         
-        return {
-          start: baseMoment.clone()
+        const currentResult = {
+          start: endMoment.clone()
+            .subtract(timeRange, 'days')
             .hour(currentHour)
             .minute(currentMinute)
             .second(0),
-          end: baseMoment.clone()
-            .add(1, 'day')
+          end: endMoment.clone()
             .hour(currentHour)
             .minute(currentMinute)
             .second(0),
           startHour: currentHour,
           endHour: currentHour
         };
+
+        console.log('CURRENT type calculation:', {
+          startTime: currentResult.start.format('YYYY-MM-DD HH:mm:ss'),
+          endTime: currentResult.end.format('YYYY-MM-DD HH:mm:ss'),
+          startHour: currentResult.startHour,
+          endHour: currentResult.endHour
+        });
+
+        return currentResult;
       case DayRangeType.FORECAST:
         const FORECAST_START_HOUR = 5;  // 5am PDT (13Z)
         const FORECAST_END_HOUR = 4;    // 4am PDT next day (12Z)
         
         return {
-          start: baseMoment.clone().startOf('day').hour(FORECAST_START_HOUR),
-          end: baseMoment.clone().add(1, 'day').startOf('day').hour(FORECAST_END_HOUR),
+          start: endMoment.clone().startOf('day').hour(FORECAST_START_HOUR),
+          end: endMoment.clone().add(1, 'day').startOf('day').hour(FORECAST_END_HOUR),
           startHour: FORECAST_START_HOUR,
           endHour: FORECAST_END_HOUR
         };
     }
   };
 
-  // Initialize selectedDate using calculateTimeRange
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const baseDate = new Date();
-    const { start } = calculateTimeRange(baseDate, DayRangeType.MIDNIGHT);
-    return start.toDate();
-  });
+  // Initialize with the current date
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
     // Remove unused state variables
-    const [timeRange, setTimeRange] = useState(1);
     const [useCustomEndDate, setUseCustomEndDate] = useState(false);
-    const [endDate, setEndDate] = useState(new Date());
-  
-    // Add these state variables near your other state declarations
     const [startHour, setStartHour] = useState<number>(0);
     const [endHour, setEndHour] = useState<number>(0);
   
@@ -122,8 +143,6 @@ export default function Home() {
   
     // Now the time calculation will work
     const { 
-      start: start_time_pdt, 
-      end: end_time_pdt, 
       startHour: calculatedStartHour, 
       endHour: calculatedEndHour 
     } = calculateTimeRange(selectedDate, dayRangeType);
@@ -134,63 +153,64 @@ export default function Home() {
       setEndHour(calculatedEndHour);
     }, [calculatedStartHour, calculatedEndHour]);
   
-    const handleDateChange = (
-      event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      setSelectedDate(new Date(event.target.value));
+    const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedEndDate = new Date(event.target.value);
+      setEndDate(selectedEndDate);
+      setSelectedDate(subDays(selectedEndDate, timeRange));
     };
 
-  const handleTimeRangeChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
+
+  // this is the function that determines what happens in the drop down menu for date range
+  const handleTimeRangeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     console.log('Time range changed to:', value);
     
     if (value === 'custom') {
       setUseCustomEndDate(true);
       setIsOneDay(false);
-    } else {
-      setUseCustomEndDate(false);
-      setTimeRange(Number(value));
-      
-      const newEndDate = new Date();
-      let newStartDate: Date;
-      
-      switch (value) {
-        case '1':
-          newStartDate = new Date();
-          setIsOneDay(true);
-          break;
-        case '3':
-          newStartDate = subDays(newEndDate, 2);
-          setIsOneDay(false);
-          break;
-        case '7':
-          newStartDate = subDays(newEndDate, 6);
-          setIsOneDay(false);
-          break;
-        case '14':
-          newStartDate = subDays(newEndDate, 13);
-          setIsOneDay(false);
-          break;
-        case '30':
-          newStartDate = subDays(newEndDate, 29);
-          setIsOneDay(false);
-          break;
-        default:
-          newStartDate = new Date();
-          setIsOneDay(true);
-      }
-
-      console.log('Setting dates:', {
-        start: newStartDate,
-        end: newEndDate
-      });
-
-      setSelectedDate(newStartDate);
-      setEndDate(newEndDate);
-      setUseCustomEndDate(true); // Make sure we're using the custom end date
+      return;
     }
+    
+    setUseCustomEndDate(false);
+    setTimeRange(Number(value));
+    
+    const newEndDate = new Date();
+    let newStartDate: Date;
+    
+    switch (value) {
+      case '1':
+        newStartDate = subDays(newEndDate, 1);
+        setIsOneDay(true);
+        break;
+      case '3':
+        newStartDate = subDays(newEndDate, 3);
+        setIsOneDay(false);
+        break;
+      case '7':
+        newStartDate = subDays(newEndDate, 7);
+        setIsOneDay(false);
+        break;
+      case '14':
+        newStartDate = subDays(newEndDate, 14);
+        setIsOneDay(false);
+        break;
+      case '30':
+        newStartDate = subDays(newEndDate, 30);
+        setIsOneDay(false);
+        break;
+      default:
+        newStartDate = subDays(newEndDate, 1);
+        setIsOneDay(true);
+    }
+
+    console.log('Setting dates:', {
+      start: newStartDate,
+      end: newEndDate
+    });
+
+    setSelectedDate(newStartDate);
+    setEndDate(newEndDate);
+    setUseCustomEndDate(true);
   };
 
   const handleEndDateChange = (
@@ -420,6 +440,12 @@ export default function Home() {
   // Simplified handler - only updates the type and hours
   const handleDayRangeTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = event.target.value as DayRangeType;
+    console.log('DayRangeType changed:', {
+      newType,
+      selectedDate,
+      timeRange
+    });
+    
     setDayRangeType(newType);
     
     // Update hours based on the selected type
