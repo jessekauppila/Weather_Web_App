@@ -501,28 +501,7 @@ export default function Home() {
                 <option value="custom">Custom Range</option>
               </select>
 
-              <div className="flex items-center space-x-4">
-                <select
-                  value={dayRangeType}
-                  onChange={handleDayRangeTypeChange}
-                  className="neumorphic-button dropdown h-10"
-                >
-                  <option value={DayRangeType.MIDNIGHT}>Range: Midnight to Midnight</option>
-                  <option value={DayRangeType.CURRENT}>Range: Rolling 24 Hours</option>
-                  <option value={DayRangeType.CUSTOM}>Range: Custom</option>
-                </select>
-              </div>
-
-              {dayRangeType === DayRangeType.CUSTOM && (
-                console.log('Rendering time picker'),
-                <input
-                  type="time"
-                  value={customTime}
-                  onChange={(e) => setCustomTime(e.target.value)}
-                  className="neumorphic-button time-picker h-10"
-                />
-              )}
-
+              
               <div className="flex gap-4 items-center">
                 {/* <DayRangeSelect 
                   value={dayRangeType} 
@@ -557,6 +536,38 @@ export default function Home() {
                       min={format(selectedDate, 'yyyy-MM-dd')}
                     />
                   )}
+
+              <div className="flex items-center space-x-4">
+                {/* Main container - now narrower since dropdown expands left */}
+                <details className="relative w-[40px]"> {/* Match button width */}
+                  {/* Button that shows the caret - same size as before */}
+                  <summary className="neumorphic-button h-10 w-10 flex items-center justify-center px-4 cursor-pointer">
+                    <span className="transform transition-transform duration-200 details-caret">▼</span>
+                  </summary>
+                  {/* Expanded dropdown menu - now positioned to expand leftward */}
+                  <div className="absolute right-0 top-full mt-2 bg-[cornflowerblue] p-4 rounded-lg shadow-lg space-y-4 w-[300px]">
+                    <select
+                      value={dayRangeType}
+                      onChange={handleDayRangeTypeChange}
+                      className="neumorphic-button dropdown h-10 w-full"
+                    >
+                      <option value={DayRangeType.MIDNIGHT}>Range: Midnight to Midnight</option>
+                      <option value={DayRangeType.CURRENT}>Range: Rolling 24 hours</option>
+                      <option value={DayRangeType.CUSTOM}>Range: Custom</option>
+                    </select>
+
+                    {/* Time picker - only shows when Custom is selected */}
+                    {dayRangeType === DayRangeType.CUSTOM && (
+                      <input
+                        type="time"
+                        value={customTime}
+                        onChange={(e) => setCustomTime(e.target.value)}
+                        className="neumorphic-button time-picker h-10 w-full"
+                      />
+                    )}
+                  </div>
+                </details>
+              </div>
 
 
                 </div>
