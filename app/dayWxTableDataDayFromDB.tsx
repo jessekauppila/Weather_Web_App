@@ -498,16 +498,16 @@ function wxTableDataDayFromDB(
     ? (() => {
         // Get the actual end time from the data
         const lastDataPoint = formattedData[0]['End Date Time'];
-        const endTimeDisplay = moment(options.end).format('MMM D, h:mm A');
+        const endTimeDisplay = moment(options.end).format('MMM D, h A');
 
         const stationInfo = options.mode === 'daily' 
           ? `${formattedData[0].Station} - ${formattedData[0].Elevation}\n` 
           : '';
 
         if (options.mode === 'daily') {
-          return `${stationInfo}${moment(options.start).format('MMM D, h:mm A')} - ${endTimeDisplay}`;
+          return `${stationInfo}${moment(options.start).format('MMM D, h A')} - ${endTimeDisplay}`;
         } else {
-          return `Summary - ${moment(options.start).format('MMM D, h:mm A')} to ${endTimeDisplay}`;
+          return `Summary - ${moment(options.start).format('MMM D, h A')} to ${endTimeDisplay}`;
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';

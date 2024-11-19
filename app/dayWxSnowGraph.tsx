@@ -352,6 +352,9 @@ function DayWxSnowGraph({ dayAverages }: DayAveragesProps) {
         const date = xScale.invert(xPos);
         const bisect = d3.bisector((d: any) => d.date).left;
         const index = bisect(data, date);
+        
+        // Add safety check
+        if (index >= data.length || index < 0) return;
         const d = data[index];
 
         verticalLine
