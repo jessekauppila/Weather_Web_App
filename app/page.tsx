@@ -23,6 +23,7 @@ interface Station {
 export default function Home() {
   // Get current time in PDT
   const currentMoment = moment().tz('America/Los_Angeles');
+  const [customTime, setCustomTime] = useState(currentMoment.format('HH:mm'));
 
   const [isLoading, setIsLoading] = useState(true);
   const [observationsDataDay, setObservationsDataDay] = useState<{
@@ -44,6 +45,8 @@ export default function Home() {
   const [isStationChanging, setIsStationChanging] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
+
+  
 
   // Add state for table mode
   const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
@@ -116,16 +119,31 @@ export default function Home() {
         });
 
         return currentResult;
-      case DayRangeType.FORECAST:
-        const FORECAST_START_HOUR = 5;  // 5am PDT (13Z)
-        const FORECAST_END_HOUR = 4;    // 4am PDT next day (12Z)
-        
-        return {
-          start: endMoment.clone().startOf('day').hour(FORECAST_START_HOUR),
-          end: endMoment.clone().add(1, 'day').startOf('day').hour(FORECAST_END_HOUR),
-          startHour: FORECAST_START_HOUR,
-          endHour: FORECAST_END_HOUR
-        };
+
+        case DayRangeType.CUSTOM:
+          const [hours, minutes] = customTime.split(':').map(Number);
+          return {
+            start: endMoment.clone()
+              .subtract(timeRange, 'days')
+              .hour(hours)
+              .minute(minutes)
+              .second(0),
+            end: endMoment.clone()
+              .hour(hours)
+              .minute(minutes)
+              .second(0),
+            startHour: hours,
+            endHour: hours
+          };
+    
+        default:
+          // Fallback to midnight case if type is unknown
+          return {
+            start: endMoment.clone().subtract(timeRange, 'days').startOf('day'),
+            end: endMoment.clone().endOf('day'),
+            startHour: 0,
+            endHour: 23
+          };
     }
   };
 
@@ -140,7 +158,9 @@ export default function Home() {
   
     // Add state for day range type
     const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
+    console.log('dayRangeType:', dayRangeType);
   
+
     // Now the time calculation will work
     const { 
       startHour: calculatedStartHour, 
@@ -443,7 +463,8 @@ export default function Home() {
     console.log('DayRangeType changed:', {
       newType,
       selectedDate,
-      timeRange
+      timeRange,
+      isCustom: newType === DayRangeType.CUSTOM
     });
     
     setDayRangeType(newType);
@@ -453,6 +474,12 @@ export default function Home() {
     setStartHour(startHour);
     setEndHour(endHour);
   };
+
+  // Add this effect or merge with existing dayRangeType-related effect
+  useEffect(() => {
+    console.log('Current dayRangeType:', dayRangeType);
+    console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
+  }, [dayRangeType]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
@@ -480,11 +507,21 @@ export default function Home() {
                   onChange={handleDayRangeTypeChange}
                   className="neumorphic-button dropdown h-10"
                 >
-                  <option value={DayRangeType.MIDNIGHT}>Daily: Midnight to Midnight (default)</option>
-                  <option value={DayRangeType.CURRENT}>Daily: Current Hour to Current Hour</option>
-                  <option value={DayRangeType.FORECAST}>Daily: 13Z - 12Z (forecasters)</option>
+                  <option value={DayRangeType.MIDNIGHT}>Range: Midnight to Midnight</option>
+                  <option value={DayRangeType.CURRENT}>Range: Rolling 24 Hours</option>
+                  <option value={DayRangeType.CUSTOM}>Range: Custom</option>
                 </select>
               </div>
+
+              {dayRangeType === DayRangeType.CUSTOM && (
+                console.log('Rendering time picker'),
+                <input
+                  type="time"
+                  value={customTime}
+                  onChange={(e) => setCustomTime(e.target.value)}
+                  className="neumorphic-button time-picker h-10"
+                />
+              )}
 
               <div className="flex gap-4 items-center">
                 {/* <DayRangeSelect 
@@ -520,6 +557,8 @@ export default function Home() {
                       min={format(selectedDate, 'yyyy-MM-dd')}
                     />
                   )}
+
+
                 </div>
               </div>
             </div>

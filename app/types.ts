@@ -8,7 +8,7 @@ export type Column =
 export enum DayRangeType {
   MIDNIGHT = 'MIDNIGHT',
   CURRENT = 'CURRENT',
-  FORECAST = 'FORECAST'
+  CUSTOM = 'CUSTOM'
 }
 
 export interface DayRangeOption {
@@ -20,19 +20,19 @@ export interface DayRangeOption {
 export const DAY_RANGE_OPTIONS: DayRangeOption[] = [
   {
     id: DayRangeType.MIDNIGHT,
-    label: 'Daily: Midnight to Midnight',
+    label: 'Range: Midnight to Midnight',
     description: '(default)'
   },
   {
     id: DayRangeType.CURRENT,
-    label: 'Daily: Current Time to Current Time',
+    label: 'Range: 24hr Rolling',
     description: '(24h rolling)'
   },
-  // {
-  //   id: DayRangeType.FORECAST,
-  //   label: 'Daily: UTC',
-  //   description: '(forecasters)'
-  // }
+  {
+    id: DayRangeType.CUSTOM,
+    label: 'Range: Custom',
+    description: '(custom)'
+  }
 ];
 
 export interface WxTableOptions {
