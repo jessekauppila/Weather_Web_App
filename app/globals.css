@@ -604,6 +604,7 @@ input[type='datetime-local']:focus {
   color: lightgrey;
 }
 
+/* This is for the time picker input */
 .time-picker {
   padding: 0.5rem;
   border-radius: 0.375rem;
@@ -621,4 +622,27 @@ input[type='datetime-local']:focus {
   box-shadow: 
     inset 1px 1px 3px rgba(255,255,255,0.3),
     inset -1px -1px 3px rgba(0,0,0,0.2);
+}
+
+/* This is for the collapsible component holding the time range options */
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details[open] summary {
+  margin-bottom: 0.5rem;
+}
+
+details > div {
+  z-index: 50;
+}
+/* caret for the drop down component holding the time range options */
+
+.details-caret {
+  font-size: 0.8rem;
+}
+
+details[open] .details-caret {
+  transform: rotate(180deg);
 }
