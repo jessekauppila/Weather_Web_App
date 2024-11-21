@@ -68,12 +68,12 @@ export default function Home() {
     const endMoment = moment(date).tz('America/Los_Angeles');
     const currentMoment = moment().tz('America/Los_Angeles');
     
-    console.log('calculateTimeRange input:', {
-      date,
-      type,
-      endMoment: endMoment.format('YYYY-MM-DD HH:mm:ss'),
-      currentMoment: currentMoment.format('YYYY-MM-DD HH:mm:ss')
-    });
+    //console.log('calculateTimeRange input:', {
+    //  date,
+    //  type,
+    // endMoment: endMoment.format('YYYY-MM-DD HH:mm:ss'),
+    //  currentMoment: currentMoment.format('YYYY-MM-DD HH:mm:ss')
+    //  });
 
     switch (type) {
       case DayRangeType.MIDNIGHT:
@@ -84,12 +84,12 @@ export default function Home() {
           endHour: 23
         };
 
-        console.log('MIDNIGHT type calculation:', {
-          startTime: midnightResult.start.format('YYYY-MM-DD HH:mm:ss'),
-          endTime: midnightResult.end.format('YYYY-MM-DD HH:mm:ss'),
-          startHour: midnightResult.startHour,
-          endHour: midnightResult.endHour
-        });
+        // console.log('MIDNIGHT type calculation:', {
+        //   startTime: midnightResult.start.format('YYYY-MM-DD HH:mm:ss'),
+        //   endTime: midnightResult.end.format('YYYY-MM-DD HH:mm:ss'),
+        //   startHour: midnightResult.startHour,
+        //   endHour: midnightResult.endHour
+        // });
 
         return midnightResult;
         
@@ -111,12 +111,12 @@ export default function Home() {
           endHour: currentHour
         };
 
-        console.log('CURRENT type calculation:', {
-          startTime: currentResult.start.format('YYYY-MM-DD HH:mm:ss'),
-          endTime: currentResult.end.format('YYYY-MM-DD HH:mm:ss'),
-          startHour: currentResult.startHour,
-          endHour: currentResult.endHour
-        });
+        // console.log('CURRENT type calculation:', {
+        //   startTime: currentResult.start.format('YYYY-MM-DD HH:mm:ss'),
+        //   endTime: currentResult.end.format('YYYY-MM-DD HH:mm:ss'),
+        //   startHour: currentResult.startHour,
+        //   endHour: currentResult.endHour
+        // });
 
         return currentResult;
 
@@ -158,7 +158,7 @@ export default function Home() {
   
     // Add state for day range type
     const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
-    console.log('dayRangeType:', dayRangeType);
+    // console.log('dayRangeType:', dayRangeType);
   
 
     // Now the time calculation will work
@@ -183,7 +183,7 @@ export default function Home() {
   // this is the function that determines what happens in the drop down menu for date range
   const handleTimeRangeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    console.log('Time range changed to:', value);
+    //console.log('Time range changed to:', value);
     
     if (value === 'custom') {
       setUseCustomEndDate(true);
@@ -315,7 +315,7 @@ export default function Home() {
 
         const result = await response.json();
 
-        console.log('Processing data with mode:', tableMode);
+        //console.log('Processing data with mode:', tableMode);
         const processedDataDay = wxTableDataDayFromDB(
           result.observations,
           result.units,
@@ -329,12 +329,12 @@ export default function Home() {
           }
         );
 
-        console.log('Processing options:', {
-          startHour,
-          endHour,
-          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-        });
+        // console.log('Processing options:', {
+        //   startHour,
+        //   endHour,
+        //   start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+        //   end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        // });
 
         setObservationsDataDay(processedDataDay);
 
@@ -347,7 +347,7 @@ export default function Home() {
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Error in fetchDataFromDB:', error);
+        // console.error('Error in fetchDataFromDB:', error);
         setIsLoading(false);
       }
     };
@@ -405,11 +405,11 @@ export default function Home() {
 
   // In your main Home component, modify this handler
   const handleStationClick = (stationId: string) => {
-    console.log('handleStationClick called with:', stationId);
+    //console.log('handleStationClick called with:', stationId);
     
     // Find the station name for the selected ID
     const selectedStationObj = stations.find(station => station.id === stationId);
-    console.log('Selected station object:', selectedStationObj);
+    //console.log('Selected station object:', selectedStationObj);
 
     setIsStationChanging(true);
     
@@ -437,12 +437,12 @@ export default function Home() {
 
   // Add this effect after your other useEffects
   useEffect(() => {
-    console.log('selectedStation changed to:', selectedStation);
+    //console.log('selectedStation changed to:', selectedStation);
     if (selectedStation) {
-      console.log('🔄 Switching to daily mode - Station selected:', selectedStation);
+      //console.log('🔄 Switching to daily mode - Station selected:', selectedStation);
       setTableMode('daily');
     } else {
-      console.log('🔄 Switching to summary mode - No station selected');
+      //console.log('🔄 Switching to summary mode - No station selected');
       setTableMode('summary');
     }
   }, [selectedStation]);
@@ -460,12 +460,12 @@ export default function Home() {
   // Simplified handler - only updates the type and hours
   const handleDayRangeTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = event.target.value as DayRangeType;
-    console.log('DayRangeType changed:', {
-      newType,
-      selectedDate,
-      timeRange,
-      isCustom: newType === DayRangeType.CUSTOM
-    });
+    //console.log('DayRangeType changed:', {
+    //  newType,
+    //  selectedDate,
+    //  timeRange,
+    //  isCustom: newType === DayRangeType.CUSTOM
+    //});
     
     setDayRangeType(newType);
     
@@ -477,8 +477,8 @@ export default function Home() {
 
   // Add this effect or merge with existing dayRangeType-related effect
   useEffect(() => {
-    console.log('Current dayRangeType:', dayRangeType);
-    console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
+    //console.log('Current dayRangeType:', dayRangeType);
+    //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
   }, [dayRangeType]);
 
   return (

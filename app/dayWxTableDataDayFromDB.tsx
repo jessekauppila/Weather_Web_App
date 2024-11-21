@@ -127,13 +127,6 @@ function calculateSnowDepthAccumulation(data: any[]) {
   return results;
 }
 
-// Add a new interface for configuration options
-// interface WxTableOptions {
-//   mode: 'summary' | 'daily';  // Controls whether to summarize or show daily data
-//   startHour?: number;         // Optional: hour to start each day (default: 5)
-//   endHour?: number;          // Optional: hour to end each day (default: 4)
-// }
-
 // Import the interface from types.ts
 import { WxTableOptions } from './types';
 
@@ -153,13 +146,46 @@ function wxTableDataDayFromDB(
     ? groupByStation(observationsData)
     : groupByDay(observationsData, startHour, endHour);
 
-  // Convert units array to a more usable format
-  const unitConversionsMap = units.reduce((acc, unit) => {
-    acc[unit.measurement] = unit.unit;
-    return acc;
-  }, {} as Record<string, string>);
+  // After grouping but before processing
+  const filteredGroupedObservations = Object.entries(groupedObservations).reduce((acc, [key, observations]) => {
+    // Filter snow_depth
+    const filteredSnowDepth = filterSnowDepthOutliers(
+      observations.map(obs => ({
+        date_time: obs.date_time,
+        snow_depth: obs.snow_depth
+      })),
+      10,  // 10 inches threshold
+      3,   // 3 inches max hourly change
+      10,  // 10 inches max negative change
+      12,  // window size
+      true // use early season filtering
+    );
 
-  const processedData = Object.entries(groupedObservations).map(
+    // Filter snow_depth_24h
+    const filteredSnowDepth24h = filterSnowDepthOutliers(
+      observations.map(obs => ({
+        date_time: obs.date_time,
+        snow_depth: obs.snow_depth_24h
+      })),
+      10,   // threshold
+      3,    // max hourly change
+      10,   // max negative change
+      12,   // window size
+      false // disable early season filtering
+    );
+
+    // Merge filtered data back into observations
+    const filteredObservations = observations.map((obs, index) => ({
+      ...obs,
+      snow_depth: filteredSnowDepth[index]?.snow_depth,
+      snow_depth_24h: filteredSnowDepth24h[index]?.snow_depth
+    }));
+
+    acc[key] = filteredObservations;
+    return acc;
+  }, {} as typeof groupedObservations);
+
+  const processedData = Object.entries(filteredGroupedObservations).map(
     ([stid, stationObs]) => {
       const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
@@ -212,7 +238,7 @@ function wxTableDataDayFromDB(
   );
 
   // Format the averages with unit labels
-  const formattedData = processedData.map((averages) => {
+  const formattedDailyData = processedData.map((averages) => {
     const formatted: { [key: string]: any } = { ...averages };
 
     // Helper function to safely process numeric fields
@@ -302,15 +328,6 @@ function wxTableDataDayFromDB(
       (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
     );
 
-    // // Process precipitation
-    // processNumericField(
-    //   'precipitation',
-    //   { sum: 'Precipitation' },
-    //   'in',
-    //   1,
-    //   (numbers) => ({ sum: numbers.reduce((a, b) => a + b, 0) })
-    // );
-
     // Process snow depth for both total and change
     processNumericField(
       'snow_depth',
@@ -329,17 +346,17 @@ function wxTableDataDayFromDB(
           }))
           .filter(d => !isNaN(d.snow_depth));
 
-        // Apply the filtering
-        const filteredData = filterSnowDepthOutliers(
-          dataPoints,
-          10,  // 10 inches threshold
-          3,   // 3 inches max hourly change
-          10,  // 10 inches max negative change
-          12,  // window size
-          true // use early season filtering
-        );
+        // // Apply the filtering
+        // const filteredData = filterSnowDepthOutliers(
+        //   dataPoints,
+        //   10,  // 10 inches threshold
+        //   3,   // 3 inches max hourly change
+        //   10,  // 10 inches max negative change
+        //   12,  // window size
+        //   true // use early season filtering
+        // );
 
-        const filteredDepths = filteredData
+        const filteredDepths = dataPoints
           .map(d => d.snow_depth)
           .filter(d => !isNaN(d));
 
@@ -365,17 +382,7 @@ function wxTableDataDayFromDB(
       (numbers) => {
         //console.log('Raw snow_depth-24h data:', numbers);
 
-        const filteredSnowDepths = filterSnowDepthOutliers(
-          numbers.map((snow_depth, index) => ({
-            date_time: (averages.date_time as string[])[index],
-            snow_depth
-          })),
-          10,   // threshold (won't be used)
-          3,    // 3 inches max hourly change
-          10,   // 10 inches max negative change
-          12,   // window size
-          false // disable early season filtering
-        ).map(point => point.snow_depth);
+        const filteredSnowDepths = numbers.filter(d => !isNaN(d));
         //console.log('Filtered snow depths 24h:', filteredSnowDepths);
 
         const data = (averages.date_time as string[])
@@ -399,7 +406,7 @@ function wxTableDataDayFromDB(
     // Process relative humidity
     processNumericField(
       'relative_humidity',
-      { cur: 'Relative Humidity' },
+      { avg: 'Relative Humidity' },
       '%',
       0,
       undefined,
@@ -482,26 +489,26 @@ function wxTableDataDayFromDB(
     return formatted;
   });
 
-  // console.log(
-  //   'formattedData from wxTableDataDayFromDB:',
-  //   formattedData
-  // );
+  console.log(
+    'formattedDailyData from wxTableDataDayFromDB:',
+    formattedDailyData
+  );
 
-  // Sort the formattedData array by station name
-  formattedData.sort((a, b) => {
+  // Sort the formattedDailyData array by station name
+  formattedDailyData.sort((a, b) => {
     const stationA = String(a.Station).toLowerCase();
     const stationB = String(b.Station).toLowerCase();
     return stationA.localeCompare(stationB);
   });
 
-  const title = formattedData.length > 0
+  const title = formattedDailyData.length > 0
     ? (() => {
         // Get the actual end time from the data
-        const lastDataPoint = formattedData[0]['End Date Time'];
+        const lastDataPoint = formattedDailyData[0]['End Date Time'];
         const endTimeDisplay = moment(options.end).format('MMM D, h A');
 
         const stationInfo = options.mode === 'daily' 
-          ? `${formattedData[0].Station} - ${formattedData[0].Elevation}\n` 
+          ? `${formattedDailyData[0].Station} - ${formattedDailyData[0].Elevation}\n` 
           : '';
 
         if (options.mode === 'daily') {
@@ -512,7 +519,7 @@ function wxTableDataDayFromDB(
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
 
-  return { data: formattedData, title };
+  return { data: formattedDailyData, title };
 }
 
 // Helper function to group by station (current behavior)
