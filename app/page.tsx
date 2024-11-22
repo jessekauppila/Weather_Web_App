@@ -15,6 +15,7 @@ import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import { DayRangeType } from './types';
 import { filteredObservationData } from './filteredObservationData';
+import hourWxTableDataFiltered from './hourWxTableDataFiltered';
 
 interface Station {
   id: string;
@@ -301,9 +302,6 @@ export default function Home() {
           end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
         });
 
-        console.log('filteredData in page.tsx:', filteredData);
-
-
         //console.log('Processing data with mode:', tableMode);
         const processedDataDay = wxTableDataDayFromDB(
           filteredData,
@@ -326,7 +324,11 @@ export default function Home() {
           result.units
         );
 
-        setObservationsDataHour(processedDataHour);
+        const filteredDataHour = hourWxTableDataFiltered(filteredData);
+        
+        //setObservationsDataHour(processedDataHour);
+
+
 
         setIsLoading(false);
       } catch (error) {
