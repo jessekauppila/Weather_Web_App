@@ -50,7 +50,7 @@ function wxTableDataDayFromDB(
     return acc;
   }, {} as typeof groupedObservations);
 
-  console.log('filteredGroupedObservations from wxTableDataDayFromDB:', filteredGroupedObservations);
+  //console.log('filteredGroupedObservations from wxTableDataDayFromDB:', filteredGroupedObservations);
 
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -106,7 +106,7 @@ function wxTableDataDayFromDB(
     }
   );
 
-  console.log('processedData from wxTableDataDayFromDB:', processedData);
+  //console.log('processedData from wxTableDataDayFromDB:', processedData);
 
   // Format the averages with unit labels
   const formattedDailyData = processedData.map((averages) => {
@@ -351,10 +351,10 @@ function wxTableDataDayFromDB(
     return formatted;
   });
 
-  console.log(
-    'formattedDailyData from wxTableDataDayFromDB:',
-    formattedDailyData
-  );
+  // console.log(
+  //   'formattedDailyData from wxTableDataDayFromDB:',
+  //   formattedDailyData
+  // );
 
   // Sort the formattedDailyData array by station name
   formattedDailyData.sort((a, b) => {
