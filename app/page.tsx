@@ -28,11 +28,18 @@ export default function Home() {
   const [customTime, setCustomTime] = useState(currentMoment.format('HH:mm'));
 
   const [isLoading, setIsLoading] = useState(true);
+
   const [observationsDataDay, setObservationsDataDay] = useState<{
     data: any[];
     title: string;
   } | null>(null);
+
   const [observationsDataHour, setObservationsDataHour] = useState<{
+    data: any[];
+    title: string;
+  } | null>(null);
+
+  const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
     data: any[];
     title: string;
   } | null>(null);
@@ -316,18 +323,21 @@ export default function Home() {
           }
         );
 
-
         setObservationsDataDay(processedDataDay);
 
+        //for raw data table
         const processedDataHour = hourWxTableDataFromDB(
           result.observations,
           result.units
         );
 
-        const filteredDataHour = hourWxTableDataFiltered(filteredData);
-        
-        //setObservationsDataHour(processedDataHour);
+        setObservationsDataHour(processedDataHour);
 
+        //error filtered data
+        const filteredDataHour = hourWxTableDataFiltered(filteredData);
+
+        setFilteredObservationsDataHour(filteredDataHour);
+        
 
 
         setIsLoading(false);
@@ -604,6 +614,13 @@ export default function Home() {
             />
           )}
 
+        {filteredObservationsDataHour && selectedStation && (
+                    <HourWxTable 
+                      hourAverages={filteredObservationsDataHour} 
+                    />
+                  )}
+
+
           {observationsDataHour && selectedStation && (
             <HourWxTable 
               hourAverages={observationsDataHour} 
@@ -611,7 +628,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* <StationUpdateStatus /> */}
       </div>
     </main>
   );
