@@ -1,4 +1,4 @@
-import { filterSnowDepthOutliers, calculateSnowDepthAccumulation } from './snowDepthUtils';
+import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from './snowDepthUtils';
 import moment from 'moment-timezone';
 
 // Import the interface from types.ts
@@ -12,40 +12,34 @@ function wxTableDataDayFromDB(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
+  
   const startHour = options.startHour;
   const endHour = options.endHour;
+
 
   // Group observations either by station (summary mode) or by day (daily mode)
   const groupedObservations = options.mode === 'summary' 
     ? groupByStation(observationsData)
     : groupByDay(observationsData, startHour, endHour);
 
+
   // After grouping but before processing
   const filteredGroupedObservations = Object.entries(groupedObservations).reduce((acc, [key, observations]) => {
     // Filter snow_depth
     const filteredSnowDepth = filterSnowDepthOutliers(
-      observations.map(obs => ({
+      observations.map((obs: Record<string, any>) => ({
         date_time: obs.date_time,
         snow_depth: obs.snow_depth
       })),
-      10,  // 10 inches threshold
-      3,   // 3 inches max hourly change
-      10,  // 10 inches max negative change
-      12,  // window size
-      true // use early season filtering
+      SNOW_DEPTH_CONFIG
     );
 
-    // Filter snow_depth_24h
     const filteredSnowDepth24h = filterSnowDepthOutliers(
-      observations.map(obs => ({
+      observations.map((obs: Record<string, any>) => ({
         date_time: obs.date_time,
         snow_depth: obs.snow_depth_24h
       })),
-      10,   // threshold
-      3,    // max hourly change
-      10,   // max negative change
-      12,   // window size
-      false // disable early season filtering
+      SNOW_DEPTH_24H_CONFIG 
     );
 
     // Merge filtered data back into observations
@@ -58,6 +52,8 @@ function wxTableDataDayFromDB(
     acc[key] = filteredObservations;
     return acc;
   }, {} as typeof groupedObservations);
+
+  console.log('filteredGroupedObservations from wxTableDataDayFromDB:', filteredGroupedObservations);
 
   const processedData = Object.entries(filteredGroupedObservations).map(
     ([stid, stationObs]) => {

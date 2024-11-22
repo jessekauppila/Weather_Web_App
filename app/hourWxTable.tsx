@@ -55,9 +55,9 @@ const measurementDescriptions: Record<string, string> = {
   'Wind Direction':
     'Wind direction in degrees (0 is North, 90 is East, 180 is South, 270 is West)',
   'Total Snow Depth':
-    'Total depth of snow on the ground in inches. (This the depth of the snow pack from the surface of the snow to the ground.) (This is susceptible to sensor errors particularly in the summer.)',
+    'Total depth of snow on the ground in inches. (This the depth of the snow pack from the surface of the snow to the ground.) (This is susceptible to sensor errors in summer.)',
   '24h Snow Depth':
-    'Record of hourly snow accumulation. (Snow board cleared in the morning to provide record of hourly snow accumulation.)',
+    'Record of snow accumulated over 24hrs. (Snow board cleared in the morning to provide record of hourly snow accumulation over 24hrs.)',
   'Precip Accum':
     'Liquid precipitation accumulated during the hour in inches. Also known as "snow water equivalent".',
   'Relative Humidity': 'Relative humidity as a percentage (0-100%)',
