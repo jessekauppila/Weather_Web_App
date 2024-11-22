@@ -39,7 +39,7 @@ function hourWxTableDataFromDB(
     };
   }
 
-  console.log("observationsData from hourWxTableData:", observationsData);
+  //console.log("observationsData from hourWxTableData:", observationsData);
 
   // Instead of grouping and averaging, process each observation individually
   const formattedData = observationsData.map((obs) => {
@@ -92,6 +92,8 @@ function hourWxTableDataFromDB(
     startDate === endDate
       ? `${startDate}, ${startTime} - ${endTime}`
       : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
+
+  console.log('formattedData in hourWxTableDataFromDB:', formattedData);
 
   return {
     data: formattedData,

@@ -5,9 +5,9 @@ import moment from 'moment-timezone';
 import { WxTableOptions } from './types';
 
 function wxTableDataDayFromDB(
-  observationsData: Array<Record<string, any>>,
+  inputObservations: Record<string, Array<Record<string, any>>>,
   _units: Array<Record<string, string>>,
-  options: WxTableOptions  // Now using the imported interface
+  options: WxTableOptions
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
@@ -15,16 +15,13 @@ function wxTableDataDayFromDB(
   
   const startHour = options.startHour;
   const endHour = options.endHour;
-
-
-  // Group observations either by station (summary mode) or by day (daily mode)
+  
   const groupedObservations = options.mode === 'summary' 
-    ? groupByStation(observationsData)
-    : groupByDay(observationsData, startHour, endHour);
-
+    ? groupByStation(Object.values(inputObservations).flat())
+    : groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
 
   // After grouping but before processing
-  const filteredGroupedObservations = Object.entries(groupedObservations).reduce((acc, [key, observations]) => {
+  const filteredGroupedObservations = Object.entries(inputObservations).reduce((acc, [key, observations]) => {
     // Filter snow_depth
     const filteredSnowDepth = filterSnowDepthOutliers(
       observations.map((obs: Record<string, any>) => ({
@@ -54,6 +51,8 @@ function wxTableDataDayFromDB(
   }, {} as typeof groupedObservations);
 
   console.log('filteredGroupedObservations from wxTableDataDayFromDB:', filteredGroupedObservations);
+
+  //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   const processedData = Object.entries(filteredGroupedObservations).map(
     ([stid, stationObs]) => {

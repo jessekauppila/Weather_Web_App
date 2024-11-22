@@ -69,13 +69,6 @@ export default function Home() {
     const endMoment = moment(date).tz('America/Los_Angeles');
     const currentMoment = moment().tz('America/Los_Angeles');
     
-    //console.log('calculateTimeRange input:', {
-    //  date,
-    //  type,
-    // endMoment: endMoment.format('YYYY-MM-DD HH:mm:ss'),
-    //  currentMoment: currentMoment.format('YYYY-MM-DD HH:mm:ss')
-    //  });
-
     switch (type) {
       case DayRangeType.MIDNIGHT:
         const midnightResult = {
@@ -84,13 +77,6 @@ export default function Home() {
           startHour: 0,
           endHour: 23
         };
-
-        // console.log('MIDNIGHT type calculation:', {
-        //   startTime: midnightResult.start.format('YYYY-MM-DD HH:mm:ss'),
-        //   endTime: midnightResult.end.format('YYYY-MM-DD HH:mm:ss'),
-        //   startHour: midnightResult.startHour,
-        //   endHour: midnightResult.endHour
-        // });
 
         return midnightResult;
         
@@ -111,13 +97,6 @@ export default function Home() {
           startHour: currentHour,
           endHour: currentHour
         };
-
-        // console.log('CURRENT type calculation:', {
-        //   startTime: currentResult.start.format('YYYY-MM-DD HH:mm:ss'),
-        //   endTime: currentResult.end.format('YYYY-MM-DD HH:mm:ss'),
-        //   startHour: currentResult.startHour,
-        //   endHour: currentResult.endHour
-        // });
 
         return currentResult;
 
@@ -327,7 +306,7 @@ export default function Home() {
 
         //console.log('Processing data with mode:', tableMode);
         const processedDataDay = wxTableDataDayFromDB(
-          result.observations,
+          filteredData,
           result.units,
           {
             mode: tableMode,
@@ -339,7 +318,6 @@ export default function Home() {
           }
         );
 
-        console.log('processedDataDay in page.tsx:', processedDataDay);
 
         setObservationsDataDay(processedDataDay);
 
