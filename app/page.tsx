@@ -14,6 +14,7 @@ import HourWxTable from './hourWxTable';
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import { DayRangeType } from './types';
+import { filteredObservationData } from './filteredObservationData';
 
 interface Station {
   id: string;
@@ -289,11 +290,6 @@ export default function Home() {
           end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
         }
 
-        console.log('Raw start and end times:', {
-          start: start_time_pdt.toISOString(),
-          end: end_time_pdt.toISOString()
-        });
-
         const response = await fetch('/api/getObservationsFromDB', {
           method: 'POST',
           headers: {
@@ -313,7 +309,21 @@ export default function Home() {
           );
         }
 
+        //this is the raw data from the DB
         const result = await response.json();
+
+        //this is the filtered data
+        const filteredData = filteredObservationData(result.observations, {
+          mode: tableMode,
+          startHour: startHour,
+          endHour: endHour,
+          dayRangeType: dayRangeType,
+          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        });
+
+        console.log('filteredData in page.tsx:', filteredData);
+
 
         //console.log('Processing data with mode:', tableMode);
         const processedDataDay = wxTableDataDayFromDB(
@@ -329,12 +339,7 @@ export default function Home() {
           }
         );
 
-        // console.log('Processing options:', {
-        //   startHour,
-        //   endHour,
-        //   start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-        //   end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-        // });
+        console.log('processedDataDay in page.tsx:', processedDataDay);
 
         setObservationsDataDay(processedDataDay);
 
