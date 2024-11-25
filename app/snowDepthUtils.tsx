@@ -1,7 +1,7 @@
 // Add these configurations at the top of the file
 export const SNOW_DEPTH_CONFIG = {
   threshold: 10,          // inches threshold
-  maxPositiveChange: 3,   // max hourly change
+  maxPositiveChange: 4,   // max hourly change
   maxNegativeChange: 10,  // max negative change
   windowSize: 12,         // window size
   useEarlySeasonFilter: true
@@ -10,7 +10,7 @@ export const SNOW_DEPTH_CONFIG = {
 export const SNOW_DEPTH_24H_CONFIG = {
   threshold: 10,
   maxPositiveChange: 3,
-  maxNegativeChange: 10,
+  maxNegativeChange: 36,
   windowSize: 12,
   useEarlySeasonFilter: false
 } as const;
@@ -29,6 +29,7 @@ interface SnowDepthConfig {
   readonly maxNegativeChange: number;
   readonly windowSize: number;
   readonly useEarlySeasonFilter: boolean;
+  readonly stdDevMultiplier?: number;
 }
 
 // This function filters out unreliable snow depth measurements based on several criteria
@@ -46,87 +47,78 @@ export function filterSnowDepthOutliers(
     
     if (data.length === 0) return [];
   
-    // Ensure data is in chronological order for proper analysis
+    // Sort data
     const sortedData = [...data].sort((a, b) => 
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
-  
-    // Helper function that calculates the average snow depth over a sliding window
-    // This helps smooth out temporary fluctuations in measurements
-    const calculateRollingAverage = (index: number): number => {
-      const windowStart = Math.max(0, index - windowSize + 1);
-      const windowValues = sortedData
-        .slice(windowStart, index + 1)
-        .map(d => d.snow_depth)
-        .filter(d => !isNaN(d));
+
+    console.log('Initial data:', {
+      length: sortedData.length,
+      validValues: sortedData.filter(d => !isNaN(d.snow_depth)).length,
+      data: sortedData
+    });
+
+    // Apply median filtering
+    const filteredData = sortedData.map((point, index) => {
+      const halfKernel = Math.floor(windowSize / 2);
+      const start = Math.max(0, index - halfKernel);
+      const end = Math.min(sortedData.length, index + halfKernel + 1);
+      const window = sortedData.slice(start, end)
+        .map(p => p.snow_depth)
+        .filter(d => !isNaN(d))
+        .sort((a, b) => a - b);
       
-      return windowValues.length > 0
-        ? windowValues.reduce((sum, val) => sum + val, 0) / windowValues.length
-        : 0;
-    };
-  
-    // Calculate rolling averages for all data points
-    const filteredData = sortedData.map((point, index) => ({
-      ...point,
-      rollingAvg: calculateRollingAverage(index)
-    }));
-  
-    // Track whether we've reached valid snow season and previous valid measurement
-    let validSnowStarted = false;
-    const result: SnowDataPoint[] = [];
-    let previousValidDepth: number | null = null;
-  
-    // Process each data point to determine if it's valid
-    for (let i = 0; i < filteredData.length; i++) {
-      const current = filteredData[i];
+      const median = window.length % 2 === 0
+        ? (window[window.length / 2 - 1] + window[window.length / 2]) / 2
+        : window[Math.floor(window.length / 2)];
+
+      const previousDepth = index > 0 ? sortedData[index - 1].snow_depth : point.snow_depth;
+      const hourlyChange = point.snow_depth - previousDepth;
       
-      // Early season filter: Marks all measurements as invalid until
-      // rolling average exceeds threshold (indicating consistent snow cover)
-      if (useEarlySeasonFilter) {
-        if (!validSnowStarted && current.rollingAvg > threshold) {
+      return {
+        date_time: point.date_time,
+        snow_depth: (hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange)
+          ? NaN 
+          : median,
+        rollingAvg: median
+      };
+    });
+
+    console.log('After median filtering:', {
+      length: filteredData.length,
+      validValues: filteredData.filter(d => !isNaN(d.snow_depth)).length,
+      data: filteredData
+    });
+
+    // Apply early season filter if enabled
+    if (useEarlySeasonFilter) {
+      let validSnowStarted = false;
+      const finalData = filteredData.map(point => {
+        if (!validSnowStarted && (point.rollingAvg ?? 0) > threshold) {
           validSnowStarted = true;
         }
-  
-        if (!validSnowStarted) {
-          result.push({
-            date_time: current.date_time,
-            snow_depth: NaN  // NaN indicates invalid measurement
-          });
-          continue;
-        }
-      }
-  
-      // Calculate how much snow depth changed since last valid measurement
-      // Used to detect unrealistic changes that are likely measurement errors
-      const hourlyChange = previousValidDepth !== null 
-        ? current.snow_depth - previousValidDepth
-        : 0;
-  
-      // Mark as invalid if change exceeds reasonable limits
-      if (hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange) {
-        result.push({
-          date_time: current.date_time,
-          snow_depth: NaN
-        });
-      } else {
-        // Measurement passes all validity checks
-        result.push({
-          date_time: current.date_time,
-          snow_depth: current.snow_depth
-        });
-        previousValidDepth = current.snow_depth;
-      }
+        return validSnowStarted ? point : { ...point, snow_depth: NaN };
+      });
+      return finalData;
     }
-  
-    // Return only the valid measurements (those not marked as NaN)
-    const validPoints = result.filter(d => !isNaN(d.snow_depth));
-    
-    return result;
+
+    return filteredData;
   }
 
- 
- //////////////////////////////////////////////////////////////////////// 
-  export function calculateSnowDepthAccumulation(data: any[]) {
+// Helper function moved outside to keep the main function cleaner
+function calculateRollingAverage(index: number, data: SnowDataPoint[], windowSize: number): number {
+  const windowStart = Math.max(0, index - windowSize + 1);
+  const windowValues = data
+    .slice(windowStart, index + 1)
+    .map(d => d.snow_depth)
+    .filter(d => !isNaN(d));
+  
+  return windowValues.length > 0
+    ? windowValues.reduce((sum, val) => sum + val, 0) / windowValues.length
+    : 0;
+}
+
+export function calculateSnowDepthAccumulation(data: any[]) {
     const results = [];
     let snowTotal = 0;
     const recentHours = [];
