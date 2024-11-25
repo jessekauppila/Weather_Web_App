@@ -322,7 +322,6 @@ export default function Home() {
             end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
           }
         );
-
         setObservationsDataDay(processedDataDay);
 
         //for raw data table
@@ -330,12 +329,10 @@ export default function Home() {
           result.observations,
           result.units
         );
-
         setObservationsDataHour(processedDataHour);
 
         //error filtered data
         const filteredDataHour = hourWxTableDataFiltered(filteredData);
-
         setFilteredObservationsDataHour(filteredDataHour);
         
 
@@ -479,9 +476,13 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
       <div className="w-full max-w-6xl space-y-4">
+
+                  {/* Top control bar thing */}
+
         <div className="flex flex-col items-center">
           <div className="flex flex-col space-y-4 bg-[cornflowerblue] p-4 rounded-xl shadow-md">
             {/* Top row with date controls */}
+
             <div className="flex items-center justify-center space-x-4">
               <select
                 value={calculateCurrentTimeRange()}
@@ -598,13 +599,13 @@ export default function Home() {
           }`}
         >
 
-        {observationsDataDay && selectedStation && stationIds.length === 1 && (
+        {/* {observationsDataDay && selectedStation && stationIds.length === 1 && (
             <>
               <DayWxSnowGraph 
                 dayAverages={observationsDataDay} 
               />
             </>
-          )}
+          )} */}
 
           {observationsDataDay && (
             <DayAveragesTable 

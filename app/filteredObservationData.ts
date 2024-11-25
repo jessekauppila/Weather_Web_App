@@ -17,26 +17,43 @@ export function filteredObservationData(
     ? groupByStation(observationsData)
     : groupByDay(observationsData, startHour, endHour);
 
-  //console.log('groupedObservations in filteredObservationData:', groupedObservations);
+  console.log('groupedObservations in filteredObservationData:', groupedObservations);
 
   // Filter and process observations
   const filteredGroupedObservations = Object.entries(groupedObservations).reduce((acc, [key, observations]) => {
-    // Filter snow_depth
+    // Log input for snow_depth
+    const snowDepthInput = observations.map((obs: Record<string, any>) => ({
+      date_time: obs.date_time,
+      snow_depth: obs.snow_depth
+    }));
+    console.log('Snow Depth Input:', snowDepthInput);
+    
     const filteredSnowDepth = filterSnowDepthOutliers(
-        observations.map((obs: Record<string, any>) => ({
-          date_time: obs.date_time,
-          snow_depth: obs.snow_depth
-        })),
+        snowDepthInput,
         SNOW_DEPTH_CONFIG
-      );
+    );
+    console.log('Snow Depth Output:', filteredSnowDepth);
   
-      const filteredSnowDepth24h = filterSnowDepthOutliers(
-        observations.map((obs: Record<string, any>) => ({
-          date_time: obs.date_time,
-          snow_depth: obs.snow_depth_24h
-        })),
+    // Log input for snow_depth_24h with more detail
+    const snowDepth24hInput = observations.map((obs: Record<string, any>) => ({
+      date_time: obs.date_time,
+      snow_depth: obs.snow_depth_24h
+    }));
+    console.log('Snow Depth 24h Input:', {
+      length: snowDepth24hInput.length,
+      validValues: snowDepth24hInput.filter(d => !isNaN(d.snow_depth)).length,
+      data: snowDepth24hInput.map(d => ({
+        ...d,
+        isValid: !isNaN(d.snow_depth),
+        typeOf: typeof d.snow_depth
+      }))
+    });
+    
+    const filteredSnowDepth24h = filterSnowDepthOutliers(
+        snowDepth24hInput,
         SNOW_DEPTH_24H_CONFIG
-      );
+    );
+    console.log('Snow Accumulation 24h Output:', filteredSnowDepth24h);
 
     const filteredObservations = observations.map((obs: Record<string, any>, index: number) => ({
       ...obs,
