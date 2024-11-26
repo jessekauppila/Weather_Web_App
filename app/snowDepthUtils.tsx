@@ -58,7 +58,7 @@ export function filterSnowDepthOutliers(
       data: sortedData
     });
 
-    // Apply median filtering
+    // Apply IQR filtering
     const filteredData = sortedData.map((point, index) => {
       const halfKernel = Math.floor(windowSize / 2);
       const start = Math.max(0, index - halfKernel);
@@ -68,23 +68,38 @@ export function filterSnowDepthOutliers(
         .filter(d => !isNaN(d))
         .sort((a, b) => a - b);
       
-      const median = window.length % 2 === 0
-        ? (window[window.length / 2 - 1] + window[window.length / 2]) / 2
-        : window[Math.floor(window.length / 2)];
+      if (window.length === 0) {
+        return { ...point, snow_depth: NaN, rollingAvg: NaN };
+      }
 
+      // Calculate quartiles
+      const q1Index = Math.floor(window.length * 0.25);
+      const q3Index = Math.floor(window.length * 0.75);
+      const q1 = window[q1Index];
+      const q3 = window[q3Index];
+      const iqr = q3 - q1;
+      const lowerBound = q1 - 1.5 * iqr;
+      const upperBound = q3 + 1.5 * iqr;
+
+      // Check if current value is within IQR bounds
+      const isOutlier = point.snow_depth < lowerBound || point.snow_depth > upperBound;
+      
+      // Still maintain hourly change limits
       const previousDepth = index > 0 ? sortedData[index - 1].snow_depth : point.snow_depth;
       const hourlyChange = point.snow_depth - previousDepth;
+      const isInvalidChange = hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange;
+
+      // Use median as the rolling average for consistency
+      const median = window[Math.floor(window.length / 2)];
       
       return {
         date_time: point.date_time,
-        snow_depth: (hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange)
-          ? NaN 
-          : median,
+        snow_depth: (isOutlier || isInvalidChange) ? NaN : point.snow_depth,
         rollingAvg: median
       };
     });
 
-    console.log('After median filtering:', {
+    console.log('After IQR filtering:', {
       length: filteredData.length,
       validValues: filteredData.filter(d => !isNaN(d.snow_depth)).length,
       data: filteredData
@@ -99,11 +114,18 @@ export function filterSnowDepthOutliers(
         }
         return validSnowStarted ? point : { ...point, snow_depth: NaN };
       });
+
+      console.log('After early season filter:', {
+        length: finalData.length,
+        validValues: finalData.filter(d => !isNaN(d.snow_depth)).length,
+        validSnowStarted: validSnowStarted
+      });
+
       return finalData;
     }
 
     return filteredData;
-  }
+}
 
 // Helper function moved outside to keep the main function cleaner
 function calculateRollingAverage(index: number, data: SnowDataPoint[], windowSize: number): number {
