@@ -83,14 +83,35 @@ function applyHourlyChangeLimits(
     maxNegativeChange: number
 ): SnowDataPoint[] {
     return data.map((point, index) => {
-      const previousDepth = index > 0 ? data[index - 1].snow_depth : point.snow_depth;
-      const hourlyChange = point.snow_depth - previousDepth;
-      const isInvalidChange = hourlyChange > maxPositiveChange || hourlyChange < -maxNegativeChange;
+      // Find the last valid snow depth
+      let previousDepth = point.snow_depth;
+      let i = index - 1;
+      let hoursBack = 0;
       
-      return {
-        ...point,
-        snow_depth: isInvalidChange ? NaN : point.snow_depth
-      };
+      while (i >= 0 && isNaN(data[i].snow_depth)) {
+        i--;
+        hoursBack++;
+      }
+      
+      if (i >= 0) {
+        previousDepth = data[i].snow_depth;
+        hoursBack++; // Add one more for the actual valid point we found
+        
+        const hourlyChange = point.snow_depth - previousDepth;
+        const scaledMaxPositiveChange = maxPositiveChange * hoursBack;
+        const scaledMaxNegativeChange = maxNegativeChange * hoursBack;
+        
+        const isInvalidChange = 
+          hourlyChange > scaledMaxPositiveChange || 
+          hourlyChange < -scaledMaxNegativeChange;
+      
+        return {
+          ...point,
+          snow_depth: isInvalidChange ? NaN : point.snow_depth
+        };
+      }
+      
+      return point; // Return original point if no previous valid points found
     });
 }
 
