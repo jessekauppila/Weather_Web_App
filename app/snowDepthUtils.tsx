@@ -23,7 +23,6 @@ export const SNOW_DEPTH_24H_CONFIG = {
 interface SnowDataPoint {
   date_time: string;
   snow_depth: number;
-  rollingAvg?: number;  // Optional since it's added during processing
 }
 
 // Update the type for the config parameter
@@ -54,7 +53,10 @@ function applyIQRFilter(
         .sort((a, b) => a - b);
       
       if (window.length === 0) {
-        return { ...point, snow_depth: NaN, rollingAvg: NaN };
+        return {
+          date_time: point.date_time,
+          snow_depth: NaN
+        };
       }
 
       const q1Index = Math.floor(window.length * 0.25);
@@ -68,10 +70,15 @@ function applyIQRFilter(
       const isOutlier = point.snow_depth < lowerBound || point.snow_depth > upperBound;
       const median = window[Math.floor(window.length / 2)];
       
+      console.log(`IQR Filter - Point ${index}:`, {
+        date_time: point.date_time,
+        snow_depth: point.snow_depth,
+        isOutlier
+      });
+
       return {
         date_time: point.date_time,
-        snow_depth: isOutlier ? NaN : point.snow_depth,
-        rollingAvg: median
+        snow_depth: isOutlier ? NaN : point.snow_depth
       };
     });
 }
@@ -105,13 +112,19 @@ function applyHourlyChangeLimits(
           hourlyChange > scaledMaxPositiveChange || 
           hourlyChange < -scaledMaxNegativeChange;
       
+        console.log(`Hourly Change - Point ${index}:`, {
+          date_time: point.date_time,
+          snow_depth: point.snow_depth,
+          isInvalidChange
+        });
+
         return {
           ...point,
           snow_depth: isInvalidChange ? NaN : point.snow_depth
         };
       }
       
-      return point; // Return original point if no previous valid points found
+      return point;
     });
 }
 
@@ -126,61 +139,53 @@ export function filterSnowDepthOutliers(
       maxNegativeChange,
       windowSize,
       useEarlySeasonFilter,
-      upperIQRMultiplier = 2,
+      upperIQRMultiplier = 1.5,
       lowerIQRMultiplier = 1.5
     } = config;
     
     if (data.length === 0) return [];
   
+    console.log('Initial data:', JSON.parse(JSON.stringify({data})));
+
+
     // Sort data
     const sortedData = [...data].sort((a, b) => 
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
-    console.log('Initial data:', {
-      length: sortedData.length,
-      validValues: sortedData.filter(d => !isNaN(d.snow_depth)).length,
-      data: sortedData
-    });
+    console.log('Sorted data:', JSON.parse(JSON.stringify({data: sortedData})));
+
 
     // Apply IQR filtering
     const iqrFiltered = applyIQRFilter(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
 
-    console.log('After IQR filtering:', {
-      length: iqrFiltered.length,
-      validValues: iqrFiltered.filter(d => !isNaN(d.snow_depth)).length,
-      data: iqrFiltered
-    });
+    console.log('After IQR filtering:', JSON.parse(JSON.stringify({data: iqrFiltered})));
 
     // Apply hourly change limits
     const hourlyFiltered = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
 
-    console.log('After hourly change limits:', {
-      length: hourlyFiltered.length,
-      validValues: hourlyFiltered.filter(d => !isNaN(d.snow_depth)).length,
-      data: hourlyFiltered
-    });
+    console.log('After hourly change limits:', JSON.parse(JSON.stringify({data: hourlyFiltered})));
 
-    // Apply early season filter if enabled
+    // Apply early season filter if enabled and return its result,
+    // otherwise return hourlyFiltered
     if (useEarlySeasonFilter) {
       let validSnowStarted = false;
       const finalData = hourlyFiltered.map(point => {
-        if (!validSnowStarted && (point.rollingAvg ?? 0) > threshold) {
+        if (!validSnowStarted && point.snow_depth > threshold) {
           validSnowStarted = true;
         }
-        return validSnowStarted ? point : { ...point, snow_depth: NaN };
+        return {
+          date_time: point.date_time,
+          snow_depth: validSnowStarted ? point.snow_depth : NaN
+        };
       });
 
-      console.log('After early season filter:', {
-        length: finalData.length,
-        validValues: finalData.filter(d => !isNaN(d.snow_depth)).length,
-        validSnowStarted: validSnowStarted
-      });
+      console.log('After early season filter:', JSON.parse(JSON.stringify({data: validSnowStarted})));
 
       return finalData;
     }
 
-    return hourlyFiltered;
+    return hourlyFiltered;  // Return hourlyFiltered if early season filter is disabled
 }
 
 export function calculateSnowDepthAccumulation(data: any[]) {
