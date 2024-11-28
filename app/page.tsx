@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useCallback,
   useTransition,
+  useMemo,
 } from 'react';
 import DayAveragesTable from './dayWxTable';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
@@ -265,17 +266,27 @@ export default function Home() {
     fetchStations();
   }, []);
 
-  //Fetch the observations from the DB
+  // First, memoize the time range calculation
+  const timeRangeData = useMemo(() => {
+    let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
+    
+    // Only override the calculated times for multi-day views
+    if (timeRange !== 1) {
+      start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
+      end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
+    }
+
+    return {
+      start_time_pdt,
+      end_time_pdt
+    };
+  }, [selectedDate, endDate, dayRangeType, timeRange]);
+
+  // Then update the useEffect to use the memoized values
   useEffect(() => {
     const fetchDataFromDB = async () => {
       try {
-        let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
-        
-        // Only override the calculated times for multi-day views
-        if (timeRange !== 1) {
-          start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
-          end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
-        }
+        const { start_time_pdt, end_time_pdt } = timeRangeData;
 
         const response = await fetch('/api/getObservationsFromDB', {
           method: 'POST',
@@ -296,65 +307,39 @@ export default function Home() {
           );
         }
 
-        //this is the raw data from the DB
         const result = await response.json();
 
-        //this is the filtered data
+        // Process data once and store results
         const filteredData = filteredObservationData(result.observations, {
           mode: tableMode,
-          startHour: startHour,
-          endHour: endHour,
-          dayRangeType: dayRangeType,
+          startHour,
+          endHour,
+          dayRangeType,
           start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
           end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
         });
 
-        //console.log('Processing data with mode:', tableMode);
-        const processedDataDay = wxTableDataDayFromDB(
-          filteredData,
-          result.units,
-          {
-            mode: tableMode,
-            startHour: startHour,
-            endHour: endHour,
-            dayRangeType: dayRangeType,
-            start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-            end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-          }
-        );
-        setObservationsDataDay(processedDataDay);
-
-        //for raw data table
-        const processedDataHour = hourWxTableDataFromDB(
-          result.observations,
-          result.units
-        );
-        setObservationsDataHour(processedDataHour);
-
-        //error filtered data
-        const filteredDataHour = hourWxTableDataFiltered(filteredData);
-        setFilteredObservationsDataHour(filteredDataHour);
+        // Update all states at once
+        setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
+          mode: tableMode,
+          startHour,
+          endHour,
+          dayRangeType,
+          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        }));
         
-
-
+        setObservationsDataHour(hourWxTableDataFromDB(result.observations, result.units));
+        setFilteredObservationsDataHour(hourWxTableDataFiltered(filteredData));
         setIsLoading(false);
+
       } catch (error) {
-        // console.error('Error in fetchDataFromDB:', error);
         setIsLoading(false);
       }
     };
 
     fetchDataFromDB();
-  }, [
-    selectedDate, 
-    endDate, 
-    stationIds, 
-    tableMode, 
-    dayRangeType, 
-    startHour, 
-    endHour, 
-    timeRange
-  ]);
+  }, [timeRangeData, stationIds, tableMode, startHour, endHour]); // Reduced dependencies
 
 
 
@@ -406,16 +391,16 @@ export default function Home() {
     setIsStationChanging(true);
     
     startTransition(() => {
-      // Update all related state in one transition
+      // Update all related state in one transition WAS 7
       setSelectedStation(stationId);
       setStationIds([stationId]);
       setTableMode('daily');
-      setTimeRange(7);
+      setTimeRange(1);
       setIsOneDay(false);
       
-      // Set date range to last 7 days
+      // Set date range to last 1 days WAS 7
       const newEndDate = new Date();
-      const newStartDate = subDays(newEndDate, 6);
+      const newStartDate = subDays(newEndDate, 1);
       
       setSelectedDate(newStartDate);
       setEndDate(newEndDate);

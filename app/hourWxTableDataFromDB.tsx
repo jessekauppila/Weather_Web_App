@@ -79,7 +79,7 @@ function hourWxTableDataFromDB(
       ? `${startDate}, ${startTime} - ${endTime}`
       : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
 
-  console.log('formattedData in hourWxTableDataFromDB:', formattedData);
+  //console.log('formattedData in hourWxTableDataFromDB:', formattedData);
 
   return {
     data: formattedData,
