@@ -10,63 +10,48 @@ export function filteredObservationData(
 ) {
   const { startHour, endHour, mode } = options;
 
-  //console.log('observationsData in filteredObservationData:', observationsData);
+  console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
 
-  // Group observations
-  const groupedObservations = mode === 'summary' 
-    ? groupByStation(observationsData)
-    : groupByDay(observationsData, startHour, endHour);
-
-  console.log('groupedObservations in filteredObservationData:', groupedObservations);
-
-  // Filter and process observations
-  const filteredGroupedObservations = Object.entries(groupedObservations).reduce((acc, [key, observations]) => {
-    // Log input for snow_depth
-    const snowDepthInput = observations.map((obs: Record<string, any>) => ({
+  // Filter all snow depth data first
+  const filteredSnowDepth = filterSnowDepthOutliers(
+    observationsData.map(obs => ({
       date_time: obs.date_time,
       snow_depth: obs.snow_depth
-    }));
-    console.log('Snow Depth Input:', snowDepthInput);
-    
-    const filteredSnowDepth = filterSnowDepthOutliers(
-        snowDepthInput,
-        SNOW_DEPTH_CONFIG
-    );
-    console.log('Snow Depth Output:', filteredSnowDepth);
-  
-    // Log input for snow_depth_24h with more detail
-    const snowDepth24hInput = observations.map((obs: Record<string, any>) => ({
+    })),
+    SNOW_DEPTH_CONFIG
+  );
+
+  const filteredSnowDepth24h = filterSnowDepthOutliers(
+    observationsData.map(obs => ({
       date_time: obs.date_time,
       snow_depth: obs.snow_depth_24h
-    }));
-    console.log('Snow Depth 24h Input:', {
-      length: snowDepth24hInput.length,
-      validValues: snowDepth24hInput.filter(d => !isNaN(d.snow_depth)).length,
-      data: snowDepth24hInput.map(d => ({
-        ...d,
-        isValid: !isNaN(d.snow_depth),
-        typeOf: typeof d.snow_depth
-      }))
-    });
-    
-    const filteredSnowDepth24h = filterSnowDepthOutliers(
-        snowDepth24hInput,
-        SNOW_DEPTH_24H_CONFIG
-    );
-    console.log('Snow Accumulation 24h Output:', filteredSnowDepth24h);
+    })),
+    SNOW_DEPTH_24H_CONFIG
+  );
 
-    const filteredObservations = observations.map((obs: Record<string, any>, index: number) => ({
-      ...obs,
-      snow_depth: filteredSnowDepth[index]?.snow_depth,
-      snow_depth_24h: filteredSnowDepth24h[index]?.snow_depth
-    }));
+  // Create lookup maps for quick access
+  const snowDepthMap = new Map(
+    filteredSnowDepth.map(item => [item.date_time, item.snow_depth])
+  );
+  const snowDepth24hMap = new Map(
+    filteredSnowDepth24h.map(item => [item.date_time, item.snow_depth])
+  );
 
-    acc[key] = filteredObservations;
-    return acc;
-  }, {} as typeof groupedObservations);
+  // Apply filtered values to original data
+  const filteredObservations = observationsData.map(obs => ({
+    ...obs,
+    snow_depth: snowDepthMap.get(obs.date_time),
+    snow_depth_24h: snowDepth24hMap.get(obs.date_time)
+  }));
 
-  //console.log('filteredGroupedObservations in filteredObservationData:', filteredGroupedObservations);
-  return filteredGroupedObservations;
+  // Group the filtered data
+  const groupedObservations = mode === 'summary'
+    ? groupByStation(filteredObservations)
+    : groupByDay(filteredObservations, startHour, endHour);
+
+  // Only log the final output once
+  console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
+  return groupedObservations;
 }
 
 // Helper functions

@@ -1,20 +1,18 @@
 // Add these configurations at the top of the file
 export const SNOW_DEPTH_CONFIG = {
-  threshold: 10,          // inches threshold
+  threshold: 0,          // inches threshold
   maxPositiveChange: 4,   // max hourly change
   maxNegativeChange: 10,  // max negative change
   windowSize: 24,         // window size
-  useEarlySeasonFilter: true,
   upperIQRMultiplier: 1,
   lowerIQRMultiplier: 2
 } as const;
 
 export const SNOW_DEPTH_24H_CONFIG = {
-  threshold: 10,
+  threshold: -1,
   maxPositiveChange: 4,
-  maxNegativeChange: 36,
+  maxNegativeChange: 4,
   windowSize: 12,
-  useEarlySeasonFilter: false,
   upperIQRMultiplier: 1,
   lowerIQRMultiplier: 1.5
 } as const;
@@ -31,7 +29,6 @@ interface SnowDepthConfig {
   readonly maxPositiveChange: number;
   readonly maxNegativeChange: number;
   readonly windowSize: number;
-  readonly useEarlySeasonFilter: boolean;
   readonly upperIQRMultiplier?: number;
   readonly lowerIQRMultiplier?: number;
 }
@@ -43,7 +40,11 @@ function applyIQRFilter(
     upperIQRMultiplier: number,
     lowerIQRMultiplier: number
 ): SnowDataPoint[] {
-    return sortedData.map((point, index) => {
+    const cacheKey = createIQRCacheKey(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
+    const cached = iqrCache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = sortedData.map((point, index) => {
       const halfKernel = Math.floor(windowSize / 2);
       const start = Math.max(0, index - halfKernel);
       const end = Math.min(sortedData.length, index + halfKernel + 1);
@@ -70,17 +71,20 @@ function applyIQRFilter(
       const isOutlier = point.snow_depth < lowerBound || point.snow_depth > upperBound;
       const median = window[Math.floor(window.length / 2)];
       
-      console.log(`IQR Filter - Point ${index}:`, {
-        date_time: point.date_time,
-        snow_depth: point.snow_depth,
-        isOutlier
-      });
+      // console.log(`IQR Filter - Point ${index}:`, {
+      //   date_time: point.date_time,
+      //   snow_depth: point.snow_depth,
+      //   isOutlier
+      // });
 
       return {
         date_time: point.date_time,
         snow_depth: isOutlier ? NaN : point.snow_depth
       };
     });
+
+    iqrCache.set(cacheKey, result);
+    return result;
 }
 
 // New separate function for hourly change limits
@@ -90,20 +94,27 @@ function applyHourlyChangeLimits(
     maxNegativeChange: number
 ): SnowDataPoint[] {
     return data.map((point, index) => {
+      // If current point is null, return as is
+      if (point.snow_depth === null) {
+        return point;
+      }
+
       // Find the last valid snow depth
-      let previousDepth = point.snow_depth;
+      let previousDepth = null;
       let i = index - 1;
       let hoursBack = 0;
       
-      while (i >= 0 && isNaN(data[i].snow_depth)) {
+      while (i >= 0) {
+        if (data[i].snow_depth !== null && !isNaN(data[i].snow_depth)) {
+          previousDepth = data[i].snow_depth;
+          hoursBack = index - i;  // Calculate actual hours between measurements
+          break;
+        }
         i--;
-        hoursBack++;
       }
       
-      if (i >= 0) {
-        previousDepth = data[i].snow_depth;
-        hoursBack++; // Add one more for the actual valid point we found
-        
+      // If we found a previous valid depth
+      if (previousDepth !== null) {
         const hourlyChange = point.snow_depth - previousDepth;
         const scaledMaxPositiveChange = maxPositiveChange * hoursBack;
         const scaledMaxNegativeChange = maxNegativeChange * hoursBack;
@@ -112,11 +123,15 @@ function applyHourlyChangeLimits(
           hourlyChange > scaledMaxPositiveChange || 
           hourlyChange < -scaledMaxNegativeChange;
       
-        console.log(`Hourly Change - Point ${index}:`, {
-          date_time: point.date_time,
-          snow_depth: point.snow_depth,
-          isInvalidChange
-        });
+        // console.log(`Hourly Change - Point ${index}:`, {
+        //   date_time: point.date_time,
+        //   current_depth: point.snow_depth,
+        //   previous_depth: previousDepth,
+        //   hours_back: hoursBack,
+        //   hourly_change: hourlyChange,
+        //   scaled_max_negative: scaledMaxNegativeChange,
+        //   is_invalid: isInvalidChange
+        // });
 
         return {
           ...point,
@@ -124,8 +139,30 @@ function applyHourlyChangeLimits(
         };
       }
       
+      // If no previous valid depth found, return point as is
       return point;
     });
+}
+
+// Update the cache key creation to be more reliable
+const filterCache = new Map<string, SnowDataPoint[]>();
+const iqrCache = new Map<string, SnowDataPoint[]>();
+
+function createCacheKey(data: SnowDataPoint[], config: SnowDepthConfig): string {
+    // Create a simpler key using essential data
+    const dataKey = data.map(d => `${d.date_time}:${d.snow_depth}`).join('|');
+    const configKey = Object.values(config).join(':');
+    return `${dataKey}-${configKey}`;
+}
+
+function createIQRCacheKey(
+    data: SnowDataPoint[], 
+    windowSize: number, 
+    upperMultiplier: number, 
+    lowerMultiplier: number
+): string {
+    const dataKey = data.map(d => `${d.date_time}:${d.snow_depth}`).join('|');
+    return `${dataKey}-${windowSize}-${upperMultiplier}-${lowerMultiplier}`;
 }
 
 // Main function with separated steps
@@ -133,59 +170,73 @@ export function filterSnowDepthOutliers(
     data: SnowDataPoint[],
     config: SnowDepthConfig
 ): SnowDataPoint[] {
+    const isSnow24h = config === SNOW_DEPTH_24H_CONFIG;
+    const logPrefix = isSnow24h ? '[24h Snow]' : '[Total Snow]';
+
+    console.log(`${logPrefix} Starting filter with:`, {
+        dataPoints: data.length,
+        config,
+        firstPoint: data[0],
+        lastPoint: data[data.length - 1]
+    });
+
+    const cacheKey = createCacheKey(data, config);
+    const cached = filterCache.get(cacheKey);
+    if (cached) {
+        console.log(`${logPrefix} ⚡ Returning cached result:`, {
+            dataPoints: cached.length
+        });
+        return cached;
+    }
+
     const {
-      threshold,
       maxPositiveChange,
       maxNegativeChange,
       windowSize,
-      useEarlySeasonFilter,
       upperIQRMultiplier = 1.5,
       lowerIQRMultiplier = 1.5
     } = config;
     
     if (data.length === 0) return [];
   
-    console.log('Initial data:', JSON.parse(JSON.stringify({data})));
-
-
-    // Sort data
     const sortedData = [...data].sort((a, b) => 
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
-    console.log('Sorted data:', JSON.parse(JSON.stringify({data: sortedData})));
-
-
-    // Apply IQR filtering
+    console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
+    
+    const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
+    console.log(`${logPrefix} 📊 After IQR filtering:`, {
+        totalPoints: iqrFiltered.length,
+        validPoints: iqrFiltered.length - nanCountIQR,
+        invalidPoints: nanCountIQR
+    });
+    console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
 
-    console.log('After IQR filtering:', JSON.parse(JSON.stringify({data: iqrFiltered})));
 
-    // Apply hourly change limits
-    const hourlyFiltered = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
+    console.log(`${logPrefix} 🔄 Applying hourly limits...`);
+    const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
+    console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
 
-    console.log('After hourly change limits:', JSON.parse(JSON.stringify({data: hourlyFiltered})));
+    
+    const nanCountFinal = hourlyChangeLimits.filter(p => isNaN(p.snow_depth)).length;
+    console.log(`${logPrefix} 🏁 Final results:`, {
+        totalPoints: hourlyChangeLimits.length,
+        validPoints: hourlyChangeLimits.length - nanCountFinal,
+        invalidPoints: nanCountFinal,
+        firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
+        lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
+    });
 
-    // Apply early season filter if enabled and return its result,
-    // otherwise return hourlyFiltered
-    if (useEarlySeasonFilter) {
-      let validSnowStarted = false;
-      const finalData = hourlyFiltered.map(point => {
-        if (!validSnowStarted && point.snow_depth > threshold) {
-          validSnowStarted = true;
-        }
-        return {
-          date_time: point.date_time,
-          snow_depth: validSnowStarted ? point.snow_depth : NaN
-        };
-      });
 
-      console.log('After early season filter:', JSON.parse(JSON.stringify({data: validSnowStarted})));
+    filterCache.set(cacheKey, hourlyChangeLimits);
+    return hourlyChangeLimits;
+}
 
-      return finalData;
-    }
-
-    return hourlyFiltered;  // Return hourlyFiltered if early season filter is disabled
+// Clear cache when needed (e.g., when component unmounts)
+export function clearFilterCache() {
+    filterCache.clear();
 }
 
 export function calculateSnowDepthAccumulation(data: any[]) {
@@ -222,5 +273,6 @@ export default {
   SNOW_DEPTH_CONFIG,
   SNOW_DEPTH_24H_CONFIG,
   filterSnowDepthOutliers,
-  calculateSnowDepthAccumulation
+  calculateSnowDepthAccumulation,
+  clearFilterCache
 };

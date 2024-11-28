@@ -20,41 +20,43 @@ function wxTableDataDayFromDB(
     ? groupByStation(Object.values(inputObservations).flat())
     : groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
 
-  // After grouping but before processing
-  const filteredGroupedObservations = Object.entries(inputObservations).reduce((acc, [key, observations]) => {
-    // Filter snow_depth
-    const filteredSnowDepth = filterSnowDepthOutliers(
-      observations.map((obs: Record<string, any>) => ({
-        date_time: obs.date_time,
-        snow_depth: obs.snow_depth
-      })),
-      SNOW_DEPTH_CONFIG
-    );
 
-    const filteredSnowDepth24h = filterSnowDepthOutliers(
-      observations.map((obs: Record<string, any>) => ({
-        date_time: obs.date_time,
-        snow_depth: obs.snow_depth_24h
-      })),
-      SNOW_DEPTH_24H_CONFIG 
-    );
+  // I THINK THIS IS WHAT CAUSED THE DATA TO BE FILTERED TWICE
+  // // After grouping but before processing
+  // const filteredGroupedObservations = Object.entries(inputObservations).reduce((acc, [key, observations]) => {
+  //   // Filter snow_depth
+  //   const filteredSnowDepth = filterSnowDepthOutliers(
+  //     observations.map((obs: Record<string, any>) => ({
+  //       date_time: obs.date_time,
+  //       snow_depth: obs.snow_depth
+  //     })),
+  //     SNOW_DEPTH_CONFIG
+  //   );
 
-    // Merge filtered data back into observations
-    const filteredObservations = observations.map((obs, index) => ({
-      ...obs,
-      snow_depth: filteredSnowDepth[index]?.snow_depth,
-      snow_depth_24h: filteredSnowDepth24h[index]?.snow_depth
-    }));
+  //   const filteredSnowDepth24h = filterSnowDepthOutliers(
+  //     observations.map((obs: Record<string, any>) => ({
+  //       date_time: obs.date_time,
+  //       snow_depth: obs.snow_depth_24h
+  //     })),
+  //     SNOW_DEPTH_24H_CONFIG 
+  //   );
 
-    acc[key] = filteredObservations;
-    return acc;
-  }, {} as typeof groupedObservations);
+  //   // Merge filtered data back into observations
+  //   const filteredObservations = observations.map((obs, index) => ({
+  //     ...obs,
+  //     snow_depth: filteredSnowDepth[index]?.snow_depth,
+  //     snow_depth_24h: filteredSnowDepth24h[index]?.snow_depth
+  //   }));
+
+  //   acc[key] = filteredObservations;
+  //   return acc;
+  // }, {} as typeof groupedObservations);
 
   //console.log('filteredGroupedObservations from wxTableDataDayFromDB:', filteredGroupedObservations);
 
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  const processedData = Object.entries(filteredGroupedObservations).map(
+  const processedData = Object.entries(groupedObservations).map(
     ([stid, stationObs]) => {
       const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
