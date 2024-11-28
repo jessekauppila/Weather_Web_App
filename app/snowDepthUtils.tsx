@@ -94,12 +94,38 @@ function applyHourlyChangeLimits(
     maxNegativeChange: number
 ): SnowDataPoint[] {
     return data.map((point, index) => {
-      // If current point is null, return as is
-      if (point.snow_depth === null) {
+      // If current point is null or NaN, return as is
+      if (point.snow_depth === null || isNaN(point.snow_depth)) {
         return point;
       }
 
-      // Find the last valid snow depth
+      // For first point, look ahead instead of back if it's significantly different from next valid points
+      if (index === 0) {
+        let nextValidDepth = null;
+        let j = 1;
+        while (j < data.length) {
+          if (data[j].snow_depth !== null && !isNaN(data[j].snow_depth)) {
+            nextValidDepth = data[j].snow_depth;
+            break;
+          }
+          j++;
+        }
+
+        if (nextValidDepth !== null) {
+          const change = point.snow_depth - nextValidDepth;
+          const hoursForward = j;
+          const scaledMaxChange = maxPositiveChange * hoursForward;
+          
+          if (Math.abs(change) > scaledMaxChange) {
+            return {
+              ...point,
+              snow_depth: NaN
+            };
+          }
+        }
+      }
+
+      // Original logic for non-first points
       let previousDepth = null;
       let i = index - 1;
       let hoursBack = 0;
@@ -107,13 +133,12 @@ function applyHourlyChangeLimits(
       while (i >= 0) {
         if (data[i].snow_depth !== null && !isNaN(data[i].snow_depth)) {
           previousDepth = data[i].snow_depth;
-          hoursBack = index - i;  // Calculate actual hours between measurements
+          hoursBack = index - i;
           break;
         }
         i--;
       }
       
-      // If we found a previous valid depth
       if (previousDepth !== null) {
         const hourlyChange = point.snow_depth - previousDepth;
         const scaledMaxPositiveChange = maxPositiveChange * hoursBack;
@@ -122,16 +147,6 @@ function applyHourlyChangeLimits(
         const isInvalidChange = 
           hourlyChange > scaledMaxPositiveChange || 
           hourlyChange < -scaledMaxNegativeChange;
-      
-        // console.log(`Hourly Change - Point ${index}:`, {
-        //   date_time: point.date_time,
-        //   current_depth: point.snow_depth,
-        //   previous_depth: previousDepth,
-        //   hours_back: hoursBack,
-        //   hourly_change: hourlyChange,
-        //   scaled_max_negative: scaledMaxNegativeChange,
-        //   is_invalid: isInvalidChange
-        // });
 
         return {
           ...point,
@@ -139,7 +154,6 @@ function applyHourlyChangeLimits(
         };
       }
       
-      // If no previous valid depth found, return point as is
       return point;
     });
 }
