@@ -13,7 +13,6 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
-  
   const startHour = options.startHour;
   const endHour = options.endHour;
   
@@ -22,7 +21,7 @@ function wxTableDataDayFromDB(
     : groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
 
 
-  // I THINK THIS IS WHAT CAUSED THE DATA TO BE FILTERED TWICE
+  // I THINK THIS IS WHAT CAUSED THE data OBSERVATIONS TO BE FILTERED TWICE
   // // After grouping but before processing
   // const filteredGroupedObservations = Object.entries(inputObservations).reduce((acc, [key, observations]) => {
   //   // Filter snow_depth
