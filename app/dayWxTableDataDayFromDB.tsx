@@ -441,18 +441,19 @@ function groupBy24hrs(
   const result: Record<string, Array<Record<string, any>>> = {};
   
   if (sortedData.length > 0) {
+    // Start from the first observation's time
     let currentPeriodStart = moment(sortedData[0].date_time);
-    let currentPeriodEnd = moment(currentPeriodStart).add(24, 'hours');
+    // End exactly 24 hours later
+    let currentPeriodEnd = moment(currentPeriodStart).add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
     
-    // Format the period key as "MM-DD HH:mm AM - MM-DD HH:mm AM"
     let periodKey = `${currentPeriodStart.format('MM-DD hh:mm A')} - ${currentPeriodEnd.format('MM-DD hh:mm A')}`;
     
     sortedData.forEach(obs => {
       const obsTime = moment(obs.date_time);
       
       while (obsTime.isAfter(currentPeriodEnd)) {
-        currentPeriodStart = moment(currentPeriodEnd);
-        currentPeriodEnd = moment(currentPeriodStart).add(24, 'hours');
+        currentPeriodStart = moment(currentPeriodEnd).add(1, 'second');
+        currentPeriodEnd = moment(currentPeriodStart).add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
         periodKey = `${currentPeriodStart.format('MM-DD hh:mm A')} - ${currentPeriodEnd.format('MM-DD hh:mm A')}`;
       }
       

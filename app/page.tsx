@@ -81,10 +81,10 @@ export default function Home() {
     switch (type) {
       case DayRangeType.MIDNIGHT:
         const midnightResult = {
-          start: endMoment.clone().subtract(timeRange, 'days').startOf('day'),
-          end: endMoment.clone().endOf('day'),
+          start: endMoment.clone().startOf('day'),
+          end: endMoment.clone().startOf('day').add(24 * timeRange, 'hours'),
           startHour: 0,
-          endHour: 23
+          endHour: 24
         };
 
         return midnightResult;
@@ -378,28 +378,12 @@ export default function Home() {
 
   // In your main Home component, modify this handler
   const handleStationClick = (stationId: string) => {
-    //console.log('handleStationClick called with:', stationId);
-    
-    // Find the station name for the selected ID
-    //const selectedStationObj = stations.find(station => station.id === stationId);
-
-
     setIsStationChanging(true);
     
     startTransition(() => {
       setSelectedStation(stationId);
       setStationIds([stationId]);
       setTableMode('daily');
-      setTimeRange(1);
-      setIsOneDay(true);
-      
-      // Set date range to last 1 days was7
-      const newEndDate = new Date();
-      const newStartDate = subDays(newEndDate, 1);
-      
-      setSelectedDate(newStartDate);
-      setEndDate(newEndDate);
-      setUseCustomEndDate(true);
     });
 
     setTimeout(() => {
