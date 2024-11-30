@@ -13,13 +13,21 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
+  console.log('inputObservations:', inputObservations);
+
   const startHour = options.startHour;
   const endHour = options.endHour;
+
+  console.log('startHour:', startHour);
+  console.log('endHour:', endHour);
   
   const groupedObservations = options.mode === 'summary' 
     ? groupByStation(Object.values(inputObservations).flat())
-    : groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
+    :groupBy24hrs(Object.values(inputObservations).flat(), startHour, endHour);
+    //: groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
+    
 
+  console.log('groupedObservations:', groupedObservations);
 
   // I THINK THIS IS WHAT CAUSED THE data OBSERVATIONS TO BE FILTERED TWICE
   // // After grouping but before processing
@@ -397,7 +405,7 @@ function groupByStation(data: Array<Record<string, any>>) {
   }, {} as Record<string, Array<Record<string, any>>>);
 }
 
-// Helper function to group by day
+// Helper function to group by day with specific 24-hour periods
 function groupByDay(
   data: Array<Record<string, any>>, 
   startHour: number,
@@ -405,14 +413,57 @@ function groupByDay(
 ) {
   return data.reduce((acc, obs) => {
     const datetime = moment(obs.date_time);
-    const dayKey = datetime.format('YYYY-MM-DD');
+    const obsHour = datetime.hour();
     
-    if (!acc[dayKey]) {
-      acc[dayKey] = [];
+    // Only include observations that fall within the specified hour range
+    if (obsHour >= startHour && obsHour < endHour) {
+      const periodKey = datetime.format('YYYY-MM-DD');
+      if (!acc[periodKey]) {
+        acc[periodKey] = [];
+      }
+      acc[periodKey].push(obs);
     }
-    acc[dayKey].push(obs);
+    
     return acc;
   }, {} as Record<string, Array<Record<string, any>>>);
+}
+
+function groupBy24hrs(
+  data: Array<Record<string, any>>,
+  startHour: number,
+  endHour: number
+) {
+  // Sort data by date_time first
+  const sortedData = [...data].sort((a, b) => 
+    new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+  );
+
+  const result: Record<string, Array<Record<string, any>>> = {};
+  
+  if (sortedData.length > 0) {
+    let currentPeriodStart = moment(sortedData[0].date_time);
+    let currentPeriodEnd = moment(currentPeriodStart).add(24, 'hours');
+    
+    // Format the period key as "MM-DD HH:mm AM - MM-DD HH:mm AM"
+    let periodKey = `${currentPeriodStart.format('MM-DD hh:mm A')} - ${currentPeriodEnd.format('MM-DD hh:mm A')}`;
+    
+    sortedData.forEach(obs => {
+      const obsTime = moment(obs.date_time);
+      
+      while (obsTime.isAfter(currentPeriodEnd)) {
+        currentPeriodStart = moment(currentPeriodEnd);
+        currentPeriodEnd = moment(currentPeriodStart).add(24, 'hours');
+        periodKey = `${currentPeriodStart.format('MM-DD hh:mm A')} - ${currentPeriodEnd.format('MM-DD hh:mm A')}`;
+      }
+      
+      if (!result[periodKey]) {
+        result[periodKey] = [];
+      }
+      result[periodKey].push(obs);
+    });
+  }
+  
+  return result;
 }
 
 export default wxTableDataDayFromDB;
