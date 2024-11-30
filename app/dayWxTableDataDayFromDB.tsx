@@ -13,6 +13,7 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
+  
   const startHour = options.startHour;
   const endHour = options.endHour;
   
