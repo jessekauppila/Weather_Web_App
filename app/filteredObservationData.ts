@@ -10,7 +10,7 @@ export function filteredObservationData(
 ) {
   const { startHour, endHour, mode } = options;
 
-  console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
+  //console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
 
   // Filter all snow depth data first
   const filteredSnowDepth = filterSnowDepthOutliers(
@@ -50,7 +50,8 @@ export function filteredObservationData(
     : groupByDay(filteredObservations, startHour, endHour);
 
   // Only log the final output once
-  console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
+  //console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
+  console.log('GROUPED OBSERVATIONS:', groupedObservations);
   return groupedObservations;
 }
 

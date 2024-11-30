@@ -179,6 +179,20 @@ function createIQRCacheKey(
     return `${dataKey}-${windowSize}-${upperMultiplier}-${lowerMultiplier}`;
 }
 
+// Helper function to create a cache key
+function createFilterCacheKey(
+    data: SnowDataPoint[],
+    config: SnowDepthConfig,
+    isSnow24h: boolean
+): string {
+    // Create a unique key based on the input parameters and data
+    const dataHash = data.map(point => 
+        `${point.date_time}:${point.snow_depth}`
+    ).join('|');
+    const configHash = `${config.maxPositiveChange}-${config.maxNegativeChange}-${config.windowSize}`;
+    return `${dataHash}-${configHash}-${isSnow24h}`;
+}
+
 // Main function with separated steps
 export function filterSnowDepthOutliers(
     data: SnowDataPoint[],
@@ -187,21 +201,23 @@ export function filterSnowDepthOutliers(
     const isSnow24h = config === SNOW_DEPTH_24H_CONFIG;
     const logPrefix = isSnow24h ? '[24h Snow]' : '[Total Snow]';
 
-    console.log(`${logPrefix} Starting filter with:`, {
-        dataPoints: data.length,
-        config,
-        firstPoint: data[0],
-        lastPoint: data[data.length - 1]
-    });
-
-    const cacheKey = createCacheKey(data, config);
+    // Generate cache key and check cache first
+    const cacheKey = createFilterCacheKey(data, config, isSnow24h);
     const cached = filterCache.get(cacheKey);
+    
     if (cached) {
-        console.log(`${logPrefix} ⚡ Returning cached result:`, {
-            dataPoints: cached.length
-        });
+        // console.log(`${logPrefix} ⚡ Using cached result:`, {
+        //     dataPoints: cached.length
+        // });
         return cached;
     }
+
+    // console.log(`${logPrefix} Starting filter with:`, {
+    //     dataPoints: data.length,
+    //     config,
+    //     firstPoint: data[0],
+    //     lastPoint: data[data.length - 1]
+    // });
 
     const {
       maxPositiveChange,
@@ -217,41 +233,47 @@ export function filterSnowDepthOutliers(
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
-    console.log(`${logPrefix} 🔄 Applying IQR filter...`);
+    // console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
-    console.log(`${logPrefix} 📊 After IQR filtering:`, {
-        totalPoints: iqrFiltered.length,
-        validPoints: iqrFiltered.length - nanCountIQR,
-        invalidPoints: nanCountIQR
-    });
-    console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
+    // console.log(`${logPrefix} 📊 After IQR filtering:`, {
+    //     totalPoints: iqrFiltered.length,
+    //     validPoints: iqrFiltered.length - nanCountIQR,
+    //     invalidPoints: nanCountIQR
+    // });
+    // console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
 
 
-    console.log(`${logPrefix} 🔄 Applying hourly limits...`);
+    // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
+    // console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
 
     
     const nanCountFinal = hourlyChangeLimits.filter(p => isNaN(p.snow_depth)).length;
-    console.log(`${logPrefix} 🏁 Final results:`, {
-        totalPoints: hourlyChangeLimits.length,
-        validPoints: hourlyChangeLimits.length - nanCountFinal,
-        invalidPoints: nanCountFinal,
-        firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
-        lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
-    });
+    // console.log(`${logPrefix} 🏁 Final results:`, {
+    //     totalPoints: hourlyChangeLimits.length,
+    //     validPoints: hourlyChangeLimits.length - nanCountFinal,
+    //     invalidPoints: nanCountFinal,
+    //     firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
+    //     lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
+    // });
 
 
+    // Store result in cache before returning
     filterCache.set(cacheKey, hourlyChangeLimits);
+    
+    // Optional: Implement cache size limit
+    if (filterCache.size > 1000) { // Adjust size limit as needed
+        const firstKey = filterCache.keys().next().value;
+        filterCache.delete(firstKey);
+    }
+
     return hourlyChangeLimits;
 }
 
-// Clear cache when needed (e.g., when component unmounts)
-export function clearFilterCache() {
-    filterCache.clear();
-}
+// Export cache management functions
+export const clearFilterCache = () => filterCache.clear();
 
 export function calculateSnowDepthAccumulation(data: any[]) {
     const results = [];
