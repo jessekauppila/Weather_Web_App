@@ -381,20 +381,19 @@ export default function Home() {
     //console.log('handleStationClick called with:', stationId);
     
     // Find the station name for the selected ID
-    const selectedStationObj = stations.find(station => station.id === stationId);
-    //console.log('Selected station object:', selectedStationObj);
+    //const selectedStationObj = stations.find(station => station.id === stationId);
+
 
     setIsStationChanging(true);
     
     startTransition(() => {
-      // Update all related state in one transition WAS 7
       setSelectedStation(stationId);
       setStationIds([stationId]);
       setTableMode('daily');
       setTimeRange(1);
-      setIsOneDay(false);
+      setIsOneDay(true);
       
-      // Set date range to last 1 days WAS 7
+      // Set date range to last 1 days was7
       const newEndDate = new Date();
       const newStartDate = subDays(newEndDate, 1);
       
