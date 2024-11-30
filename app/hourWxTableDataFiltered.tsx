@@ -64,7 +64,7 @@ interface Observation {
         return dateCompare || a.Station.localeCompare(b.Station);
       });
   
-      console.log('flattenedData in hourWxTableDataFiltered:', flattenedData);
+      //console.log('flattenedData in hourWxTableDataFiltered:', flattenedData);
     return {
       data: flattenedData,
       title: 'Filtered Hourly Observations'

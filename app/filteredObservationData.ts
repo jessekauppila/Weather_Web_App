@@ -44,43 +44,47 @@ export function filteredObservationData(
     snow_depth_24h: snowDepth24hMap.get(obs.date_time)
   }));
 
-  // Group the filtered data
-  const groupedObservations = mode === 'summary'
-    ? groupByStation(filteredObservations)
-    : groupByDay(filteredObservations, startHour, endHour);
+  console.log('filteredObservations in filteredObservationData:', filteredObservations);
+
+//   // Group the filtered data
+//   const groupedObservations = mode === 'summary'
+//     ? groupByStation(filteredObservations)
+//     : groupByDay(filteredObservations, startHour, endHour);
+
+//   console.log('groupedObservations in filteredObservationData:', groupedObservations);
 
   // Only log the final output once
   //console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
-  console.log('GROUPED OBSERVATIONS:', groupedObservations);
-  return groupedObservations;
+  //console.log('GROUPED OBSERVATIONS:', groupedObservations);
+  return filteredObservations;
 }
 
 // Helper functions
 // Helper function to group by station (current behavior)
-function groupByStation(data: Array<Record<string, any>>) {
-    return data.reduce((acc, obs) => {
-      if (!acc[obs.stid]) {
-        acc[obs.stid] = [];
-      }
-      acc[obs.stid].push(obs);
-      return acc;
-    }, {} as Record<string, Array<Record<string, any>>>);
-  }
+// function groupByStation(data: Array<Record<string, any>>) {
+//     return data.reduce((acc, obs) => {
+//       if (!acc[obs.stid]) {
+//         acc[obs.stid] = [];
+//       }
+//       acc[obs.stid].push(obs);
+//       return acc;
+//     }, {} as Record<string, Array<Record<string, any>>>);
+//   }
   
-  // Helper function to group by day
-  function groupByDay(
-    data: Array<Record<string, any>>, 
-    startHour: number,
-    endHour: number
-  ) {
-    return data.reduce((acc, obs) => {
-      const datetime = moment(obs.date_time);
-      const dayKey = datetime.format('YYYY-MM-DD');
+//   // Helper function to group by day
+//   function groupByDay(
+//     data: Array<Record<string, any>>, 
+//     startHour: number,
+//     endHour: number
+//   ) {
+//     return data.reduce((acc, obs) => {
+//       const datetime = moment(obs.date_time);
+//       const dayKey = datetime.format('YYYY-MM-DD');
       
-      if (!acc[dayKey]) {
-        acc[dayKey] = [];
-      }
-      acc[dayKey].push(obs);
-      return acc;
-    }, {} as Record<string, Array<Record<string, any>>>);
-  }
+//       if (!acc[dayKey]) {
+//         acc[dayKey] = [];
+//       }
+//       acc[dayKey].push(obs);
+//       return acc;
+//     }, {} as Record<string, Array<Record<string, any>>>);
+//   }
