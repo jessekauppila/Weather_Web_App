@@ -33,7 +33,7 @@ interface Observation {
     'Relative Humidity': string;
   }
   
-  export default function hourWxTableDataFiltered(data: Record<string, Observation[]>) {
+  export default function hourWxTableDataFiltered(data: any[], units?: any) {
     // Flatten the nested structure into a single array
     const flattenedData: FormattedObservation[] = Object.values(data)
       .flat()

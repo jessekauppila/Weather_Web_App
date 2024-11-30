@@ -266,55 +266,8 @@ export default function Home() {
     fetchStations();
   }, []);
 
-  // 1. Create a stable fetch function with useCallback
-  const fetchDataFromDB = useCallback(async (timeRange, stationIds) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/getObservationsFromDB', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startDate: timeRange.start_time_pdt.toISOString(),
-          endDate: timeRange.end_time_pdt.toISOString(),
-          stationIds,
-        }),
-      });
-
-      if (!response.ok) throw new Error('API error');
-      const result = await response.json();
-      
-      // Process all data transformations in one go
-      const filteredData = filteredObservationData(result.observations, {
-        mode: tableMode,
-        startHour,
-        endHour,
-        dayRangeType,
-        start: timeRange.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-        end: timeRange.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-      });
-
-      // Batch all state updates
-      startTransition(() => {
-        setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
-          mode: tableMode,
-          startHour,
-          endHour,
-          dayRangeType,
-          start: timeRange.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-          end: timeRange.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-        }));
-        setObservationsDataHour(hourWxTableDataFromDB(result.observations, result.units));
-        setFilteredObservationsDataHour(hourWxTableDataFiltered(filteredData));
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.error('Fetch error:', error);
-      setIsLoading(false);
-    }
-  }, [tableMode, startHour, endHour, dayRangeType]); // Stable dependencies
-
-  // 2. Create a debounced time range calculation
-  const debouncedTimeRange = useMemo(() => {
+  // First, memoize the time range calculation
+  const timeRangeData = useMemo(() => {
     let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
     
     if (timeRange !== 1) {
@@ -326,20 +279,63 @@ export default function Home() {
       start_time_pdt,
       end_time_pdt
     };
-  }, [selectedDate, endDate, dayRangeType, timeRange]);
+  }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
-  // 3. Single useEffect with cleanup
+  // Then update the useEffect to use the memoized values and minimal dependencies
   useEffect(() => {
-    let isSubscribed = true;
-    
-    if (isSubscribed) {
-      fetchDataFromDB(debouncedTimeRange, stationIds);
-    }
+    const fetchDataFromDB = async () => {
+      try {
+        const { start_time_pdt, end_time_pdt } = timeRangeData;
+        
+        const response = await fetch('/api/getObservationsFromDB', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            startDate: start_time_pdt.toISOString(),
+            endDate: end_time_pdt.toISOString(),
+            stationIds: stationIds,
+          }),
+        });
 
-    return () => {
-      isSubscribed = false;
+        if (!response.ok) {
+          throw new Error('API error');
+        }
+
+        const result = await response.json();
+        
+        // Process data once and store results
+        const filteredData = filteredObservationData(result.observations, {
+          mode: tableMode,
+          startHour,
+          endHour,
+          dayRangeType,
+          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        });
+
+        // Update all states at once
+        setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
+          mode: tableMode,
+          startHour,
+          endHour,
+          dayRangeType,
+          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+        }));
+        
+        setObservationsDataHour(hourWxTableDataFromDB(result.observations, result.units));
+        setFilteredObservationsDataHour(hourWxTableDataFiltered(filteredData));
+        setIsLoading(false);
+
+      } catch (error) {
+        setIsLoading(false);
+      }
     };
-  }, [debouncedTimeRange, stationIds, fetchDataFromDB]);
+
+    fetchDataFromDB();
+  }, [timeRangeData, stationIds]); // Reduced dependencies
 
 
 
