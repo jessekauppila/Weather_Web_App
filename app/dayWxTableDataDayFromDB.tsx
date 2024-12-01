@@ -13,13 +13,13 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
-  console.log('inputObservations:', inputObservations);
+  // console.log('inputObservations:', inputObservations);
 
   const startHour = options.startHour;
   const endHour = options.endHour;
 
-  console.log('startHour:', startHour);
-  console.log('endHour:', endHour);
+  // console.log('startHour:', startHour);
+  // console.log('endHour:', endHour);
   
   const groupedObservations = options.mode === 'summary' 
     ? groupByStation(Object.values(inputObservations).flat())
@@ -27,7 +27,7 @@ function wxTableDataDayFromDB(
     //: groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
     
 
-  console.log('groupedObservations:', groupedObservations);
+  // console.log('groupedObservations:', groupedObservations);
 
   // I THINK THIS IS WHAT CAUSED THE data OBSERVATIONS TO BE FILTERED TWICE
   // // After grouping but before processing
