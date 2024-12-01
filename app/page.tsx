@@ -9,14 +9,18 @@ import React, {
   useTransition,
   useMemo,
 } from 'react';
-import DayAveragesTable from './dayWxTable';
-import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
-import HourWxTable from './hourWxTable';
-import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import DayWxSnowGraph from './dayWxSnowGraph';
-import { DayRangeType } from './types';
+
 import { filteredObservationData } from './filteredObservationData';
 import hourWxTableDataFiltered from './hourWxTableDataFiltered';
+
+import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
+import DayAveragesTable from './dayWxTable';
+import DayWxSnowGraph from './dayWxSnowGraph';
+
+import hourWxTableDataFromDB from './hourWxTableDataFromDB';
+import HourWxTable from './hourWxTable';
+
+import { DayRangeType } from './types';
 
 interface Station {
   id: string;
@@ -573,6 +577,14 @@ export default function Home() {
               />
             </>
           )}
+
+          {/* {filteredObservationsDataHour && selectedStation && stationIds.length === 1 && (
+            <>
+              <DayWxSnowGraph 
+                dayAverages={filteredObservationsDataHour} 
+              />
+            </>
+          )} */}
 
           {observationsDataDay && (
             <DayAveragesTable 
