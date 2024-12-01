@@ -17,8 +17,13 @@ import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import DayAveragesTable from './dayWxTable';
 import DayWxSnowGraph from './dayWxSnowGraph';
 
+
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import HourWxTable from './hourWxTable';
+import WxSnowGraph from './wxSnowGraph';
+
+//import HourWxSnowGraph from './hourWxSnowGraph';
+
 
 import { DayRangeType } from './types';
 
@@ -574,17 +579,19 @@ export default function Home() {
             <>
               <DayWxSnowGraph 
                 dayAverages={observationsDataDay} 
+                isHourly={false}
               />
             </>
           )}
 
-          {/* {filteredObservationsDataHour && selectedStation && stationIds.length === 1 && (
+          {filteredObservationsDataHour && selectedStation && stationIds.length === 1 && (
             <>
-              <DayWxSnowGraph 
+              <WxSnowGraph 
                 dayAverages={filteredObservationsDataHour} 
+                isHourly={true}
               />
             </>
-          )} */}
+          )}
 
           {observationsDataDay && (
             <DayAveragesTable 
