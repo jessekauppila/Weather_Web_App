@@ -21,6 +21,7 @@ export const SNOW_DEPTH_24H_CONFIG = {
 interface SnowDataPoint {
   date_time: string;
   snow_depth: number;
+  stid?: string;  // Add station ID as optional parameter
 }
 
 // Update the type for the config parameter
@@ -233,12 +234,14 @@ export function filterSnowDepthOutliers(
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
-    // Apply the identical check here
-    // const identicalCheckedData = applyIdenticalCheck(sortedData);
-    // console.log(`${logPrefix} Identical Check:`, identicalCheckedData);
+    console.log(`${logPrefix} Sorted Data:`, sortedData);
+
+   //Apply the identical check here
+    const identicalCheckedData = applyIdenticalCheck(sortedData);
+    console.log(`${logPrefix} Identical Check:`, identicalCheckedData);
     
-    // console.log(`${logPrefix} 🔄 Applying IQR filter...`);
-    const iqrFiltered = applyIQRFilter(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
+    console.log(`${logPrefix} 🔄 Applying IQR filter...`);
+    const iqrFiltered = applyIQRFilter(identicalCheckedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
     console.log(`${logPrefix} 📊 After IQR filtering:`, {

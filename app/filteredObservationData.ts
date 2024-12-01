@@ -12,45 +12,51 @@ export function filteredObservationData(
 
   console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
 
-  // Group the filtered data
+  // Group the filtered data first
   const groupedObservations = mode === 'summary'
     ? groupByStation(observationsData)
     : groupByDay(observationsData, startHour, endHour);
 
-  // Filter all snow depth data first
-  const filteredSnowDepth = filterSnowDepthOutliers(
-    observationsData.map(obs => ({
-      date_time: obs.date_time,
-      snow_depth: obs.snow_depth
-    })),
-    SNOW_DEPTH_CONFIG
-  );
+  // Process each station group separately
+  const processedGroups = Object.entries(groupedObservations).reduce((acc, [stid, stationData]) => {
+    // Filter snow depth for this station
+    const filteredSnowDepth = filterSnowDepthOutliers(
+      stationData.map((obs: Record<string, any>) => ({
+        date_time: obs.date_time,
+        snow_depth: obs.snow_depth,
+        stid
+      })),
+      SNOW_DEPTH_CONFIG
+    );
 
-  const filteredSnowDepth24h = filterSnowDepthOutliers(
-    observationsData.map(obs => ({
-      date_time: obs.date_time,
-      snow_depth: obs.snow_depth_24h
-    })),
-    SNOW_DEPTH_24H_CONFIG
-  );
+    const filteredSnowDepth24h = filterSnowDepthOutliers(
+      stationData.map((obs: Record<string, any>) => ({
+        date_time: obs.date_time,
+        snow_depth: obs.snow_depth_24h,
+        stid
+      })),
+      SNOW_DEPTH_24H_CONFIG
+    );
 
-  // Create lookup maps for quick access
-  const snowDepthMap = new Map(
-    filteredSnowDepth.map(item => [item.date_time, item.snow_depth])
-  );
-  const snowDepth24hMap = new Map(
-    filteredSnowDepth24h.map(item => [item.date_time, item.snow_depth])
-  );
+    // Create lookup maps for this station
+    const snowDepthMap = new Map(
+      filteredSnowDepth.map(item => [item.date_time, item.snow_depth])
+    );
+    const snowDepth24hMap = new Map(
+      filteredSnowDepth24h.map(item => [item.date_time, item.snow_depth])
+    );
 
-  // Apply filtered values to original data
-  const filteredObservations = observationsData.map(obs => ({
-    ...obs,
-    snow_depth: snowDepthMap.get(obs.date_time),
-    snow_depth_24h: snowDepth24hMap.get(obs.date_time)
-  }));
+    // Apply filtered values to station data
+    acc[stid] = stationData.map((obs: Record<string, any>) => ({
+      ...obs,
+      snow_depth: snowDepthMap.get(obs.date_time),
+      snow_depth_24h: snowDepth24hMap.get(obs.date_time)
+    }));
 
-  console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
-  return groupedObservations;
+    return acc;
+  }, {} as Record<string, Array<Record<string, any>>>);
+
+  return processedGroups;
 }
 
 // Helper functions
