@@ -5,7 +5,8 @@ export const SNOW_DEPTH_CONFIG = {
   maxNegativeChange: 10,  // max negative change
   windowSize: 24,         // window size
   upperIQRMultiplier: 1,
-  lowerIQRMultiplier: 2
+  lowerIQRMultiplier: 2,
+  applyIdenticalCheck: true    // Enable for total snow depth
 } as const;
 
 export const SNOW_DEPTH_24H_CONFIG = {
@@ -14,7 +15,8 @@ export const SNOW_DEPTH_24H_CONFIG = {
   maxNegativeChange: 4,
   windowSize: 12,
   upperIQRMultiplier: 1,
-  lowerIQRMultiplier: 1.5
+  lowerIQRMultiplier: 1.5,
+  applyIdenticalCheck: false   // Disable for 24h snow
 } as const;
 
 // This interface defines the structure of each snow measurement data point
@@ -32,6 +34,7 @@ interface SnowDepthConfig {
   readonly windowSize: number;
   readonly upperIQRMultiplier?: number;
   readonly lowerIQRMultiplier?: number;
+  readonly applyIdenticalCheck?: boolean;  // New flag
 }
 
 // New separate function for IQR filtering
@@ -237,11 +240,13 @@ export function filterSnowDepthOutliers(
     console.log(`${logPrefix} Sorted Data:`, sortedData);
 
    //Apply the identical check here
-    const identicalCheckedData = applyIdenticalCheck(sortedData);
-    console.log(`${logPrefix} Identical Check:`, identicalCheckedData);
+    const processedData = config.applyIdenticalCheck 
+      ? applyIdenticalCheck(sortedData)
+      : sortedData;
+    console.log(`${logPrefix} Identical Check:`, processedData);
     
     console.log(`${logPrefix} 🔄 Applying IQR filter...`);
-    const iqrFiltered = applyIQRFilter(identicalCheckedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
+    const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
     console.log(`${logPrefix} 📊 After IQR filtering:`, {
