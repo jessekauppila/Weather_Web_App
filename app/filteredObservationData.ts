@@ -10,7 +10,12 @@ export function filteredObservationData(
 ) {
   const { startHour, endHour, mode } = options;
 
-  //console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
+  console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
+
+  // Group the filtered data
+  const groupedObservations = mode === 'summary'
+    ? groupByStation(observationsData)
+    : groupByDay(observationsData, startHour, endHour);
 
   // Filter all snow depth data first
   const filteredSnowDepth = filterSnowDepthOutliers(
@@ -44,13 +49,7 @@ export function filteredObservationData(
     snow_depth_24h: snowDepth24hMap.get(obs.date_time)
   }));
 
-  // Group the filtered data
-  const groupedObservations = mode === 'summary'
-    ? groupByStation(filteredObservations)
-    : groupByDay(filteredObservations, startHour, endHour);
-
-  // Only log the final output once
-  //console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
+  console.log('Snow Accumulation 24h OUTPUT:', filteredSnowDepth24h);
   return groupedObservations;
 }
 
