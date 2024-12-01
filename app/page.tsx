@@ -575,7 +575,7 @@ export default function Home() {
           }`}
         >
 
-        {observationsDataDay && selectedStation && stationIds.length === 1 && (
+        {observationsDataDay && selectedStation && stationIds.length === 1 && timeRange > 3 && (
             <>
               <DayWxSnowGraph 
                 dayAverages={observationsDataDay} 

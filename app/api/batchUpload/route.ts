@@ -23,10 +23,10 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 1;
+    const totalToProcess = 14;
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
-    const chunk_size = 1;
+    const start_time_pst = moment(end_time_pst).subtract(14, 'days');
+    const chunk_size = 3;
     const stids = [
       '1',
       '14',

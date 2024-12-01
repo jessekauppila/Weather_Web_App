@@ -14,6 +14,53 @@ interface DayAveragesProps {
   isHourly?: boolean;
 }
 
+// Add this helper function before the main component
+function interpolateValues(data: any[]) {
+  const result = [...data];
+  
+  // Helper to find next valid value
+  const findNextValid = (arr: any[], startIndex: number, property: string) => {
+    for (let i = startIndex + 1; i < arr.length; i++) {
+      if (!isNaN(arr[i][property])) return { value: arr[i][property], index: i };
+    }
+    return null;
+  };
+
+  // Helper to find last valid value
+  const findLastValid = (arr: any[], startIndex: number, property: string) => {
+    for (let i = startIndex - 1; i >= 0; i--) {
+      if (!isNaN(arr[i][property])) return { value: arr[i][property], index: i };
+    }
+    return null;
+  };
+
+  ['totalSnowDepth', 'snowDepth24h'].forEach(property => {
+    for (let i = 0; i < result.length; i++) {
+      if (isNaN(result[i][property])) {
+        const lastValid = findLastValid(result, i, property);
+        const nextValid = findNextValid(result, i, property);
+
+        if (lastValid && nextValid) {
+          // Interpolate between last and next valid values
+          const range = nextValid.index - lastValid.index;
+          const position = i - lastValid.index;
+          const ratio = position / range;
+          result[i][property] = lastValid.value + (nextValid.value - lastValid.value) * ratio;
+        } else if (lastValid) {
+          // Use last valid value if no next valid value
+          result[i][property] = lastValid.value;
+        } else if (nextValid) {
+          // Use next valid value if no last valid value
+          result[i][property] = nextValid.value;
+        }
+        // If neither exists, leave as NaN
+      }
+    }
+  });
+
+  return result;
+}
+
 function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,8 +85,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const height = containerHeight - margin.top - margin.bottom;
 
 
-    // Process data with validation and logging
-    const data = dayAverages.data
+    // Process data with validation and interpolation
+    const rawData = dayAverages.data
       .map((d) => {
         const date = isHourly 
           ? new Date(`${d.Day} ${d.Hour}`) 
@@ -51,14 +98,17 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
         return {
           date,
-          totalSnowDepth: isNaN(totalSnowDepth) ? 0 : totalSnowDepth,
-          snowDepth24h: isNaN(snowDepth24h) ? 0 : snowDepth24h,
+          totalSnowDepth,  // Don't replace NaN yet
+          snowDepth24h,    // Don't replace NaN yet
           precipAccum: isNaN(precipAccum) ? 0 : precipAccum,
           temp: isNaN(temp) ? 0 : temp
         };
       })
       .filter(d => d.date && !isNaN(d.date.getTime()))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Apply interpolation after sorting
+    const data = interpolateValues(rawData);
 
     // Keep temperature scale
     const yScaleTemp = d3.scaleLinear()
