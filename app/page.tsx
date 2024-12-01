@@ -563,13 +563,13 @@ export default function Home() {
           }`}
         >
 
-        {/* {observationsDataDay && selectedStation && stationIds.length === 1 && (
+        {observationsDataDay && selectedStation && stationIds.length === 1 && (
             <>
               <DayWxSnowGraph 
                 dayAverages={observationsDataDay} 
               />
             </>
-          )} */}
+          )}
 
           {observationsDataDay && (
             <DayAveragesTable 

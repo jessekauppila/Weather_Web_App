@@ -206,18 +206,18 @@ export function filterSnowDepthOutliers(
     const cached = filterCache.get(cacheKey);
     
     if (cached) {
-        // console.log(`${logPrefix} ⚡ Using cached result:`, {
-        //     dataPoints: cached.length
-        // });
+        console.log(`${logPrefix} ⚡ Using cached result:`, {
+            dataPoints: cached.length
+        });
         return cached;
     }
 
-    // console.log(`${logPrefix} Starting filter with:`, {
-    //     dataPoints: data.length,
-    //     config,
-    //     firstPoint: data[0],
-    //     lastPoint: data[data.length - 1]
-    // });
+    console.log(`${logPrefix} Starting filter with:`, {
+        dataPoints: data.length,
+        config,
+        firstPoint: data[0],
+        lastPoint: data[data.length - 1]
+    });
 
     const {
       maxPositiveChange,
@@ -233,31 +233,35 @@ export function filterSnowDepthOutliers(
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
+    // Apply the identical check here
+    // const identicalCheckedData = applyIdenticalCheck(sortedData);
+    // console.log(`${logPrefix} Identical Check:`, identicalCheckedData);
+    
     // console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(sortedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
-    // console.log(`${logPrefix} 📊 After IQR filtering:`, {
-    //     totalPoints: iqrFiltered.length,
-    //     validPoints: iqrFiltered.length - nanCountIQR,
-    //     invalidPoints: nanCountIQR
-    // });
-    // console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
+    console.log(`${logPrefix} 📊 After IQR filtering:`, {
+        totalPoints: iqrFiltered.length,
+        validPoints: iqrFiltered.length - nanCountIQR,
+        invalidPoints: nanCountIQR
+    });
+    console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
 
 
-    // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
+    console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    // console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
+    console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
 
     
     const nanCountFinal = hourlyChangeLimits.filter(p => isNaN(p.snow_depth)).length;
-    // console.log(`${logPrefix} 🏁 Final results:`, {
-    //     totalPoints: hourlyChangeLimits.length,
-    //     validPoints: hourlyChangeLimits.length - nanCountFinal,
-    //     invalidPoints: nanCountFinal,
-    //     firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
-    //     lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
-    // });
+    console.log(`${logPrefix} 🏁 Final results:`, {
+        totalPoints: hourlyChangeLimits.length,
+        validPoints: hourlyChangeLimits.length - nanCountFinal,
+        invalidPoints: nanCountFinal,
+        firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
+        lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
+    });
 
 
     // Store result in cache before returning
@@ -304,6 +308,55 @@ export function calculateSnowDepthAccumulation(data: any[]) {
   
     return results;
   }
+
+// Function to check for identical elements to the third decimal place against all other elements
+function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
+  console.log('Starting applyIdenticalCheck with data:', data);
+  
+  return data.map((currentPoint, currentIndex, array) => {
+    // Skip if current point is already NaN or undefined
+    if (!currentPoint || !currentPoint.snow_depth || isNaN(currentPoint.snow_depth)) {
+      console.log('Skipping point due to NaN or undefined:', currentPoint);
+      return currentPoint;
+    }
+
+    const currentDepth = parseFloat(currentPoint.snow_depth.toFixed(3));
+    console.log('Checking currentDepth:', currentDepth, 'at index:', currentIndex);
+    
+    // Check if this depth appears anywhere else in the array
+    const hasIdenticalValue = array.some((comparePoint, compareIndex) => {
+      if (!comparePoint || !comparePoint.snow_depth || 
+          currentIndex === compareIndex || 
+          isNaN(comparePoint.snow_depth)) {
+        return false;
+      }
+      const compareDepth = parseFloat(comparePoint.snow_depth.toFixed(3));
+      const isIdentical = currentDepth === compareDepth;
+      
+      if (isIdentical) {
+        console.log('Found identical value:', {
+          currentDepth,
+          compareDepth,
+          currentIndex,
+          compareIndex
+        });
+      }
+      
+      return isIdentical;
+    });
+
+    // If we found an identical value, return NaN
+    if (hasIdenticalValue) {
+      console.log('Setting NaN for point:', currentPoint);
+      return {
+        ...currentPoint,
+        snow_depth: NaN
+      };
+    }
+
+    return currentPoint;
+  });
+}
 
 export default {
   SNOW_DEPTH_CONFIG,
