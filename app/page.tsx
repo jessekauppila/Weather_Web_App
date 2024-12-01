@@ -325,8 +325,11 @@ export default function Home() {
           end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
         }));
         
-        setObservationsDataHour(hourWxTableDataFromDB(result.observations, result.units));
-        setFilteredObservationsDataHour(hourWxTableDataFiltered(filteredData));
+        setObservationsDataHour(hourWxTableDataFromDB(
+          Object.values(result.observations) as any[][] as any[],
+          result.units
+        ));
+        setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
         setIsLoading(false);
 
       } catch (error) {
