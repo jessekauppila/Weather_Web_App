@@ -17,19 +17,25 @@ export async function POST(request: NextRequest) {
 
 async function handleRequest(request: NextRequest) {
   let client;
+  const startTime = new Date();
+  console.log('=== Batch Upload Started ===', startTime.toISOString());
 
   try {
     client = await db.connect();
-
-    // let totalProcessed = 0;
-    // const totalToProcess = 1;
-    // const start_time_pst = moment(end_time_pst).subtract(1, 'days');
-    // const chunk_size = 1;
     
     const end_time_pst = moment().tz('America/Los_Angeles');
     const start_time_pst = moment(end_time_pst).subtract(1, 'hours');
 
-    console.log('Processing data from', start_time_pst.format(), 'to', end_time_pst.format());
+    console.log('Time Range:', {
+      start: start_time_pst.format(),
+      end: end_time_pst.format(),
+      currentServerTime: new Date().toISOString()
+    });
+
+    // Add request tracking
+    let totalAttempted = 0;
+    let totalSuccessful = 0;
+    let failedStations: string[] = [];
 
     const stids = [
       '1',
@@ -167,7 +173,24 @@ async function handleRequest(request: NextRequest) {
       let batch = [];
 
       for (const observation of observationsData) {
+        totalAttempted++;
         try {
+          const dateStrings = observation.date_time;
+          if (!dateStrings || !Array.isArray(dateStrings)) {
+            console.error('Invalid date_time array for station:', {
+              stid: observation.stid,
+              dateTimeValue: dateStrings
+            });
+            failedStations.push(observation.stid);
+            continue;
+          }
+
+          console.log(`Processing station ${observation.stid}:`, {
+            dataPoints: dateStrings.length,
+            firstDate: dateStrings[0],
+            lastDate: dateStrings[dateStrings.length - 1]
+          });
+
           // Add station to tracking set
           updatedStations.add(observation.stid);
 
@@ -199,15 +222,6 @@ async function handleRequest(request: NextRequest) {
           // Verify observation object and required properties
           if (!observation) {
             console.error('Invalid observation:', observation);
-            continue;
-          }
-
-          const dateStrings = observation.date_time;
-          if (!dateStrings) {
-            console.error(
-              'Missing date_time for observation:',
-              observation
-            );
             continue;
           }
 
@@ -346,13 +360,11 @@ async function handleRequest(request: NextRequest) {
               batch = [];
             }
           }
+
+          totalSuccessful++;
         } catch (error) {
-          console.error(
-            'Error processing observation:',
-            error,
-            observation
-          );
-          continue;
+          failedStations.push(observation.stid);
+          console.error(`Failed to process station ${observation.stid}:`, error);
         }
       }
 
@@ -400,9 +412,22 @@ async function handleRequest(request: NextRequest) {
 
       console.log('Station Status:', stationStatus);
 
+      // Add summary logging
+      console.log('=== Batch Upload Complete ===', {
+        duration: `${(new Date().getTime() - startTime.getTime()) / 1000}s`,
+        stationsAttempted: totalAttempted,
+        stationsSuccessful: totalSuccessful,
+        failedStations: failedStations,
+      });
+
       return NextResponse.json({
         message: 'Hourly data update completed',
-        stationStatus
+        stationStatus,
+        summary: {
+          stationsAttempted: totalAttempted,
+          stationsSuccessful: totalSuccessful,
+          failedStations: failedStations,
+        }
       });
     } catch (error) {
       console.error(
@@ -454,14 +479,16 @@ async function handleRequest(request: NextRequest) {
 async function retryOperation<T>(
   operation: () => Promise<T>,
   maxRetries = 3,
-  delay = 1000
+  delay = 1000,
+  context?: string
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
     } catch (error) {
+      console.warn(`Attempt ${i + 1}/${maxRetries} failed${context ? ` for ${context}` : ''}:`, error);
       if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, i))); // Exponential backoff
     }
   }
   throw new Error('Operation failed after max retries');

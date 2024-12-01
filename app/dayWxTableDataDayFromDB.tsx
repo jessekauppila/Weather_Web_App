@@ -205,7 +205,7 @@ function wxTableDataDayFromDB(
       'precip_accum_one_hour',
       { sum: 'Precip Accum One Hour' },
       'in',
-      1,
+      6,
       (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
     );
 
