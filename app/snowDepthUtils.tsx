@@ -13,9 +13,9 @@ export const SNOW_DEPTH_24H_CONFIG = {
   threshold: -1,
   maxPositiveChange: 4,
   maxNegativeChange: 4,
-  windowSize: 12,
+  windowSize: 24,
   upperIQRMultiplier: 1,
-  lowerIQRMultiplier: 1.5,
+  lowerIQRMultiplier: 2,
   applyIdenticalCheck: false   // Disable for 24h snow
 } as const;
 
@@ -73,13 +73,26 @@ function applyIQRFilter(
       const upperBound = q3 + (upperIQRMultiplier * iqr);
 
       const isOutlier = point.snow_depth < lowerBound || point.snow_depth > upperBound;
-      const median = window[Math.floor(window.length / 2)];
+      //const median = window[Math.floor(window.length / 2)];
       
       // console.log(`IQR Filter - Point ${index}:`, {
       //   date_time: point.date_time,
       //   snow_depth: point.snow_depth,
       //   isOutlier
       // });
+
+      console.log(`IQR Filter - Point ${index}:`, {
+      //   //date_time: point.date_time,
+      //   //snow_depth: point.snow_depth,
+      //   //isOutlier,
+        upperBound: upperBound.toFixed(2),
+        lowerBound: lowerBound.toFixed(2),
+        upperMultiplier: upperIQRMultiplier,
+        lowerMultiplier: lowerIQRMultiplier,
+        q1,
+        q3,
+      //   iqr: iqr.toFixed(2)
+      });
 
       return {
         date_time: point.date_time,
