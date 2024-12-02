@@ -265,7 +265,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const barGap = totalBarWidth * 0.05; // 5% gap between bars in a pair
 
     // Define bar area margins
-    const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 500px on each side
+    const barMargin = { left: 0, right: 0 };  // This will shrink the bar area by 500px on each side
     
     // Create bar-specific scale with reduced width
     const barAreaWidth = width - (barMargin.left + barMargin.right);
