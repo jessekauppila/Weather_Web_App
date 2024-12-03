@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import moment from 'moment-timezone';
 
@@ -64,12 +64,14 @@ function interpolateValues(data: any[]) {
 function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
   useEffect(() => {
-    // Clear any existing content
+    // Clear any existing content and reset loaded state
+    setIsLoaded(false);
     if (svgRef.current) {
       d3.select(svgRef.current).selectAll('*').remove();
     }
@@ -493,15 +495,19 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('font-size', '12px')
       .text('Temperature');
 
+    // Set loaded state after graph is created
+    setIsLoaded(true);
   }, [dayAverages, isHourly]); // This ensures the graph updates when dayAverages changes
 
   return (
     <div 
       ref={containerRef} 
-      className="graph-container bg-white p-4 rounded-xl shadow-md"
+      className={`graph-container bg-white p-4 rounded-xl shadow-md transition-opacity duration-500 ${
+        isLoaded ? 'opacity-100' : 'opacity-0'
+      }`}
       style={{ 
         width: '100%',
-        height: '500px',//was 300
+        height: '500px',
         overflow: 'hidden'
       }}
     >
