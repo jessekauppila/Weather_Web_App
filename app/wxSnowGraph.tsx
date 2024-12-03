@@ -98,16 +98,37 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
         return {
           date,
-          totalSnowDepth,  // Don't replace NaN yet
-          snowDepth24h,    // Don't replace NaN yet
+          totalSnowDepth,
+          snowDepth24h,
           precipAccum: isNaN(precipAccum) ? 0 : precipAccum,
           temp: isNaN(temp) ? 0 : temp
         };
       })
       .filter(d => d.date && !isNaN(d.date.getTime()))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      // Calculate snow depth changes with look-back for NaN values
+      .map((point, index, arr) => {
+        if (index === 0) return { ...point, snowDepth24h: 0 };
 
-    // Apply interpolation after sorting
+        // Look back for the last valid snowDepth24h value
+        let lastValidIndex = index - 1;
+        while (lastValidIndex >= 0 && isNaN(arr[lastValidIndex].snowDepth24h)) {
+          lastValidIndex--;
+        }
+
+        if (lastValidIndex >= 0 && !isNaN(point.snowDepth24h)) {
+          const lastValid = arr[lastValidIndex].snowDepth24h;
+          const change = point.snowDepth24h - lastValid;
+          return {
+            ...point,
+            snowDepth24h: Math.max(0, change) // Only keep positive changes
+          };
+        }
+
+        return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
+      });
+
+    // Apply interpolation after sorting and change calculation
     const data = interpolateValues(rawData);
 
     // Keep temperature scale
