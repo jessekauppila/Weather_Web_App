@@ -60,6 +60,8 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .filter(d => d.date && !isNaN(d.date.getTime()))
       .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
 
+    console.log('Raw precip values:', dayAverages.data.map(d => d['Precip Accum One Hour']));
+    console.log('Parsed precip values:', data.map(d => d.precipHour));
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -67,11 +69,26 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .range([0, width])
       .nice();
 
-    // Add padding to temperature scale
+    // Calculate snow depth statistics and scales
+    const avgSnowDepth = d3.mean(data, d => d.totalSnowDepth) || 0;
+    const minSnowDepth = d3.min(data, d => d.totalSnowDepth) || 0;
+    const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
+
+    // Calculate the range centered on the average
+    const rangeMin = Math.min(minSnowDepth, avgSnowDepth - 12);
+    const rangeMax = Math.max(maxSnowDepth, avgSnowDepth + 12);
+
+    // Update snow depth scale
+    const yScaleLine = d3.scaleLinear()
+      .domain([rangeMin, rangeMax])
+      .range([height, 0])
+      .nice();
+
+    // Update temperature scale
     const yScaleTemp = d3.scaleLinear()
       .domain([
         Math.min(10, d3.min(data, d => d.tempMin) || 10),
-        Math.max(80, d3.max(data, d => d.tempMax) || 80)
+        Math.max(50, d3.max(data, d => d.tempMax) || 50)
       ])
       .range([height, 0])
       .nice();
@@ -108,14 +125,12 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .text('Temperature (°F)');
 
     // Create scales with separate domains for line and bars
-    const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
-    const yScaleLine = d3.scaleLinear()
-      .domain([0, Math.max(12, maxSnowDepth)])  // Use 12in or data max, whichever is larger
-      .range([height, 0]);
-
+    //const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
     const yScaleBars = d3.scaleLinear()
       .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipHour)) || 0])
       .range([height, 0]);
+
+    console.log('yScaleBars domain:', yScaleBars.domain());
 
     // Add grid lines
     svg.append('g')
@@ -216,6 +231,19 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('height', d => height - yScaleBars(d.precipHour))
       .attr('fill', '#82EEFD')
       .attr('opacity', 0.7);
+
+    // Just add the labels
+    svg.selectAll('.bar-label')
+      .data(data)
+      .enter()
+      .append('text')
+      .attr('class', 'bar-label')
+      .attr('x', d => xScale(d.date))
+      .attr('y', d => yScaleLine(d.snowDepth24h) - 5)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#666')
+      .style('font-size', '10px')
+      .text(d => d.snowDepth24h > 0 ? d.snowDepth24h.toFixed(1) : '');
 
     // Add value labels
     const addValueLabels = (selection: d3.Selection<any, any, any, any>) => {
@@ -319,70 +347,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('stroke-dasharray', '2,2')
       .attr('d', tempMaxLine);
 
+    // Add the tooltip code here, after all SVG elements are created
     // Remove any existing tooltips first
-    d3.selectAll('.snow-accum-tooltip').remove();
-
-    // Add tooltip elements
-    const tooltip = d3.select('body') // Attach to body instead of SVG parent
-      .append('div')
-      .attr('class', 'snow-accum-tooltip')
-      .style('opacity', 0)
-      .style('position', 'absolute')
-      .style('pointer-events', 'none')
-      .style('background', 'white')
-      .style('border', '1px solid #ddd')
-      .style('border-radius', '4px')
-      .style('padding', '8px')
-      .style('z-index', '1000'); // Ensure tooltip appears above other elements
-
-    // Add vertical line for tooltip
-    const verticalLine = svg.append('line')
-      .attr('class', 'tooltip-line')
-      .style('stroke', '#999')
-      .style('stroke-width', '1px')
-      .style('opacity', 0);
-
-    // Add mouse move handlers
-    svg.append('rect')
-      .attr('class', 'overlay')
-      .attr('width', width)
-      .attr('height', height)
-      .style('opacity', 0)
-      .on('mousemove', function(event) {
-        const [xPos] = d3.pointer(event);
-        const date = xScale.invert(xPos);
-        const bisect = d3.bisector((d: any) => d.date).left;
-        const index = bisect(data, date);
-        
-        // Add safety check
-        if (index >= data.length || index < 0) return;
-        const d = data[index];
-
-        verticalLine
-          .attr('x1', xScale(d.date))
-          .attr('x2', xScale(d.date))
-          .attr('y1', 0)
-          .attr('y2', height)
-          .style('opacity', 1);
-
-        tooltip
-          .style('opacity', 1)
-          .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 100}px`)
-          .html(`
-            <div class="tooltip-content">
-              <strong>${d3.timeFormat(isHourly ? '%B %d %H:%M' : '%B %d')(d.date)}</strong><br/>
-              <span>Total Snow Depth: ${d.totalSnowDepth}″</span><br/>
-              <span>Snow Accumulation: ${d.snowDepth24h}″</span><br/>
-              <span>Hourly Precip (SWE): ${d.precipHour}″</span><br/>
-              <span>Temperature: ${d.tempMin}°F - ${d.tempMax}°F</span>
-            </div>
-          `);
-      })
-      .on('mouseleave', function() {
-        verticalLine.style('opacity', 0);
-        tooltip.style('opacity', 0);
-      });
+    d3.selectAll('.day-wx-tooltip').remove();
 
     // Add snow depth label along the line
     svg.append('text')
@@ -404,6 +371,44 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', '#808080')  // Match the temperature line color
       .style('font-size', '12px')
       .text('Temperature Range');
+
+    // Add labels above the snow bars
+    svg.selectAll('.snow-bar-label')
+      .data(data.filter(d => d.snowDepth24h > 0))
+      .enter()
+      .append('text')
+      .attr('class', 'snow-bar-label')
+      .attr('x', d => xScaleBars(d.date) - (individualBarWidth/2))
+      .attr('y', d => yScaleBars(d.snowDepth24h) - 5)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#4169E1')
+      .style('font-size', '10px')
+      .text(d => `${d.snowDepth24h.toFixed(1)} in`);  // Added "″ snow" to the output
+      
+          // Add labels above the snow bars
+    svg.selectAll('.liquid-bar-label')
+      .data(data.filter(d => d.precipHour > 0))
+      .enter()
+      .append('text')
+      .attr('class', 'liquid-bar-label')
+      .attr('x', d => xScaleBars(d.date) + (individualBarWidth/2))
+      .attr('y', d => yScaleBars(d.precipHour) - 5)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#4169E1')
+      .style('font-size', '10px')
+      .text(d => `${d.precipHour.toFixed(1)} in`);  // Added "″ snow" to the output
+
+    // svg.selectAll('.liquid-bar-label')
+    //   .data(data.filter(d => d.precipHour > 0))
+    //   .enter()
+    //   .append('text')
+    //   .attr('class', 'snow-bar-label')
+    //   .attr('x', d => xScaleBars(d.date) - (individualBarWidth/2))
+    //   .attr('y', d => yScaleBars(d.snowDepth24h) - 5)
+    //   .attr('text-anchor', 'middle')
+    //   .style('fill', '#4169E1')
+    //   .style('font-size', '10px')
+    //   .text(d => `${d.precipHour.toFixed(1)}″ snow`);
 
   }, [dayAverages, isHourly]); // This ensures the graph updates when dayAverages changes
 
