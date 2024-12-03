@@ -159,15 +159,15 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .selectAll('text')
       .style('fill', 'blue');
 
-    // Update snow depth label to blue
+    // Update snow depth label to blue and position at first data point
+    const firstDataPoint = data[0];
     svg.append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', -margin.left)
-      .attr('x', -height / 2)
-      .attr('dy', '1em')
-      .style('text-anchor', 'middle')
-      .style('fill', 'blue') // Match the blue of the snow depth line
-      //.text('Snow Depth');
+      .attr('x', xScale(firstDataPoint.date))  // Position at first data point's x coordinate
+      .attr('y', yScaleLine(firstDataPoint.totalSnowDepth) - 10)  // Position above the line (-10 for padding)
+      .attr('text-anchor', 'start')  // Align text to start from this point
+      .style('fill', 'blue')  // Match the line color
+      .style('font-size', '12px')
+      .text('Snow Depth');
 
     // Add x-axis label
     svg.append('text')
@@ -192,10 +192,11 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('d', line);
 
     // Adjust bar dimensions
-    const totalBarWidth = width / data.length * 0.8; // 80% of available space per date
-    const individualBarWidth = totalBarWidth * 0.4; // 40% of total bar space
-    const pairGap = totalBarWidth * 0.2; // 20% gap between pairs
-    const barGap = totalBarWidth * 0.05; // 5% gap between bars in a pair
+    const totalBarWidth = width / data.length * 0.9; // Increase from 0.8 to 0.9 for wider bars
+    const individualBarWidth = totalBarWidth * 0.45; // Increase from 0.4 to 0.45
+    const pairGap = totalBarWidth * 0.1; // Decrease from 0.2 to 0.1 for less gap between pairs
+    const barGap = totalBarWidth * 0.025; // Decrease from 0.05 to 0.025 for less gap between bars in a pair
+
 
     // Define bar area margins
     const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 500px on each side
@@ -351,22 +352,11 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Remove any existing tooltips first
     d3.selectAll('.day-wx-tooltip').remove();
 
-    // Add snow depth label along the line
+    // Add temperature range label using the last data point
+    const lastDataPoint = data[data.length - 1];  // Get the last data point
     svg.append('text')
-      .attr('x', width - width)  // Position it just after the end of the line
-      .attr('y', (height / 2) -20)  // Center it vertically with the snow depth line
-      .attr('dy', '0.3em')  // Small vertical adjustment
-      .style('fill', 'blue')  // Match the line color
-      .style('font-size', '12px')
-      .text('Snow Depth');
-
-    // Add temperature range label
-    svg.append('text')
-      .attr('x', width - 120)  // Position it just after the end of the area
-      .attr('y', yScaleTemp(d3.mean([
-        d3.min(data, d => d.tempMin) ?? 0,
-        d3.max(data, d => d.tempMax) ?? 0
-      ]) ?? 0))  // Use nullish coalescing to provide fallback
+      .attr('x', xScale(lastDataPoint.date) - 120)  // Position at last data point's x coordinate
+      .attr('y', yScaleTemp((lastDataPoint.tempMin + lastDataPoint.tempMax) / 2) - 10)  // Position between min and max temperature
       .attr('dy', '0.3em')
       .style('fill', '#808080')  // Match the temperature line color
       .style('font-size', '12px')
