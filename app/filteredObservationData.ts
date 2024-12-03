@@ -10,7 +10,7 @@ export function filteredObservationData(
 ) {
   const { startHour, endHour, mode } = options;
 
-  console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
+  //console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
 
   // Group the filtered data first
   const groupedObservations = mode === 'summary'

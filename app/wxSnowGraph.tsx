@@ -106,6 +106,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       })
       .filter(d => d.date && !isNaN(d.date.getTime()))
       .sort((a, b) => a.date.getTime() - b.date.getTime())
+
+      //SNOW DEPTH CHANGES 
       // Calculate snow depth changes with look-back for NaN values
       .map((point, index, arr) => {
         if (index === 0) return { ...point, snowDepth24h: 0 };
@@ -118,12 +120,15 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
         if (lastValidIndex >= 0 && !isNaN(point.snowDepth24h)) {
           const lastValid = arr[lastValidIndex].snowDepth24h;
-          const change = point.snowDepth24h - lastValid;
+          const change = Number((point.snowDepth24h - lastValid).toFixed(2)); // Round to 2 decimal places
           return {
             ...point,
             snowDepth24h: Math.max(0, change) // Only keep positive changes
           };
         }
+
+
+        
 
         return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
       });
@@ -135,16 +140,16 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const yScaleTemp = d3.scaleLinear()
       .domain([
         Math.min(10, d3.min(data, d => d.temp) || 10),
-        Math.max(80, d3.max(data, d => d.temp) || 80)
+        Math.max(50, d3.max(data, d => d.temp) || 50)
       ])
       .range([height, 0])
       .nice();
 
-    // Update legend items to include temperature
+    // Update legend items
     const legendItems = [
-      'Total Snow Depth',
-      '24h Snow Depth',
-      'Precip Accum',
+      'Snow Depth',
+      'Hourly Snow',
+      'Liquid Precipitation (SWE)',
       'Temperature'
     ];
 
@@ -210,14 +215,23 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
       .text('Temperature (°F)');
 
-    // Create scales with separate domains for line and bars
+    // Calculate snow depth statistics and scales
+    const avgSnowDepth = d3.mean(data, d => d.totalSnowDepth) || 0;
+    const minSnowDepth = d3.min(data, d => d.totalSnowDepth) || 0;
     const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
+
+    // Calculate the range centered on the average
+    const rangeMin = Math.min(minSnowDepth, avgSnowDepth - 6);
+    const rangeMax = Math.max(maxSnowDepth, avgSnowDepth + 6);
+
+    // Create scales with separate domains for line and bars
     const yScaleLine = d3.scaleLinear()
-      .domain([0, Math.max(12, maxSnowDepth)])  // Use 12in or data max, whichever is larger
-      .range([height, 0]);
+      .domain([rangeMin, rangeMax])
+      .range([height, 0])
+      .nice();
 
     const yScaleBars = d3.scaleLinear()
-      .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipAccum)) || 0])
+      .domain([0, Math.max(2, d3.max(data, d => Math.max(d.snowDepth24h, d.precipAccum)) || 0)])
       .range([height, 0]);
 
     // Add grid lines
@@ -230,11 +244,21 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('stroke-dasharray', '2,2')
       .style('stroke', '#ccc');
 
-    // Add axes with black text
+    // Calculate optimal number of ticks based on data length
+    const maxTicks = 24;
+    const tickCount = Math.min(data.length, maxTicks);
+    const tickInterval = Math.ceil(data.length / tickCount);
+
+    // Generate tick values at regular intervals
+    const tickValues = data
+      .filter((_, i) => i % tickInterval === 0)
+      .map(d => d.date);
+
+    // Add x-axis with dynamic ticks
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(xScale)
-        .tickValues(data.map(d => d.date))
+        .tickValues(tickValues)
         .tickFormat((d) => moment(d as Date).format(isHourly ? 'HH:mm' : 'MM/DD')))
       .selectAll('text')
       .style('text-anchor', 'middle')
@@ -372,54 +396,22 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     d3.select(svgRef.current)
       .attr('height', height + margin.top + margin.bottom + 40); // Adjusted for single-line legend
 
-    // Define the temperature area generator
-    const tempArea = d3.area<(typeof data)[0]>()
-      .x(d => xScale(d.date))
-      .y0(d => yScaleTemp(d.temp))
-      .y1(d => yScaleTemp(d.temp))
-      .curve(d3.curveMonotoneX);
-
-    // Add the temperature range area
-    svg.append('path')
-      .datum(data)
-      .attr('fill', 'rgba(128, 128, 128, 0.1)')
-      .attr('stroke', 'none')
-      .attr('d', tempArea);
-
-    // Add the min temperature line
-    const tempMinLine = d3.line<(typeof data)[0]>()
+    // Remove the temperature area and range code and replace with a single line
+    const tempLine = d3.line<(typeof data)[0]>()
       .x(d => xScale(d.date))
       .y(d => yScaleTemp(d.temp))
       .curve(d3.curveMonotoneX);
 
-    // Add the max temperature line
-    const tempMaxLine = d3.line<(typeof data)[0]>()
-      .x(d => xScale(d.date))
-      .y(d => yScaleTemp(d.temp))
-      .curve(d3.curveMonotoneX);
-
-    // Add both temperature lines
+    // Add the temperature line
     svg.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', '#808080') // Lighter gray
-      .attr('stroke-width', 0.5) // Thinner line
-      .attr('stroke-dasharray', '2,2')
-      .attr('d', tempMinLine);
+      .attr('stroke', '#808080')  // Grey color for temperature
+      .attr('stroke-width', 1.5)  // Slightly thicker than the grid lines
+      .attr('d', tempLine);
 
-    svg.append('path')
-      .datum(data)
-      .attr('fill', 'none')
-      .attr('stroke', '#808080') // Lighter gray
-      .attr('stroke-width', 0.5) // Thinner line
-      .attr('stroke-dasharray', '2,2')
-      .attr('d', tempMaxLine);
-
-    // Remove any existing tooltips first
-    d3.selectAll('.snow-accum-tooltip').remove();
-
-    // Add tooltip elements
-    const tooltip = d3.select('body') // Attach to body instead of SVG parent
+    // Keep the D3 tooltip implementation
+    const tooltip = d3.select('body')
       .append('div')
       .attr('class', 'snow-accum-tooltip')
       .style('opacity', 0)
@@ -429,7 +421,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('border', '1px solid #ddd')
       .style('border-radius', '4px')
       .style('padding', '8px')
-      .style('z-index', '1000'); // Ensure tooltip appears above other elements
+      .style('z-index', '1000');
 
     // Add vertical line for tooltip
     const verticalLine = svg.append('line')
@@ -468,9 +460,9 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
           .html(`
             <div class="tooltip-content">
               <strong>${d3.timeFormat(isHourly ? '%B %d %H:%M' : '%B %d')(d.date)}</strong><br/>
-              <span>Total Snow Depth: ${d.totalSnowDepth}″</span><br/>
-              <span>24h Snow Depth: ${d.snowDepth24h}″</span><br/>
-              <span>Precip Accum: ${d.precipAccum}″</span><br/>
+              <span>Snow Depth: ${d.totalSnowDepth}″</span><br/>
+              <span>Hourly Snow: ${d.snowDepth24h}″</span><br/>
+              <span>Liquid Precip: ${d.precipAccum}″</span><br/>
               <span>Temperature: ${d.temp}°F</span>
             </div>
           `);
@@ -482,16 +474,16 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Add snow depth label along the line
     svg.append('text')
-      .attr('x', width - width)  // Position it just after the end of the line
-      .attr('y', (height / 2) -20)  // Center it vertically with the snow depth line
-      .attr('dy', '0.3em')  // Small vertical adjustment
-      .style('fill', 'blue')  // Match the line color
+      .attr('x', width - width)
+      .attr('y', (height / 2) -20)
+      .attr('dy', '0.3em')
+      .style('fill', 'blue')
       .style('font-size', '12px')
       .text('Snow Depth');
 
     // Add temperature range label
     svg.append('text')
-      .attr('x', width - 120)  // Position it just after the end of the area
+      .attr('x', width - 120)
       .attr('y', yScaleTemp(d3.mean([
         d3.min(data, d => d.temp) ?? 0,
         d3.max(data, d => d.temp) ?? 0
@@ -499,7 +491,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('dy', '0.3em')
       .style('fill', '#808080')  // Match the temperature line color
       .style('font-size', '12px')
-      .text('Temperature Range');
+      .text('Temperature');
 
   }, [dayAverages, isHourly]); // This ensures the graph updates when dayAverages changes
 
