@@ -37,7 +37,7 @@ const measurementDescriptions: Record<string, string> = {
     'Net Change in Snow Depth - The difference between final and initial readings, filtering out values greater than twice the standard deviation',
   '24h Snow Accumulation':
     'Total New Snow - Calculated by adding up the positive snow changes every hour, filtering out values greater than twice the standard deviation, filtered out values less than -1',
-  'Liquid Precip':
+  'Precip Accum One Hour':
     'Total Liquid Precipitation - Sum of hourly precipitation readings over the selected period',
   'Relative Humidity':
     'Current Relative Humidity - The most recent humidity reading',
@@ -69,7 +69,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
         'Total Snow Depth',
         'Total Snow Depth Change',
         '24h Snow Accumulation',
-        'Liquid Precip'      ],
+        'Precip Accum One Hour'      ],
     },
     { category: 'RH', columns: ['Relative Humidity'] },
   ];
@@ -127,6 +127,8 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       //{ category: 'Other', columns: otherKeys },
     ];
   }, [dayAverages.data, mode]);
+
+  console.log('dayAverages', dayAverages);
 
   useEffect(() => {
     if (
@@ -288,7 +290,7 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       })
       .text(d => {
         // Special formatting for Precip Accum One Hour
-        if (d.key === 'Liquid Precip' && d.value !== '-') {
+        if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
           const value = parseFloat(d.value);
           return `${value.toFixed(3)} in`;
         }
