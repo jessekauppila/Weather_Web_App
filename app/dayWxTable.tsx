@@ -128,7 +128,7 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     ];
   }, [dayAverages.data, mode]);
 
-  console.log('dayAverages', dayAverages);
+  //console.log('dayAverages', dayAverages);
 
   useEffect(() => {
     if (
