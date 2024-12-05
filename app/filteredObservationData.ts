@@ -10,7 +10,7 @@ export function filteredObservationData(
 ) {
   const { startHour, endHour, mode } = options;
 
-  //console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
+  console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);
 
   // Group the filtered data first
   const groupedObservations = mode === 'summary'
@@ -19,7 +19,7 @@ export function filteredObservationData(
 
   // Process each station group separately
   const processedGroups = Object.entries(groupedObservations).reduce((acc, [stid, stationData]) => {
-    // Filter snow depth for this station
+    // Filter snow depth for this stationß
     const filteredSnowDepth = filterSnowDepthOutliers(
       stationData.map((obs: Record<string, any>) => ({
         date_time: obs.date_time,
