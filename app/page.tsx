@@ -338,6 +338,7 @@ export default function Home() {
           Object.values(result.observations) as any[][] as any[],
           result.units
         ));
+
         setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
         setIsLoading(false);
 
@@ -388,7 +389,6 @@ export default function Home() {
     [stations]
   );
 
-  // In your main Home component, modify this handler
   const handleStationClick = (stationId: string) => {
     setIsStationChanging(true);
     
@@ -403,7 +403,6 @@ export default function Home() {
     }, 300);
   };
 
-  // Add this effect after your other useEffects
   useEffect(() => {
     //console.log('selectedStation changed to:', selectedStation);
     if (selectedStation) {
@@ -417,7 +416,7 @@ export default function Home() {
 
 
 
-  // Update calculateCurrentTimeRange to be more precise
+  // Updated calculateCurrentTimeRange to be more precise
   const calculateCurrentTimeRange = () => {
     if (useCustomEndDate && timeRange !== 1 && timeRange !== 3 && timeRange !== 7 && timeRange !== 14 && timeRange !== 30) {
       return 'custom';
@@ -449,11 +448,82 @@ export default function Home() {
     //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
   }, [dayRangeType]);
 
+  console.log('observationsDataDay', observationsDataDay);
+
+
+  // start STATION CARD 
+
+  const StationCard = ({ station }: { station: { 
+    Station: string,
+    'Cur Air Temp': string,
+    '24h Snow Accumulation': string,
+    'Cur Wind Speed': string 
+  } }) => {
+    // Strip units from values and convert to numbers where needed
+    const snowValue = station['24h Snow Accumulation'] === '-' ? '-' : 
+      station['24h Snow Accumulation'].replace(' in', '');
+    const tempValue = station['Cur Air Temp'] === '-' ? '-' : 
+      station['Cur Air Temp'].replace('°F', '');
+    const windValue = station['Cur Wind Speed'] === '-' ? '-' : 
+      station['Cur Wind Speed'].replace(' mph', '');
+
+    return (
+      <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">{station.Station}</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm text-gray-600 text-left">Snow</p>
+            {snowValue === '-' ? (
+              <p className="text-sm text-gray-400 text-left">no station data</p>
+            ) : (
+              <>
+                <p className="text-3xl text-gray-800 font-bold text-left">
+                  {snowValue}
+                  <span className="text-sm text-gray-500"> in</span>
+                </p>
+                <p className="text-xs text-gray-500 text-right">Last 24 Hours</p>
+              </>
+            )}
+          </div>
+
+          {/* TEMP */}
+          <div>
+            <p className="text-sm text-gray-600 text-left">Temp</p>
+            <p className="text-3xl text-gray-800 font-bold text-left">
+              {tempValue}
+              <span className="text-sm text-gray-500">°F</span>
+            </p>
+            <p className="text-xs text-gray-500 text-right">Current</p>
+          </div>
+
+          {/* WIND */}
+            <div>
+            <p className="text-sm text-gray-600 text-left">Wind</p>
+            {windValue === '-' ? (
+              <p className="text-sm text-gray-400 text-left">no station data</p>
+            ) : (
+              <>
+                <p className="text-3xl text-gray-800 font-bold text-left">
+                  {windValue}
+                  <span className="text-sm text-gray-500"> mph</span>
+                </p>
+                <p className="text-xs text-gray-500 text-right">Current</p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+    // end STATION CARD 
+
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
       <div className="w-full max-w-6xl space-y-4">
 
-                  {/* Top control bar thing */}
+        {/* Top Tool Bar */}
 
         <div className="flex flex-col items-center">
           <div className="flex flex-col space-y-4 bg-[cornflowerblue] p-4 rounded-xl shadow-md">
@@ -567,6 +637,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Should show if stuff is loading, but not showing anything now  */}
         <div 
           className={`w-full max-w-6xl space-y-4 transition-opacity duration-200 ${
             isComponentVisible && !isLoading && !isPending 
@@ -574,6 +645,16 @@ export default function Home() {
               : 'opacity-0'
           }`}
         >
+
+        {/* Individual STATION Components  */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {observationsDataDay?.data.map((station, index) => (
+            <StationCard key={index} station={station} />
+          ))}
+        </div>
+        
+        {/* This is where the chart starts  */}
 
         {observationsDataDay && selectedStation && stationIds.length === 1 && timeRange > 3 && (
             <>

@@ -229,12 +229,12 @@ export function filterSnowDepthOutliers(
         return cached;
     }
 
-    console.log(`${logPrefix} Starting filter with:`, {
-        dataPoints: data.length,
-        config,
-        firstPoint: data[0],
-        lastPoint: data[data.length - 1]
-    });
+    // console.log(`${logPrefix} Starting filter with:`, {
+    //     dataPoints: data.length,
+    //     config,
+    //     firstPoint: data[0],
+    //     lastPoint: data[data.length - 1]
+    // });
 
     const {
       maxPositiveChange,
@@ -250,39 +250,39 @@ export function filterSnowDepthOutliers(
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
     );
 
-    console.log(`${logPrefix} Sorted Data:`, sortedData);
+    // console.log(`${logPrefix} Sorted Data:`, sortedData);
 
    //Apply the identical check here
     const processedData = config.applyIdenticalCheck 
       ? applyIdenticalCheck(sortedData)
       : sortedData;
-    console.log(`${logPrefix} Identical Check:`, processedData);
+    // console.log(`${logPrefix} Identical Check:`, processedData);
     
-    console.log(`${logPrefix} 🔄 Applying IQR filter...`);
+    //console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
-    console.log(`${logPrefix} 📊 After IQR filtering:`, {
-        totalPoints: iqrFiltered.length,
-        validPoints: iqrFiltered.length - nanCountIQR,
-        invalidPoints: nanCountIQR
-    });
-    console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
+    // console.log(`${logPrefix} 📊 After IQR filtering:`, {
+    //     totalPoints: iqrFiltered.length,
+    //     validPoints: iqrFiltered.length - nanCountIQR,
+    //     invalidPoints: nanCountIQR
+    // });
+    // console.log(`${logPrefix} Data with IQR limits:`, iqrFiltered);
 
 
-    console.log(`${logPrefix} 🔄 Applying hourly limits...`);
+    // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
+    // console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
 
     
     const nanCountFinal = hourlyChangeLimits.filter(p => isNaN(p.snow_depth)).length;
-    console.log(`${logPrefix} 🏁 Final results:`, {
-        totalPoints: hourlyChangeLimits.length,
-        validPoints: hourlyChangeLimits.length - nanCountFinal,
-        invalidPoints: nanCountFinal,
-        firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
-        lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
-    });
+    // console.log(`${logPrefix} 🏁 Final results:`, {
+    //     totalPoints: hourlyChangeLimits.length,
+    //     validPoints: hourlyChangeLimits.length - nanCountFinal,
+    //     invalidPoints: nanCountFinal,
+    //     firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
+    //     lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
+    // });
 
 
     // Store result in cache before returning
