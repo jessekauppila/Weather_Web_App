@@ -41,15 +41,15 @@ function HourWxSnowGraph({ hourAverages }: SnowGraphProps) {
       );
 
     // Setup dimensions
-    const margin = { top: 20, right: 60, bottom: 30, left: 60 };
+    const margin = { top: 20, right: 60, bottom: 100, left: 60 };
     const width = 800 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const height = 400 - margin.top - margin.bottom + 40;
 
-    // Create SVG
+    // Create SVG with larger height
     const svg = d3
       .select(svgRef.current)
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('height', height + margin.top + margin.bottom + 40)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -89,13 +89,20 @@ function HourWxSnowGraph({ hourAverages }: SnowGraphProps) {
     // Create axes
     const xAxis = d3
       .axisBottom(xScale)
-      .tickFormat((d) => moment(d as Date).format('MM/DD HH:mm'));
+      .tickFormat((d) => moment(d as Date).format('HH:mm'));
+
+    const xAxisDate = d3
+      .axisBottom(xScale)
+      .tickFormat((d) => moment(d as Date).format('MM/DD'))
+      .ticks(d3.timeDay.every(1));
+
     const yAxisLeft = d3.axisLeft(yScaleLeft);
     const yAxisRight = d3.axisRight(yScaleRight);
 
     // Add axes
     svg
       .append('g')
+      .attr('class', 'x-axis-time')
       .attr('transform', `translate(0,${height})`)
       .call(xAxis)
       .selectAll('text')
@@ -103,6 +110,14 @@ function HourWxSnowGraph({ hourAverages }: SnowGraphProps) {
       .attr('dx', '-.8em')
       .attr('dy', '.15em')
       .attr('transform', 'rotate(-45)');
+
+    svg
+      .append('g')
+      .attr('class', 'x-axis-date')
+      .attr('transform', `translate(0,${height + 40})`)
+      .call(xAxisDate)
+      .selectAll('text')
+      .style('text-anchor', 'middle');
 
     svg
       .append('g')

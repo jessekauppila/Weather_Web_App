@@ -86,6 +86,11 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const width = containerWidth - margin.left - margin.right;
     const height = containerHeight - margin.top - margin.bottom;
 
+    // Define spacing constants at the top of the useEffect
+    const spacing = {
+      dateAxisOffset: 20,
+      legendOffset: 40  // This includes the dateAxisOffset plus additional space
+    };
 
     // Process data with validation and interpolation
     const rawData = dayAverages.data
@@ -256,15 +261,41 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .filter((_, i) => i % tickInterval === 0)
       .map(d => d.date);
 
-    // Add x-axis with dynamic ticks
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale)
-        .tickValues(tickValues)
-        .tickFormat((d) => moment(d as Date).format(isHourly ? 'HH:mm' : 'MM/DD')))
-      .selectAll('text')
-      .style('text-anchor', 'middle')
-      .style('fill', 'black');
+    // // Add x-axis with dynamic ticks
+    // svg.append('g')
+    //   .attr('transform', `translate(0,${height})`)
+    //   .call(d3.axisBottom(xScale)
+    //     .tickValues(tickValues)
+    //     .tickFormat((d) => moment(d as Date).format(isHourly ? 'h a' : 'MM/DD')))
+    //   .selectAll('text')
+    //   .style('text-anchor', 'middle')
+    //   .style('fill', 'black');
+
+    // Create custom ticks for dates - only show first occurrence of each date
+    const getDateTicks = () => {
+      const seenDates = new Set();
+      return data
+        .filter(d => {
+          const dateStr = moment(d.date).format('MM/DD');
+          if (!seenDates.has(dateStr)) {
+            seenDates.add(dateStr);
+            return true;
+          }
+          return false;
+        })
+        .map(d => d.date);
+    };
+
+    // Add date x-axis below
+    // svg.append('g')
+    //   .attr('class', 'x-axis-date')
+    //   .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
+    //   .call(d3.axisBottom(xScale)
+    //     .tickValues(getDateTicks())  // Use our custom ticks
+    //     .tickFormat((d) => moment(d as Date).format('MM/DD')))
+    //   .selectAll('text')
+    //   .style('text-anchor', 'middle')
+    //   .style('fill', 'black');
 
     // Add y-axis for total snow depth (left)
     svg.append('g')
@@ -373,7 +404,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('font-family', 'sans-serif')
       .attr('font-size', 12)
       .attr('text-anchor', 'start')
-      .attr('transform', `translate(0,${height + 30})`);
+      .attr('transform', `translate(0,${height + spacing.legendOffset})`);
 
     const itemWidth = legendWidth / legendItems.length;
 
@@ -394,9 +425,9 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         .text(text);
     });
 
-    // Update container height
+    // Update container height to account for all elements
     d3.select(svgRef.current)
-      .attr('height', height + margin.top + margin.bottom + 40); // Adjusted for single-line legend
+      .attr('height', height + margin.top + margin.bottom + spacing.legendOffset); 
 
     // Remove the temperature area and range code and replace with a single line
     const tempLine = d3.line<(typeof data)[0]>()
@@ -483,6 +514,58 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', '#808080')  // Match the temperature line color
       .style('font-size', '12px')
       .text('Temperature');
+
+    // Calculate time span in hours and log values
+    const timeSpanHours = (d3.max(data, d => d.date.getTime()) - d3.min(data, d => d.date.getTime())) / (1000 * 60 * 60);
+    console.log('Time span in hours:', timeSpanHours);
+    console.log('First date:', d3.min(data, d => d.date));
+    console.log('Last date:', d3.max(data, d => d.date));
+    const shouldShowAllTimes = timeSpanHours <= 72;
+    console.log('Should show times:', shouldShowAllTimes);
+
+    // Keep the original time axis but modify it based on time span
+    svg.append('g')
+      .attr('class', 'x-axis-time')
+      .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
+      .call(d3.axisBottom(xScaleBars)
+        .tickValues(data.map(d => d.date))  // Keep all tick positions
+        .tickFormat((d) => {
+          console.log('Formatting date:', d, 'shouldShowAllTimes:', shouldShowAllTimes);
+          return shouldShowAllTimes ? moment(d as Date).format('h a') : '';
+        })
+        .tickSize(5))
+      .call(g => g.select('.domain').remove())
+      .selectAll('text')
+      .style('text-anchor', 'middle')
+      .style('fill', 'black')
+      .style('font-size', '10px')
+      .attr('dy', '-1.5em');
+
+    // Add date brackets above
+    const dateRanges = getDateTicks();
+    dateRanges.forEach((date, i) => {
+      const nextDate = i < dateRanges.length - 1 ? dateRanges[i + 1] : data[data.length - 1].date;
+      
+      // Add bracket
+      svg.append('path')
+        .attr('d', `
+          M ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 15}
+          L ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 20}
+          L ${xScaleBars(nextDate)} ${height + spacing.dateAxisOffset - 20}
+          L ${xScaleBars(nextDate)} ${height + spacing.dateAxisOffset - 15}
+        `)
+        .attr('stroke', 'black')
+        .attr('fill', 'none');
+
+      // Add centered date label below time annotations
+      svg.append('text')
+        .attr('x', xScaleBars(date) + (xScaleBars(nextDate) - xScaleBars(date))/2)
+        .attr('y', height + spacing.dateAxisOffset + 8)
+        .attr('text-anchor', 'middle')
+        .style('fill', 'black')
+        .style('font-size', '12px')
+        .text(moment(date).format('MM/DD'));
+    });
 
     // Set loaded state after graph is created
     setIsLoaded(true);

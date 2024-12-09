@@ -18,6 +18,11 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const spacing = {
+    dateAxisOffset: 15,
+    legendOffset: 30
+  };
+
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
@@ -143,14 +148,14 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('stroke', '#ccc');
 
     // Add axes with black text
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale)
-        .tickValues(data.map(d => d.date))
-        .tickFormat((d) => moment(d as Date).format(isHourly ? 'HH:mm' : 'MM/DD')))
-      .selectAll('text')
-      .style('text-anchor', 'middle')
-      .style('fill', 'black');
+    // svg.append('g')
+    //   .attr('transform', `translate(0,${height})`)
+    //   .call(d3.axisBottom(xScale)
+    //     .tickValues(data.map(d => d.date))
+    //     .tickFormat((d) => moment(d as Date).format(isHourly ? 'HH:mm' : 'MM/DD')))
+    //   .selectAll('text')
+    //   .style('text-anchor', 'middle')
+    //   .style('fill', 'black');
 
     // Add y-axis for total snow depth (left)
     svg.append('g')
@@ -199,7 +204,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
 
     // Define bar area margins
-    const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 500px on each side
+    const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 50px on each side
     
     // Create bar-specific scale with reduced width
     const barAreaWidth = width - (barMargin.left + barMargin.right);
@@ -207,6 +212,74 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .domain(d3.extent(data, d => d.date) as [Date, Date])
       .range([barMargin.left, barMargin.left + barAreaWidth])
       .nice();
+
+    // Create custom ticks for dates - only show first occurrence of each date
+    const getDateTicks = () => {
+      const seenDates = new Set();
+      return data
+        .filter(d => {
+          const dateStr = moment(d.date).format('MM/DD');
+          if (!seenDates.has(dateStr)) {
+            seenDates.add(dateStr);
+            return true;
+          }
+          return false;
+        })
+        .map(d => d.date);
+    };
+
+    // Add date x-axis below
+    svg.append('g')
+      .attr('class', 'x-axis-date')
+      .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
+      .call(d3.axisBottom(xScaleBars)
+        .tickValues(getDateTicks())
+        .tickFormat((d) => moment(d as Date).format('MM/DD')))
+      .call(g => g.select('.domain').remove())
+      .selectAll('text')
+      .style('text-anchor', 'middle')
+      .style('fill', 'black')
+      .attr('dy', '-.5em');  // Added this line to move text up closer to ticks
+
+    // Add just vertical ticks for date ranges
+    const dateRanges = getDateTicks();
+    dateRanges.forEach((date) => {
+      // Add horizontal line extending 10px left and right of tick
+      svg.append('path')
+        .attr('d', `
+          M ${xScaleBars(date) - individualBarWidth} ${height + spacing.dateAxisOffset - 5}
+          L ${xScaleBars(date) + individualBarWidth} ${height + spacing.dateAxisOffset - 5}
+        `)
+        .attr('stroke', 'black')
+        .attr('fill', 'none');
+
+      // Add vertical tick
+      // svg.append('path')
+      //   .attr('d', `
+      //     M ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 5}
+      //     L ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 10}
+      //   `)
+      //   .attr('stroke', 'black')
+      //   .attr('fill', 'none');
+
+              // Add vertical tick to left of bar
+      svg.append('path')
+        .attr('d', `
+          M ${xScaleBars(date) - individualBarWidth} ${height + spacing.dateAxisOffset - 5}  
+          L ${xScaleBars(date) - individualBarWidth} ${height + spacing.dateAxisOffset - 10}
+        `)
+        .attr('stroke', 'black')
+        .attr('fill', 'none');
+
+        // Add vertical tick to left of bar
+      svg.append('path')
+      .attr('d', `
+        M ${xScaleBars(date) + individualBarWidth} ${height + spacing.dateAxisOffset - 5}  
+        L ${xScaleBars(date) + individualBarWidth} ${height + spacing.dateAxisOffset - 10}
+      `)
+      .attr('stroke', 'black')
+      .attr('fill', 'none');
+    });
 
     // Use xScaleBars for the bars
     svg.selectAll('.snow-bars')
