@@ -646,3 +646,118 @@ details > div {
 details[open] .details-caret {
   transform: rotate(180deg);
 }
+
+/* ////////////////////////////////////////////////////////////////////////////////////////// */
+/* Station Card Styles */
+.station-card {
+  background-color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.station-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.station-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.station-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.station-elevation {
+  font-size: 0.625rem;
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+.station-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.station-metric {
+  cursor: pointer;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.625rem;
+  color: #4b5563;
+  text-align: left;
+}
+
+.metric-caret {
+  font-size: 0.5rem;
+  color: #9ca3af;
+  transform: rotate(0deg);
+  transition: transform 0.2s;
+}
+
+.metric-caret.open {
+  transform: rotate(180deg);
+}
+
+.metric-caret:hover {
+  color: #4b5563;
+}
+
+.accordion-content {
+  transition: all 0.2s;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.accordion-content.open {
+  height: auto;
+  opacity: 1;
+  margin-top: 0.25rem;
+}
+
+.accordion-inner {
+  font-size: 0.625rem;
+  color: #4b5563;
+  background-color: #f9fafb;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.metric-value {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 700;
+  text-align: left;
+}
+
+.metric-unit {
+  font-size: 0.625rem;
+  color: #6b7280;
+}
+
+.metric-subtitle {
+  font-size: 0.5rem;
+  color: #6b7280;
+}
+
+.no-data {
+  font-size: 0.625rem;
+  color: #9ca3af;
+  text-align: left;
+}
