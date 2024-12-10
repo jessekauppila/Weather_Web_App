@@ -46,10 +46,19 @@ const MeasurementCard = ({
       );
     }
 
+    // Special handling for precipitation to round to 3 decimal places
+    let displayValue = value;
+    if (value.includes('Precip Accum One Hour')) {
+      const numValue = parseFloat(value.replace(` ${unit}`, ''));
+      displayValue = numValue.toFixed(3);
+    } else {
+      displayValue = value.replace(` ${unit}`, '');
+    }
+
     return (
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
         <Typography sx={{ fontSize: '1rem', color: '#1f2937', fontWeight: 700 }}>
-          {value.replace(` ${unit}`, '')}
+          {displayValue}
         </Typography>
         <Typography sx={{ fontSize: '0.625rem', color: '#6b7280' }}>{unit}</Typography>
       </Box>
@@ -107,7 +116,12 @@ const MeasurementCard = ({
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              {renderValue(station['Precip Accum One Hour'], 'in')}
+              {renderValue(
+                station['Precip Accum One Hour'] !== '-' 
+                  ? parseFloat(station['Precip Accum One Hour']).toFixed(2) + ' in'
+                  : '-',
+                'in'
+              )}
               <Box component="p" className="metric-subtitle">Liquid Precip</Box>
             </Box>
           </Box>
@@ -137,7 +151,7 @@ const MeasurementCard = ({
           display: 'none',
         },
         '& .MuiAccordionSummary-root': {
-          padding: '0.25rem',
+          padding: '0.15rem',
           minHeight: 'unset',
           width: '100%',
           '& .MuiAccordionSummary-expandIconWrapper': {
@@ -148,7 +162,7 @@ const MeasurementCard = ({
           margin: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.15rem',
+          gap: '0.1rem',
           width: '100%'
         }
       }}
@@ -166,7 +180,7 @@ const MeasurementCard = ({
           pointerEvents: 'none',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.15rem'
+          gap: '0.1rem'
         }}>
           <Box>
             <Box sx={{ 
@@ -219,10 +233,16 @@ const MeasurementCard = ({
       <AccordionDetails onClick={(e) => e.stopPropagation()}>
         <Box sx={{ 
           backgroundColor: '#f9fafb',
-          padding: '0.25rem',
+          padding: '0.15rem',
           borderRadius: '0.25rem'
         }}>
-          {renderAccordionContent()}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '0.15rem'
+          }}>
+            {renderAccordionContent()}
+          </Box>
         </Box>
       </AccordionDetails>
     </MuiAccordion>
