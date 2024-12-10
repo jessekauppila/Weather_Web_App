@@ -680,15 +680,18 @@ details[open] .details-caret {
   margin-bottom: 0;
 }
 
-.station-grid {
+.measurement-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0;
+  gap: 0.5rem;  /* Reduce gap between cards */
+  width: 100%;
+  padding: 0.25rem;  /* Add small padding around grid */
 }
 
 .station-metric {
-  cursor: pointer;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .metric-header {
@@ -729,6 +732,8 @@ details[open] .details-caret {
   height: auto;
   opacity: 1;
   margin-top: 0.25rem;
+  grid-column: 1 / -1;  /* Spans all columns when open */
+  order: 1;  /* Pushes expanded content below the accordions */
 }
 
 .accordion-inner {
@@ -760,4 +765,36 @@ details[open] .details-caret {
   font-size: 0.625rem;
   color: #9ca3af;
   text-align: left;
+}
+
+.metric-detail {
+  background-color: #f9fafb;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  text-align: center;
+}
+
+/* Update measurement grid spacing */
+.measurement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;  /* Reduce gap between cards */
+  width: 100%;
+  padding: 0.25rem;  /* Add small padding around grid */
+}
+
+/* Add containment and sizing for measurement cards */
+.MuiAccordion-root {
+  min-width: 0 !important;  /* Prevent overflow */
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Adjust the padding inside measurement cards */
+.MuiAccordionSummary-root {
+  padding: 0.25rem !important;  /* Reduce internal padding */
+}
+
+.MuiAccordionDetails-root {
+  padding: 0.25rem !important;
 }
