@@ -77,6 +77,9 @@ export default function Home() {
   // Move this up, before calculateTimeRange
   const [timeRange, setTimeRange] = useState(1);
 
+  // Add this state at the top level where RegionCard is used
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
   /**
    * Calculates the start and end times based on the selected date and range type
    * @param date - The base date to calculate the range from
@@ -453,7 +456,13 @@ export default function Home() {
 
   // start STATION CARD 
 
-  const StationCard = ({ station, onStationClick }: { 
+  const StationCard = ({ 
+    station, 
+    onStationClick,
+    observationsData,
+    isActive,
+    onDropdownToggle 
+  }: { 
     station: { 
       Station: string,
       'Cur Air Temp': string,
@@ -462,73 +471,94 @@ export default function Home() {
       'Elevation': string,  
       Stid: string
     },
-    onStationClick: (stid: string) => void
+    onStationClick: (stid: string) => void,
+    observationsData: {
+      data: any[];
+      title: string;
+    } | null,
+    isActive: boolean,
+    onDropdownToggle: (stid: string | null) => void
   }) => {
-    // Strip units from values and convert to numbers where needed
-    const snowValue = station['24h Snow Accumulation'] === '-' ? '-' : 
-      station['24h Snow Accumulation'].replace(' in', '');
-    const tempValue = station['Cur Air Temp'] === '-' ? '-' : 
-      station['Cur Air Temp'].replace('°F', '');
-    const windValue = station['Cur Wind Speed'] === '-' ? '-' : 
-      station['Cur Wind Speed'].replace(' mph', '');
+
+    // Filter observations for this station
+    const stationData = useMemo(() => {
+      if (!observationsData) return null;
+      
+      return {
+        data: observationsData.data.filter(obs => obs.Stid === station.Stid),
+        title: `${station.Station} Observations`
+      };
+    }, [observationsData, station.Stid]);
+
+    const handleDetailsClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDropdownToggle(isActive ? null : station.Stid);
+    };
 
     return (
-      <div 
-        className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer" 
-        onClick={() => onStationClick(station.Stid)}
-      >
-        {/* Station Title */}
-        <h2 className="text-sm font-bold text-gray-800 mb-0">{station.Station}</h2>
-        <p className="text-[10px] text-gray-500 mb-0">{station.Elevation}</p>
-        
-        <div className="grid grid-cols-3 gap-2 mb-0">
+      <div className="bg-white p-2 rounded-lg shadow-md">
+        {/* Header with just station name */}
+        <div className="flex justify-between items-center mb-0">
+          <h2 className="text-sm font-bold text-gray-800">{station.Station}</h2>
+        </div>
 
-          {/* SNOW */}
-          <div>
-            <p className="text-[10px] text-gray-600 text-left">Snow</p>
-            {snowValue === '-' ? (
-              <p className="text-[10px] text-gray-400 text-left">no station data</p>
-            ) : (
-              <>
-                <p className="text-base text-gray-800 font-bold text-left">
-                  {snowValue}
-                  <span className="text-[10px] text-gray-500"> in</span>
-                </p>
-                <p className="text-[8px] text-gray-500">Last 24 Hours</p>
-              </>
-            )}
-          </div>
+        {/* Clickable card content */}
+        <div 
+          className="cursor-pointer"
+          onClick={() => onStationClick(station.Stid)}
+        >
+          <p className="text-[10px] text-gray-500 mb-0">{station.Elevation}</p>
+          
+          {/* Grid content */}
+          <div className="grid grid-cols-3 gap-2 mb-0">
+            {/* SNOW */}
+            <div>
+              <p className="text-[10px] text-gray-600 text-left">Snow</p>
+              {station['24h Snow Accumulation'] === '-' ? (
+                <p className="text-[10px] text-gray-400 text-left">no station data</p>
+              ) : (
+                <>
+                  <p className="text-base text-gray-800 font-bold text-left">
+                    {station['24h Snow Accumulation']}
+                    <span className="text-[10px] text-gray-500"> in</span>
+                  </p>
+                  <p className="text-[8px] text-gray-500">Last 24 Hours</p>
+                </>
+              )}
+            </div>
 
-          {/* TEMP */}
-          <div>
-            <p className="text-[10px] text-gray-600 text-left">Temp</p>
-            {tempValue === '-' ? (
-              <p className="text-[10px] text-gray-400 text-left">no station data</p>
-            ) : (
-              <>
-                <p className="text-base text-gray-800 font-bold text-left">
-                  {tempValue}
-                  <span className="text-[10px] text-gray-500">°F</span>
-                </p>
-                <p className="text-[8px] text-gray-500">Current</p>
-              </>
-            )}
-          </div>
+            {/* TEMP */}
+            <div>
+              <p className="text-[10px] text-gray-600 text-left">Temp</p>
+              {station['Cur Air Temp'] === '-' ? (
+                <p className="text-[10px] text-gray-400 text-left">no station data</p>
+              ) : (
+                <>
+                  <p className="text-base text-gray-800 font-bold text-left">
+                    {station['Cur Air Temp'].replace(' °F', '')}
+                    <span className="text-[10px] text-gray-500">°F</span>
+                  </p>
+                  <p className="text-[8px] text-gray-500">Current</p>
+                </>
+              )}
+            </div>
 
-          {/* WIND */}
-          <div>
-            <p className="text-[10px] text-gray-600 text-left">Wind</p>
-            {windValue === '-' ? (
-              <p className="text-[10px] text-gray-400 text-left">no station data</p>
-            ) : (
-              <>
-                <p className="text-base text-gray-800 font-bold text-left">
-                  {windValue}
-                  <span className="text-[10px] text-gray-500"> mph</span>
-                </p>
-                <p className="text-[8px] text-gray-500">Current</p>
-              </>
-            )}
+            {/* WIND */}
+            <div>
+              <p className="text-[10px] text-gray-600 text-left">Wind</p>
+              {station['Cur Wind Speed'] === '-' ? (
+                <p className="text-[10px] text-gray-400 text-left">no station data</p>
+              ) : (
+                <>
+                  <p className="text-base text-gray-800 font-bold text-left">
+                    {station['Cur Wind Speed'].replace(' mph', '')}
+                    <span className="text-[10px] text-gray-500"> mph</span>
+                  </p>
+                  <p className="text-[8px] text-gray-500">Current</p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -553,7 +583,15 @@ export default function Home() {
   };
 
   // RegionCard component that contains multiple StationCards
-  const RegionCard = ({ title, stations, stationIds, onStationClick }: { 
+  const RegionCard = ({ 
+    title, 
+    stations, 
+    stationIds, 
+    onStationClick,
+    observationsData,
+    activeDropdown,
+    onDropdownToggle
+  }: { 
     title: string, 
     stations: Array<{
       Station: string,
@@ -564,19 +602,60 @@ export default function Home() {
       Stid: string
     }>,
     stationIds: string[],
-    onStationClick: (stid: string) => void
+    onStationClick: (stid: string) => void,
+    observationsData: {
+      data: any[];
+      title: string;
+    } | null,
+    activeDropdown: string | null,
+    onDropdownToggle: (stid: string | null) => void
   }) => (
-    <div className="bg-[cornflowerblue] p-4 rounded-lg mb-4">
+    <div className="bg-[cornflowerblue] bg-opacity-10 p-4 rounded-lg mb-4">
       <h2 className="text-xl text-black font-bold mb-4">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {stations.filter(station => 
           stationIds.includes(station.Stid)
         ).map((station, index) => (
-          <StationCard key={index} station={station} onStationClick={onStationClick}/>
+          <StationCard 
+            key={index} 
+            station={station} 
+            onStationClick={onStationClick}
+            observationsData={observationsData}
+            isActive={activeDropdown === station.Stid}
+            onDropdownToggle={onDropdownToggle}
+          />
         ))}
       </div>
     </div>
   );
+
+  // Add click outside handler at the top level
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdown && !(event.target as Element).closest('details')) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [activeDropdown]);
+
+  // Define the regions configuration
+  const regions = [
+    { id: 'westSlopesNorth', title: 'West Slopes North', stationIds: stationGroups.westSlopesNorth },
+    { id: 'westSlopesCentral', title: 'West Slopes Central', stationIds: stationGroups.westSlopesCentral },
+    { id: 'westSlopesSouth', title: 'West Slopes South', stationIds: stationGroups.westSlopesSouth },
+    { id: 'eastSlopesNorth', title: 'East Slopes North', stationIds: stationGroups.eastSlopesNorth },
+    { id: 'eastSlopesCentral', title: 'East Slopes Central', stationIds: stationGroups.eastSlopesCentral },
+    { id: 'eastSlopesSouth', title: 'East Slopes South', stationIds: stationGroups.eastSlopesSouth },
+    { id: 'olympics', title: 'Olympics', stationIds: stationGroups.olympics },
+    { id: 'mtHood', title: 'Mt Hood', stationIds: stationGroups.mtHood },
+    { id: 'snoqualmie', title: 'Snoqualmie', stationIds: stationGroups.snoqualmie },
+    { id: 'stevensPass', title: 'Stevens Pass', stationIds: stationGroups.stevensPass }
+  ];
 
   // Usage in your render
   return (
@@ -706,73 +785,22 @@ export default function Home() {
           }`}
         >
 
-           {/*  REgions  */}
+        {/*  Regions  */}
 
         {observationsDataDay && tableMode === 'summary' && (
           <>
-            <RegionCard 
-              title="West Slopes North"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.westSlopesNorth}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="West Slopes Central"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.westSlopesCentral}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="West Slopes South"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.westSlopesSouth}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="East Slopes North"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.eastSlopesNorth}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="East Slopes Central"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.eastSlopesCentral}
-              onStationClick={handleStationClick}
+            {regions.map(region => (
+              <RegionCard
+                key={region.id}
+                title={region.title}
+                stations={observationsDataDay.data}
+                stationIds={region.stationIds}
+                onStationClick={handleStationClick}
+                observationsData={observationsDataDay}
+                activeDropdown={activeDropdown}
+                onDropdownToggle={setActiveDropdown}
               />
-
-            <RegionCard 
-              title="East Slopes South"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.eastSlopesSouth}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="Olympics"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.olympics}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="Mt Hood"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.mtHood}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="Snoqualmie"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.snoqualmie}
-              onStationClick={handleStationClick}
-            />
-            <RegionCard 
-              title="Stevens Pass"
-              stations={observationsDataDay.data}
-              stationIds={stationGroups.stevensPass}
-              onStationClick={handleStationClick}
-
-            
-            />
+            ))}
           </>
         )}
 
