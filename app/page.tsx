@@ -39,8 +39,16 @@ interface StationCardProps {
     'Cur Air Temp': string;
     '24h Snow Accumulation': string;
     'Cur Wind Speed': string;
-    Elevation: string;
-    Stid: string;
+    'Elevation': string;
+    'Stid': string;
+    'Air Temp Min': string;
+    'Air Temp Max': string;
+    'Wind Speed Avg': string;
+    'Max Wind Gust': string;
+    'Wind Direction': string;
+    'Total Snow Depth Change': string;
+    'Precip Accum One Hour': string;
+    [key: string]: string;
   };
   onStationClick: (stid: string) => void;
   observationsData: { data: any[]; title: string; } | null;
@@ -491,7 +499,8 @@ export default function Home() {
               onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
               metricValue={station['24h Snow Accumulation'].replace(' in', '')}
               metricUnit=" in"
-              subtitle="24 hrs"
+              subtitle="Accumulation"
+              station={station}
             />
 
             <MeasurementCard 
@@ -501,6 +510,7 @@ export default function Home() {
               metricValue={station['Cur Air Temp'].replace(' °F', '')}
               metricUnit="°F"
               subtitle="Current"
+              station={station}
             />
 
             <MeasurementCard 
@@ -510,6 +520,7 @@ export default function Home() {
               metricValue={station['Cur Wind Speed'].replace(' mph', '')}
               metricUnit=" mph"
               subtitle="Current"
+              station={station}
             />
           </div>
         </div>
