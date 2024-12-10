@@ -453,12 +453,17 @@ export default function Home() {
 
   // start STATION CARD 
 
-  const StationCard = ({ station }: { station: { 
-    Station: string,
-    'Cur Air Temp': string,
-    '24h Snow Accumulation': string,
-    'Cur Wind Speed': string 
-  } }) => {
+  const StationCard = ({ station, onStationClick }: { 
+    station: { 
+      Station: string,
+      'Cur Air Temp': string,
+      '24h Snow Accumulation': string,
+      'Cur Wind Speed': string,
+      'Elevation': string,  
+      Stid: string
+    },
+    onStationClick: (stid: string) => void
+  }) => {
     // Strip units from values and convert to numbers where needed
     const snowValue = station['24h Snow Accumulation'] === '-' ? '-' : 
       station['24h Snow Accumulation'].replace(' in', '');
@@ -468,46 +473,60 @@ export default function Home() {
       station['Cur Wind Speed'].replace(' mph', '');
 
     return (
-      <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">{station.Station}</h2>
-        <div className="grid grid-cols-3 gap-4">
+      <div 
+        className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer" 
+        onClick={() => onStationClick(station.Stid)}
+      >
+        {/* Station Title */}
+        <h2 className="text-sm font-bold text-gray-800 mb-0">{station.Station}</h2>
+        <p className="text-[10px] text-gray-500 mb-0">{station.Elevation}</p>
+        
+        <div className="grid grid-cols-3 gap-2 mb-0">
+
+          {/* SNOW */}
           <div>
-            <p className="text-sm text-gray-600 text-left">Snow</p>
+            <p className="text-[10px] text-gray-600 text-left">Snow</p>
             {snowValue === '-' ? (
-              <p className="text-sm text-gray-400 text-left">no station data</p>
+              <p className="text-[10px] text-gray-400 text-left">no station data</p>
             ) : (
               <>
-                <p className="text-3xl text-gray-800 font-bold text-left">
+                <p className="text-base text-gray-800 font-bold text-left">
                   {snowValue}
-                  <span className="text-sm text-gray-500"> in</span>
+                  <span className="text-[10px] text-gray-500"> in</span>
                 </p>
-                <p className="text-xs text-gray-500 text-right">Last 24 Hours</p>
+                <p className="text-[8px] text-gray-500">Last 24 Hours</p>
               </>
             )}
           </div>
 
           {/* TEMP */}
           <div>
-            <p className="text-sm text-gray-600 text-left">Temp</p>
-            <p className="text-3xl text-gray-800 font-bold text-left">
-              {tempValue}
-              <span className="text-sm text-gray-500">°F</span>
-            </p>
-            <p className="text-xs text-gray-500 text-right">Current</p>
+            <p className="text-[10px] text-gray-600 text-left">Temp</p>
+            {tempValue === '-' ? (
+              <p className="text-[10px] text-gray-400 text-left">no station data</p>
+            ) : (
+              <>
+                <p className="text-base text-gray-800 font-bold text-left">
+                  {tempValue}
+                  <span className="text-[10px] text-gray-500">°F</span>
+                </p>
+                <p className="text-[8px] text-gray-500">Current</p>
+              </>
+            )}
           </div>
 
           {/* WIND */}
-            <div>
-            <p className="text-sm text-gray-600 text-left">Wind</p>
+          <div>
+            <p className="text-[10px] text-gray-600 text-left">Wind</p>
             {windValue === '-' ? (
-              <p className="text-sm text-gray-400 text-left">no station data</p>
+              <p className="text-[10px] text-gray-400 text-left">no station data</p>
             ) : (
               <>
-                <p className="text-3xl text-gray-800 font-bold text-left">
+                <p className="text-base text-gray-800 font-bold text-left">
                   {windValue}
-                  <span className="text-sm text-gray-500"> mph</span>
+                  <span className="text-[10px] text-gray-500"> mph</span>
                 </p>
-                <p className="text-xs text-gray-500 text-right">Current</p>
+                <p className="text-[8px] text-gray-500">Current</p>
               </>
             )}
           </div>
@@ -518,7 +537,48 @@ export default function Home() {
 
     // end STATION CARD 
 
+  // Define station groups by stids
+  const stationGroups = {
+    westSlopesNorth: ['5', '6'],  // Example stids for alpine stations
+    westSlopesCentral: ['48', '49', '50', '51', '52', '53','57'],
+    westSlopesSouth: ['29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '54'],
+    eastSlopesNorth: ['7', '8', '9'],  // Example stids for alpine stations
+    eastSlopesCentral: ['11','24', '25', '26'],  // Example stids for alpine stations
+    eastSlopesSouth: [],  // Example stids for alpine stations
+    olympics: ['4', '19'],  // Example stids for alpine stations
+    mtHood: ['41', '42', '43', '44', '45', '46', '47','56'],
+    snoqualmie: ['1','2','20', '21', '22', '23'],  // Example stids for alpine stations
+    stevensPass: ['13', '14', '17', '18','50','51'],  // Example stids for alpine stations
+    
+  };
 
+  // RegionCard component that contains multiple StationCards
+  const RegionCard = ({ title, stations, stationIds, onStationClick }: { 
+    title: string, 
+    stations: Array<{
+      Station: string,
+      'Cur Air Temp': string,
+      '24h Snow Accumulation': string,
+      'Cur Wind Speed': string,
+      'Elevation': string,
+      Stid: string
+    }>,
+    stationIds: string[],
+    onStationClick: (stid: string) => void
+  }) => (
+    <div className="bg-[cornflowerblue] p-4 rounded-lg mb-4">
+      <h2 className="text-xl text-black font-bold mb-4">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {stations.filter(station => 
+          stationIds.includes(station.Stid)
+        ).map((station, index) => (
+          <StationCard key={index} station={station} onStationClick={onStationClick}/>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Usage in your render
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
       <div className="w-full max-w-6xl space-y-4">
@@ -646,15 +706,86 @@ export default function Home() {
           }`}
         >
 
+           {/*  REgions  */}
+
+        {observationsDataDay && tableMode === 'summary' && (
+          <>
+            <RegionCard 
+              title="West Slopes North"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.westSlopesNorth}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="West Slopes Central"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.westSlopesCentral}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="West Slopes South"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.westSlopesSouth}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="East Slopes North"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.eastSlopesNorth}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="East Slopes Central"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.eastSlopesCentral}
+              onStationClick={handleStationClick}
+              />
+
+            <RegionCard 
+              title="East Slopes South"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.eastSlopesSouth}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="Olympics"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.olympics}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="Mt Hood"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.mtHood}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="Snoqualmie"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.snoqualmie}
+              onStationClick={handleStationClick}
+            />
+            <RegionCard 
+              title="Stevens Pass"
+              stations={observationsDataDay.data}
+              stationIds={stationGroups.stevensPass}
+              onStationClick={handleStationClick}
+
+            
+            />
+          </>
+        )}
+
         {/* Individual STATION Components  */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {observationsDataDay?.data.map((station, index) => (
-            <StationCard key={index} station={station} />
+         {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {observationsDataDay?.data.map((station, stid) => (
+            <StationCard key={stid} station={station} />
           ))}
         </div>
+        */}
         
-        {/* This is where the chart starts  */}
+        {/* Graphs   */}
 
         {observationsDataDay && selectedStation && stationIds.length === 1 && timeRange > 3 && (
             <>
@@ -674,7 +805,10 @@ export default function Home() {
             </>
           )}
 
-          {observationsDataDay && (
+           {/* Tables   */}
+
+
+          {observationsDataDay && tableMode === 'daily' && (
             <DayAveragesTable 
               dayAverages={observationsDataDay} 
               onStationClick={handleStationClick}
