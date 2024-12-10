@@ -415,7 +415,10 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       g.append('rect')
         .attr('width', 15)
         .attr('height', 15)
-        .attr('fill', i === 0 ? 'blue' : i === 1 ? '#4169E1' : i === 2 ? '#82EEFD' : 'rgba(128, 128, 128, 0.1)')
+        .attr('fill', i === 0 ? 'blue' : 
+                      i === 1 ? '#4169E1' : 
+                      i === 2 ? '#82EEFD' : 
+                      '#808080')
         .attr('opacity', i === 0 ? 1 : 0.7);
 
       g.append('text')
@@ -517,11 +520,11 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Calculate time span in hours and log values
     const timeSpanHours = (d3.max(data, d => d.date.getTime()) - d3.min(data, d => d.date.getTime())) / (1000 * 60 * 60);
-    console.log('Time span in hours:', timeSpanHours);
-    console.log('First date:', d3.min(data, d => d.date));
-    console.log('Last date:', d3.max(data, d => d.date));
+    // console.log('Time span in hours:', timeSpanHours);
+    // console.log('First date:', d3.min(data, d => d.date));
+    // console.log('Last date:', d3.max(data, d => d.date));
     const shouldShowAllTimes = timeSpanHours <= 72;
-    console.log('Should show times:', shouldShowAllTimes);
+    // console.log('Should show times:', shouldShowAllTimes);
 
     // Keep the original time axis but modify it based on time span
     svg.append('g')
@@ -530,7 +533,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .call(d3.axisBottom(xScaleBars)
         .tickValues(data.map(d => d.date))  // Keep all tick positions
         .tickFormat((d) => {
-          console.log('Formatting date:', d, 'shouldShowAllTimes:', shouldShowAllTimes);
+          //console.log('Formatting date:', d, 'shouldShowAllTimes:', shouldShowAllTimes);
           return shouldShowAllTimes ? moment(d as Date).format('h a') : '';
         })
         .tickSize(5))

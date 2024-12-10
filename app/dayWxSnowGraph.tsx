@@ -364,7 +364,10 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       g.append('rect')
         .attr('width', 15)
         .attr('height', 15)
-        .attr('fill', i === 0 ? 'blue' : i === 1 ? '#4169E1' : i === 2 ? '#82EEFD' : 'rgba(128, 128, 128, 0.1)')
+        .attr('fill', i === 0 ? 'blue' : 
+                      i === 1 ? '#4169E1' : 
+                      i === 2 ? '#82EEFD' : 
+                      '#808080')
         .attr('opacity', i === 0 ? 1 : 0.7);
 
       g.append('text')
