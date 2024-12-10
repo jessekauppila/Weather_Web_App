@@ -37,70 +37,90 @@ const MeasurementCard = ({
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         borderRadius: '0.5rem !important',
         maxWidth: '100%',
-        overflow: 'hidden',
+        overflow: 'visible',
         position: 'relative',
+        padding: '0.25rem',
         '&:before': {
           display: 'none',
         },
         '& .MuiAccordionSummary-root': {
-          padding: '0.5rem 0.75rem',
+          padding: '0.75rem',
           minHeight: 'unset',
+          width: '100%',
           '& .MuiAccordionSummary-expandIconWrapper': {
-            position: 'absolute',
-            bottom: '0.25rem',
-            right: '0.5rem',
+            display: 'none'
           }
         },
         '& .MuiAccordionSummary-content': {
           margin: 0,
-          marginRight: '1.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.25rem'
+          gap: '0.25rem',
+          width: '100%'
         }
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ fontSize: '0.8rem', color: '#6b7280' }} />}
+        expandIcon={<ExpandMoreIcon sx={{ 
+          fontSize: '0.8rem', 
+          color: '#6b7280',
+          padding: '0.25rem'
+        }} />}
         onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ 
-          width: '100%', 
+          width: 'calc(100% - 1.5rem)',
           pointerEvents: 'none',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.25rem'
         }}>
           <Box>
-            <Typography sx={{ fontSize: '0.625rem', color: '#4b5563', fontWeight: 500 }}>
-              {title}
-            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.25rem'
+            }}>
+              <Typography sx={{ fontSize: '0.625rem', color: '#4b5563', fontWeight: 500 }}>
+                {title}
+              </Typography>
+              <ExpandMoreIcon sx={{ 
+                fontSize: '0.625rem', 
+                color: '#6b7280',
+                transform: isOpen ? 'rotate(180deg)' : 'none',
+                transition: 'transform 0.2s'
+              }} />
+            </Box>
+            
             {metricValue === '-' ? (
               <Typography sx={{ fontSize: '0.625rem', color: '#9ca3af' }}>
                 no station data
               </Typography>
             ) : (
-              <Typography sx={{ fontSize: '1rem', color: '#1f2937', fontWeight: 700 }}>
-                {metricValue}
-                <span style={{ fontSize: '0.625rem', color: '#6b7280', marginLeft: '2px' }}>
-                  {metricUnit}
-                </span>
-              </Typography>
+              <>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'baseline',
+                  gap: '2px'
+                }}>
+                  <Typography sx={{ fontSize: '1rem', color: '#1f2937', fontWeight: 700 }}>
+                    {metricValue}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.625rem', color: '#6b7280' }}>
+                    {metricUnit}
+                  </Typography>
+                </Box>
+
+                <Typography sx={{ 
+                  fontSize: '0.5rem', 
+                  color: '#6b7280',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {subtitle}
+                </Typography>
+              </>
             )}
           </Box>
-          
-          {metricValue !== '-' && (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingRight: '1rem'
-            }}>
-              <Typography sx={{ fontSize: '0.5rem', color: '#6b7280' }}>
-                {subtitle}
-              </Typography>
-            </Box>
-          )}
         </Box>
       </AccordionSummary>
       <AccordionDetails onClick={(e) => e.stopPropagation()}>

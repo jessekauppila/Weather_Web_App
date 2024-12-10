@@ -491,7 +491,7 @@ export default function Home() {
               onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
               metricValue={station['24h Snow Accumulation'].replace(' in', '')}
               metricUnit=" in"
-              subtitle="Last 24 Hours"
+              subtitle="24 hrs"
             />
 
             <MeasurementCard 
