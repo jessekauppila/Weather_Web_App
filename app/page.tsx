@@ -26,7 +26,7 @@ import WxSnowGraph from './wxSnowGraph';
 
 
 import { DayRangeType } from './types';
-import Accordion from './components/Accordion';
+import MeasurementCard from './components/MeasurementCard';
 
 interface Station {
   id: string;
@@ -484,8 +484,8 @@ export default function Home() {
         </div>
         <div onClick={() => onStationClick(station.Stid)}>
           <p className="station-elevation">{station.Elevation}</p>
-          <div className="station-grid">
-            <Accordion 
+          <div className="measurement-grid">
+            <MeasurementCard 
               title="Snow"
               isOpen={snowAccordionOpen}
               onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
@@ -494,7 +494,7 @@ export default function Home() {
               subtitle="Last 24 Hours"
             />
 
-            <Accordion 
+            <MeasurementCard 
               title="Temp"
               isOpen={tempAccordionOpen}
               onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
@@ -503,7 +503,7 @@ export default function Home() {
               subtitle="Current"
             />
 
-            <Accordion 
+            <MeasurementCard 
               title="Wind"
               isOpen={windAccordionOpen}
               onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
