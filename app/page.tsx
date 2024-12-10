@@ -26,10 +26,26 @@ import WxSnowGraph from './wxSnowGraph';
 
 
 import { DayRangeType } from './types';
+import Accordion from './components/Accordion';
 
 interface Station {
   id: string;
   name: string;
+}
+
+interface StationCardProps {
+  station: {
+    Station: string;
+    'Cur Air Temp': string;
+    '24h Snow Accumulation': string;
+    'Cur Wind Speed': string;
+    Elevation: string;
+    Stid: string;
+  };
+  onStationClick: (stid: string) => void;
+  observationsData: { data: any[]; title: string; } | null;
+  isActive: boolean;
+  onDropdownToggle: (stid: string | null) => void;
 }
 
 export default function Home() {
@@ -456,173 +472,45 @@ export default function Home() {
 
   // start STATION CARD 
 
-  const StationCard = ({ 
-    station, 
-    onStationClick,
-    observationsData,
-    isActive,
-    onDropdownToggle 
-  }: { 
-    station: { 
-      Station: string,
-      'Cur Air Temp': string,
-      '24h Snow Accumulation': string,
-      'Cur Wind Speed': string,
-      'Elevation': string,  
-      Stid: string
-    },
-    onStationClick: (stid: string) => void,
-    observationsData: {
-      data: any[];
-      title: string;
-    } | null,
-    isActive: boolean,
-    onDropdownToggle: (stid: string | null) => void
-  }) => {
-
-    // Filter observations for this station
-    const stationData = useMemo(() => {
-      if (!observationsData) return null;
-      
-      return {
-        data: observationsData.data.filter(obs => obs.Stid === station.Stid),
-        title: `${station.Station} Observations`
-      };
-    }, [observationsData, station.Stid]);
-
-    const handleDetailsClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onDropdownToggle(isActive ? null : station.Stid);
-    };
-
+  const StationCard = ({ station, onStationClick, observationsData, isActive, onDropdownToggle }: StationCardProps) => {
     const [snowAccordionOpen, setSnowAccordionOpen] = useState(false);
     const [tempAccordionOpen, setTempAccordionOpen] = useState(false);
     const [windAccordionOpen, setWindAccordionOpen] = useState(false);
 
     return (
-      <div className="bg-white p-2 rounded-lg shadow-md">
-        {/* Header with just station name */}
-        <div className="flex justify-between items-center mb-0">
-          <h2 className="text-sm font-bold text-gray-800">{station.Station}</h2>
+      <div className="station-card">
+        <div className="station-card-header">
+          <h2 className="station-name">{station.Station}</h2>
         </div>
+        <div onClick={() => onStationClick(station.Stid)}>
+          <p className="station-elevation">{station.Elevation}</p>
+          <div className="station-grid">
+            <Accordion 
+              title="Snow"
+              isOpen={snowAccordionOpen}
+              onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
+              metricValue={station['24h Snow Accumulation'].replace(' in', '')}
+              metricUnit=" in"
+              subtitle="Last 24 Hours"
+            />
 
-        {/* Clickable card content */}
-        <div 
-          className="cursor-pointer"
-          onClick={() => onStationClick(station.Stid)}
-        >
-          <p className="text-[10px] text-gray-500 mb-0">{station.Elevation}</p>
-          
-          {/* Grid content */}
-          <div className="grid grid-cols-3 gap-2 mb-0">
-            {/* SNOW */}
-            <div>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-gray-600 text-left">Snow</p>
-                <button 
-                  className={`text-[8px] text-gray-400 transform transition-transform duration-200 hover:text-gray-600 ${
-                    snowAccordionOpen ? 'rotate-180' : ''
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSnowAccordionOpen(!snowAccordionOpen);
-                  }}
-                >
-                  ▼
-                </button>
-              </div>
-              {/* Snow content */}
-              <div className={`transition-all duration-200 ${snowAccordionOpen ? 'h-auto opacity-100 mt-1' : 'h-0 opacity-0 overflow-hidden'}`}>
-                <div className="text-[10px] text-gray-600 bg-gray-50 p-1 rounded">
-                  Snow Accordion
-                </div>
-              </div>
-              {/* Original snow content */}
-              {station['24h Snow Accumulation'] === '-' ? (
-                <p className="text-[10px] text-gray-400 text-left">no station data</p>
-              ) : (
-                <>
-                  <p className="text-base text-gray-800 font-bold text-left">
-                    {station['24h Snow Accumulation']}
-                    <span className="text-[10px] text-gray-500"> in</span>
-                  </p>
-                  <p className="text-[8px] text-gray-500">Last 24 Hours</p>
-                </>
-              )}
-            </div>
+            <Accordion 
+              title="Temp"
+              isOpen={tempAccordionOpen}
+              onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
+              metricValue={station['Cur Air Temp'].replace(' °F', '')}
+              metricUnit="°F"
+              subtitle="Current"
+            />
 
-            {/* TEMP */}
-            <div>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-gray-600 text-left">Temp</p>
-                <button 
-                  className={`text-[8px] text-gray-400 transform transition-transform duration-200 hover:text-gray-600 ${
-                    tempAccordionOpen ? 'rotate-180' : ''
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTempAccordionOpen(!tempAccordionOpen);
-                  }}
-                >
-                  ▼
-                </button>
-              </div>
-              {/* Temp content */}
-              <div className={`transition-all duration-200 ${tempAccordionOpen ? 'h-auto opacity-100 mt-1' : 'h-0 opacity-0 overflow-hidden'}`}>
-                <div className="text-[10px] text-gray-600 bg-gray-50 p-1 rounded">
-                  Temp Accordion
-                </div>
-              </div>
-              {/* Original temp content */}
-              {station['Cur Air Temp'] === '-' ? (
-                <p className="text-[10px] text-gray-400 text-left">no station data</p>
-              ) : (
-                <>
-                  <p className="text-base text-gray-800 font-bold text-left">
-                    {station['Cur Air Temp'].replace(' °F', '')}
-                    <span className="text-[10px] text-gray-500">°F</span>
-                  </p>
-                  <p className="text-[8px] text-gray-500">Current</p>
-                </>
-              )}
-            </div>
-
-            {/* WIND */}
-            <div>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-gray-600 text-left">Wind</p>
-                <button 
-                  className={`text-[8px] text-gray-400 transform transition-transform duration-200 hover:text-gray-600 ${
-                    windAccordionOpen ? 'rotate-180' : ''
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setWindAccordionOpen(!windAccordionOpen);
-                  }}
-                >
-                  ▼
-                </button>
-              </div>
-              {/* Wind content */}
-              <div className={`transition-all duration-200 ${windAccordionOpen ? 'h-auto opacity-100 mt-1' : 'h-0 opacity-0 overflow-hidden'}`}>
-                <div className="text-[10px] text-gray-600 bg-gray-50 p-1 rounded">
-                  Wind Accordion
-                </div>
-              </div>
-              {/* Original wind content */}
-              {station['Cur Wind Speed'] === '-' ? (
-                <p className="text-[10px] text-gray-400 text-left">no station data</p>
-              ) : (
-                <>
-                  <p className="text-base text-gray-800 font-bold text-left">
-                    {station['Cur Wind Speed'].replace(' mph', '')}
-                    <span className="text-[10px] text-gray-500"> mph</span>
-                  </p>
-                  <p className="text-[8px] text-gray-500">Current</p>
-                </>
-              )}
-            </div>
+            <Accordion 
+              title="Wind"
+              isOpen={windAccordionOpen}
+              onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
+              metricValue={station['Cur Wind Speed'].replace(' mph', '')}
+              metricUnit=" mph"
+              subtitle="Current"
+            />
           </div>
         </div>
       </div>
