@@ -48,6 +48,7 @@ interface StationCardProps {
     'Wind Direction': string;
     'Total Snow Depth Change': string;
     'Precip Accum One Hour': string;
+    'Total Snow Depth': string;
     [key: string]: string;
   };
   onStationClick: (stid: string) => void;
@@ -433,7 +434,7 @@ export default function Home() {
   useEffect(() => {
     //console.log('selectedStation changed to:', selectedStation);
     if (selectedStation) {
-      //console.log('🔄 Switching to daily mode - Station selected:', selectedStation);
+      //console.log('���� Switching to daily mode - Station selected:', selectedStation);
       setTableMode('daily');
     } else {
       //console.log('🔄 Switching to summary mode - No station selected');
@@ -487,42 +488,52 @@ export default function Home() {
 
     return (
       <div className="station-card">
-        <div className="station-card-header">
+        <div 
+          className="station-card-header"
+          onClick={() => onStationClick(station.Stid)}
+          style={{ cursor: 'pointer' }}
+        >
           <h2 className="station-name">{station.Station}</h2>
         </div>
-        <div onClick={() => onStationClick(station.Stid)}>
-          <p className="station-elevation">{station.Elevation}</p>
-          <div className="measurement-grid">
-            <MeasurementCard 
-              title="Snow"
-              isOpen={snowAccordionOpen}
-              onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
-              metricValue={station['24h Snow Accumulation'].replace(' in', '')}
-              metricUnit=" in"
-              subtitle="Accumulation"
-              station={station}
-            />
+        
+        <p 
+          className="station-elevation" 
+          onClick={() => onStationClick(station.Stid)}
+          style={{ cursor: 'pointer' }}
+        >
+          {station.Elevation}
+        </p>
 
-            <MeasurementCard 
-              title="Temp"
-              isOpen={tempAccordionOpen}
-              onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
-              metricValue={station['Cur Air Temp'].replace(' °F', '')}
-              metricUnit="°F"
-              subtitle="Current"
-              station={station}
-            />
+        <div className="measurement-grid">
+          <MeasurementCard 
+            title="Snow"
+            isOpen={snowAccordionOpen}
+            onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
+            metricValue={station['24h Snow Accumulation'].replace(' in', '')}
+            metricUnit=" in"
+            subtitle="Accumulated"
+            station={station}
+          />
 
-            <MeasurementCard 
-              title="Wind"
-              isOpen={windAccordionOpen}
-              onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
-              metricValue={station['Cur Wind Speed'].replace(' mph', '')}
-              metricUnit=" mph"
-              subtitle="Current"
-              station={station}
-            />
-          </div>
+          <MeasurementCard 
+            title="Temp"
+            isOpen={tempAccordionOpen}
+            onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
+            metricValue={station['Cur Air Temp'].replace(' °F', '')}
+            metricUnit="°F"
+            subtitle="Current"
+            station={station}
+          />
+
+          <MeasurementCard 
+            title="Wind"
+            isOpen={windAccordionOpen}
+            onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
+            metricValue={station['Cur Wind Speed'].replace(' mph', '')}
+            metricUnit=" mph"
+            subtitle="Current"
+            station={station}
+          />
         </div>
       </div>
     );
