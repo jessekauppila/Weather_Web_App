@@ -26,7 +26,12 @@ import WxSnowGraph from './wxSnowGraph';
 
 
 import { DayRangeType } from './types';
-import MeasurementCard from './components/MeasurementCard';
+
+//import MeasurementCard from './components/MeasurementCard';
+import RegionCard from './components/RegionCard';
+//import StationCard from './components/StationCard';
+
+import TimeToolbar from './components/TimeToolbar';
 
 interface Station {
   id: string;
@@ -434,7 +439,7 @@ export default function Home() {
   useEffect(() => {
     //console.log('selectedStation changed to:', selectedStation);
     if (selectedStation) {
-      //console.log('���� Switching to daily mode - Station selected:', selectedStation);
+      //console.log(' Switching to daily mode - Station selected:', selectedStation);
       setTableMode('daily');
     } else {
       //console.log('🔄 Switching to summary mode - No station selected');
@@ -481,63 +486,7 @@ export default function Home() {
 
   // start STATION CARD 
 
-  const StationCard = ({ station, onStationClick, observationsData, isActive, onDropdownToggle }: StationCardProps) => {
-    const [snowAccordionOpen, setSnowAccordionOpen] = useState(false);
-    const [tempAccordionOpen, setTempAccordionOpen] = useState(false);
-    const [windAccordionOpen, setWindAccordionOpen] = useState(false);
 
-    return (
-      <div className="station-card">
-        <div 
-          className="station-card-header"
-          onClick={() => onStationClick(station.Stid)}
-          style={{ cursor: 'pointer' }}
-        >
-          <h2 className="station-name">{station.Station}</h2>
-        </div>
-        
-        <p 
-          className="station-elevation" 
-          onClick={() => onStationClick(station.Stid)}
-          style={{ cursor: 'pointer' }}
-        >
-          {station.Elevation}
-        </p>
-
-        <div className="measurement-grid">
-          <MeasurementCard 
-            title="Snow"
-            isOpen={snowAccordionOpen}
-            onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
-            metricValue={station['24h Snow Accumulation'].replace(' in', '')}
-            metricUnit=" in"
-            subtitle="Accumulated"
-            station={station}
-          />
-
-          <MeasurementCard 
-            title="Temp"
-            isOpen={tempAccordionOpen}
-            onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
-            metricValue={station['Cur Air Temp'].replace(' °F', '')}
-            metricUnit="°F"
-            subtitle="Current"
-            station={station}
-          />
-
-          <MeasurementCard 
-            title="Wind"
-            isOpen={windAccordionOpen}
-            onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
-            metricValue={station['Cur Wind Speed'].replace(' mph', '')}
-            metricUnit=" mph"
-            subtitle="Current"
-            station={station}
-          />
-        </div>
-      </div>
-    );
-  };
 
     // end STATION CARD 
 
@@ -556,52 +505,7 @@ export default function Home() {
     
   };
 
-  // RegionCard component that contains multiple StationCards
-  const RegionCard = ({ 
-    title, 
-    stations, 
-    stationIds, 
-    onStationClick,
-    observationsData,
-    activeDropdown,
-    onDropdownToggle
-  }: { 
-    title: string, 
-    stations: Array<{
-      Station: string,
-      'Cur Air Temp': string,
-      '24h Snow Accumulation': string,
-      'Cur Wind Speed': string,
-      'Elevation': string,
-      Stid: string
-    }>,
-    stationIds: string[],
-    onStationClick: (stid: string) => void,
-    observationsData: {
-      data: any[];
-      title: string;
-    } | null,
-    activeDropdown: string | null,
-    onDropdownToggle: (stid: string | null) => void
-  }) => (
-    <div className="bg-[cornflowerblue] bg-opacity-10 p-4 rounded-lg mb-4">
-      <h2 className="text-xl text-black font-bold mb-4">{title}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {stations.filter(station => 
-          stationIds.includes(station.Stid)
-        ).map((station, index) => (
-          <StationCard 
-            key={index} 
-            station={station} 
-            onStationClick={onStationClick}
-            observationsData={observationsData}
-            isActive={activeDropdown === station.Stid}
-            onDropdownToggle={onDropdownToggle}
-          />
-        ))}
-      </div>
-    </div>
-  );
+
 
   // Add click outside handler at the top level
   useEffect(() => {
@@ -633,122 +537,27 @@ export default function Home() {
 
   // Usage in your render
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100">
+    <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100 w-full">
       <div className="w-full max-w-6xl space-y-4">
-
-        {/* Top Tool Bar */}
-
-        <div className="flex flex-col items-center">
-          <div className="flex flex-col space-y-4 bg-[cornflowerblue] p-4 rounded-xl shadow-md">
-            {/* Top row with date controls */}
-
-            <div className="flex items-center justify-center space-x-4">
-              <select
-                value={calculateCurrentTimeRange()}
-                onChange={handleTimeRangeChange}
-                className="neumorphic-button dropdown h-10"
-              >
-                <option value="1">1 Day</option>
-                <option value="3">Past 3 Days</option>
-                <option value="7">Past 7 Days</option>
-                <option value="14">Past 14 Days</option>
-                <option value="30">Past 30 Days</option>
-                <option value="custom">Custom Range</option>
-              </select>
-
-              
-              <div className="flex gap-4 items-center">
-                {/* <DayRangeSelect 
-                  value={dayRangeType} 
-                  onChange={handleDayRangeChange} 
-                /> */}
-                <div className="flex items-center space-x-2">
-                  {isOneDay && (
-                    <button onClick={handlePrevDay} className="neumorphic-button nav-button h-10 w-10">
-                      &lt;
-                    </button>
-                  )}
-                  
-                  <input
-                    type="date"
-                    value={format(selectedDate, 'yyyy-MM-dd')}
-                    onChange={handleDateChange}
-                    className="neumorphic-button date-picker h-10"
-                  />
-                  
-                  {isOneDay && (
-                    <button onClick={handleNextDay} className="neumorphic-button nav-button h-10 w-10">
-                      &gt;
-                    </button>
-                  )}
-
-                  {!isOneDay && (
-                    <input
-                      type="date"
-                      value={format(endDate, 'yyyy-MM-dd')}
-                      onChange={handleEndDateChange}
-                      className="neumorphic-button date-picker h-10"
-                      min={format(selectedDate, 'yyyy-MM-dd')}
-                    />
-                  )}
-
-              <div className="flex items-center space-x-4">
-                {/* Main container - now narrower since dropdown expands left */}
-                <details className="relative w-[40px]"> {/* Match button width */}
-                  {/* Button that shows the caret - same size as before */}
-                  <summary className="neumorphic-button h-10 w-10 flex items-center justify-center px-4 cursor-pointer">
-                    <span className="transform transition-transform duration-200 details-caret">▼</span>
-                  </summary>
-                  {/* Expanded dropdown menu - now positioned to expand leftward */}
-                  <div className="absolute right-0 top-full mt-2 bg-[cornflowerblue] p-4 rounded-lg shadow-lg space-y-4 w-[300px]">
-                    <select
-                      value={dayRangeType}
-                      onChange={handleDayRangeTypeChange}
-                      className="neumorphic-button dropdown h-10 w-full"
-                    >
-                      <option value={DayRangeType.MIDNIGHT}>Range: Midnight to Midnight</option>
-                      <option value={DayRangeType.CURRENT}>Range: Rolling 24 hours</option>
-                      <option value={DayRangeType.CUSTOM}>Range: Custom</option>
-                    </select>
-
-                    {/* Time picker - only shows when Custom is selected */}
-                    {dayRangeType === DayRangeType.CUSTOM && (
-                      <input
-                        type="time"
-                        value={customTime}
-                        onChange={(e) => setCustomTime(e.target.value)}
-                        className="neumorphic-button time-picker h-10 w-full"
-                      />
-                    )}
-                  </div>
-                </details>
-              </div>
-
-
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom row with station selector */}
-            {/* Station selector - show when a station is selected or after clicking from table */}
-            {(selectedStation || stationIds.length === 1) && (
-              <div className="flex justify-center">
-                <select
-                  value={selectedStation}
-                  onChange={handleStationChange}
-                  className="neumorphic-button dropdown h-10"
-                >
-                  <option value="">All Stations</option>
-                  {stations.map((station) => (
-                    <option key={station.id} value={station.id}>
-                      {station.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
+        <TimeToolbar
+          calculateCurrentTimeRange={calculateCurrentTimeRange}
+          handleTimeRangeChange={handleTimeRangeChange}
+          isOneDay={isOneDay}
+          handlePrevDay={handlePrevDay}
+          handleNextDay={handleNextDay}
+          selectedDate={selectedDate}
+          handleDateChange={handleDateChange}
+          endDate={endDate}
+          handleEndDateChange={handleEndDateChange}
+          dayRangeType={dayRangeType}
+          handleDayRangeTypeChange={handleDayRangeTypeChange}
+          customTime={customTime}
+          setCustomTime={setCustomTime}
+          selectedStation={selectedStation}
+          stations={stations}
+          handleStationChange={handleStationChange}
+          stationIds={stationIds}
+        />
 
         {/* Should show if stuff is loading, but not showing anything now  */}
         <div 
@@ -758,6 +567,14 @@ export default function Home() {
               : 'opacity-0'
           }`}
         >
+
+{observationsDataDay && (
+            <DayAveragesTable 
+              dayAverages={observationsDataDay} 
+              onStationClick={handleStationClick}
+              mode={tableMode}
+            />
+          )}
 
         {/*  Regions  */}
 
@@ -810,13 +627,14 @@ export default function Home() {
            {/* Tables   */}
 
 
-          {observationsDataDay && tableMode === 'daily' && (
+   {/* This is when I want the daily table to show up only on daily page   */}
+          {/* {observationsDataDay && tableMode === 'daily' && (
             <DayAveragesTable 
               dayAverages={observationsDataDay} 
               onStationClick={handleStationClick}
               mode={tableMode}
             />
-          )}
+          )} */}
 
         {filteredObservationsDataHour && selectedStation && (
                     <HourWxTable 
