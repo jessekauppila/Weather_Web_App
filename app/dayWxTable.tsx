@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
+import { Button } from '@mui/material';
 
 interface DayAverage {
   [key: string]: string | number;
@@ -272,29 +273,44 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       .enter()
       .append('td')
       .merge(cells as any)
-      .attr('class', d => d.isStation ? 
-        // Basic styling
-        'cursor-pointer ' +         
-        'neumorphic-cell ' +       // Add the neumorphic cell class
-        
-        // Animation
-        'transition-all ' +        
-        'duration-300'             
-        : ''
-      )
-      .on('click', (event, d) => {
+      .each(function(d) {
         if (d.isStation && d.stid) {
-          console.log('Clicked station:', d.stid);
-          onStationClick(d.stid);
+          // Clear existing content
+          d3.select(this).html('');
+          // Create Material UI button
+          const button = document.createElement('button');
+          button.className = `
+            MuiButton-root 
+            MuiButton-outlined 
+            MuiButton-sizeSmall 
+            MuiButton-outlinedPrimary
+            bg-transparent
+            transition-colors
+            duration-200
+            min-w-[120px]
+            text-left
+            px-2
+            py-1
+            rounded
+            border
+            border-solid
+            border-[rgba(73,89,127,0.23)]
+            hover:border-[rgba(73,89,127,0.5)]
+          `;
+          button.textContent = d.value;
+          button.onclick = () => onStationClick(d.stid);
+          // Add the button to the cell
+          this.appendChild(button);
+        } else {
+          // For non-station cells, just set the text
+          d3.select(this).text(d => {
+            if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
+              const value = parseFloat(d.value);
+              return `${value.toFixed(3)} in`;
+            }
+            return d.value;
+          });
         }
-      })
-      .text(d => {
-        // Special formatting for Precip Accum One Hour
-        if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
-          const value = parseFloat(d.value);
-          return `${value.toFixed(3)} in`;
-        }
-        return d.value;
       });
 
     cells.exit().remove();
