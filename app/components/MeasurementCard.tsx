@@ -69,13 +69,13 @@ const MeasurementCard = ({
     switch (title) {
       case 'Temp':
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Air Temp Min'], '°F')}
               <Box component="p" className="metric-subtitle">Min</Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Air Temp Max'], '°F')}
               <Box component="p" className="metric-subtitle">Max</Box>
             </Box>
@@ -84,18 +84,18 @@ const MeasurementCard = ({
 
       case 'Wind':
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Wind Speed Avg'], 'mph')}
               <Box component="p" className="metric-subtitle">Average</Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Max Wind Gust'], 'mph')}
               <Box component="p" className="metric-subtitle">Gust</Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Wind Direction'], '')}
               <Box component="p" className="metric-subtitle">Direction</Box>
             </Box>
@@ -104,18 +104,18 @@ const MeasurementCard = ({
 
       case 'Snow':
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Total Snow Depth'], 'in')}
               <Box component="p" className="metric-subtitle">Snow Depth</Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(station['Total Snow Depth Change'], 'in')}
               <Box component="p" className="metric-subtitle">Depth Change</Box>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
               {renderValue(
                 station['Precip Accum One Hour'] !== '-' 
                   ? parseFloat(station['Precip Accum One Hour']).toFixed(2) + ' in'
@@ -136,12 +136,9 @@ const MeasurementCard = ({
     <MuiAccordion 
       expanded={isOpen}
       onChange={(e: React.SyntheticEvent) => {
-        // Only stop propagation for the expand/collapse icon
-        const target = e.target as HTMLElement;
-        if (target.closest('.MuiAccordionSummary-expandIconWrapper')) {
-          e.stopPropagation();
-          onToggle();
-        }
+        // Only handle the accordion toggle
+        e.stopPropagation();  // Stop click from bubbling to station card
+        onToggle();  // Toggle accordion state
       }}
       sx={{
         backgroundColor: 'white',
@@ -150,23 +147,20 @@ const MeasurementCard = ({
         maxWidth: '100%',
         overflow: 'visible',
         position: 'relative',
-        padding: '0.15rem',
+        padding: '0.1rem',
         '&:before': {
           display: 'none',
         },
         '& .MuiAccordionSummary-root': {
-          padding: '0.15rem',
+          padding: '0.1rem',
           minHeight: 'unset',
-          width: '100%',
-          '& .MuiAccordionSummary-expandIconWrapper': {
-            display: 'none'
-          }
+          width: '100%'
         },
         '& .MuiAccordionSummary-content': {
           margin: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.1rem',
+          gap: '0.05rem',
           width: '100%'
         }
       }}
@@ -183,7 +177,7 @@ const MeasurementCard = ({
           pointerEvents: 'none',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.1rem'
+          gap: '0.05rem'
         }}>
           <Box>
             <Box sx={{ 
@@ -244,13 +238,13 @@ const MeasurementCard = ({
       >
         <Box sx={{ 
           backgroundColor: '#f9fafb',
-          padding: '0.15rem',
+          padding: '0.1rem',
           borderRadius: '0.25rem'
         }}>
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
-            gap: '0.15rem'
+            gap: '0.1rem'
           }}>
             {renderAccordionContent()}
           </Box>
