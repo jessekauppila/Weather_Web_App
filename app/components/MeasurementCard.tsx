@@ -135,9 +135,13 @@ const MeasurementCard = ({
   return (
     <MuiAccordion 
       expanded={isOpen}
-      onChange={(e) => {
-        e.stopPropagation();
-        onToggle();
+      onChange={(e: React.SyntheticEvent) => {
+        // Only stop propagation for the expand/collapse icon
+        const target = e.target as HTMLElement;
+        if (target.closest('.MuiAccordionSummary-expandIconWrapper')) {
+          e.stopPropagation();
+          onToggle();
+        }
       }}
       sx={{
         backgroundColor: 'white',
@@ -173,7 +177,6 @@ const MeasurementCard = ({
           color: '#6b7280',
           padding: '0.25rem'
         }} />}
-        onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ 
           width: 'calc(100% - 1.5rem)',
@@ -230,7 +233,15 @@ const MeasurementCard = ({
           </Box>
         </Box>
       </AccordionSummary>
-      <AccordionDetails onClick={(e) => e.stopPropagation()}>
+      <AccordionDetails 
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          // Only stop propagation for accordion content clicks
+          const target = e.target as HTMLElement;
+          if (target.closest('.MuiAccordionDetails-root')) {
+            e.stopPropagation();
+          }
+        }}
+      >
         <Box sx={{ 
           backgroundColor: '#f9fafb',
           padding: '0.15rem',
