@@ -10,10 +10,10 @@ import React, {
   useMemo,
 } from 'react';
 
-import { filteredObservationData } from './filteredObservationData';
-import hourWxTableDataFiltered from './hourWxTableDataFiltered';
+//import { filteredObservationData } from './filteredObservationData';
+//import hourWxTableDataFiltered from './hourWxTableDataFiltered';
 
-import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
+// import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import DayAveragesTable from './dayWxTable';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import AccordionWrapper from './components/AccordionWrapper';
@@ -32,6 +32,7 @@ import RegionCard from './components/RegionCard';
 //import StationCard from './components/StationCard';
 
 import TimeToolbar from './components/TimeToolbar';
+import { fetchWeatherData } from './utils/fetchWeatherData';
 
 interface Station {
   id: string;
@@ -323,67 +324,28 @@ export default function Home() {
     };
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
-  // Then update the useEffect to use the memoized values and minimal dependencies
+  
+  // Create a refresh function
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await fetchWeatherData({
+      timeRangeData,
+      stationIds,
+      tableMode,
+      startHour,
+      endHour,
+      dayRangeType,
+      setObservationsDataDay,
+      setObservationsDataHour,
+      setFilteredObservationsDataHour,
+      setIsLoading
+    });
+  };
+
+  // Use the same function in useEffect
   useEffect(() => {
-    const fetchDataFromDB = async () => {
-      try {
-        const { start_time_pdt, end_time_pdt } = timeRangeData;
-        
-        const response = await fetch('/api/getObservationsFromDB', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            startDate: start_time_pdt.toISOString(),
-            endDate: end_time_pdt.toISOString(),
-            stationIds: stationIds,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('API error');
-        }
-
-        const result = await response.json();
-        
-        // Process data once and store results
-        const filteredData = filteredObservationData(result.observations, {
-          mode: tableMode,
-          startHour,
-          endHour,
-          dayRangeType,
-          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-        });
-
-        // Update all states at once
-        setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
-          mode: tableMode,
-          startHour,
-          endHour,
-          dayRangeType,
-          start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-          end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-        }));
-        
-        setObservationsDataHour(hourWxTableDataFromDB(
-          Object.values(result.observations) as any[][] as any[],
-          result.units
-        ));
-
-        setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
-        setIsLoading(false);
-
-      } catch (error) {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDataFromDB();
-  }, [timeRangeData, stationIds]); // Reduced dependencies
-
-
+    handleRefresh();
+  }, [timeRangeData, stationIds]);
 
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
@@ -557,7 +519,8 @@ export default function Home() {
           stations={stations}
           handleStationChange={handleStationChange}
           stationIds={stationIds}
-          observationsData={filteredObservationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          onRefresh={handleRefresh}
         />
 
         {/* Should show if stuff is loading, but not showing anything now  */}
