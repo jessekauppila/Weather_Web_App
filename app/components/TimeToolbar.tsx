@@ -4,6 +4,7 @@ import { DayRangeType } from '../types';
 import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import moment from 'moment';
+import { fetchWeatherData } from '../utils/fetchWeatherData';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -23,10 +24,11 @@ interface TimeToolbarProps {
   stations: Array<{ id: string; name: string }>;
   handleStationChange: (event: SelectChangeEvent<string>) => void;
   stationIds: string[];
-  observationsData?: {
+  filteredObservationsDataHour?: {
     data: any[];
     title: string;
   } | null;
+  onRefresh: () => void;
 }
 
 const TimeToolbar = ({
@@ -47,7 +49,8 @@ const TimeToolbar = ({
   stations,
   handleStationChange,
   stationIds,
-  observationsData,
+  filteredObservationsDataHour,
+  onRefresh
 }: TimeToolbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -62,7 +65,7 @@ const TimeToolbar = ({
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
 
-  console.log(observationsData)
+  console.log(filteredObservationsDataHour)
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -136,6 +139,7 @@ const TimeToolbar = ({
             <Button variant="outlined" size="small" onClick={handleClick}>
               Cut Offs
             </Button>
+
             <Popover
               id={id}
               open={open}
@@ -179,6 +183,15 @@ const TimeToolbar = ({
                 )}
               </div>
             </Popover>
+
+            <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={onRefresh}
+                //className="ml-2"
+                >
+                Refresh Data
+                </Button>
           </div>
         </div>
 
@@ -200,28 +213,30 @@ const TimeToolbar = ({
             </Select>
           </FormControl>
         )}
+
+
       </div>
 
       
 
       {/* Status lines showing both timespans */}
-      {(observationsData || observationsData) && (
+      {(filteredObservationsDataHour || filteredObservationsDataHour) && (
         <div className="text-sm text-gray-500 mt-2 text-center space-y-1">
-          {observationsData && observationsData.data.length > 0 && (
+          {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
             <>
               <div>
-                Last Update: {moment(observationsData.data[observationsData.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
+                Last Update: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div>
               {/* <div>
-                Query Range: {moment(observationsData.data[0].date_time).format('MM/DD/YYYY h:mm A')} - {' '}
-                {moment(observationsData.data[observationsData.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
+                Query Range: {moment(filteredObservationsDataHour.data[0].date_time).format('MM/DD/YYYY h:mm A')} - {' '}
+                {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div> */}
             </>
           )}
-          {observationsData && observationsData.data.length > 0 && (
+          {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
             <div>
-            Data: {moment(`${observationsData.data[0].Day} ${observationsData.data[0].Hour}`).format('MMM DD h:mm A')} - {' '}
-              {moment(`${observationsData.data[observationsData.data.length - 1].Day} ${observationsData.data[observationsData.data.length - 1].Hour}`).format('MMM DD h:mm A')}
+              Data: {moment(`${filteredObservationsDataHour.data[0].Day} ${filteredObservationsDataHour.data[0].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')} - {' '}
+              {moment(`${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Day} ${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')}
             </div>
           )}
         </div>
