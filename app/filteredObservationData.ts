@@ -8,6 +8,8 @@ export function filteredObservationData(
   observationsData: Array<Record<string, any>>,
   options: WxTableOptions
 ) {
+  console.log('Filtering observations:', { observationsData, options });
+
   const { startHour, endHour, mode } = options;
 
   //console.log('OBSERVATIONS DATA in filteredObservationData:', observationsData);

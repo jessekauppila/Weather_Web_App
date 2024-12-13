@@ -36,7 +36,33 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       d3.select(svgRef.current).selectAll('*').remove();
     }
 
-    if (!dayAverages.data.length || !svgRef.current || !containerRef.current) return;
+    if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) return;
+
+    // Process data first
+    const data = dayAverages.data
+      .map((d) => {
+        const date = new Date(d.Date);
+        const totalSnowDepth = parseFloat(String(d['Total Snow Depth']).replace(' in', ''));
+        const snowDepth24h = parseFloat(String(d['24h Snow Accumulation']).replace(' in', ''));
+        const precipHour = parseFloat(String(d['Precip Accum One Hour']).replace(' in', ''));
+        const tempMin = parseFloat(String(d['Air Temp Min']).replace(' °F', ''));
+        const tempMax = parseFloat(String(d['Air Temp Max']).replace(' °F', ''));
+
+        return {
+          date,
+          totalSnowDepth: isNaN(totalSnowDepth) ? 0 : totalSnowDepth,
+          snowDepth24h: isNaN(snowDepth24h) ? 0 : snowDepth24h,
+          precipHour: isNaN(precipHour) ? 0 : precipHour,
+          tempMin: isNaN(tempMin) ? 0 : tempMin,
+          tempMax: isNaN(tempMax) ? 0 : tempMax
+        };
+      })
+      .filter(d => d.date && !isNaN(d.date.getTime()));
+
+    // Add safety check before accessing first data point
+    if (!data.length) return;  // Add this check
+
+    const firstDataPoint = data[0];
 
     // Get container dimensions and set margins
     const containerRect = containerRef.current.getBoundingClientRect();
@@ -57,31 +83,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('height', containerHeight)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Process data with validation and logging
-    const data = dayAverages.data
-      .map((d) => {
-        const date = new Date(d.Date);
-        const totalSnowDepth = parseFloat(String(d['Total Snow Depth']).replace(' in', ''));
-        const snowDepth24h = parseFloat(String(d['24h Snow Accumulation']).replace(' in', ''));
-        const precipHour = parseFloat(String(d['Precip Accum One Hour']).replace(' in', ''));
-        const tempMin = parseFloat(String(d['Air Temp Min']).replace(' °F', ''));
-        const tempMax = parseFloat(String(d['Air Temp Max']).replace(' °F', ''));
-
-        return {
-          date,
-          totalSnowDepth: isNaN(totalSnowDepth) ? 0 : totalSnowDepth,
-          snowDepth24h: isNaN(snowDepth24h) ? 0 : snowDepth24h,
-          precipHour: isNaN(precipHour) ? 0 : precipHour,
-          tempMin: isNaN(tempMin) ? 0 : tempMin,
-          tempMax: isNaN(tempMax) ? 0 : tempMax
-        };
-      })
-      .filter(d => d.date && !isNaN(d.date.getTime()))
-      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Sort by date
-
-    console.log('Raw precip values:', dayAverages.data.map(d => d['Precip Accum One Hour']));
-    console.log('Parsed precip values:', data.map(d => d.precipHour));
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -149,7 +150,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', 'blue');
 
     // Update snow depth label to blue and position at first data point
-    const firstDataPoint = data[0];
     svg.append('text')
       .attr('x', xScale(firstDataPoint.date))  // Position at first data point's x coordinate
       .attr('y', yScaleLine(firstDataPoint.totalSnowDepth) - 10)  // Position above the line (-10 for padding)

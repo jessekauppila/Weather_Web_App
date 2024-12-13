@@ -14,7 +14,7 @@ export default function AccordionWrapper({
   title,
   subtitle,
   children,
-  defaultExpanded = true,
+  defaultExpanded = false,
   onExpandChange
 }: AccordionWrapperProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -29,7 +29,7 @@ export default function AccordionWrapper({
   return (
     <Accordion 
       defaultExpanded={defaultExpanded}
-      className="bg-white rounded-xl shadow-md"
+      className="bg-white rounded-lg shadow-sm mb-4"
       onChange={(_, isExpanded) => handleChange(isExpanded)}
       sx={{
         '& .MuiAccordionSummary-root': {
@@ -47,7 +47,8 @@ export default function AccordionWrapper({
         },
         '&:before': {
           display: 'none'
-        }
+        },
+        marginBottom: '1rem !important'
       }}
     >
       <AccordionSummary
