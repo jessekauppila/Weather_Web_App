@@ -69,7 +69,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
-  console.log(dayAverages.data)
+  //console.log(dayAverages.data)
 
   useEffect(() => {
     // Clear any existing content and reset loaded state
@@ -95,7 +95,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     };
 
     // Add console logs to check data
-    console.log('Raw data before processing:', dayAverages.data);
+    //console.log('Raw data before processing:', dayAverages.data);
 
     // Process data with validation and interpolation
     const rawData = dayAverages.data
@@ -147,7 +147,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
       });
 
-    console.log('Data after initial processing:', rawData);
+    //console.log('Data after initial processing:', rawData);
 
     // Apply interpolation after sorting and change calculation
     const data = interpolateValues(rawData);
