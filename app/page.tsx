@@ -254,10 +254,10 @@ export default function Home() {
         setIsOneDay(true);
     }
 
-    console.log('Setting dates:', {
-      start: newStartDate,
-      end: newEndDate
-    });
+    // console.log('Setting dates:', {
+    //   start: newStartDate,
+    //   end: newEndDate
+    // });
 
     setSelectedDate(newStartDate);
     setEndDate(newEndDate);
@@ -481,7 +481,7 @@ export default function Home() {
     //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
   }, [dayRangeType]);
 
-  console.log('observationsDataDay', observationsDataDay);
+  //console.log('observationsDataDay', observationsDataDay);
 
 
   // start STATION CARD 
@@ -557,6 +557,7 @@ export default function Home() {
           stations={stations}
           handleStationChange={handleStationChange}
           stationIds={stationIds}
+          observationsData={filteredObservationsDataHour}
         />
 
         {/* Should show if stuff is loading, but not showing anything now  */}
