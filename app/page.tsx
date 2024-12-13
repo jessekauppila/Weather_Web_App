@@ -606,26 +606,38 @@ export default function Home() {
         
         {/* Graphs   */}
 
-        {observationsDataDay && selectedStation && stationIds.length === 1 && timeRange > 3 && (
+
+
+<div className="flex flex-col gap-4">
+      {     /* USED TO BE THIS timeRange > 3 &&  */}
+        {observationsDataDay && selectedStation && stationIds.length === 1 && ( 
             <>
               <AccordionWrapper
-                title="Snow and Temperature Graph"
+                title="Daily Snow and Temperature Graph"
                 subtitle={observationsDataDay.title}
-                defaultExpanded={true}
+                defaultExpanded={false}
               >
                 <DayWxSnowGraph dayAverages={observationsDataDay} />
               </AccordionWrapper>
             </>
           )}
 
-          {filteredObservationsDataHour && selectedStation && stationIds.length === 1 && (
+          {filteredObservationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
             <>
+                <AccordionWrapper
+                  title="Hourly Snow and Temperature Graph"
+                  subtitle={observationsDataDay.title}
+                  defaultExpanded={false}
+                >
               <WxSnowGraph 
                 dayAverages={filteredObservationsDataHour} 
                 isHourly={true}
               />
+                            </AccordionWrapper>
+
             </>
           )}
+</div>
 
            {/* Tables   */}
 

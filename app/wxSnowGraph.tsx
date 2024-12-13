@@ -69,6 +69,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
+  console.log(dayAverages.data)
+
   useEffect(() => {
     // Clear any existing content and reset loaded state
     setIsLoaded(false);
@@ -92,6 +94,9 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       legendOffset: 40  // This includes the dateAxisOffset plus additional space
     };
 
+    // Add console logs to check data
+    console.log('Raw data before processing:', dayAverages.data);
+
     // Process data with validation and interpolation
     const rawData = dayAverages.data
       .map((d) => {
@@ -102,6 +107,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         const snowDepth24h = parseFloat(String(d['24h Snow Depth']).replace(' in', ''));
         const precipAccum = parseFloat(String(d['Precip Accum']).replace(' in', ''));
         const temp = parseFloat(String(d['Air Temp']).replace(' °F', ''));
+
+
 
         return {
           date,
@@ -139,6 +146,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
         return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
       });
+
+    console.log('Data after initial processing:', rawData);
 
     // Apply interpolation after sorting and change calculation
     const data = interpolateValues(rawData);
@@ -354,7 +363,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Use xScaleBars for the bars
     svg.selectAll('.snow-bars')
-      .data(data.filter(d => d.snowDepth24h > 0))
+      .data(data)
       .enter()
       .append('rect')
       .attr('class', 'snow-bars')
@@ -366,7 +375,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('opacity', 0.7);
 
     svg.selectAll('.precip-bars')
-      .data(data.filter(d => d.precipAccum > 0))
+      .data(data)
       .enter()
       .append('rect')
       .attr('class', 'precip-bars')
@@ -531,18 +540,16 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('class', 'x-axis-time')
       .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
       .call(d3.axisBottom(xScaleBars)
-        .tickValues(data.map(d => d.date))  // Keep all tick positions
-        .tickFormat((d) => {
-          //console.log('Formatting date:', d, 'shouldShowAllTimes:', shouldShowAllTimes);
-          return shouldShowAllTimes ? moment(d as Date).format('h a') : '';
-        })
+        .tickValues(data.map(d => {
+          // Only show ticks for the first hour of each day
+          const hour = d.date.getHours();
+          const minute = d.date.getMinutes();
+          return (hour === 0 && minute === 0) ? d.date : null;
+        }).filter(Boolean))  // Remove null values
         .tickSize(5))
       .call(g => g.select('.domain').remove())
       .selectAll('text')
-      .style('text-anchor', 'middle')
-      .style('fill', 'black')
-      .style('font-size', '10px')
-      .attr('dy', '-1.5em');
+      .remove();  // Remove all text since we'll add our own labels
 
     // Add date brackets above
     const dateRanges = getDateTicks();
@@ -560,7 +567,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         .attr('stroke', 'black')
         .attr('fill', 'none');
 
-      // Add centered date label below time annotations
+      // Add centered date label
       svg.append('text')
         .attr('x', xScaleBars(date) + (xScaleBars(nextDate) - xScaleBars(date))/2)
         .attr('y', height + spacing.dateAxisOffset + 8)
@@ -586,7 +593,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         overflow: 'hidden'
       }}
     >
-      <h3 className="text-center font-bold mb-4">{dayAverages.title}</h3>
+      {/* <h3 className="text-center font-bold mb-4">{dayAverages.title}</h3> */}
       <svg 
         ref={svgRef}
         style={{
