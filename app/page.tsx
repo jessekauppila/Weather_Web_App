@@ -16,7 +16,7 @@ import hourWxTableDataFiltered from './hourWxTableDataFiltered';
 import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import DayAveragesTable from './dayWxTable';
 import DayWxSnowGraph from './dayWxSnowGraph';
-
+import AccordionWrapper from './components/AccordionWrapper';
 
 import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import HourWxTable from './hourWxTable';
@@ -608,10 +608,13 @@ export default function Home() {
 
         {observationsDataDay && selectedStation && stationIds.length === 1 && timeRange > 3 && (
             <>
-              <DayWxSnowGraph 
-                dayAverages={observationsDataDay} 
-                isHourly={false}
-              />
+              <AccordionWrapper
+                title="Snow and Temperature Graph"
+                subtitle={observationsDataDay.title}
+                defaultExpanded={true}
+              >
+                <DayWxSnowGraph dayAverages={observationsDataDay} />
+              </AccordionWrapper>
             </>
           )}
 

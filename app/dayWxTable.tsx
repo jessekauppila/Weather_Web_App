@@ -294,8 +294,8 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
             rounded
             border
             border-solid
-            border-[rgba(73,89,127,0.23)]
-            hover:border-[rgba(73,89,127,0.5)]
+            border-[#49597F] //border color
+            hover:border-2 //border width on hover
           `;
           button.textContent = d.value;
           button.onclick = () => onStationClick(d.stid);
