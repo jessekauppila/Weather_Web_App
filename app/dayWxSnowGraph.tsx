@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import moment from 'moment-timezone';
 
@@ -14,9 +14,11 @@ interface DayAveragesProps {
   isHourly?: boolean;
 }
 
+// This is the core graph component without the accordion
 function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(true);
 
   const spacing = {
     dateAxisOffset: 15,
@@ -27,6 +29,8 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
   const shouldComponentUpdate = () => false;
 
   useEffect(() => {
+    if (!expanded) return; // Don't draw if accordion is collapsed
+    
     // Clear any existing content
     if (svgRef.current) {
       d3.select(svgRef.current).selectAll('*').remove();
@@ -38,10 +42,21 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;
     const containerHeight = 400; // Fixed height
-    const margin = { top: 30, right: 60, bottom: 50, left: 60 };
+    const margin = { 
+      top: 30, 
+      right: 122, 
+      bottom: 50, 
+      left: 60 
+    };
     const width = containerWidth - margin.left - margin.right;
     const height = containerHeight - margin.top - margin.bottom;
 
+    // Create SVG first
+    const svg = d3.select(svgRef.current)
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', containerHeight)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Process data with validation and logging
     const data = dayAverages.data
@@ -97,37 +112,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       ])
       .range([height, 0])
       .nice();
-
-    // Create SVG first
-    const svg = d3.select(svgRef.current)
-      .attr('width', width + margin.left + margin.right)
-      //.attr('height', height + margin.top + margin.bottom)
-      .attr('height', containerHeight)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Add white background
-    svg.append('rect')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .attr('x', -margin.left)
-      .attr('y', -margin.top)
-      .attr('fill', 'white');
-
-    // Now add temperature axis and label
-    svg.append('g')
-      .attr('transform', `translate(${width}, 0)`)
-      .call(d3.axisRight(yScaleTemp)
-        .tickFormat(d => `${d}°F`))  // Add °F to temperature labels
-      .selectAll('text')
-      .style('fill', '#808080');
-
-    // Update temperature label to grey
-    svg.append('text')
-      .attr('transform', `rotate(-90) translate(${-height/2},${width + 45})`)
-      .style('text-anchor', 'middle')
-      .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
-      .text('Temperature (°F)');
 
     // Create scales with separate domains for line and bars
     //const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
@@ -377,10 +361,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         .text(text);
     });
 
-    // Update container height
-    d3.select(svgRef.current)
-      .attr('height', height + margin.top + margin.bottom + 40); // Adjusted for single-line legend
-
     // Define the temperature area generator
     const tempArea = d3.area<(typeof data)[0]>()
       .x(d => xScale(d.date))
@@ -449,9 +429,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('text-anchor', 'middle')
       .style('fill', '#4169E1')
       .style('font-size', '10px')
-      .text(d => `${d.snowDepth24h.toFixed(1)} in`);  // Added "″ snow" to the output
+      .text(d => `${(d.snowDepth24h % 1 === 0) ? d.snowDepth24h : d.snowDepth24h.toString().replace('0.', '.')} in`);
       
-          // Add labels above the snow bars
+    // Add labels above the snow bars
     svg.selectAll('.liquid-bar-label')
       .data(data.filter(d => d.precipHour > 0))
       .enter()
@@ -462,39 +442,41 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('text-anchor', 'middle')
       .style('fill', '#4169E1')
       .style('font-size', '10px')
-      .text(d => `${d.precipHour.toFixed(1)} in`);  // Added "″ snow" to the output
+      .text(d => {
+        const value = Number(d.precipHour).toFixed(2); // Force 3 decimal places
+        return `${(value % 1 === 0) ? value : value.toString().replace('0.', '.')} in`;
+      });
 
-    // svg.selectAll('.liquid-bar-label')
-    //   .data(data.filter(d => d.precipHour > 0))
-    //   .enter()
-    //   .append('text')
-    //   .attr('class', 'snow-bar-label')
-    //   .attr('x', d => xScaleBars(d.date) - (individualBarWidth/2))
-    //   .attr('y', d => yScaleBars(d.snowDepth24h) - 5)
-    //   .attr('text-anchor', 'middle')
-    //   .style('fill', '#4169E1')
-    //   .style('font-size', '10px')
-    //   .text(d => `${d.precipHour.toFixed(1)}″ snow`);
+    // Update container height at the end
+    d3.select(svgRef.current)
+      .attr('height', height + margin.top + margin.bottom + 40); // Adjusted for single-line legend
 
-  }, [dayAverages, isHourly]); // This ensures the graph updates when dayAverages changes
+    // After adding the left y-axis for snow depth, add the temperature y-axis on the right
+    svg.append('g')
+      .attr('class', 'y-axis-temp')
+      .attr('transform', `translate(${width},0)`)  // Position it on the right side
+      .call(d3.axisRight(yScaleTemp)
+        .tickFormat(d => `${d}°F`))
+      .selectAll('text')
+      .style('fill', '#808080');  // Gray color to match temperature lines
+
+    // Add temperature axis label
+    svg.append('text')
+      .attr('transform', `translate(${width + 40},${height/2}) rotate(90)`)  // Position label
+      .style('text-anchor', 'middle')
+      .style('fill', '#808080')
+      .text('Temperature (°F)');
+
+  }, [dayAverages, isHourly, expanded]); // This ensures the graph updates when dayAverages changes
 
   return (
-    <div 
-      ref={containerRef} 
-      className="graph-container bg-white p-4 rounded-xl shadow-md"
-      style={{ 
-        width: '100%',
-        height: '500px',//was 300
-        overflow: 'hidden'
-      }}
-    >
-      <h3 className="text-center font-bold mb-4">{dayAverages.title}</h3>
-      <svg 
+    <div ref={containerRef}>
+      <svg
         ref={svgRef}
         style={{
           display: 'block',
           width: '100%',
-          height: 'calc(100% - 2rem)'
+          height: '400px'
         }}
       />
     </div>
@@ -502,3 +484,4 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 }
 
 export default DayWxSnowGraph;
+

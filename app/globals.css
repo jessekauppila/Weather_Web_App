@@ -815,3 +815,18 @@ details[open] .details-caret {
 .MuiAccordionDetails-root {
   padding: 0.25rem !important;
 }
+
+/* ////////////////////////////////////////////////////////////////////////////////////////// */
+/* Graph and Table Title Styles */  
+.section-title {
+  @apply text-center font-bold whitespace-pre-line w-full my-0 py-1 text-[#797979] text-lg;
+}
+
+.section-subtitle {
+  @apply text-center font-bold mb-1 whitespace-pre-line text-[#797979] text-sm;
+}
+
+/* Remove default caption spacing and background */
+/* caption.section-title {
+  @apply bg-transparent p-0;
+} */
