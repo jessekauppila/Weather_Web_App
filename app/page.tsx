@@ -120,7 +120,9 @@ export default function Home() {
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
     const endMoment = moment(date).tz('America/Los_Angeles');
     const currentMoment = moment().tz('America/Los_Angeles');
-    
+    const currentHour = currentMoment.hour();
+    const currentMinute = currentMoment.minute();
+
     switch (type) {
       case DayRangeType.MIDNIGHT:
         const midnightResult = {
@@ -133,9 +135,6 @@ export default function Home() {
         return midnightResult;
         
       case DayRangeType.CURRENT:
-        const currentHour = currentMoment.hour();
-        const currentMinute = currentMoment.minute();
-        
         const currentResult = {
           start: endMoment.clone()
             .subtract(timeRange, 'days')
@@ -169,12 +168,22 @@ export default function Home() {
           };
     
         default:
-          // Fallback to midnight case if type is unknown
+          // Fallback to CURRENT case if type is unknown
+          // const currentHour = currentMoment.hour();
+          // const currentMinute = currentMoment.minute();
+          
           return {
-            start: endMoment.clone().subtract(timeRange, 'days').startOf('day'),
-            end: endMoment.clone().endOf('day'),
-            startHour: 0,
-            endHour: 23
+            start: endMoment.clone()
+              .subtract(timeRange, 'days')
+              .hour(currentHour)
+              .minute(currentMinute)
+              .second(0),
+            end: endMoment.clone()
+              .hour(currentHour)
+              .minute(currentMinute)
+              .second(0),
+            startHour: currentHour,
+            endHour: currentHour
           };
     }
   };
@@ -189,7 +198,7 @@ export default function Home() {
     const [endHour, setEndHour] = useState<number>(0);
   
     // Add state for day range type
-    const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
+    const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
     // console.log('dayRangeType:', dayRangeType);
   
 
@@ -324,7 +333,6 @@ export default function Home() {
     };
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
-  
   // Create a refresh function
   const handleRefresh = async () => {
     setIsLoading(true);
