@@ -2,7 +2,7 @@ import { filteredObservationData } from '../filteredObservationData';
 import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 import hourWxTableDataFromDB  from '../hourWxTableDataFromDB';
 import hourWxTableDataFiltered  from '../hourWxTableDataFiltered';
-
+import { DayRangeType } from '../types';
 
 interface FetchWeatherDataProps {
   timeRangeData: {
@@ -13,7 +13,7 @@ interface FetchWeatherDataProps {
   tableMode: 'summary' | 'daily';
   startHour: number;
   endHour: number;
-  dayRangeType: string;
+  dayRangeType: DayRangeType;
   setObservationsDataDay: (data: any) => void;
   setObservationsDataHour: (data: any) => void;
   setFilteredObservationsDataHour: (data: any) => void;

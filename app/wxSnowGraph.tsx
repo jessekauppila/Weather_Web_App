@@ -333,9 +333,16 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Create line for total snow depth
     const line = d3.line<(typeof data)[0]>()
-      .x(d => xScale(d.date))
-      .y(d => yScaleLine(d.totalSnowDepth))
-      .curve(d3.curveMonotoneX); // Add curve interpolation
+      .x(d => {
+        const val = xScale(d.date);
+        return isNaN(val) ? 0 : val;
+      })
+      .y(d => {
+        const val = yScaleLine(d.totalSnowDepth);
+        return isNaN(val) ? 0 : val;
+      })
+      .defined(d => !isNaN(d.totalSnowDepth) && !isNaN(d.date.getTime()))  // Skip invalid points
+      .curve(d3.curveMonotoneX);
 
     // Add the line
     svg.append('path')
@@ -546,7 +553,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
           const minute = d.date.getMinutes();
           return (hour === 0 && minute === 0) ? d.date : null;
         }).filter(Boolean))  // Remove null values
-        .tickSize(5))
+        .tickSize(0))
       .call(g => g.select('.domain').remove())
       .selectAll('text')
       .remove();  // Remove all text since we'll add our own labels
