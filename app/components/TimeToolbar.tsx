@@ -60,22 +60,28 @@ const TimeToolbar = ({
   filteredObservationsDataHour,
   onRefresh
 }: TimeToolbarProps) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
+  const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [lastApiCall, setLastApiCall] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLastApiCall(setLastApiCall);
   }, []);
 
-  const handlePopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleDataPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+    setDataAnchorEl(event.currentTarget);
+  };
+
+  const handleCutOffPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+    setCutOffAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setDataAnchorEl(null);
+    setCutOffAnchorEl(null);
   };
 
-  const open = Boolean(anchorEl);
+  const open = Boolean(dataAnchorEl) || Boolean(cutOffAnchorEl);
   const id = open ? 'simple-popover' : undefined;
 
   const handleRefreshButtonClick = async () => {
@@ -154,14 +160,14 @@ const TimeToolbar = ({
             )}
 
             {/* Settings dropdown using Popover */}
-            <Button variant="outlined" size="small" onClick={handlePopupButtonClick}>
+            <Button variant="outlined" size="small" onClick={handleCutOffPopupButtonClick}>
               Cut Offs
             </Button>
 
             <Popover
               id={id}
-              open={open}
-              anchorEl={anchorEl}
+              open={Boolean(cutOffAnchorEl)}
+              anchorEl={cutOffAnchorEl}
               onClose={handleClose}
               anchorOrigin={{
                 vertical: 'bottom',
@@ -203,14 +209,14 @@ const TimeToolbar = ({
             </Popover>
 
 
-            <Button variant="outlined" size="small" onClick={handlePopupButtonClick}>
+            <Button variant="outlined" size="small" onClick={handleDataPopupButtonClick}>
             Data Info
             </Button>
 
             <Popover
               id={id}
-              open={open}
-              anchorEl={anchorEl}
+              open={Boolean(dataAnchorEl)}
+              anchorEl={dataAnchorEl}
               onClose={handleClose}
               anchorOrigin={{
                 vertical: 'bottom',
@@ -218,19 +224,45 @@ const TimeToolbar = ({
               }}
               >
 
-              <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
+            <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
 
-
-
+            <div className="text-[11px] text-[lightgrey] mt-2 text-center space-y-1 bg-[cornflowerblue]">
+            {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
+            <>
+              <div>
+                Page Loaded: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div>
 
-              <Button 
+              {lastApiCall && (
+                <>
+                  <div>
+                Most Recent Data: {moment(lastApiCall).format('MM/DD/YYYY h:mm A')}
+                  </div>
+                  <div className="text-[10px]">
+                  (Fetched 1, 10, and 30 min past the hour)
+                  </div>
+                </>
+
+              )}
+
+            {/* <div>
+                Range Requested: {moment(`${filteredObservationsDataHour.data[0].Day} ${filteredObservationsDataHour.data[0].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')} - {' '}
+                {moment(`${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Day} ${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')}
+              </div> */}
+            </>
+          )}
+          </div>
+            <FormControl variant="outlined" size="small" className="w-full">
+            <Button 
                 variant="outlined" 
                 size="small" 
                 onClick={handleRefreshButtonClick}
                 >
                 Refresh Data
             </Button>
+            </FormControl>
+            </div>
+
             </Popover>
 
           </div>
