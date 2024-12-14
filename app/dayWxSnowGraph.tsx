@@ -62,7 +62,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Add safety check before accessing first data point
     if (!data.length) return;  // Add this check
 
-    const firstDataPoint = data[0];
+    //const firstDataPoint = data[0];
 
     // Get container dimensions and set margins
     const containerRect = containerRef.current.getBoundingClientRect();
