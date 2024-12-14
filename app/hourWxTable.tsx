@@ -128,10 +128,10 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .text(hourAverages.title)
       .style('caption-side', 'top')
       .attr('data-tooltip-id', 'hourly-measurement-tooltip')
-      .attr(
-        'data-tooltip-content',
-        'Raw weather station data'
-      );
+      // .attr(
+      //   'data-tooltip-content',
+      //   'Raw weather station data'
+      // );
 
     // Headers
     const thead = tableUpdate
