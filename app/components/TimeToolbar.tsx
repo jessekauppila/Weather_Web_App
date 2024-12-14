@@ -67,7 +67,7 @@ const TimeToolbar = ({
     fetchLastApiCall(setLastApiCall);
   }, []);
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handlePopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -78,7 +78,7 @@ const TimeToolbar = ({
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
 
-  const handleButtonClick = async () => {
+  const handleRefreshButtonClick = async () => {
     await onRefresh();
     await fetchLastApiCall(setLastApiCall);
   };
@@ -154,7 +154,7 @@ const TimeToolbar = ({
             )}
 
             {/* Settings dropdown using Popover */}
-            <Button variant="outlined" size="small" onClick={handleClick}>
+            <Button variant="outlined" size="small" onClick={handlePopupButtonClick}>
               Cut Offs
             </Button>
 
@@ -202,13 +202,37 @@ const TimeToolbar = ({
               </div>
             </Popover>
 
-            <Button 
+
+            <Button variant="outlined" size="small" onClick={handlePopupButtonClick}>
+            Data Info
+            </Button>
+
+            <Popover
+              id={id}
+              open={open}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              >
+
+              <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
+
+
+
+              </div>
+
+              <Button 
                 variant="outlined" 
                 size="small" 
-                onClick={handleButtonClick}
+                onClick={handleRefreshButtonClick}
                 >
                 Refresh Data
-                </Button>
+            </Button>
+            </Popover>
+
           </div>
         </div>
 
@@ -236,35 +260,7 @@ const TimeToolbar = ({
 
       
 
-      {/* Status lines showing both timespans */}
-    {(filteredObservationsDataHour || filteredObservationsDataHour) && (
-        <div className="text-sm text-gray-500 mt-2 text-center space-y-1">
-          {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
-            <>
-              <div>
-                Updated: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
-              </div>
 
-              {lastApiCall && (
-                <>
-                  <div>
-                API Called: {moment(lastApiCall).format('MM/DD/YYYY h:mm A')}
-                  </div>
-                  <div>
-                    1, 10, and 30 min past the hour
-                  </div>
-                </>
-                
-              )}
-
-         <div>
-                Requested: {moment(`${filteredObservationsDataHour.data[0].Day} ${filteredObservationsDataHour.data[0].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')} - {' '}
-                {moment(`${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Day} ${filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')}
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
     {/* {lastApiCall && (
                 <>
