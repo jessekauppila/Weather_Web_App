@@ -9,7 +9,17 @@ interface RegionCardProps {
     '24h Snow Accumulation': string;
     'Cur Wind Speed': string;
     'Elevation': string;
-    Stid: string;
+    'Stid': string;
+    'Air Temp Min': string;
+    'Air Temp Max': string;
+    'Wind Speed Avg': string;
+    'Max Wind Gust': string;
+    'Wind Direction': string;
+    'Relative Humidity': string;
+    'Total Snow Depth': string;
+    'Total Snow Depth Change': string;
+    'Precip Accum One Hour': string;
+    [key: string]: string;
   }>;
   stationIds: string[];
   onStationClick: (stid: string) => void;

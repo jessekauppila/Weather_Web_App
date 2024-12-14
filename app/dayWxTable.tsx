@@ -303,7 +303,7 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
           this.appendChild(button);
         } else {
           // For non-station cells, just set the text
-          d3.select(this).text(d => {
+          d3.select(this).text(function(d: any) {
             if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
               const value = parseFloat(d.value);
               return `${value.toFixed(3)} in`;

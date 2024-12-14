@@ -150,6 +150,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', 'blue');
 
     // Update snow depth label to blue and position at first data point
+    const firstDataPoint = data[0];
     svg.append('text')
       .attr('x', xScale(firstDataPoint.date))  // Position at first data point's x coordinate
       .attr('y', yScaleLine(firstDataPoint.totalSnowDepth) - 10)  // Position above the line (-10 for padding)
@@ -443,8 +444,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', '#4169E1')
       .style('font-size', '10px')
       .text(d => {
-        const value = Number(d.precipHour).toFixed(2); // Force 3 decimal places
-        return `${(value % 1 === 0) ? value : value.toString().replace('0.', '.')} in`;
+        const numValue = Number(d.precipHour);
+        const value = numValue.toFixed(2);
+        return `${(numValue % 1 === 0) ? value : value.toString().replace('0.', '.')} in`;
       });
 
     // Update container height at the end

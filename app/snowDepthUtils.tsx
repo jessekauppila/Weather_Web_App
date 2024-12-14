@@ -379,10 +379,12 @@ function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
   });
 }
 
-export default {
+const snowDepthUtils = {
   SNOW_DEPTH_CONFIG,
   SNOW_DEPTH_24H_CONFIG,
   filterSnowDepthOutliers,
   calculateSnowDepthAccumulation,
   clearFilterCache
 };
+
+export default snowDepthUtils;

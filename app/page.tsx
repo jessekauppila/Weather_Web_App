@@ -9,6 +9,7 @@ import React, {
   useTransition,
   useMemo,
 } from 'react';
+import { SelectChangeEvent } from '@mui/material';
 
 //import { filteredObservationData } from './filteredObservationData';
 //import hourWxTableDataFiltered from './hourWxTableDataFiltered';
@@ -222,7 +223,7 @@ export default function Home() {
 
 
   // this is the function that determines what happens in the drop down menu for date range
-  const handleTimeRangeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     //console.log('Time range changed to:', value);
     
@@ -357,10 +358,10 @@ export default function Home() {
 
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setIsComponentVisible(false);  // Hide components before transition
+    (event: SelectChangeEvent<string>) => {
+      setIsComponentVisible(false);
       setIsTransitioning(true);
-      const selectedStationId = e.target.value;
+      const selectedStationId = event.target.value;
       
       // Short delay before state changes
       setTimeout(() => {
@@ -428,7 +429,7 @@ export default function Home() {
   };
 
   // Simplified handler - only updates the type and hours
-  const handleDayRangeTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
     const newType = event.target.value as DayRangeType;
     //console.log('DayRangeType changed:', {
     //  newType,
