@@ -1,6 +1,8 @@
 // run by going to this URL when running the app locally:
 // http://localhost:3000/api/batchUploadLastHourRevised
 
+// THIS IS WHAT"S BEING RUN NOW AS A CRON JOB
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
@@ -182,7 +184,7 @@ async function handleRequest(request: NextRequest) {
             })
           );
 
-          console.log('Array lengths:', arrayLengths);
+          //console.log('Array lengths:', arrayLengths);
 
           // Verify observation object and required properties
           if (!observation) {
@@ -350,10 +352,29 @@ async function handleRequest(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      message: 'Yearly data update completed',
-      progress: `${totalProcessed}/${totalToProcess} days processed`,
-    });
+    // Log the API run
+    await client.query(`
+      INSERT INTO api_runs (type, run_time) 
+      VALUES (
+        'batch_upload',
+        $1
+      )
+    `, [new Date().toISOString()]);
+
+    // // Get the last run time
+    // const lastRun = await client.query(`
+    //   SELECT run_time 
+    //   FROM api_runs 
+    //   WHERE type = 'batch_upload' 
+    //   ORDER BY run_time DESC 
+    //   LIMIT 1
+    // `);
+
+    // return NextResponse.json({
+    //   message: 'Data update completed',
+    //   progress: `${totalProcessed}/${totalToProcess} days processed`,
+    //   lastApiRun: lastRun.rows[0]?.run_time
+    // });
   } catch (error) {
     console.error('Error updating yearly data:', error);
     return NextResponse.json(
