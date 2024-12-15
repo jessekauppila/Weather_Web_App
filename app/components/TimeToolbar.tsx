@@ -86,6 +86,7 @@ const TimeToolbar = ({
 
   const handleRefreshButtonClick = async () => {
     await onRefresh();
+    await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
     const newLastApiCall = await fetchLastApiCall(setLastApiCall);
     console.log('Updated last API call:', newLastApiCall);
   };
@@ -197,14 +198,29 @@ const TimeToolbar = ({
                 </FormControl>
 
                 {dayRangeType === DayRangeType.CUSTOM && (
-                  <TextField
-                    type="time"
-                    value={customTime}
-                    onChange={(e) => setCustomTime(e.target.value)}
-                    variant="outlined"
-                    size="small"
-                    className="w-full"
-                  />
+                  <>
+                    <TextField
+                      type="time"
+                      value={customTime}
+                      onChange={(e) => setCustomTime(e.target.value)}
+                      variant="outlined"
+                      size="small"
+                      className="w-full"
+                    />
+                    
+                    <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[200px] sm:w-[250px] bg-[cornflowerblue]">
+                      <FormControl variant="outlined" size="small" className="w-full">
+                        <Button 
+                          variant="outlined" 
+                          size="small" 
+                          onClick={handleRefreshButtonClick}
+                          className="mt-2"
+                        >
+                          Refresh Data
+                        </Button>
+                      </FormControl>
+                    </div>
+                  </>
                 )}
               </div>
             </Popover>
