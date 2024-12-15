@@ -11,10 +11,6 @@ import React, {
 } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 
-//import { filteredObservationData } from './filteredObservationData';
-//import hourWxTableDataFiltered from './hourWxTableDataFiltered';
-
-// import wxTableDataDayFromDB from './dayWxTableDataDayFromDB';
 import DayAveragesTable from './dayWxTable';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import AccordionWrapper from './components/AccordionWrapper';
@@ -23,14 +19,9 @@ import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import HourWxTable from './hourWxTable';
 import WxSnowGraph from './wxSnowGraph';
 
-//import HourWxSnowGraph from './hourWxSnowGraph';
-
-
 import { DayRangeType } from './types';
 
-//import MeasurementCard from './components/MeasurementCard';
 import RegionCard from './components/RegionCard';
-//import StationCard from './components/StationCard';
 
 import TimeToolbar from './components/TimeToolbar';
 import { fetchWeatherData } from './utils/fetchWeatherData';
@@ -96,8 +87,6 @@ export default function Home() {
   const [isStationChanging, setIsStationChanging] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
-
-  
 
   // Add state for table mode
   const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
@@ -454,13 +443,6 @@ export default function Home() {
 
   //console.log('observationsDataDay', observationsDataDay);
 
-
-  // start STATION CARD 
-
-
-
-    // end STATION CARD 
-
   // Define station groups by stids
   const stationGroups = {
     westSlopesNorth: ['5', '6'],  // Example stids for alpine stations
@@ -541,7 +523,7 @@ export default function Home() {
           }`}
         >
 
-{observationsDataDay && (
+          {observationsDataDay && (
             <DayAveragesTable 
               dayAverages={observationsDataDay} 
               onStationClick={handleStationClick}
@@ -569,13 +551,6 @@ export default function Home() {
         )}
 
         {/* Individual STATION Components  */}
-
-         {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {observationsDataDay?.data.map((station, stid) => (
-            <StationCard key={stid} station={station} />
-          ))}
-        </div>
-        */}
         
         {/* Graphs   */}
 

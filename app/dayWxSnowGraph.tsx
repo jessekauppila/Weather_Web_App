@@ -469,6 +469,53 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .style('fill', '#808080')
       .text('Temperature (°F)');
 
+    // Add tooltip div if it doesn't exist
+    const tooltip = d3.select('body')
+      .selectAll('.graph-tooltip')
+      .data([null])
+      .join('div')
+      .attr('class', 'graph-tooltip')
+      .style('position', 'absolute')
+      .style('visibility', 'hidden')
+      .style('background-color', 'white')
+      .style('padding', '5px')
+      .style('border', '1px solid #ddd')
+      .style('border-radius', '4px')
+      .style('pointer-events', 'none')
+      .style('z-index', '10');
+
+    // Add hover area
+    svg.append('rect')
+      .attr('width', width)
+      .attr('height', height)
+      .style('fill', 'none')
+      .style('pointer-events', 'all')
+      .on('mousemove', function(event) {
+        const [xPos] = d3.pointer(event);
+        const bisect = d3.bisector((d: any) => d.date).left;
+        const x0 = xScale.invert(xPos);
+        const i = bisect(data, x0);
+        const d = data[i];
+
+        if (d) {
+          tooltip
+            .style('visibility', 'visible')
+            .style('left', `${event.pageX + 10}px`)
+            .style('top', `${event.pageY - 10}px`)
+            .html(`
+              <div class="text-sm">
+                <div>Date: ${moment(d.date).format('MM/DD/YYYY')}</div>
+                <div>Snow Depth: ${d.totalSnowDepth}″</div>
+                <div>24h Snow: ${d.snowDepth24h}″</div>
+                <div>Temp Range: ${d.tempMin}°F - ${d.tempMax}°F</div>
+              </div>
+            `);
+        }
+      })
+      .on('mouseout', function() {
+        tooltip.style('visibility', 'hidden');
+      });
+
   }, [dayAverages, isHourly, expanded]); // This ensures the graph updates when dayAverages changes
 
   return (

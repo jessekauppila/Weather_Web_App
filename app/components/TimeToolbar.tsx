@@ -35,7 +35,7 @@ const fetchLastApiCall = async (setLastApiCall: (value: string | null) => void) 
   const response = await fetch('/api/getLastApiRun');
   const data = await response.json();
   setLastApiCall(data.lastApiCall);
-  console.log("Last Api Call:", data);
+  console.log("API Calls:", data.allCalls);
   return data.lastApiCall;
 };
 
@@ -86,7 +86,8 @@ const TimeToolbar = ({
 
   const handleRefreshButtonClick = async () => {
     await onRefresh();
-    await fetchLastApiCall(setLastApiCall);
+    const newLastApiCall = await fetchLastApiCall(setLastApiCall);
+    console.log('Updated last API call:', newLastApiCall);
   };
 
   //console.log(filteredObservationsDataHour)

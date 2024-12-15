@@ -39,11 +39,13 @@ export async function fetchWeatherData({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       },
       body: JSON.stringify({
         startDate: start_time_pdt.toISOString(),
         endDate: end_time_pdt.toISOString(),
         stationIds: stationIds,
+        refresh: true
       }),
     });
   
