@@ -120,7 +120,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipHour)) || 0])
       .range([height, 0]);
 
-    console.log('yScaleBars domain:', yScaleBars.domain());
+    //console.log('yScaleBars domain:', yScaleBars.domain());
 
     // Add grid lines
     svg.append('g')
