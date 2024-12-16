@@ -41,7 +41,7 @@ function hourWxTableDataFromDB(
     };
   }
 
-  //console.log("observationsData from hourWxTableData:", observationsData);
+  console.log("observationsData from hourWxTableData:", observationsData);
 
   // Instead of grouping and averaging, process each observation individually
   const formattedData = observationsData.map((obs) => {
@@ -59,6 +59,8 @@ function hourWxTableDataFromDB(
       "Precip Accum": formatValueWithUnit(obs.precip_accum_one_hour, "in"),
       "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
       "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
+      "Solar Radiation": formatValueWithUnit(obs.solar_radiation, "W/m²"),
+
     };
   });
 

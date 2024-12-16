@@ -51,6 +51,7 @@ function wxTableDataDayFromDB(
         'wind_speed',
         'wind_gust',
         'wind_direction',
+        'solar_radiation',
       ];
 
       measurementKeys.forEach((key) => {
@@ -163,6 +164,16 @@ function wxTableDataDayFromDB(
       },
       'mph'
     );
+
+        // Process wind speed
+        processNumericField(
+          'solar_radiation',
+          {
+            avg: 'Solar Radiation Avg',
+            //cur: 'Cur Solar Radiation',
+          },
+          'W/m²'
+        );
 
     // Process wind gust
     processNumericField('wind_gust', { max: 'Max Wind Gust' }, 'mph');

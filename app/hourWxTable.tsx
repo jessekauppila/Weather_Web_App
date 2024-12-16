@@ -39,7 +39,7 @@ const knownCategories = [
     category: 'Precipitation',
     columns: ['Total Snow Depth', '24h Snow Depth', 'Precip Accum'],
   },
-  { category: 'RH', columns: ['Relative Humidity'] },
+  { category: '', columns: ['Relative Humidity', 'Solar Radiation'] },
 ];
 
 // Rest of the component similar to DayAveragesTable
@@ -61,11 +61,14 @@ const measurementDescriptions: Record<string, string> = {
   'Precip Accum':
     'Liquid precipitation accumulated during the hour in inches. Also known as "snow water equivalent".',
   'Relative Humidity': 'Relative humidity as a percentage (0-100%)',
+  'Solar Radiation': 'Radiation emitted by the sun in W/m²',
 };
 
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [sortedData, setSortedData] = useState(hourAverages.data);
+
+
 
   // Update sorting function
   useEffect(() => {
@@ -236,6 +239,10 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .text((d) => d.value);
     cells.exit().remove();
   }, [sortedData, headerStructure]);
+
+  useEffect(() => {
+    console.log('Hourly data:', hourAverages.data);
+  }, [hourAverages.data]);
 
   return (
     <div className="table-container" ref={ref}>

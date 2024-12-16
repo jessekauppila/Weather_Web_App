@@ -29,18 +29,10 @@ export async function POST(request: Request) {
         o.equip_temperature,
         o.intermittent_snow,
         o.precip_accum_one_hour,
-        o.pressure,
         o.relative_humidity,
         o.snow_depth,
         o.snow_depth_24h,
-        o.soil_moisture_a,
-        o.soil_moisture_b,
-        o.soil_moisture_c,
-        o.soil_temperature_a,
-        o.soil_temperature_b,
-        o.soil_temperature_c,
         o.solar_radiation,
-        o.wet_bulb,
         o.wind_direction,
         o.wind_gust,
         o.wind_speed,
@@ -48,8 +40,6 @@ export async function POST(request: Request) {
         o.precipitation,
         s.stid,
         s.station_name,
-        s.latitude,
-        s.longitude,
         s.elevation
       FROM observations o
       JOIN stations s ON o.station_id = s.id
@@ -70,11 +60,11 @@ export async function POST(request: Request) {
       startDate,
       endDate,
     ]);
-    console.log(
-      'Query result:',
-      observationsResult.rows.length,
-      'rows'
-    );
+    // console.log(
+    //   'Query result:',
+    //   observationsResult.rows.length,
+    //   'rows'
+    // );
 
     // Query for units
     const unitsQuery = `SELECT measurement, unit FROM units;`;
@@ -87,7 +77,7 @@ export async function POST(request: Request) {
       convertObservationUnits
     );
 
-    console.log('Query result converted:', convertedObservations);
+    //console.log('Query result converted:', convertedObservations);
 
     return NextResponse.json({
       observations: convertedObservations,
