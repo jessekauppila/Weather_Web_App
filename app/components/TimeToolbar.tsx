@@ -29,6 +29,13 @@ interface TimeToolbarProps {
     title: string;
   } | null;
   onRefresh: () => void;
+  tableMode: 'summary' | 'daily';
+  startHour: number;
+  endHour: number;
+  setObservationsDataDay: (data: any) => void;
+  setObservationsDataHour: (data: any) => void;
+  setFilteredObservationsDataHour: (data: any) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const fetchLastApiCall = async (setLastApiCall: (value: string | null) => void) => {
@@ -58,7 +65,14 @@ const TimeToolbar = ({
   handleStationChange,
   stationIds,
   filteredObservationsDataHour,
-  onRefresh
+  onRefresh,
+  tableMode,
+  startHour,
+  endHour,
+  setObservationsDataDay,
+  setObservationsDataHour,
+  setFilteredObservationsDataHour,
+  setIsLoading
 }: TimeToolbarProps) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
@@ -84,14 +98,72 @@ const TimeToolbar = ({
   const open = Boolean(dataAnchorEl) || Boolean(cutOffAnchorEl);
   const id = open ? 'simple-popover' : undefined;
 
+  // const newLastApiCall = await fetchLastApiCall(setLastApiCall);
+  // console.log('Updated last API call:', newLastApiCall);
+
+
+  
+  // const handleRefreshButtonClick = async () => {
+  //   await onRefresh();
+  //   await fetchWeatherData({
+  //     timeRangeData: {
+  //       start_time_pdt: moment(selectedDate),
+  //       end_time_pdt: moment(endDate)
+  //     },
+  //     stationIds,
+  //     tableMode,
+  //     startHour,
+  //     endHour,
+  //     dayRangeType,
+  //     setObservationsDataDay,
+  //     setObservationsDataHour,
+  //     setFilteredObservationsDataHour,
+  //     setIsLoading
+  //   });
+  //   handleTimeRangeChange({ 
+  //     target: { value: dayRangeType.toString() }
+  //   } as SelectChangeEvent<string>);
+  //   await fetchLastApiCall(setLastApiCall);
+  // };
+
   const handleRefreshButtonClick = async () => {
     await onRefresh();
-    await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
-    const newLastApiCall = await fetchLastApiCall(setLastApiCall);
-    console.log('Updated last API call:', newLastApiCall);
+    //await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
+    await fetchLastApiCall(setLastApiCall);
+    //console.log('Updated last API call:', newLastApiCall);
   };
 
-  //console.log(filteredObservationsDataHour)
+
+  const handleCustomTimeButtonClick = async () => {
+    // First set the type to CUSTOM
+    await handleDayRangeTypeChange({ 
+      target: { value: DayRangeType.CUSTOM } 
+    } as SelectChangeEvent<DayRangeType>);
+    
+    // Update the time range
+    handleTimeRangeChange({ 
+      target: { value: calculateCurrentTimeRange() } 
+    } as SelectChangeEvent<string>);
+    
+    // Then fetch weather data with the new custom time
+    await fetchWeatherData({
+      timeRangeData: {
+        start_time_pdt: moment(selectedDate).hour(parseInt(customTime.split(':')[0])).minute(parseInt(customTime.split(':')[1])),
+        end_time_pdt: moment(endDate).hour(parseInt(customTime.split(':')[0])).minute(parseInt(customTime.split(':')[1]))
+      },
+      stationIds,
+      tableMode,
+      startHour,
+      endHour,
+      dayRangeType,
+      setObservationsDataDay,
+      setObservationsDataHour,
+      setFilteredObservationsDataHour,
+      setIsLoading
+    });
+  };
+
+
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -129,7 +201,9 @@ const TimeToolbar = ({
               
               <TextField
                 type="date"
-                value={format(selectedDate, 'yyyy-MM-dd')}
+                value={selectedDate && !isNaN(selectedDate.getTime()) 
+                  ? format(selectedDate, 'yyyy-MM-dd')
+                  : format(new Date(), 'yyyy-MM-dd')}
                 onChange={handleDateChange}
                 variant="outlined"
                 size="small"
@@ -160,7 +234,9 @@ const TimeToolbar = ({
                 />
               </div>
             )}
-
+          {/* //////////////// */}
+            {/* END CUTOFF BUTTON */}
+            {/* //////////////// */}
             {/* Settings dropdown using Popover */}
             <Button variant="outlined" size="small" onClick={handleCutOffPopupButtonClick}>
               Cut Offs
@@ -208,23 +284,31 @@ const TimeToolbar = ({
                       className="w-full"
                     />
                     
-                    <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[200px] sm:w-[250px] bg-[cornflowerblue]">
-                      <FormControl variant="outlined" size="small" className="w-full">
+                    {/* <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[200px] sm:w-[250px] bg-[cornflowerblue]"> */}
+                      {/* <FormControl variant="outlined" size="small" className="w-full"> */}
                         <Button 
                           variant="outlined" 
                           size="small" 
-                          onClick={handleRefreshButtonClick}
+                          onClick={handleCustomTimeButtonClick}
                           className="mt-2"
                         >
-                          Refresh Data
+                          Apply Custom Range
                         </Button>
-                      </FormControl>
-                    </div>
+                      {/* </FormControl> */}
+                    {/* </div> */}
                   </>
                 )}
               </div>
             </Popover>
 
+            {/* //////////////// */}
+            {/* END CUTOFF BUTTON */}
+            {/* //////////////// */}
+
+
+            {/* //////////////// */}
+            {/* DATA INFO BUTTON */}
+            {/* //////////////// */}
 
             <Button variant="outlined" size="small" onClick={handleDataPopupButtonClick}>
             Data Info
@@ -284,6 +368,10 @@ const TimeToolbar = ({
 
           </div>
         </div>
+
+           {/* /////////////////////// */}
+            {/* END DATA INFO BUTTON */}
+            {/* /////////////////////// */}
 
         {/* Station selector */}
         {(selectedStation || stationIds.length === 1) && (

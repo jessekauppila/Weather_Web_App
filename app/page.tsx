@@ -121,7 +121,6 @@ export default function Home() {
           startHour: 0,
           endHour: 24
         };
-
         return midnightResult;
         
       case DayRangeType.CURRENT:
@@ -143,6 +142,7 @@ export default function Home() {
 
         case DayRangeType.CUSTOM:
           const [hours, minutes] = customTime.split(':').map(Number);
+          console.log('Setting custom time:', { hours, minutes, customTime });
           return {
             start: endMoment.clone()
               .subtract(timeRange, 'days')
@@ -191,8 +191,6 @@ export default function Home() {
     const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
     // console.log('dayRangeType:', dayRangeType);
   
-
-    // Now the time calculation will work
     const { 
       startHour: calculatedStartHour, 
       endHour: calculatedEndHour 
@@ -214,7 +212,7 @@ export default function Home() {
   // this is the function that determines what happens in the drop down menu for date range
   const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
-    //console.log('Time range changed to:', value);
+    console.log('Time range changed:', value);
     
     if (value === 'custom') {
       setUseCustomEndDate(true);
@@ -512,6 +510,13 @@ export default function Home() {
           stationIds={stationIds}
           filteredObservationsDataHour={filteredObservationsDataHour}
           onRefresh={handleRefresh}
+          tableMode ={tableMode}
+          startHour={startHour}
+          endHour={endHour}
+          setObservationsDataDay={setObservationsDataDay}
+          setObservationsDataHour={setObservationsDataHour}
+          setFilteredObservationsDataHour={setFilteredObservationsDataHour}
+          setIsLoading={setIsLoading}
         />
 
         {/* Should show if stuff is loading, but not showing anything now  */}
