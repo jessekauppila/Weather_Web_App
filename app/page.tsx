@@ -142,7 +142,6 @@ export default function Home() {
 
         case DayRangeType.CUSTOM:
           const [hours, minutes] = customTime.split(':').map(Number);
-          console.log('Setting custom time:', { hours, minutes, customTime });
           return {
             start: endMoment.clone()
               .subtract(timeRange, 'days')

@@ -44,6 +44,8 @@ const measurementDescriptions: Record<string, string> = {
     'Current Relative Humidity - The most recent humidity reading',
   'Total Snow Depth':
     'Current Snow Depth - The last snow depth reading',
+  'Solar Radiation Avg':
+    'Average Solar Radiation - The average of all solar radiation readings',
 };
 
 // Define the header structure for known categories
@@ -53,7 +55,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
   const commonCategories = [
     {
       category: 'Temperatures',
-      columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
+      columns: ['Air Temp Min', 'Air Temp Max'],
     },
     {
       category: 'Winds',
@@ -72,8 +74,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
         '24h Snow Accumulation',
         'Precip Accum One Hour'      ],
     },
-    { category: 'RH', columns: ['Relative Humidity'] },
-  ];
+    { category: '', columns: ['Relative Humidity', 'Solar Radiation Avg'] },  ];
 
   if (mode === 'summary') {
     //console.log('Returning summary categories');

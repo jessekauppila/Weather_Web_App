@@ -31,6 +31,7 @@ interface Observation {
     'Precip Accum': string;
     'Precipitation': string;
     'Relative Humidity': string;
+    "Solar Radiation": string;
   }
   
   export default function hourWxTableDataFiltered(data: any[], units?: any) {
@@ -54,6 +55,7 @@ interface Observation {
           "Precip Accum": formatValueWithUnit(obs.precip_accum_one_hour, "in"),
           "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
           "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
+          "Solar Radiation": formatValueWithUnit(obs.solar_radiation, "W/m²"),
         };
       })
       .sort((a, b) => {
