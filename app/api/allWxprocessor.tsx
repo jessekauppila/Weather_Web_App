@@ -84,6 +84,7 @@ async function processAllWxData(
       'precip_accum_one_hour',
       'relative_humidity',
       'solar_radiation',
+      'api_fetch_time',
       // Add all other keys you want in the specific order
     ];
 

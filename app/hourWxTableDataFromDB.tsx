@@ -60,7 +60,7 @@ function hourWxTableDataFromDB(
       "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
       "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
       "Solar Radiation": formatValueWithUnit(obs.solar_radiation, "W/m²"),
-
+"API Fetch Time": formatValueWithUnit(obs.api_fetch_time, "timestamp"),
     };
   });
 
@@ -81,7 +81,7 @@ function hourWxTableDataFromDB(
       ? `${startDate}, ${startTime} - ${endTime}`
       : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
 
-  //console.log('formattedData in hourWxTableDataFromDB:', formattedData);
+  console.log('formattedData in hourWxTableDataFromDB:', formattedData);
 
   return {
     data: formattedData,

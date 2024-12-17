@@ -38,6 +38,7 @@ export async function POST(request: Request) {
         o.wind_speed,
         o.wind_speed_min,
         o.precipitation,
+        o.api_fetch_time,
         s.stid,
         s.station_name,
         s.elevation

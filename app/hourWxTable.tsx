@@ -39,7 +39,7 @@ const knownCategories = [
     category: 'Precipitation',
     columns: ['Total Snow Depth', '24h Snow Depth', 'Precip Accum'],
   },
-  { category: '', columns: ['Relative Humidity', 'Solar Radiation'] },
+  { category: '', columns: ['Relative Humidity', 'Solar Radiation', 'API Fetch Time'] },
 ];
 
 // Rest of the component similar to DayAveragesTable
@@ -62,6 +62,7 @@ const measurementDescriptions: Record<string, string> = {
     'Liquid precipitation accumulated during the hour in inches. Also known as "snow water equivalent".',
   'Relative Humidity': 'Relative humidity as a percentage (0-100%)',
   'Solar Radiation': 'Radiation emitted by the sun in W/m²',
+  'API Fetch Time': 'Time of the acquisition of the data from the API',
 };
 
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {

@@ -32,9 +32,12 @@ interface Observation {
     'Precipitation': string;
     'Relative Humidity': string;
     "Solar Radiation": string;
+    "API Fetch Time": string;
   }
   
   export default function hourWxTableDataFiltered(data: any[], units?: any) {
+
+    console.log('data in hourWxTableDataFiltered:', data);
     // Flatten the nested structure into a single array
     const flattenedData: FormattedObservation[] = Object.values(data)
       .flat()
@@ -56,6 +59,7 @@ interface Observation {
           "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
           "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
           "Solar Radiation": formatValueWithUnit(obs.solar_radiation, "W/m²"),
+          "API Fetch Time": formatValueWithUnit(obs.api_fetch_time, "timestamp"),
         };
       })
       .sort((a, b) => {
@@ -66,7 +70,7 @@ interface Observation {
         return dateCompare || a.Station.localeCompare(b.Station);
       });
   
-      //console.log('flattenedData in hourWxTableDataFiltered:', flattenedData);
+      console.log('flattenedData in hourWxTableDataFiltered:', flattenedData);
     return {
       data: flattenedData,
       title: 'Filtered Hourly Observations'

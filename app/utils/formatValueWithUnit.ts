@@ -1,15 +1,33 @@
 export function formatValueWithUnit(value: any, unit: string): string {
-    if (value === null || value === undefined) return "-";
-    if (typeof value === "number" || !isNaN(Number(value))) {
-      const numValue = Number(value);
-      // Special handling for temperature, humidity, wind speeds, and snow depth
-      if (unit === "°F" || unit === "%" || unit === "mph") {
-        return `${Math.round(numValue)}${unit}`;
-      }
-      if (unit === "in") {  // For snow depth and precipitation
-        return `${numValue.toFixed(2)} ${unit}`;  // Round to 2 decimal places
-      }
-      return `${numValue.toFixed(1)} ${unit}`;
+  if (value === null || value === undefined) return "-";
+
+  // Handle timestamp formatting for API Fetch Time
+  if (unit === "timestamp") {
+    try {
+      const date = new Date(value);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return "-";
     }
-    return "-";
   }
+
+  // Handle numeric values
+  if (typeof value === "number" || !isNaN(Number(value))) {
+    const numValue = Number(value);
+    if (unit === "°F" || unit === "%" || unit === "mph") {
+      return `${Math.round(numValue)}${unit}`;
+    }
+    if (unit === "in") {
+      return `${numValue.toFixed(2)} ${unit}`;
+    }
+    return `${numValue.toFixed(1)} ${unit}`;
+  }
+  
+  return "-";
+}
