@@ -561,19 +561,6 @@ export default function Home() {
 
 
 <div className="flex flex-col gap-4">
-      {     /* USED TO BE THIS timeRange > 3 &&  */}
-        {observationsDataDay && selectedStation && stationIds.length === 1 && ( 
-            <>
-              <AccordionWrapper
-                title="Daily Snow and Temperature Graph"
-                subtitle={observationsDataDay.title}
-                defaultExpanded={false}
-              >
-                <DayWxSnowGraph dayAverages={observationsDataDay} />
-              </AccordionWrapper>
-            </>
-          )}
-
           {filteredObservationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
             <>
                 <AccordionWrapper
@@ -585,8 +572,20 @@ export default function Home() {
                 dayAverages={filteredObservationsDataHour} 
                 isHourly={true}
               />
-                            </AccordionWrapper>
+               </AccordionWrapper>
+            </>
+          )}
 
+{     /* USED TO BE THIS timeRange > 3 &&  */}
+        {observationsDataDay && selectedStation && stationIds.length === 1 && ( 
+            <>
+              <AccordionWrapper
+                title="Daily Snow and Temperature Graph"
+                subtitle={observationsDataDay.title}
+                defaultExpanded={false}
+              >
+                <DayWxSnowGraph dayAverages={observationsDataDay} />
+              </AccordionWrapper>
             </>
           )}
 </div>
