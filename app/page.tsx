@@ -15,7 +15,7 @@ import DayAveragesTable from './dayWxTable';
 import DayWxSnowGraph from './dayWxSnowGraph';
 import AccordionWrapper from './components/AccordionWrapper';
 
-import hourWxTableDataFromDB from './hourWxTableDataFromDB';
+//import hourWxTableDataFromDB from './hourWxTableDataFromDB';
 import HourWxTable from './hourWxTable';
 import WxSnowGraph from './wxSnowGraph';
 
