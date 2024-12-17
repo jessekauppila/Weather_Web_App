@@ -429,7 +429,7 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  const columns = Object.keys(batch[0]).join(', ');
+  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
   const values = batch
     .map(
       (obs, index) =>
@@ -461,8 +461,8 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
             }
             return v === null || v === '' ? 'NULL' : `'${v}'`;
           })
-          .join(', ')})`
-    )
+          .join(', ')}, NOW())`
+        )
     .join(', ');
 
   const query = `
@@ -490,15 +490,19 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       soil_moisture_a = EXCLUDED.soil_moisture_a,
       soil_moisture_b = EXCLUDED.soil_moisture_b,
       soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c
-  `;
+      soil_moisture_c = EXCLUDED.soil_moisture_c,
+      api_fetch_time = NOW()`;
 
   try {
     const result = await client.query(query);
-    console.log(`Inserted/Updated ${result.rowCount} observations`);
+    
+    // Log API usage
+    console.log(`API fetch at ${new Date().toISOString()}`);
+    console.log(`Updated/inserted ${result.rowCount} records`);
+    console.log(`Stations: ${[...new Set(batch.map(obs => obs.station_id))].join(', ')}`);
+
   } catch (error) {
     console.error('Error inserting batch:', error);
-    console.error('Problematic batch:', JSON.stringify(batch));
     throw error;
   }
 }
