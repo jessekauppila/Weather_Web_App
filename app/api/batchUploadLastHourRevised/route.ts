@@ -484,14 +484,8 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       solar_radiation = EXCLUDED.solar_radiation,
       equip_temperature = EXCLUDED.equip_temperature,
       pressure = EXCLUDED.pressure,
-      wet_bulb = EXCLUDED.wet_bulb,
-      soil_temperature_a = EXCLUDED.soil_temperature_a,
-      soil_temperature_b = EXCLUDED.soil_temperature_b,
-      soil_moisture_a = EXCLUDED.soil_moisture_a,
-      soil_moisture_b = EXCLUDED.soil_moisture_b,
-      soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c,
-      api_fetch_time = NOW()`;
+    -- Removed api_fetch_time from UPDATE to preserve original fetch time
+  `;
 
   try {
     const result = await client.query(query);
