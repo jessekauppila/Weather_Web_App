@@ -83,6 +83,7 @@ async function processAllWxData(
       'intermittent_snow',
       'precip_accum_one_hour',
       'relative_humidity',
+      'solar_radiation',
       // Add all other keys you want in the specific order
     ];
 
