@@ -1,6 +1,6 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/batchUpload
-// http://localhost:3000/api/batchUpload
+// http://localhost:3000/api/batchUpload2hrsLogFetch
+
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -23,9 +23,8 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 1;
+    const totalToProcess = 2;
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
     const chunk_size = 1;
     const stids = [
       '1',
@@ -84,17 +83,17 @@ async function handleRequest(request: NextRequest) {
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
     for (
-      let days_processed = 0;
-      days_processed < totalToProcess;
-      days_processed += chunk_size
+      let hours_processed = 0;
+      hours_processed < totalToProcess;
+      hours_processed += chunk_size
     ) {
       const chunk_end = moment(end_time_pst).subtract(
-        days_processed,
-        'days'
+        hours_processed,
+        'hours'
       );
       const chunk_start = moment(chunk_end).subtract(
         chunk_size,
-        'days'
+        'hours'
       );
 
       console.log(
@@ -143,12 +142,12 @@ async function handleRequest(request: NextRequest) {
         console.log(
           `Progress: ${progressPercentage.toFixed(
             2
-          )}% (${totalProcessed}/${totalToProcess} days processed)`
+          )}% (${totalProcessed}/${totalToProcess} hours processed)`
         );
       } catch (error) {
         console.error(
-          `Error fetching weather data for chunk ${days_processed} to ${
-            days_processed + chunk_size
+          `Error fetching weather data for chunk ${hours_processed} to ${
+            hours_processed + chunk_size
           }:`,
           error
         );
@@ -353,7 +352,7 @@ async function handleRequest(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Yearly data update completed',
-      progress: `${totalProcessed}/${totalToProcess} days processed`,
+      progress: `${totalProcessed}/${totalToProcess} hours processed`,
     });
   } catch (error) {
     console.error('Error updating yearly data:', error);
