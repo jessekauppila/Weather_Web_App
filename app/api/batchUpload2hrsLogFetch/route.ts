@@ -408,41 +408,42 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  const columns = Object.keys(batch[0]).join(', ');
-  const values = batch
-    .map(
-      (obs, index) =>
-        `(${Object.values(obs)
-          .map((v, i) => {
-            if (i === 0) {
-              // Assuming station_id is the first column
-              return v === null
-                ? 'NULL'
-                : `(SELECT id FROM stations WHERE stid = '${v}')`;
-            }
-            if (i === 1) {
-              // Assuming date_time is the second column
-              if (v === null || v === '') {
-                console.error(
-                  `Invalid date_time at index ${index}:`,
-                  obs
-                );
-                return 'NULL';
-              }
-              return `'${v}'::timestamp with time zone`;
-            }
-            // Clamp numeric values
-            if (typeof v === 'number') {
-              const clampedValue = clampNumericValue(v, 5, 2);
-              return clampedValue === null
-                ? 'NULL'
-                : `'${clampedValue}'`;
-            }
-            return v === null || v === '' ? 'NULL' : `'${v}'`;
-          })
-          .join(', ')})`
-    )
-    .join(', ');
+  // Gets all column names from the first object in the batch
+  // and adds 'api_fetch_time' to the list
+  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
+
+  // Transforms each observation in the batch into SQL values
+  const values = batch.map((obs, index) =>
+    // Creates a tuple of values for each observation
+    `(${Object.values(obs)
+      .map((v, i) => {
+        // Special handling for station_id (first column)
+        if (i === 0) {
+          return v === null
+            ? 'NULL'
+            : `(SELECT id FROM stations WHERE stid = '${v}')`; // Converts station code to ID
+        }
+        
+        // Special handling for date_time (second column)
+        if (i === 1) {
+          if (v === null || v === '') {
+            console.error(`Invalid date_time at index ${index}:`, obs);
+            return 'NULL';
+          }
+          return `'${v}'::timestamp with time zone`; // Converts to PostgreSQL timestamp
+        }
+        
+        // Handles numeric values
+        if (typeof v === 'number') {
+          const clampedValue = clampNumericValue(v, 5, 2);
+          return clampedValue === null ? 'NULL' : `'${clampedValue}'`;
+        }
+        
+        // Handles null values or converts to string
+        return v === null || v === '' ? 'NULL' : `'${v}'`;
+      })
+      .join(', ')}, NOW())` // Adds current timestamp for api_fetch_time
+  ).join(', ');
 
   const query = `
     INSERT INTO observations (${columns})
@@ -469,7 +470,8 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       soil_moisture_a = EXCLUDED.soil_moisture_a,
       soil_moisture_b = EXCLUDED.soil_moisture_b,
       soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c
+      soil_moisture_c = EXCLUDED.soil_moisture_c;
+      -- api_fetch_time is included in INSERT but not in UPDATE
   `;
 
   try {
