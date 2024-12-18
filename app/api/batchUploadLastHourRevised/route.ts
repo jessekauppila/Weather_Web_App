@@ -1,7 +1,7 @@
 // run by going to this URL when running the app locally:
 // http://localhost:3000/api/batchUploadLastHourRevised
 
-// THIS IS WHAT"S BEING RUN NOW AS A CRON JOB
+// THIS IS WHAT"S BEING RUN NOW AS A CRON JOB, but it seems to not be working now!
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -21,6 +21,7 @@ async function handleRequest(request: NextRequest) {
   let client;
 
   try {
+    console.log('Starting request handling...');
     client = await db.connect();
 
     let totalProcessed = 0;
@@ -28,6 +29,12 @@ async function handleRequest(request: NextRequest) {
     const end_time_pst = moment().tz('America/Los_Angeles');
     const start_time_pst = moment(end_time_pst).subtract(2, 'hours');
     const chunk_size = 1;
+
+    console.log('Time range:', {
+      start: start_time_pst.format(),
+      end: end_time_pst.format()
+    });
+
     const stids = [
       '1',
       '14',
@@ -84,18 +91,31 @@ async function handleRequest(request: NextRequest) {
     ];
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
+    console.log('Fetching data for time range:', {
+      start: start_time_pst.format(),
+      end: end_time_pst.format()
+    });
+
+    const existingData = await client.query(`
+      SELECT COUNT(*) 
+      FROM observations 
+      WHERE date_time BETWEEN $1 AND $2
+    `, [start_time_pst.toISOString(), end_time_pst.toISOString()]);
+    
+    console.log('Existing data count:', existingData.rows[0].count);
+
     for (
-      let days_processed = 0;
-      days_processed < totalToProcess;
-      days_processed += chunk_size
+      let hours_processed = 0;
+      hours_processed < totalToProcess;
+      hours_processed += chunk_size
     ) {
       const chunk_end = moment(end_time_pst).subtract(
-        days_processed,
-        'days'
+        hours_processed,
+        'hours'
       );
       const chunk_start = moment(chunk_end).subtract(
         chunk_size,
-        'days'
+        'hours'
       );
 
       console.log(
@@ -107,6 +127,16 @@ async function handleRequest(request: NextRequest) {
         const result = await retryOperation(() =>
           processAllWxData(chunk_start, chunk_end, stids, auth)
         );
+
+        console.log('API Response:', {
+          hasData: !!result,
+          observationsCount: result?.observationsData?.length || 0
+        });
+
+        if (!result || !result.observationsData || result.observationsData.length === 0) {
+          console.log('No new data to process');
+          return NextResponse.json({ message: 'No new data to process' });
+        }
 
         console.log(
           'Result from processAllWxData:',
@@ -148,8 +178,8 @@ async function handleRequest(request: NextRequest) {
         );
       } catch (error) {
         console.error(
-          `Error fetching weather data for chunk ${days_processed} to ${
-            days_processed + chunk_size
+          `Error fetching weather data for chunk ${hours_processed} to ${
+            hours_processed + chunk_size
           }:`,
           error
         );
@@ -429,7 +459,7 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
+  const columns = Object.keys(batch[0]).join(', ');
   const values = batch
     .map(
       (obs, index) =>
@@ -461,8 +491,8 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
             }
             return v === null || v === '' ? 'NULL' : `'${v}'`;
           })
-          .join(', ')}, NOW())`
-        )
+          .join(', ')})`
+    )
     .join(', ');
 
   const query = `
@@ -484,19 +514,21 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       solar_radiation = EXCLUDED.solar_radiation,
       equip_temperature = EXCLUDED.equip_temperature,
       pressure = EXCLUDED.pressure,
-    -- Removed api_fetch_time from UPDATE to preserve original fetch time
+      wet_bulb = EXCLUDED.wet_bulb,
+      soil_temperature_a = EXCLUDED.soil_temperature_a,
+      soil_temperature_b = EXCLUDED.soil_temperature_b,
+      soil_moisture_a = EXCLUDED.soil_moisture_a,
+      soil_moisture_b = EXCLUDED.soil_moisture_b,
+      soil_temperature_c = EXCLUDED.soil_temperature_c,
+      soil_moisture_c = EXCLUDED.soil_moisture_c
   `;
 
   try {
     const result = await client.query(query);
-    
-    // Log API usage
-    console.log(`API fetch at ${new Date().toISOString()}`);
-    console.log(`Updated/inserted ${result.rowCount} records`);
-    console.log(`Stations: ${[...new Set(batch.map(obs => obs.station_id))].join(', ')}`);
-
+    console.log(`Inserted/Updated ${result.rowCount} observations`);
   } catch (error) {
     console.error('Error inserting batch:', error);
+    console.error('Problematic batch:', JSON.stringify(batch));
     throw error;
   }
 }
