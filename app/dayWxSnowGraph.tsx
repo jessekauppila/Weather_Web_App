@@ -516,7 +516,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         tooltip.style('visibility', 'hidden');
       });
 
-  }, [dayAverages, isHourly, expanded]); // This ensures the graph updates when dayAverages changes
+  }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset]); // This ensures the graph updates when dayAverages changes
 
   return (
     <div ref={containerRef}>

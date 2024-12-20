@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 //import { Button } from '@mui/material';
 
 interface DayAverage {
@@ -312,13 +312,13 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
           if (d.isStation && d.stid) {
             cell.html('').append(() => {
               const container = document.createElement('div');
-              ReactDOM.render(
+              const root = createRoot(container);
+              root.render(
                 <StationButton 
                   stationName={d.value} 
                   stid={d.stid} 
                   onClick={onStationClick}
-                />,
-                container
+                />
               );
               return container;
             });

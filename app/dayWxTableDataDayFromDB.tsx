@@ -184,7 +184,7 @@ function wxTableDataDayFromDB(
       'precip_accum_one_hour',
       { sum: 'Precip Accum One Hour' },
       'in',
-      6,
+      2,
       (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
     );
 
@@ -338,7 +338,7 @@ function wxTableDataDayFromDB(
     }
 
     // Process api_fetch_time
-    if (averages['api_fetch_time'] && averages['api_fetch_time'].length > 0) {
+    if (averages['api_fetch_time'] && Array.isArray(averages['api_fetch_time'])) {
       const timestamps = averages['api_fetch_time']
         .map(ts => new Date(ts).getTime())
         .sort((a, b) => a - b);
