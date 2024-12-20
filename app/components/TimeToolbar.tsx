@@ -4,7 +4,6 @@ import { DayRangeType } from '../types';
 import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import moment from 'moment';
-import { useFetchWeatherData } from '../hooks/useFetchWeatherData';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -104,8 +103,6 @@ const TimeToolbar = ({
     //await fetchLastApiCall(setLastApiCall);
     //console.log('Updated last API call:', newLastApiCall);
   };
-
-  const { fetchData: fetchWeatherData } = useFetchWeatherData();
 
   const handleCustomTimeButtonClick = async () => {
     // First set the type to CUSTOM
