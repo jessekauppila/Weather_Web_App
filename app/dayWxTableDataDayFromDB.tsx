@@ -52,6 +52,7 @@ function wxTableDataDayFromDB(
         'wind_gust',
         'wind_direction',
         'solar_radiation',
+        'api_fetch_time'
       ];
 
       measurementKeys.forEach((key) => {
@@ -334,6 +335,16 @@ function wxTableDataDayFromDB(
     if (options.mode === 'daily') {
       const dateTime = moment(Array.isArray(averages.date_time) ? averages.date_time[0] : averages.date_time);
       formatted['Date'] = dateTime.format('MMM D');
+    }
+
+    // Process api_fetch_time
+    if (averages['api_fetch_time'] && averages['api_fetch_time'].length > 0) {
+      const timestamps = averages['api_fetch_time']
+        .map(ts => new Date(ts).getTime())
+        .sort((a, b) => a - b);
+      
+      formatted['Api Fetch Time'] = moment(timestamps[timestamps.length - 1])
+        .format('MMM D, h:mm A');
     }
 
     return formatted;

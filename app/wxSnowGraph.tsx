@@ -316,8 +316,14 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Update snow depth label to blue
     const firstDataPoint = data[0];
     svg.append('text')
-      .attr('x', xScale(firstDataPoint.date))  // Position at first data point's x coordinate
-      .attr('y', yScaleLine(firstDataPoint.totalSnowDepth) - 10)  // Position above the line (-10 for padding)
+      .attr('x', d => {
+        const val = xScale(firstDataPoint.date);
+        return isNaN(val) ? 0 : val;
+      })
+      .attr('y', d => {
+        const val = yScaleLine(firstDataPoint.totalSnowDepth);
+        return isNaN(val) ? 0 : val - 10;
+      })
       .attr('text-anchor', 'start')  // Align text to start from this point
       .style('fill', 'blue')
       .style('font-size', '12px')
