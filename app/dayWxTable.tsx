@@ -47,6 +47,8 @@ const measurementDescriptions: Record<string, string> = {
     'Current Snow Depth - The last snow depth reading',
   'Solar Radiation Avg':
     'Average Solar Radiation - The average of all solar radiation readings',
+    'Api Fetch Time':
+    'Api Fetch Time - The most recent time that station data has been fetched from the API storing sensor data',
 };
 
 // Define the header structure for known categories
@@ -75,7 +77,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
         '24h Snow Accumulation',
         'Precip Accum One Hour'      ],
     },
-    { category: '', columns: ['Relative Humidity', 'Solar Radiation Avg'] },  ];
+    { category: '', columns: ['Relative Humidity', 'Solar Radiation Avg', 'Api Fetch Time'] },  ];
 
   if (mode === 'summary') {
     //console.log('Returning summary categories');

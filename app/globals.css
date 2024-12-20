@@ -819,11 +819,11 @@ details[open] .details-caret {
 /* ////////////////////////////////////////////////////////////////////////////////////////// */
 /* Graph and Table Title Styles */  
 .section-title {
-  @apply text-center font-bold whitespace-pre-line w-full my-0 py-1 text-[#797979] text-lg;
+  @apply text-center font-bold whitespace-pre-line w-full my-0 py-1 text-[#797979] text-lg block mb-2;
 }
 
 .section-subtitle {
-  @apply text-center font-bold mb-1 whitespace-pre-line text-[#797979] text-sm;
+  @apply text-center font-bold whitespace-pre-line text-[#797979] text-sm block;
 }
 
 /* Remove default caption spacing and background */

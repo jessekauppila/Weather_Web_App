@@ -38,13 +38,13 @@ interface TimeToolbarProps {
   setIsLoading: (loading: boolean) => void;
 }
 
-const fetchLastApiCall = async (setLastApiCall: (value: string | null) => void) => {
-  const response = await fetch('/api/getLastApiRun');
-  const data = await response.json();
-  setLastApiCall(data.lastApiCall);
-  //console.log("API Calls:", data.allCalls);
-  return data.lastApiCall;
-};
+// const fetchLastApiCall = async (setLastApiCall: (value: string | null) => void) => {
+//   const response = await fetch('/api/getLastApiRun');
+//   const data = await response.json();
+//   setLastApiCall(data.lastApiCall);
+//   //console.log("API Calls:", data.allCalls);
+//   return data.lastApiCall;
+// };
 
 const TimeToolbar = ({
   calculateCurrentTimeRange,
@@ -76,11 +76,11 @@ const TimeToolbar = ({
 }: TimeToolbarProps) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
-  const [lastApiCall, setLastApiCall] = useState<string | null>(null);
+  //const [lastApiCall, setLastApiCall] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchLastApiCall(setLastApiCall);
-  }, []);
+  // useEffect(() => {
+  //   fetchLastApiCall(setLastApiCall);
+  // }, []);
 
   const handleDataPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
     setDataAnchorEl(event.currentTarget);
@@ -98,38 +98,10 @@ const TimeToolbar = ({
   const open = Boolean(dataAnchorEl) || Boolean(cutOffAnchorEl);
   const id = open ? 'simple-popover' : undefined;
 
-  // const newLastApiCall = await fetchLastApiCall(setLastApiCall);
-  // console.log('Updated last API call:', newLastApiCall);
-
-
-  
-  // const handleRefreshButtonClick = async () => {
-  //   await onRefresh();
-  //   await fetchWeatherData({
-  //     timeRangeData: {
-  //       start_time_pdt: moment(selectedDate),
-  //       end_time_pdt: moment(endDate)
-  //     },
-  //     stationIds,
-  //     tableMode,
-  //     startHour,
-  //     endHour,
-  //     dayRangeType,
-  //     setObservationsDataDay,
-  //     setObservationsDataHour,
-  //     setFilteredObservationsDataHour,
-  //     setIsLoading
-  //   });
-  //   handleTimeRangeChange({ 
-  //     target: { value: dayRangeType.toString() }
-  //   } as SelectChangeEvent<string>);
-  //   await fetchLastApiCall(setLastApiCall);
-  // };
-
   const handleRefreshButtonClick = async () => {
     await onRefresh();
     //await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
-    await fetchLastApiCall(setLastApiCall);
+    //await fetchLastApiCall(setLastApiCall);
     //console.log('Updated last API call:', newLastApiCall);
   };
 
@@ -333,18 +305,20 @@ const TimeToolbar = ({
               <div>
                 Page Loaded: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div>
+              <div className="text-[10px]">
+                  (Data fetched 5, 10, and 30 min past the hour)
+              </div>
 
-              {lastApiCall && (
+              {/* {lastApiCall && (
                 <>
-                  <div>
+                   <div>
                 Most Recent Data: {moment(lastApiCall).format('MM/DD/YYYY h:mm A')}
-                  </div>
+                  </div> 
                   <div className="text-[10px]">
-                  (Fetched 1, 10, and 30 min past the hour)
+                  (Data fetched 5, 10, and 30 min past the hour)
                   </div>
                 </>
-
-              )}
+              )} */}
 
             {/* <div>
                 Range Requested: {moment(`${filteredObservationsDataHour.data[0].Day} ${filteredObservationsDataHour.data[0].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')} - {' '}
