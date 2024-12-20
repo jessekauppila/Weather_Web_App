@@ -37,13 +37,7 @@ interface TimeToolbarProps {
   setIsLoading: (loading: boolean) => void;
 }
 
-// const fetchLastApiCall = async (setLastApiCall: (value: string | null) => void) => {
-//   const response = await fetch('/api/getLastApiRun');
-//   const data = await response.json();
-//   setLastApiCall(data.lastApiCall);
-//   //console.log("API Calls:", data.allCalls);
-//   return data.lastApiCall;
-// };
+
 
 const TimeToolbar = ({
   calculateCurrentTimeRange,
@@ -77,9 +71,6 @@ const TimeToolbar = ({
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   //const [lastApiCall, setLastApiCall] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   fetchLastApiCall(setLastApiCall);
-  // }, []);
 
   const handleDataPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
     setDataAnchorEl(event.currentTarget);
@@ -100,7 +91,6 @@ const TimeToolbar = ({
   const handleRefreshButtonClick = async () => {
     await onRefresh();
     //await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
-    //await fetchLastApiCall(setLastApiCall);
     //console.log('Updated last API call:', newLastApiCall);
   };
 
@@ -115,18 +105,7 @@ const TimeToolbar = ({
       target: { value: calculateCurrentTimeRange() } 
     } as SelectChangeEvent<string>);
     
-    // Then fetch weather data with the new custom time
-    await fetchWeatherData({
-      timeRangeData: {
-        start_time_pdt: moment(selectedDate).hour(parseInt(customTime.split(':')[0])).minute(parseInt(customTime.split(':')[1])),
-        end_time_pdt: moment(endDate).hour(parseInt(customTime.split(':')[0])).minute(parseInt(customTime.split(':')[1]))
-      },
-      stationIds,
-      tableMode,
-      startHour,
-      endHour,
-      dayRangeType
-    });
+
   };
 
 
@@ -303,16 +282,6 @@ const TimeToolbar = ({
                   (Data fetched 5, 10, and 30 min past the hour)
               </div>
 
-              {/* {lastApiCall && (
-                <>
-                   <div>
-                Most Recent Data: {moment(lastApiCall).format('MM/DD/YYYY h:mm A')}
-                  </div> 
-                  <div className="text-[10px]">
-                  (Data fetched 5, 10, and 30 min past the hour)
-                  </div>
-                </>
-              )} */}
 
             {/* <div>
                 Range Requested: {moment(`${filteredObservationsDataHour.data[0].Day} ${filteredObservationsDataHour.data[0].Hour}`, 'MMM DD h:mm A').format('MMM DD h:mm A')} - {' '}
