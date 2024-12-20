@@ -4,7 +4,6 @@ import { DayRangeType } from '../types';
 import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import moment from 'moment';
-import { fetchWeatherData } from '@/app/utils/fetchWeatherData';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;

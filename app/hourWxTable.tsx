@@ -239,7 +239,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
-  }, [sortedData, headerStructure]);
+  }, [sortedData, headerStructure, hourAverages.title]);
 
   useEffect(() => {
     console.log('Hourly data:', hourAverages.data);

@@ -3,6 +3,13 @@ import { filteredObservationData } from '../filteredObservationData';
 import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 import hourWxTableDataFromDB from '../hourWxTableDataFromDB';
 import hourWxTableDataFiltered from '../hourWxTableDataFiltered';
+import moment from 'moment';
+
+export enum DayRangeType {
+  MIDNIGHT = 'MIDNIGHT',
+  CURRENT = 'CURRENT',
+  CUSTOM = 'CUSTOM'
+}
 
 interface FetchWeatherDataProps {
   timeRangeData: {
@@ -13,14 +20,23 @@ interface FetchWeatherDataProps {
   tableMode: 'summary' | 'daily';
   startHour: number;
   endHour: number;
-  dayRangeType: string;
+  dayRangeType: DayRangeType;
 }
 
 export function useFetchWeatherData() {
   const [isLoading, setIsLoading] = useState(false);
-  const [observationsDataDay, setObservationsDataDay] = useState(null);
-  const [observationsDataHour, setObservationsDataHour] = useState(null);
-  const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState(null);
+  const [observationsDataDay, setObservationsDataDay] = useState<{ 
+    data: { [key: string]: string | number }[]; 
+    title: string; 
+  } | null>(null);
+  const [observationsDataHour, setObservationsDataHour] = useState<{
+    data: { [key: string]: string | number }[];
+    title: string;
+  } | null>(null);
+  const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
+    data: any[];
+    title: string;
+  } | null>(null);
 
   const fetchData = async ({
     timeRangeData,
