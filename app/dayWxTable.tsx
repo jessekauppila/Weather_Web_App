@@ -1,9 +1,10 @@
 //main page
 
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
-import { Button } from '@mui/material';
+import ReactDOM from 'react-dom';
+//import { Button } from '@mui/material';
 
 interface DayAverage {
   [key: string]: string | number;
@@ -102,11 +103,45 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
 
 type Column = string | { key: string; displayName: string };
 
+// Memoized Station Button Component
+const StationButton = memo(({ stationName, stid, onClick }: { 
+  stationName: string, 
+  stid: string,
+  onClick: (stid: string) => void 
+}) => (
+  <button
+    onClick={() => onClick(stid)}
+    className={`
+      MuiButton-root 
+      MuiButton-outlined 
+      MuiButton-sizeSmall 
+      MuiButton-outlinedPrimary
+      bg-transparent
+      transition-all
+      duration-200
+      min-w-[120px]
+      text-left
+      px-2
+      py-1
+      rounded
+      border
+      border-solid
+      border-[#49597F]
+      hover:border-2
+      hover:border-[#6B7BA4]
+    `}
+  >
+    {stationName}
+  </button>
+));
+
+StationButton.displayName = 'StationButton';
+
 function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
   //console.log('Table mode in table code:', mode);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Memoize the header structure to avoid recalculating on every render
+  // Memoize the header structure
   const headerStructure = useMemo(() => {
     if (dayAverages.data.length === 0) return getKnownCategories(mode);
 
@@ -130,192 +165,172 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     ];
   }, [dayAverages.data, mode]);
 
-  //console.log('dayAverages', dayAverages);
+  // Memoize the data
+  const memoizedData = useMemo(() => {
+    if (!dayAverages.data || dayAverages.data.length === 0) return [];
+    return dayAverages.data;
+  }, [dayAverages.data]);
 
   useEffect(() => {
-    if (
-      !dayAverages.data ||
-      dayAverages.data.length === 0 ||
-      !ref.current
-    )
-      return;
+    if (!memoizedData.length || !ref.current) return;
 
-    // Derive headers from headerStructure
-    const headers = headerStructure.flatMap(
-      (category) => category.columns
-    );
+    const renderTable = () => {
+      const table = d3
+        .select(ref.current)
+        .selectAll<HTMLTableElement, null>('table')
+        .data([null]);
+        
+      const tableEnter = table
+        .enter()
+        .append('table')
+        .attr('class', 'weatherTable');
+        
+      const tableUpdate = tableEnter.merge(table as any);
 
-    const table = d3
-      .select(ref.current)
-      .selectAll<HTMLTableElement, null>('table')
-      .data([null]);
-    const tableEnter = table
-      .enter()
-      .append('table')
-      .attr('class', 'weatherTable');
-    const tableUpdate = tableEnter.merge(table as any);
+      // Update caption
+      tableUpdate
+        .selectAll('caption')
+        .data([null])
+        .join('caption')
+        .html(dayAverages.title.replace('\n', '<br/>'))
+        .style('caption-side', 'top')
+        .style('white-space', 'pre-line');
 
-    // Update the caption text
-    tableUpdate
-      .selectAll('caption')
-      .data([null])
-      .join('caption')
-      .html(dayAverages.title.replace('\n', '<br/>'))
-      .style('caption-side', 'top')
-      .style('white-space', 'pre-line');
+      // Headers
+      const thead = tableUpdate
+        .selectAll<HTMLTableSectionElement, null>('thead')
+        .data([null]);
+        
+      const theadEnter = thead.enter().append('thead');
+      const theadUpdate = theadEnter.merge(thead as any);
 
-    // Headers
-    const thead = tableUpdate
-      .selectAll<HTMLTableSectionElement, null>('thead')
-      .data([null]);
-    const theadEnter = thead.enter().append('thead');
-    const theadUpdate = theadEnter.merge(thead as any);
+      // Category row
+      const categoryRow = theadUpdate
+        .selectAll<HTMLTableRowElement, null>('tr.category-row')
+        .data([null]);
+        
+      const categoryRowEnter = categoryRow
+        .enter()
+        .append('tr')
+        .attr('class', 'category-row');
+        
+      const categoryRowUpdate = categoryRowEnter.merge(categoryRow as any);
 
-    // Category row
-    const categoryRow = theadUpdate
-      .selectAll<HTMLTableRowElement, null>('tr.category-row')
-      .data([null]);
-    const categoryRowEnter = categoryRow
-      .enter()
-      .append('tr')
-      .attr('class', 'category-row');
-    const categoryRowUpdate = categoryRowEnter.merge(
-      categoryRow as any
-    );
+      // Category cells
+      const categoryCells = categoryRowUpdate
+        .selectAll<HTMLTableHeaderCellElement, any>('th')
+        .data(headerStructure);
+        
+      categoryCells
+        .enter()
+        .append('th')
+        .merge(categoryCells as any)
+        .attr('colspan', (d) => d.columns.length)
+        .text((d) => d.category);
+        
+      categoryCells.exit().remove();
 
-    const categoryCells = categoryRowUpdate
-      .selectAll<
-        HTMLTableHeaderCellElement,
-        (typeof headerStructure)[0]
-      >('th')
-      .data(headerStructure);
-    categoryCells
-      .enter()
-      .append('th')
-      .merge(categoryCells as any)
-      .attr('colspan', (d) => d.columns.length)
-      .text((d) => d.category);
-    categoryCells.exit().remove();
+      // Column headers
+      const headerRow = theadUpdate
+        .selectAll<HTMLTableRowElement, null>('tr.column-row')
+        .data([null]);
+        
+      const headerRowEnter = headerRow
+        .enter()
+        .append('tr')
+        .attr('class', 'column-row');
+        
+      const headerRowUpdate = headerRowEnter.merge(headerRow as any);
 
-    // Column headers row
-    const headerRow = theadUpdate
-      .selectAll<HTMLTableRowElement, null>('tr.column-row')
-      .data([null]);
-    const headerRowEnter = headerRow
-      .enter()
-      .append('tr')
-      .attr('class', 'column-row');
-    const headerRowUpdate = headerRowEnter.merge(headerRow as any);
+      const headerCells = headerRowUpdate
+        .selectAll<HTMLTableHeaderCellElement, any>('th')
+        .data(headerStructure.flatMap((category) => category.columns));
 
-    const headerCells = headerRowUpdate
-      .selectAll<HTMLTableHeaderCellElement, Column>('th')
-      .data(headerStructure.flatMap((category) => category.columns));
-
-    headerCells
-      .enter()
-      .append('th')
-      .merge(headerCells as any)
-      .attr('data-tooltip-id', 'daily-measurement-tooltip')
-      .attr('data-tooltip-content', (d) => {
-        const key = typeof d === 'string' ? d : d.displayName;
-        return measurementDescriptions[key] || '';
-      })
-      .text((d) => {
-        if (typeof d === 'string') {
-          return d;
-        } else if (d && typeof d === 'object' && 'displayName' in d) {
-          return d.displayName;
-        } else {
-          return '';
-        }
-      });
+      headerCells
+        .enter()
+        .append('th')
+        .merge(headerCells as any)
+        .attr('data-tooltip-id', 'daily-measurement-tooltip')
+        .attr('data-tooltip-content', (d) => {
+          const key = typeof d === 'string' ? d : d.displayName;
+          return measurementDescriptions[key] || '';
+        })
+        .text((d) => {
+          if (typeof d === 'string') return d;
+          return d?.displayName || '';
+        });
 
     headerCells.exit().remove();
 
-    // Body
-    const tbody = tableUpdate
-      .selectAll<HTMLTableSectionElement, null>('tbody')
-      .data([null]);
-    const tbodyEnter = tbody.enter().append('tbody');
-    const tbodyUpdate = tbodyEnter.merge(tbody as any);
+      // Body
+      const tbody = tableUpdate
+        .selectAll<HTMLTableSectionElement, null>('tbody')
+        .data([null]);
+        
+      const tbodyEnter = tbody.enter().append('tbody');
+      const tbodyUpdate = tbodyEnter.merge(tbody as any);
 
-    const rows = tbodyUpdate
-      .selectAll<HTMLTableRowElement, DayAverage>('tr')
-      .data(dayAverages.data);
-    const rowsEnter = rows
-      .enter()
-      .append('tr')
-      .attr('class', (d, i) =>
-        i % 2 === 0 ? 'even-row' : 'odd-row'
-      );
-    const rowsUpdate = rowsEnter.merge(rows as any);
-    rows.exit().remove();
+      // Rows
+      const rows = tbodyUpdate
+        .selectAll<HTMLTableRowElement, DayAverage>('tr')
+        .data(memoizedData);
+        
+      const rowsEnter = rows
+        .enter()
+        .append('tr')
+        .attr('class', (d, i) => i % 2 === 0 ? 'even-row' : 'odd-row');
+        
+      const rowsUpdate = rowsEnter.merge(rows as any);
+      rows.exit().remove();
 
-    // Update the cells creation part
-    const cells = rowsUpdate
-      .selectAll<HTMLTableDataCellElement, any>('td')
-      .data((d) =>
-        headerStructure.flatMap((category) =>
-          category.columns.map((col) => {
-            const key = typeof col === 'string' ? col : col.key;
-            return {
-              key,
-              value: d[key],
-              isStation: key === 'Station',
-              stid: d.Stid
-            };
-          })
-        )
-      );
+      // Cells
+      const cells = rowsUpdate
+        .selectAll<HTMLTableDataCellElement, any>('td')
+        .data((d) =>
+          headerStructure.flatMap((category) =>
+            category.columns.map((col) => {
+              const key = typeof col === 'string' ? col : col.key;
+              return {
+                key,
+                value: d[key],
+                isStation: key === 'Station',
+                stid: d.Stid
+              };
+            })
+          )
+        );
 
+      const cellsEnter = cells
+        .enter()
+        .append('td');
 
-      
-    const cellsEnter = cells
-      .enter()
-      .append('td')
-      .merge(cells as any)
-      .each(function(d) {
-        if (d.isStation && d.stid) {
-          // Clear existing content
-          d3.select(this).html('');
-          // Create Material UI button
-          const button = document.createElement('button');
-          button.className = `
-            MuiButton-root 
-            MuiButton-outlined 
-            MuiButton-sizeSmall 
-            MuiButton-outlinedPrimary
-            bg-transparent
-            transition-colors
-            duration-200
-            min-w-[120px]
-            text-left
-            px-2
-            py-1
-            rounded
-            border
-            border-solid
-            border-[#49597F] //border color
-            hover:border-2 //border width on hover
-          `;
-          button.textContent = d.value;
-          button.onclick = () => onStationClick(d.stid);
-          // Add the button to the cell
-          this.appendChild(button);
-        } else {
-          // For non-station cells, just set the text
-          d3.select(this).text(function(d: any) {
-            if (d.key === 'Precip Accum One Hour' && d.value !== '-') {
-              const value = parseFloat(d.value);
-              return `${value.toFixed(3)} in`;
-            }
-            return d.value;
-          });
-        }
-      });
+      cellsEnter.merge(cells as any)
+        .each(function(d) {
+          const cell = d3.select(this);
+          if (d.isStation && d.stid) {
+            cell.html('').append(() => {
+              const container = document.createElement('div');
+              ReactDOM.render(
+                <StationButton 
+                  stationName={d.value} 
+                  stid={d.stid} 
+                  onClick={onStationClick}
+                />,
+                container
+              );
+              return container;
+            });
+          } else {
+            cell.text(d.value);
+          }
+        });
 
-    cells.exit().remove();
-  }, [dayAverages, headerStructure, onStationClick]);
+      cells.exit().remove();
+    };
+
+    // Use requestAnimationFrame for smoother rendering
+    requestAnimationFrame(renderTable);
+  }, [memoizedData, headerStructure, onStationClick, dayAverages.title]);
 
   return (
     <div className="table-container" ref={ref}>
@@ -328,4 +343,4 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
   );
 }
 
-export default DayAveragesTable;
+export default memo(DayAveragesTable);
