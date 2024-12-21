@@ -13,10 +13,12 @@ export async function GET(request: NextRequest) {
     client = await db.connect();
     console.log('Database connected');
     
-    const chunkDays = 2;
+    const chunkDays = 1;
     const end_time = moment();
     const start_time = moment(end_time).subtract(chunkDays, 'days');
     console.log('Time range:', { start: start_time.format(), end: end_time.format() });
+
+
 
     // Fetch observations
     const result = await client.query(`
@@ -138,9 +140,20 @@ function processSnowData(batch: any[]) {
 
     // Process each 24-hour chunk
     chunks.forEach(chunk => {
+      // Log original values for this chunk
+      console.log('\n=== Processing new 24h chunk ===');
+      console.log('Station:', stid);
+      console.log('Original values:');
+      chunk.forEach(obs => {
+        console.log(`Time: ${moment(obs.date_time).format('YYYY-MM-DD HH:mm')}`, {
+          snow_depth: obs.snow_depth,
+          snow_depth_24h: obs.snow_depth_24h
+        });
+      });
+
       const filteredTotalSnow = filterSnowDepthOutliers(
         chunk
-          .filter(d => d.snow_depth !== null && typeof d.snow_depth === 'number')
+          .filter(d => d.snow_depth !== null && !isNaN(Number(d.snow_depth)))
           .map(d => ({
             date_time: d.date_time,
             snow_depth: Number(d.snow_depth),
@@ -151,7 +164,7 @@ function processSnowData(batch: any[]) {
 
       const filtered24hSnow = filterSnowDepthOutliers(
         chunk
-          .filter(d => d.snow_depth_24h !== null && typeof d.snow_depth_24h === 'number')
+          .filter(d => d.snow_depth_24h !== null)
           .map(d => ({
             date_time: d.date_time,
             snow_depth: Number(d.snow_depth_24h),
@@ -162,6 +175,17 @@ function processSnowData(batch: any[]) {
 
       // Calculate accumulation
       const snowAccum = calculateSnowDepthAccumulation(filtered24hSnow);
+
+      // Log filtered results
+      console.log('\nFiltered results:');
+      chunk.forEach((obs, index) => {
+        console.log(`Time: ${moment(obs.date_time).format('YYYY-MM-DD HH:mm')}`, {
+          original_snow_depth: obs.snow_depth,
+          filtered_snow_depth: filteredTotalSnow[index]?.snow_depth ?? null,
+          original_snow_depth_24h: obs.snow_depth_24h,
+          filtered_snow_accum: snowAccum[index]?.snow_total ?? null
+        });
+      });
 
       // Merge processed data back
       chunk.forEach((obs, index) => {

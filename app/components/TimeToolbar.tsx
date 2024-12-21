@@ -90,7 +90,7 @@ const TimeToolbar = ({
 
   const handleRefreshButtonClick = async () => {
     await onRefresh();
-    //await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
+    await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
     //console.log('Updated last API call:', newLastApiCall);
   };
 
