@@ -55,6 +55,8 @@ export async function fetchWeatherData({
   
     const result = await response.json();
     
+
+    //I think this filtered data means something different than the filtered data in the hourWxTableDataFiltered.tsx file
     const filteredData = filteredObservationData(result.observations, {
       mode: tableMode,
       startHour,

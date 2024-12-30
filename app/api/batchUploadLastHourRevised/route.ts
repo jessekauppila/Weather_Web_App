@@ -159,6 +159,31 @@ async function handleRequest(request: NextRequest) {
 
       for (const observation of observationsData) {
         try {
+          // Add validation for dateStrings
+          if (!observation.date_time || !Array.isArray(observation.date_time) || observation.date_time.length === 0) {
+            console.warn(`Skipping observation with invalid date_time array for station ${observation.stid}`);
+            continue;
+          }
+
+          // Create 24-hour chunk
+          console.log('\n=== Processing new 24h chunk ===');
+          console.log('Station:', observation.stid);
+          console.log('Original values:');
+
+          const chunk = observation.date_time.map((dateString: string, i: number) => {
+            // Add validation for individual dateString
+            if (!dateString || dateString === '') {
+              console.warn(`Skipping invalid date_time at index ${i} for station ${observation.stid}`);
+              return null;
+            }
+            // ... rest of the chunk mapping
+          }).filter(Boolean); // Remove any null entries
+
+          if (chunk.length === 0) {
+            console.warn(`No valid dates found for station ${observation.stid}`);
+            continue;
+          }
+
           // Log the full observation data
           console.log(
             'Full observation data:',
@@ -190,33 +215,23 @@ async function handleRequest(request: NextRequest) {
             continue;
           }
 
-          const dateStrings = observation.date_time;
-          if (!dateStrings) {
-            console.error(
-              'Missing date_time for observation:',
-              observation
-            );
-            continue;
-          }
-
           console.log('Processing observation:', {
             stid: observation.stid,
-            dateStringsLength: dateStrings?.length,
-            hasDateStrings: !!dateStrings,
+            dateStringsLength: observation.date_time?.length,
+            hasDateStrings: !!observation.date_time,
           });
 
-          for (let i = 0; i < dateStrings.length; i++) {
-            const dateString = dateStrings[i];
-            if (!dateString || dateString === '') {
-              console.warn(
-                `Skipping invalid date_time for station ${observation.stid}`
-              );
+          // Add filtered values to batch
+          for (let i = 0; i < observation.date_time.length; i++) {
+            const currentDate = observation.date_time[i];
+            if (!currentDate || currentDate === '') {
+              console.warn(`Skipping invalid date at index ${i} for station ${observation.stid}`);
               continue;
             }
 
             const observationData = {
               station_id: observation.stid,
-              date_time: dateString,
+              date_time: currentDate,  // This is now validated
               air_temp: validateValue(
                 safeParseFloat(
                   safeGetArrayValue(observation.air_temp, i)
@@ -326,13 +341,8 @@ async function handleRequest(request: NextRequest) {
                 )
               ),
             };
-
+            
             batch.push(observationData);
-
-            if (batch.length >= batchSize) {
-              await insertBatch(client, batch);
-              batch = [];
-            }
           }
         } catch (error) {
           console.error(
@@ -408,12 +418,24 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  // Gets all column names from the first object in the batch
-  // and adds 'api_fetch_time' to the list
-  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
+  // Filter out any entries with null date_time before processing
+  const validBatch = batch.filter(obs => {
+    if (!obs.date_time) {
+      console.warn('Dropping observation with null date_time:', obs);
+      return false;
+    }
+    return true;
+  });
+
+  if (validBatch.length === 0) {
+    console.warn('No valid observations to insert after filtering');
+    return;
+  }
+
+  const columns = Object.keys(validBatch[0]).join(', ') + ', api_fetch_time';
 
   // Transforms each observation in the batch into SQL values
-  const values = batch.map((obs, index) =>
+  const values = validBatch.map((obs, index) =>
     // Creates a tuple of values for each observation
     `(${Object.values(obs)
       .map((v, i) => {
@@ -479,7 +501,7 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
     console.log(`Inserted/Updated ${result.rowCount} observations`);
   } catch (error) {
     console.error('Error inserting batch:', error);
-    console.error('Problematic batch:', JSON.stringify(batch));
+    console.error('Problematic batch:', JSON.stringify(validBatch));
     throw error;
   }
 }

@@ -256,9 +256,9 @@ export function filterSnowDepthOutliers(
     const processedData = config.applyIdenticalCheck 
       ? applyIdenticalCheck(sortedData)
       : sortedData;
-    // console.log(`${logPrefix} Identical Check:`, processedData);
+        // console.log(`${logPrefix} Identical Check:`, processedData);
     
-    //console.log(`${logPrefix} 🔄 Applying IQR filter...`);
+    // console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
     
     const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;

@@ -1,7 +1,6 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/batchUploadLastHourRevisedOLD
+// http://localhost:3000/api/batchUploadLastHourRevised
 
-// THIS IS WHAT"S BEING RUN NOW AS A CRON JOB
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -19,414 +18,361 @@ export async function POST(request: NextRequest) {
 
 async function handleRequest(request: NextRequest) {
   let client;
-  const maxRetries = 3;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // Release previous client if it exists
-      if (client) {
-        try {
-          await client.release();
-          console.log('Previous connection released');
-        } catch (releaseError) {
-          console.error('Error releasing previous connection:', releaseError);
-        }
-      }
+  try {
+    client = await db.connect();
 
-      // Get new client connection
-      client = await db.connect();
-      console.log(`Database connected (attempt ${attempt})`);
+    let totalProcessed = 0;
+    const totalToProcess = 2;
+    const end_time_pst = moment().tz('America/Los_Angeles');
+    const chunk_size = 1;
+    const stids = [
+      '1',
+      '14',
+      '11',
+      '12',
+      '13',
+      '14',
+      '17',
+      '18',
+      '19',
+      '2',
+      '20',
+      '21',
+      '22',
+      '23',
+      '24',
+      '25',
+      '26',
+      '27',
+      '28',
+      '29',
+      '3',
+      '30',
+      '31',
+      '32',
+      '33',
+      '34',
+      '35',
+      '36',
+      '37',
+      '39',
+      '4',
+      '40',
+      '41',
+      '42',
+      '43',
+      '44',
+      '45',
+      '46',
+      '47',
+      '48',
+      '49',
+      '5',
+      '50',
+      '51',
+      '53',
+      '54',
+      '56',
+      '57',
+      '6',
+      '7',
+      '8',
+      '9',
+    ];
+    const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
-      // Test connection
-      await client.query('SELECT 1');
-      console.log('Connection verified');
+    for (
+      let hours_processed = 0;
+      hours_processed < totalToProcess;
+      hours_processed += chunk_size
+    ) {
+      const chunk_end = moment(end_time_pst).subtract(
+        hours_processed,
+        'hours'
+      );
+      const chunk_start = moment(chunk_end).subtract(
+        chunk_size,
+        'hours'
+      );
 
-      // If we get here, connection is good, proceed with main logic
-      let totalProcessed = 0;
-      const totalToProcess = 2;
-      const end_time_pst = moment().tz('America/Los_Angeles');
-      const start_time_pst = moment(end_time_pst).subtract(2, 'hours');
-      const chunk_size = 1;
-      const stids = [
-        '1',
-        '14',
-        '11',
-        '12',
-        '13',
-        '14',
-        '17',
-        '18',
-        '19',
-        '2',
-        '20',
-        '21',
-        '22',
-        '23',
-        '24',
-        '25',
-        '26',
-        '27',
-        '28',
-        '29',
-        '3',
-        '30',
-        '31',
-        '32',
-        '33',
-        '34',
-        '35',
-        '36',
-        '37',
-        '39',
-        '4',
-        '40',
-        '41',
-        '42',
-        '43',
-        '44',
-        '45',
-        '46',
-        '47',
-        '48',
-        '49',
-        '5',
-        '50',
-        '51',
-        '53',
-        '54',
-        '56',
-        '57',
-        '6',
-        '7',
-        '8',
-        '9',
-      ];
-      const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
+      console.log(
+        `Processing data from ${chunk_start.format()} to ${chunk_end.format()}`
+      );
 
-      for (
-        let days_processed = 0;
-        days_processed < totalToProcess;
-        days_processed += chunk_size
-      ) {
-        const chunk_end = moment(end_time_pst).subtract(
-          days_processed,
-          'days'
-        );
-        const chunk_start = moment(chunk_end).subtract(
-          chunk_size,
-          'days'
+      let observationsData;
+      try {
+        const result = await retryOperation(() =>
+          processAllWxData(chunk_start, chunk_end, stids, auth)
         );
 
         console.log(
-          `Processing data from ${chunk_start.format()} to ${chunk_end.format()}`
+          'Result from processAllWxData:',
+          JSON.stringify(result, null, 2)
         );
 
-        let observationsData;
-        try {
-          const result = await retryOperation(() =>
-            processAllWxData(chunk_start, chunk_end, stids, auth)
-          );
-
-          console.log(
-            'Result from processAllWxData:',
-            JSON.stringify(result, null, 2)
-          );
-
-          if (!result || typeof result !== 'object') {
-            console.error(
-              'Invalid result from processAllWxData:',
-              result
-            );
-            continue;
-          }
-
-          observationsData = result.observationsData;
-
-          if (!Array.isArray(observationsData)) {
-            console.error(
-              'observationsData is not an array:',
-              observationsData
-            );
-            continue;
-          }
-
-          if (observationsData.length === 0) {
-            console.log(
-              'No observations data returned for this time period'
-            );
-            continue;
-          }
-
-          totalProcessed += chunk_size;
-          const progressPercentage =
-            (totalProcessed / totalToProcess) * 100;
-          console.log(
-            `Progress: ${progressPercentage.toFixed(
-              2
-            )}% (${totalProcessed}/${totalToProcess} hours processed)`
-          );
-        } catch (error) {
+        if (!result || typeof result !== 'object') {
           console.error(
-            `Error fetching weather data for chunk ${days_processed} to ${
-              days_processed + chunk_size
-            }:`,
-            error
+            'Invalid result from processAllWxData:',
+            result
           );
           continue;
         }
 
-        const batchSize = 1000; // Adjust this value based on your database performance
-        let batch = [];
+        observationsData = result.observationsData;
 
-        for (const observation of observationsData) {
-          try {
-            // Log the full observation data
-            console.log(
-              'Full observation data:',
-              JSON.stringify(observation, null, 2)
-            );
+        if (!Array.isArray(observationsData)) {
+          console.error(
+            'observationsData is not an array:',
+            observationsData
+          );
+          continue;
+        }
 
-            // Check each array property before processing
-            const arrays = {
-              date_time: observation.date_time,
-              air_temp: observation.air_temp,
-              wind_speed: observation.wind_speed,
-              wind_gust: observation.wind_gust,
-              // ... add other properties you're accessing
-            };
+        if (observationsData.length === 0) {
+          console.log(
+            'No observations data returned for this time period'
+          );
+          continue;
+        }
 
-            // Validate all arrays have same length
-            const arrayLengths = Object.entries(arrays).map(
-              ([key, arr]) => ({
-                key,
-                length: Array.isArray(arr) ? arr.length : null,
-              })
-            );
+        totalProcessed += chunk_size;
+        const progressPercentage =
+          (totalProcessed / totalToProcess) * 100;
+        console.log(
+          `Progress: ${progressPercentage.toFixed(
+            2
+          )}% (${totalProcessed}/${totalToProcess} hours processed)`
+        );
+      } catch (error) {
+        console.error(
+          `Error fetching weather data for chunk ${hours_processed} to ${
+            hours_processed + chunk_size
+          }:`,
+          error
+        );
+        continue;
+      }
 
-            //console.log('Array lengths:', arrayLengths);
+      const batchSize = 1000; // Adjust this value based on your database performance
+      let batch = [];
 
-            // Verify observation object and required properties
-            if (!observation) {
-              console.error('Invalid observation:', observation);
-              continue;
-            }
+      for (const observation of observationsData) {
+        try {
+          // Log the full observation data
+          console.log(
+            'Full observation data:',
+            JSON.stringify(observation, null, 2)
+          );
 
-            const dateStrings = observation.date_time;
-            if (!dateStrings) {
-              console.error(
-                'Missing date_time for observation:',
-                observation
-              );
-              continue;
-            }
+          // Check each array property before processing
+          const arrays = {
+            date_time: observation.date_time,
+            air_temp: observation.air_temp,
+            wind_speed: observation.wind_speed,
+            wind_gust: observation.wind_gust,
+            // ... add other properties you're accessing
+          };
 
-            console.log('Processing observation:', {
-              stid: observation.stid,
-              dateStringsLength: dateStrings?.length,
-              hasDateStrings: !!dateStrings,
-            });
+          // Validate all arrays have same length
+          const arrayLengths = Object.entries(arrays).map(
+            ([key, arr]) => ({
+              key,
+              length: Array.isArray(arr) ? arr.length : null,
+            })
+          );
 
-            for (let i = 0; i < dateStrings.length; i++) {
-              const dateString = dateStrings[i];
-              if (!dateString || dateString === '') {
-                console.warn(
-                  `Skipping invalid date_time for station ${observation.stid}`
-                );
-                continue;
-              }
+          console.log('Array lengths:', arrayLengths);
 
-              const observationData = {
-                station_id: observation.stid,
-                date_time: dateString,
-                air_temp: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.air_temp, i)
-                  )
-                ),
-                wind_speed: validateWindSpeed(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.wind_speed, i)
-                  )
-                ),
-                wind_gust: validateWindGust(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.wind_gust, i)
-                  )
-                ),
-                wind_direction: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.wind_direction, i)
-                  )
-                ),
-                snow_depth: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.snow_depth, i)
-                  )
-                ),
-                snow_depth_24h: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.snow_depth_24h, i)
-                  )
-                ),
-                intermittent_snow: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.intermittent_snow, i)
-                  )
-                ),
-                precip_accum_one_hour: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(
-                      observation.precip_accum_one_hour,
-                      i
-                    )
-                  )
-                ),
-                relative_humidity: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.relative_humidity, i)
-                  )
-                ),
-                battery_voltage: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.battery_voltage, i)
-                  )
-                ),
-                wind_speed_min: validateWindSpeed(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.wind_speed_min, i)
-                  )
-                ),
-                solar_radiation: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.solar_radiation, i)
-                  )
-                ),
-                equip_temperature: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.equip_temperature, i)
-                  )
-                ),
-                pressure: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.pressure, i)
-                  )
-                ),
-                wet_bulb: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.wet_bulb, i)
-                  )
-                ),
-                soil_temperature_a: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_temperature_a, i)
-                  )
-                ),
-                soil_temperature_b: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_temperature_b, i)
-                  )
-                ),
-                soil_moisture_a: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_moisture_a, i)
-                  )
-                ),
-                soil_moisture_b: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_moisture_b, i)
-                  )
-                ),
-                soil_temperature_c: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_temperature_c, i)
-                  )
-                ),
-                soil_moisture_c: validateValue(
-                  safeParseFloat(
-                    safeGetArrayValue(observation.soil_moisture_c, i)
-                  )
-                ),
-              };
+          // Verify observation object and required properties
+          if (!observation) {
+            console.error('Invalid observation:', observation);
+            continue;
+          }
 
-              batch.push(observationData);
-
-              if (batch.length >= batchSize) {
-                await insertBatch(client, batch);
-                batch = [];
-              }
-            }
-          } catch (error) {
+          const dateStrings = observation.date_time;
+          if (!dateStrings) {
             console.error(
-              'Error processing observation:',
-              error,
+              'Missing date_time for observation:',
               observation
             );
             continue;
           }
-        }
 
-        // Insert any remaining observations
-        if (batch.length > 0) {
-          await insertBatch(client, batch);
+          console.log('Processing observation:', {
+            stid: observation.stid,
+            dateStringsLength: dateStrings?.length,
+            hasDateStrings: !!dateStrings,
+          });
+
+          for (let i = 0; i < dateStrings.length; i++) {
+            const dateString = dateStrings[i];
+            if (!dateString || dateString === '') {
+              console.warn(
+                `Skipping invalid date_time for station ${observation.stid}`
+              );
+              continue;
+            }
+
+            const observationData = {
+              station_id: observation.stid,
+              date_time: dateString,
+              air_temp: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.air_temp, i)
+                )
+              ),
+              wind_speed: validateWindSpeed(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_speed, i)
+                )
+              ),
+              wind_gust: validateWindGust(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_gust, i)
+                )
+              ),
+              wind_direction: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_direction, i)
+                )
+              ),
+              snow_depth: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.snow_depth, i)
+                )
+              ),
+              snow_depth_24h: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.snow_depth_24h, i)
+                )
+              ),
+              intermittent_snow: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.intermittent_snow, i)
+                )
+              ),
+              precip_accum_one_hour: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(
+                    observation.precip_accum_one_hour,
+                    i
+                  )
+                )
+              ),
+              relative_humidity: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.relative_humidity, i)
+                )
+              ),
+              battery_voltage: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.battery_voltage, i)
+                )
+              ),
+              wind_speed_min: validateWindSpeed(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wind_speed_min, i)
+                )
+              ),
+              solar_radiation: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.solar_radiation, i)
+                )
+              ),
+              equip_temperature: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.equip_temperature, i)
+                )
+              ),
+              pressure: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.pressure, i)
+                )
+              ),
+              wet_bulb: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.wet_bulb, i)
+                )
+              ),
+              soil_temperature_a: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_a, i)
+                )
+              ),
+              soil_temperature_b: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_b, i)
+                )
+              ),
+              soil_moisture_a: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_a, i)
+                )
+              ),
+              soil_moisture_b: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_b, i)
+                )
+              ),
+              soil_temperature_c: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_temperature_c, i)
+                )
+              ),
+              soil_moisture_c: validateValue(
+                safeParseFloat(
+                  safeGetArrayValue(observation.soil_moisture_c, i)
+                )
+              ),
+            };
+
+            batch.push(observationData);
+
+            if (batch.length >= batchSize) {
+              await insertBatch(client, batch);
+              batch = [];
+            }
+          }
+        } catch (error) {
+          console.error(
+            'Error processing observation:',
+            error,
+            observation
+          );
+          continue;
         }
       }
 
-      // Log the API run
-      await client.query(`
-        INSERT INTO api_runs (type, run_time) 
-        VALUES (
-          'batch_upload',
-          $1
-        )
-      `, [new Date().toISOString()]);
-
-      // // Get the last run time
-      // const lastRun = await client.query(`
-      //   SELECT run_time 
-      //   FROM api_runs 
-      //   WHERE type = 'batch_upload' 
-      //   ORDER BY run_time DESC 
-      //   LIMIT 1
-      // `);
-
-      // return NextResponse.json({
-      //   message: 'Data update completed',
-      //   progress: `${totalProcessed}/${totalToProcess} days processed`,
-      //   lastApiRun: lastRun.rows[0]?.run_time
-      // });
-
-      return NextResponse.json({
-        message: 'Data update completed',
-        processed: totalProcessed
-      });
-
-    } catch (error) {
-      console.error(`Connection attempt ${attempt} failed:`, {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-
-      if (attempt === maxRetries) {
-        return NextResponse.json(
-          {
-            error: 'Database connection failed after multiple attempts',
-            details: error instanceof Error ? error.message : error
-          },
-          { status: 500 }
-        );
+      // Insert any remaining observations
+      if (batch.length > 0) {
+        await insertBatch(client, batch);
       }
+    }
 
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-    } finally {
-      if (client) {
-        try {
-          await client.release();
-          console.log(`Connection released (attempt ${attempt})`);
-        } catch (releaseError) {
-          console.error('Error releasing client:', releaseError);
-        }
-      }
+    return NextResponse.json({
+      message: 'Yearly data update completed',
+      progress: `${totalProcessed}/${totalToProcess} hours processed`,
+    });
+  } catch (error) {
+    console.error('Error updating yearly data:', error);
+    return NextResponse.json(
+      {
+        error:
+          'Error updating yearly data: ' +
+          (error instanceof Error
+            ? error.message
+            : JSON.stringify(
+                error,
+                Object.getOwnPropertyNames(error)
+              )),
+        details: error,
+      },
+      { status: 500 }
+    );
+  } finally {
+    if (client) {
+      await client.release();
     }
   }
 }
@@ -462,41 +408,42 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
+  // Gets all column names from the first object in the batch
+  // and adds 'api_fetch_time' to the list
   const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
-  const values = batch
-    .map(
-      (obs, index) =>
-        `(${Object.values(obs)
-          .map((v, i) => {
-            if (i === 0) {
-              // Assuming station_id is the first column
-              return v === null
-                ? 'NULL'
-                : `(SELECT id FROM stations WHERE stid = '${v}')`;
-            }
-            if (i === 1) {
-              // Assuming date_time is the second column
-              if (v === null || v === '') {
-                console.error(
-                  `Invalid date_time at index ${index}:`,
-                  obs
-                );
-                return 'NULL';
-              }
-              return `'${v}'::timestamp with time zone`;
-            }
-            // Clamp numeric values
-            if (typeof v === 'number') {
-              const clampedValue = clampNumericValue(v, 5, 2);
-              return clampedValue === null
-                ? 'NULL'
-                : `'${clampedValue}'`;
-            }
-            return v === null || v === '' ? 'NULL' : `'${v}'`;
-          })
-          .join(', ')}, NOW())`
-        )
-    .join(', ');
+
+  // Transforms each observation in the batch into SQL values
+  const values = batch.map((obs, index) =>
+    // Creates a tuple of values for each observation
+    `(${Object.values(obs)
+      .map((v, i) => {
+        // Special handling for station_id (first column)
+        if (i === 0) {
+          return v === null
+            ? 'NULL'
+            : `(SELECT id FROM stations WHERE stid = '${v}')`; // Converts station code to ID
+        }
+        
+        // Special handling for date_time (second column)
+        if (i === 1) {
+          if (v === null || v === '') {
+            console.error(`Invalid date_time at index ${index}:`, obs);
+            return 'NULL';
+          }
+          return `'${v}'::timestamp with time zone`; // Converts to PostgreSQL timestamp
+        }
+        
+        // Handles numeric values
+        if (typeof v === 'number') {
+          const clampedValue = clampNumericValue(v, 5, 2);
+          return clampedValue === null ? 'NULL' : `'${clampedValue}'`;
+        }
+        
+        // Handles null values or converts to string
+        return v === null || v === '' ? 'NULL' : `'${v}'`;
+      })
+      .join(', ')}, NOW())` // Adds current timestamp for api_fetch_time
+  ).join(', ');
 
   const query = `
     INSERT INTO observations (${columns})
@@ -517,19 +464,22 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       solar_radiation = EXCLUDED.solar_radiation,
       equip_temperature = EXCLUDED.equip_temperature,
       pressure = EXCLUDED.pressure,
-    -- Removed api_fetch_time from UPDATE to preserve original fetch time
+      wet_bulb = EXCLUDED.wet_bulb,
+      soil_temperature_a = EXCLUDED.soil_temperature_a,
+      soil_temperature_b = EXCLUDED.soil_temperature_b,
+      soil_moisture_a = EXCLUDED.soil_moisture_a,
+      soil_moisture_b = EXCLUDED.soil_moisture_b,
+      soil_temperature_c = EXCLUDED.soil_temperature_c,
+      soil_moisture_c = EXCLUDED.soil_moisture_c;
+      -- api_fetch_time is included in INSERT but not in UPDATE
   `;
 
   try {
     const result = await client.query(query);
-    
-    // Log API usage
-    console.log(`API fetch at ${new Date().toISOString()}`);
-    console.log(`Updated/inserted ${result.rowCount} records`);
-    console.log(`Stations: ${[...new Set(batch.map(obs => obs.station_id))].join(', ')}`);
-
+    console.log(`Inserted/Updated ${result.rowCount} observations`);
   } catch (error) {
     console.error('Error inserting batch:', error);
+    console.error('Problematic batch:', JSON.stringify(batch));
     throw error;
   }
 }

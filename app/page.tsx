@@ -293,6 +293,7 @@ export default function Home() {
             a.name.localeCompare(b.name)
           );
 
+        console.log("data", data);
         setStations(mappedStations);
         // Set stationIds to include all station IDs initially
         const allStationIds = mappedStations.map((station: any) => station.id);
@@ -335,6 +336,7 @@ export default function Home() {
       setFilteredObservationsDataHour,
       setIsLoading
     });
+
   };
 
   // Use the same function in useEffect
@@ -602,11 +604,13 @@ export default function Home() {
             />
           )} */}
 
+   
         {filteredObservationsDataHour && selectedStation && (
                     <HourWxTable 
                       hourAverages={filteredObservationsDataHour} 
                     />
                   )}
+                
 
 
           {observationsDataHour && selectedStation && (

@@ -29,6 +29,8 @@ export async function POST(request: Request) {
         o.equip_temperature,
         o.intermittent_snow,
         o.precip_accum_one_hour,
+        o.error_filtered_total_snow,
+        o.error_filtered_24hr_snow_accum,
         o.relative_humidity,
         o.snow_depth,
         o.snow_depth_24h,
