@@ -23,18 +23,19 @@ interface TimeToolbarProps {
   stations: Array<{ id: string; name: string }>;
   handleStationChange: (event: SelectChangeEvent<string>) => void;
   stationIds: string[];
-  filteredObservationsDataHour?: {
-    data: any[];
-    title: string;
-  } | null;
+  // filteredObservationsDataHour?: {
+  //   data: any[];
+  //   title: string;
+  // } | null;
   onRefresh: () => void;
   tableMode: 'summary' | 'daily';
   startHour: number;
   endHour: number;
   setObservationsDataDay: (data: any) => void;
   setObservationsDataHour: (data: any) => void;
-  setFilteredObservationsDataHour: (data: any) => void;
+  //setFilteredObservationsDataHour: (data: any) => void;
   setIsLoading: (loading: boolean) => void;
+  observationDataHour: any;
 }
 
 
@@ -57,15 +58,16 @@ const TimeToolbar = ({
   stations,
   handleStationChange,
   stationIds,
-  filteredObservationsDataHour,
+  //filteredObservationsDataHour,
   onRefresh,
   tableMode,
   startHour,
   endHour,
   setObservationsDataDay,
   setObservationsDataHour,
-  setFilteredObservationsDataHour,
-  setIsLoading
+  //setFilteredObservationsDataHour,
+  setIsLoading,
+  observationDataHour
 }: TimeToolbarProps) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
@@ -256,7 +258,7 @@ const TimeToolbar = ({
             {/* //////////////// */}
 
             <Button variant="outlined" size="small" onClick={handleDataPopupButtonClick}>
-            Data Info
+            Refresh
             </Button>
 
             <Popover
@@ -273,10 +275,10 @@ const TimeToolbar = ({
             <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
 
             <div className="text-[11px] text-[lightgrey] mt-2 text-center space-y-1 bg-[cornflowerblue]">
-            {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
+            {observationDataHour && observationDataHour.data.length > 0 && (
             <>
               <div>
-                Page Loaded: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
+                Page Loaded: {moment(observationDataHour.data[observationDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div>
               <div className="text-[10px]">
                   (Data fetched 5, 10, and 30 min past the hour)

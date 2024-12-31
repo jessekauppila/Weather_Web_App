@@ -1,7 +1,8 @@
 // run by going to this URL when running the app locally:
 // http://localhost:3000/api/dbEditSnowData
 
-//this seems to be working!
+//this seems to be working
+//it goes through the snow data and filters out what might be data errors...
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     client = await db.connect();
     console.log('Database connected');
     
-    const days = 7;
+    const days = 90;
     const end_time = moment();
     const start_time = moment(end_time).subtract(days, 'days');
     console.log('Time range:', { start: start_time.format(), end: end_time.format() });

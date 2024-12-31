@@ -48,6 +48,8 @@ function wxTableDataDayFromDB(
         'relative_humidity',
         'snow_depth',
         'snow_depth_24h',
+        'error_filtered_total_snow',
+        'error_filtered_24hr_snow_accum',
         'wind_speed',
         'wind_gust',
         'wind_direction',
@@ -190,7 +192,7 @@ function wxTableDataDayFromDB(
 
     // Process snow depth for both total and change
     processNumericField(
-      'snow_depth',
+      'error_filtered_total_snow',
       {
         total: 'Total Snow Depth',      
         change: 'Total Snow Depth Change'  
@@ -226,7 +228,7 @@ function wxTableDataDayFromDB(
 
     // Process 24h snow depth
     processNumericField(
-      'snow_depth_24h',
+      'error_filtered_24hr_snow_accum',
       { total: '24h Snow Accumulation' },
       'in',
       1,
@@ -452,7 +454,7 @@ function groupBy24hrs(
       result[periodKey].push(obs);
     });
   }
-  
+  console.log('result in groupBy24hrs:', result);
   return result;
 }
 

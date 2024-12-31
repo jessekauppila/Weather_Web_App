@@ -31,29 +31,29 @@ interface Station {
   name: string;
 }
 
-interface StationCardProps {
-  station: {
-    Station: string;
-    'Cur Air Temp': string;
-    '24h Snow Accumulation': string;
-    'Cur Wind Speed': string;
-    'Elevation': string;
-    'Stid': string;
-    'Air Temp Min': string;
-    'Air Temp Max': string;
-    'Wind Speed Avg': string;
-    'Max Wind Gust': string;
-    'Wind Direction': string;
-    'Total Snow Depth Change': string;
-    'Precip Accum One Hour': string;
-    'Total Snow Depth': string;
-    [key: string]: string;
-  };
-  onStationClick: (stid: string) => void;
-  observationsData: { data: any[]; title: string; } | null;
-  isActive: boolean;
-  onDropdownToggle: (stid: string | null) => void;
-}
+// interface StationCardProps {
+//   station: {
+//     Station: string;
+//     'Cur Air Temp': string;
+//     '24h Snow Accumulation': string;
+//     'Cur Wind Speed': string;
+//     'Elevation': string;
+//     'Stid': string;
+//     'Air Temp Min': string;
+//     'Air Temp Max': string;
+//     'Wind Speed Avg': string;
+//     'Max Wind Gust': string;
+//     'Wind Direction': string;
+//     'Total Snow Depth Change': string;
+//     'Precip Accum One Hour': string;
+//     'Total Snow Depth': string;
+//     [key: string]: string;
+//   };
+//   onStationClick: (stid: string) => void;
+//   observationsData: { data: any[]; title: string; } | null;
+//   isActive: boolean;
+//   onDropdownToggle: (stid: string | null) => void;
+// }
 
 export default function Home() {
   // Get current time in PDT
@@ -72,10 +72,10 @@ export default function Home() {
     title: string;
   } | null>(null);
 
-  const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
-    data: any[];
-    title: string;
-  } | null>(null);
+  // const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
+  //   data: any[];
+  //   title: string;
+  // } | null>(null);
 
   const [stations, setStations] = useState<
     Array<{ id: string; name: string }>
@@ -90,7 +90,7 @@ export default function Home() {
 
   // Add state for table mode
   const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  // const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
@@ -200,11 +200,16 @@ export default function Home() {
       setStartHour(calculatedStartHour);
       setEndHour(calculatedEndHour);
     }, [calculatedStartHour, calculatedEndHour]);
-  
+
+    //This is what is making the date change when you change the date in the date picker, it used to go back two days before what you picked!
     const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedEndDate = new Date(event.target.value);
-      setEndDate(selectedEndDate);
-      setSelectedDate(subDays(selectedEndDate, timeRange));
+      const newDate = moment(event.target.value)
+        .tz('America/Los_Angeles')
+        .startOf('day')
+        .toDate();
+      
+      setSelectedDate(newDate);
+      setEndDate(newDate);
     };
 
 
@@ -333,10 +338,8 @@ export default function Home() {
       dayRangeType,
       setObservationsDataDay,
       setObservationsDataHour,
-      setFilteredObservationsDataHour,
       setIsLoading
     });
-
   };
 
   // Use the same function in useEffect
@@ -348,7 +351,6 @@ export default function Home() {
   const handleStationChange = useCallback(
     (event: SelectChangeEvent<string>) => {
       setIsComponentVisible(false);
-      setIsTransitioning(true);
       const selectedStationId = event.target.value;
       
       // Short delay before state changes
@@ -373,7 +375,6 @@ export default function Home() {
         // Show components after state changes
         setTimeout(() => {
           setIsComponentVisible(true);
-          setIsTransitioning(false);
           setIsStationChanging(false);
         }, 100);
       }, 100);
@@ -509,14 +510,13 @@ export default function Home() {
           stations={stations}
           handleStationChange={handleStationChange}
           stationIds={stationIds}
-          filteredObservationsDataHour={filteredObservationsDataHour}
           onRefresh={handleRefresh}
-          tableMode ={tableMode}
+          tableMode={tableMode}
           startHour={startHour}
           endHour={endHour}
+          observationDataHour={observationsDataHour}
           setObservationsDataDay={setObservationsDataDay}
           setObservationsDataHour={setObservationsDataHour}
-          setFilteredObservationsDataHour={setFilteredObservationsDataHour}
           setIsLoading={setIsLoading}
         />
 
@@ -563,7 +563,7 @@ export default function Home() {
 
 
 <div className="flex flex-col gap-4">
-          {filteredObservationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
+          {observationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
             <>
                 <AccordionWrapper
                   title="Hourly Snow and Temperature Graph"
@@ -571,7 +571,7 @@ export default function Home() {
                   defaultExpanded={false}
                 >
               <WxSnowGraph 
-                dayAverages={filteredObservationsDataHour} 
+                dayAverages={observationsDataHour} 
                 isHourly={true}
               />
                </AccordionWrapper>
@@ -604,12 +604,13 @@ export default function Home() {
             />
           )} */}
 
-   
+      {/* 
         {filteredObservationsDataHour && selectedStation && (
                     <HourWxTable 
                       hourAverages={filteredObservationsDataHour} 
                     />
                   )}
+                    */}
                 
 
 

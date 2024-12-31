@@ -1,7 +1,7 @@
-import { filteredObservationData } from '../filteredObservationData';
+//import { filteredObservationData } from '../filteredObservationData';
 import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 import hourWxTableDataFromDB  from '../hourWxTableDataFromDB';
-import hourWxTableDataFiltered  from '../hourWxTableDataFiltered';
+// import hourWxTableDataFiltered  from '../hourWxTableDataFiltered';
 import { DayRangeType } from '../types';
 
 interface FetchWeatherDataProps {
@@ -16,7 +16,6 @@ interface FetchWeatherDataProps {
   dayRangeType: DayRangeType;
   setObservationsDataDay: (data: any) => void;
   setObservationsDataHour: (data: any) => void;
-  setFilteredObservationsDataHour: (data: any) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
@@ -29,7 +28,6 @@ export async function fetchWeatherData({
   dayRangeType,
   setObservationsDataDay,
   setObservationsDataHour,
-  setFilteredObservationsDataHour,
   setIsLoading
 }: FetchWeatherDataProps) {
   try {
@@ -56,34 +54,42 @@ export async function fetchWeatherData({
     const result = await response.json();
     
 
-    //I think this filtered data means something different than the filtered data in the hourWxTableDataFiltered.tsx file
-    const filteredData = filteredObservationData(result.observations, {
-      mode: tableMode,
-      startHour,
-      endHour,
-      dayRangeType,
-      start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    });
+    // //I think this filtered data means something different than the filtered data in the hourWxTableDataFiltered.tsx file
+    // const filteredData = filteredObservationData(result.observations, {
+    //   mode: tableMode,
+    //   startHour,
+    //   endHour,
+    //   dayRangeType,
+    //   start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    //   end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    // });
 
-    console.log('filteredData:', filteredData);
-  
-    setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
-      mode: tableMode,
-      startHour,
-      endHour,
-      dayRangeType,
-      start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    }));
-    
+    // console.log('filteredData:', filteredData);
+
+    // setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
+    // setIsLoading(false);
+
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
       result.units
     ));
   
-    setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
-    setIsLoading(false);
+    // const hourlyData = hourWxTableDataFromDB(Object.values(result.observations), result.units);
+    const dailyData = wxTableDataDayFromDB(
+      Object.values(result.observations) as unknown as Record<string, Record<string, any>[]>,
+      result.units,
+      {
+        mode: tableMode,
+        startHour,
+        endHour,
+        dayRangeType,
+        start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+        end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+      }
+    );
+    setObservationsDataDay(dailyData);
+    
+
   
   } catch (error) {
     setIsLoading(false);

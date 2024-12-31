@@ -58,7 +58,7 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
   const commonCategories = [
     {
       category: 'Temperatures',
-      columns: ['Air Temp Min', 'Air Temp Max'],
+      columns: ['Cur Air Temp', 'Air Temp Min', 'Air Temp Max'],
     },
     {
       category: 'Winds',

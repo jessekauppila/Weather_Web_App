@@ -1,3 +1,5 @@
+//This was used to do the error filtering before
+
 import moment from 'moment-timezone';
 import { WxTableOptions } from './types';
 import { filterSnowDepthOutliers, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } from './snowDepthUtils';
