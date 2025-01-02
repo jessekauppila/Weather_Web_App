@@ -72,6 +72,8 @@ export default function Home() {
     title: string;
   } | null>(null);
 
+  // console.log('observationsDataHour', observationsDataHour);
+
   const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
     data: any[];
     title: string;
