@@ -201,12 +201,18 @@ export default function Home() {
       setEndHour(calculatedEndHour);
     }, [calculatedStartHour, calculatedEndHour]);
   
-    const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedEndDate = new Date(event.target.value);
-      setEndDate(selectedEndDate);
-      setSelectedDate(subDays(selectedEndDate, timeRange));
-    };
 
+        //This is what is making the date change when you change the date in the date picker, it used to go back two days before what you picked!
+        const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+          const newDate = moment(event.target.value)
+            .tz('America/Los_Angeles')
+            .startOf('day')
+            .toDate();
+          
+          setSelectedDate(newDate);
+          setEndDate(newDate);
+        };
+    
 
   // this is the function that determines what happens in the drop down menu for date range
   const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
