@@ -140,13 +140,20 @@ const StationButton = memo(({ stationName, stid, onClick }: {
 StationButton.displayName = 'StationButton';
 
 function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
-  //console.log('Table mode in table code:', mode);
+  console.log('DayAveragesTable Props:', {
+    hasData: !!dayAverages,
+    dataLength: dayAverages?.data?.length,
+    mode,
+    title: dayAverages?.title,
+    sampleData: dayAverages?.data?.[0]
+  });
+
   const ref = useRef<HTMLDivElement>(null);
 
   // Memoize the header structure
   const headerStructure = useMemo(() => {
-    if (dayAverages.data.length === 0) return getKnownCategories(mode);
-
+    if (!dayAverages?.data?.length) return getKnownCategories(mode);
+    
     // Get all unique keys from the data
     const allKeys = Array.from(
       new Set(dayAverages.data.flatMap(Object.keys))
@@ -165,7 +172,8 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       ...getKnownCategories(mode),
       //{ category: 'Other', columns: otherKeys },
     ];
-  }, [dayAverages.data, mode]);
+  }, [dayAverages?.data, mode]);
+
 
   // Memoize the data
   const memoizedData = useMemo(() => {
@@ -174,9 +182,18 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
   }, [dayAverages.data]);
 
   useEffect(() => {
-    if (!memoizedData.length || !ref.current) return;
+    console.log('useEffect triggered:', {
+      hasData: !!memoizedData.length,
+      refExists: !!ref.current
+    });
+
+    if (!memoizedData.length || !ref.current) {
+      console.log('Early return in useEffect');
+      return;
+    }
 
     const renderTable = () => {
+      console.log('Starting table render');
       const table = d3
         .select(ref.current)
         .selectAll<HTMLTableElement, null>('table')
@@ -334,8 +351,23 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     requestAnimationFrame(renderTable);
   }, [memoizedData, headerStructure, onStationClick, dayAverages.title]);
 
+    // Add check for data
+    if (!dayAverages?.data?.length) {
+      console.log('No data available in DayAveragesTable');
+      return <div>Loading table data...</div>;
+    }
+
+    
   return (
-    <div className="table-container" ref={ref}>
+    <div 
+      className="table-container border border-gray-300 min-h-[100px]" 
+      ref={ref}
+      style={{ border: '1px solid red' }} // Temporary to make it visible
+    >
+      {(() => {
+        console.log('Rendering table container');
+        return null;
+      })()}
       <Tooltip
         id="daily-measurement-tooltip"
         place="top"
