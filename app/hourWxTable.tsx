@@ -37,7 +37,9 @@ const knownCategories = [
   },
   {
     category: 'Precipitation',
-    columns: ['Total Snow Depth', '24h Snow Depth', 'Precip Accum'],
+    columns: ['Total Snow Depth',"Error Filtered Total Snow", '24h Snow Depth',"Error Filtered 24hr Snow Accum", 'Precip Accum' ],
+
+
   },
   { category: '', columns: ['Relative Humidity', 'Solar Radiation', 'API Fetch Time'] },
 ];
@@ -56,8 +58,12 @@ const measurementDescriptions: Record<string, string> = {
     'Wind direction in degrees (0 is North, 90 is East, 180 is South, 270 is West)',
   'Total Snow Depth':
     'Total depth of snow on the ground in inches. (This the depth of the snow pack from the surface of the snow to the ground.) (This is susceptible to sensor errors in summer.)',
+  'Error Filtered Total Snow':
+    'Filtering out repeated values, using an IQR filter to remove outliers, and impossible increases and decreases in snow depth.',
   '24h Snow Depth':
     'Record of snow accumulated over 24hrs. (Snow board cleared in the morning to provide record of hourly snow accumulation over 24hrs.)',
+  'Error Filtered 24hr Snow Accum':
+    'Filtering out repeated values, using an IQR filter to remove outliers, and impossible increases and decreases in snow depth.',
   'Precip Accum':
     'Liquid precipitation accumulated during the hour in inches. Also known as "snow water equivalent".',
   'Relative Humidity': 'Relative humidity as a percentage (0-100%)',
@@ -68,6 +74,8 @@ const measurementDescriptions: Record<string, string> = {
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [sortedData, setSortedData] = useState(hourAverages.data);
+
+
 
   // Update sorting function
   useEffect(() => {
