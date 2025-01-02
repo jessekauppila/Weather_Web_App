@@ -41,7 +41,7 @@ function hourWxTableDataFromDB(
     };
   }
 
-  //console.log("observationsData from hourWxTableData:", observationsData);
+  //console.log("TABLE DATA FROM DB:", observationsData);
 
   // Instead of grouping and averaging, process each observation individually
   const formattedData = observationsData.map((obs) => {
@@ -55,7 +55,9 @@ function hourWxTableDataFromDB(
       "Wind Gust": formatValueWithUnit(obs.wind_gust, " mph"),
       "Wind Direction": degreeToCompass(obs.wind_direction),
       "Total Snow Depth": formatValueWithUnit(obs.snow_depth, "in"),
+      "Error Filtered Total Snow": formatValueWithUnit(obs.error_filtered_total_snow, "in"),
       "24h Snow Depth": formatValueWithUnit(obs.snow_depth_24h, "in"),
+      "Error Filtered 24hr Snow Accum": formatValueWithUnit(obs.error_filtered_24hr_snow_accum, "in"),
       "Precip Accum": formatValueWithUnit(obs.precip_accum_one_hour, "in"),
       "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
       "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
@@ -63,6 +65,9 @@ function hourWxTableDataFromDB(
 "API Fetch Time": formatValueWithUnit(obs.api_fetch_time, "timestamp"),
     };
   });
+
+  // error_filtered_total_snow = EXCLUDED.error_filtered_total_snow,
+  // error_filtered_24hr_snow_accum = EXCLUDED.error_filtered_24hr_snow_accum
 
   // Get the dates and format them
   const startMoment = moment(observationsData[0].date_time);
@@ -81,7 +86,7 @@ function hourWxTableDataFromDB(
       ? `${startDate}, ${startTime} - ${endTime}`
       : `${startDate}, ${startTime} - ${endDate}, ${endTime}`;
 
-  console.log('formattedData in hourWxTableDataFromDB:', formattedData);
+  //console.log('formattedData in hourWxTableDataFromDB:', formattedData);
 
   return {
     data: formattedData,

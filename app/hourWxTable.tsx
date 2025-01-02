@@ -69,8 +69,6 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [sortedData, setSortedData] = useState(hourAverages.data);
 
-
-
   // Update sorting function
   useEffect(() => {
     const sorted = [...hourAverages.data].sort((a, b) => {
