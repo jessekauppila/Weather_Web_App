@@ -41,7 +41,8 @@ const fetchDataWithRetry = async (url: string, options: any) => {
       console.log(`Attempt ${i + 1}: Data not fresh, retrying after ${RETRY_DELAY}ms`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
     } catch (error) {
-      console.error(`Attempt ${i + 1} failed:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Attempt ${i + 1} failed:`, errorMessage);
       if (i === MAX_RETRIES - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
     }
