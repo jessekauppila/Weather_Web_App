@@ -35,7 +35,9 @@ export function convertObservationUnits(
 
     // Snow depth conversions (cm to in)
     ['snow_depth',
-      'snow_depth_24h'
+      'snow_depth_24h',
+      'error_filtered_total_snow',
+      'error_filtered_24hr_snow_accum'
     ].forEach((key) => {
       if (converted[key] !== null) {
         converted[key] = converted[key] * 0.393701; // cm to inches
