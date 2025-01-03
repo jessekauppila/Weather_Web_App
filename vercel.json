@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/batchUploadLastHourRevised",
-      "schedule": "5,10,30 * * * *"
+      "schedule": "5 * * * *"
     }
   ]
 }
