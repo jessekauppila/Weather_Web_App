@@ -9,23 +9,11 @@ import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
 
 export async function GET(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 export async function POST(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 async function handleRequest(request: NextRequest) {

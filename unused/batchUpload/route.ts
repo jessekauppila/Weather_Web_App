@@ -1,6 +1,6 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/batchUploadLastHourRevised
-
+// http://localhost:3000/api/batchUpload
+// http://localhost:3000/api/batchUpload
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -9,23 +9,11 @@ import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
 
 export async function GET(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 export async function POST(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 async function handleRequest(request: NextRequest) {
@@ -35,8 +23,9 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 2;
+    const totalToProcess = 1;
     const end_time_pst = moment().tz('America/Los_Angeles');
+    const start_time_pst = moment(end_time_pst).subtract(1, 'days');
     const chunk_size = 1;
     const stids = [
       '1',
@@ -95,17 +84,17 @@ async function handleRequest(request: NextRequest) {
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
     for (
-      let hours_processed = 0;
-      hours_processed < totalToProcess;
-      hours_processed += chunk_size
+      let days_processed = 0;
+      days_processed < totalToProcess;
+      days_processed += chunk_size
     ) {
       const chunk_end = moment(end_time_pst).subtract(
-        hours_processed,
-        'hours'
+        days_processed,
+        'days'
       );
       const chunk_start = moment(chunk_end).subtract(
         chunk_size,
-        'hours'
+        'days'
       );
 
       console.log(
@@ -154,12 +143,12 @@ async function handleRequest(request: NextRequest) {
         console.log(
           `Progress: ${progressPercentage.toFixed(
             2
-          )}% (${totalProcessed}/${totalToProcess} hours processed)`
+          )}% (${totalProcessed}/${totalToProcess} days processed)`
         );
       } catch (error) {
         console.error(
-          `Error fetching weather data for chunk ${hours_processed} to ${
-            hours_processed + chunk_size
+          `Error fetching weather data for chunk ${days_processed} to ${
+            days_processed + chunk_size
           }:`,
           error
         );
@@ -364,7 +353,7 @@ async function handleRequest(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Yearly data update completed',
-      progress: `${totalProcessed}/${totalToProcess} hours processed`,
+      progress: `${totalProcessed}/${totalToProcess} days processed`,
     });
   } catch (error) {
     console.error('Error updating yearly data:', error);
@@ -420,42 +409,41 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  // Gets all column names from the first object in the batch
-  // and adds 'api_fetch_time' to the list
-  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
-
-  // Transforms each observation in the batch into SQL values
-  const values = batch.map((obs, index) =>
-    // Creates a tuple of values for each observation
-    `(${Object.values(obs)
-      .map((v, i) => {
-        // Special handling for station_id (first column)
-        if (i === 0) {
-          return v === null
-            ? 'NULL'
-            : `(SELECT id FROM stations WHERE stid = '${v}')`; // Converts station code to ID
-        }
-        
-        // Special handling for date_time (second column)
-        if (i === 1) {
-          if (v === null || v === '') {
-            console.error(`Invalid date_time at index ${index}:`, obs);
-            return 'NULL';
-          }
-          return `'${v}'::timestamp with time zone`; // Converts to PostgreSQL timestamp
-        }
-        
-        // Handles numeric values
-        if (typeof v === 'number') {
-          const clampedValue = clampNumericValue(v, 5, 2);
-          return clampedValue === null ? 'NULL' : `'${clampedValue}'`;
-        }
-        
-        // Handles null values or converts to string
-        return v === null || v === '' ? 'NULL' : `'${v}'`;
-      })
-      .join(', ')}, NOW())` // Adds current timestamp for api_fetch_time
-  ).join(', ');
+  const columns = Object.keys(batch[0]).join(', ');
+  const values = batch
+    .map(
+      (obs, index) =>
+        `(${Object.values(obs)
+          .map((v, i) => {
+            if (i === 0) {
+              // Assuming station_id is the first column
+              return v === null
+                ? 'NULL'
+                : `(SELECT id FROM stations WHERE stid = '${v}')`;
+            }
+            if (i === 1) {
+              // Assuming date_time is the second column
+              if (v === null || v === '') {
+                console.error(
+                  `Invalid date_time at index ${index}:`,
+                  obs
+                );
+                return 'NULL';
+              }
+              return `'${v}'::timestamp with time zone`;
+            }
+            // Clamp numeric values
+            if (typeof v === 'number') {
+              const clampedValue = clampNumericValue(v, 5, 2);
+              return clampedValue === null
+                ? 'NULL'
+                : `'${clampedValue}'`;
+            }
+            return v === null || v === '' ? 'NULL' : `'${v}'`;
+          })
+          .join(', ')})`
+    )
+    .join(', ');
 
   const query = `
     INSERT INTO observations (${columns})
@@ -482,8 +470,7 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       soil_moisture_a = EXCLUDED.soil_moisture_a,
       soil_moisture_b = EXCLUDED.soil_moisture_b,
       soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c;
-      -- api_fetch_time is included in INSERT but not in UPDATE
+      soil_moisture_c = EXCLUDED.soil_moisture_c
   `;
 
   try {

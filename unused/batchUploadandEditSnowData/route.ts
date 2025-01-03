@@ -1,5 +1,6 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/batchUploadLastHourRevised
+// http://localhost:3000/api/batchUploadandEditSnowData
+
 
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -7,25 +8,14 @@ import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
+import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } from '../../snowDepthUtils';
 
 export async function GET(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 export async function POST(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 async function handleRequest(request: NextRequest) {
@@ -35,9 +25,9 @@ async function handleRequest(request: NextRequest) {
     client = await db.connect();
 
     let totalProcessed = 0;
-    const totalToProcess = 2;
+    const totalToProcess = 24;
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const chunk_size = 1;
+    const chunk_size = 24;
     const stids = [
       '1',
       '14',
@@ -171,64 +161,60 @@ async function handleRequest(request: NextRequest) {
 
       for (const observation of observationsData) {
         try {
-          // Log the full observation data
-          console.log(
-            'Full observation data:',
-            JSON.stringify(observation, null, 2)
-          );
-
-          // Check each array property before processing
-          const arrays = {
-            date_time: observation.date_time,
-            air_temp: observation.air_temp,
-            wind_speed: observation.wind_speed,
-            wind_gust: observation.wind_gust,
-            // ... add other properties you're accessing
-          };
-
-          // Validate all arrays have same length
-          const arrayLengths = Object.entries(arrays).map(
-            ([key, arr]) => ({
-              key,
-              length: Array.isArray(arr) ? arr.length : null,
-            })
-          );
-
-          console.log('Array lengths:', arrayLengths);
-
-          // Verify observation object and required properties
-          if (!observation) {
-            console.error('Invalid observation:', observation);
-            continue;
-          }
-
           const dateStrings = observation.date_time;
-          if (!dateStrings) {
-            console.error(
-              'Missing date_time for observation:',
-              observation
-            );
-            continue;
-          }
+          if (!dateStrings) continue;
 
-          console.log('Processing observation:', {
-            stid: observation.stid,
-            dateStringsLength: dateStrings?.length,
-            hasDateStrings: !!dateStrings,
+          // Create 24-hour chunk
+          console.log('\n=== Processing new 24h chunk ===');
+          console.log('Station:', observation.stid);
+          console.log('Original values:');
+
+          const chunk = dateStrings.map((dateString: string, i: number) => {
+            const snowDepth = safeParseFloat(safeGetArrayValue(observation.snow_depth, i));
+            const snowDepth24h = safeParseFloat(safeGetArrayValue(observation.snow_depth_24h, i));
+            
+            console.log(`Time: ${moment(dateString).format('YYYY-MM-DD HH:mm')}`, {
+              snow_depth: snowDepth,
+              snow_depth_24h: snowDepth24h
+            });
+
+            return {
+              date_time: dateString,
+              snow_depth: snowDepth,
+              snow_depth_24h: snowDepth24h,
+              stid: observation.stid
+            };
           });
 
-          for (let i = 0; i < dateStrings.length; i++) {
-            const dateString = dateStrings[i];
-            if (!dateString || dateString === '') {
-              console.warn(
-                `Skipping invalid date_time for station ${observation.stid}`
-              );
-              continue;
-            }
+          // Apply error filtering
+          const filteredTotalSnow = filterSnowDepthOutliers(
+            chunk.filter(d => d.snow_depth !== null && !isNaN(Number(d.snow_depth))),
+            SNOW_DEPTH_CONFIG
+          );
 
+          const filtered24hSnow = filterSnowDepthOutliers(
+            chunk.filter(d => d.snow_depth_24h !== null && !isNaN(Number(d.snow_depth_24h))),
+            SNOW_DEPTH_24H_CONFIG
+          );
+
+          const snowAccum = calculateSnowDepthAccumulation(filtered24hSnow);
+
+          // Log filtered results
+          console.log('\nFiltered results:');
+          chunk.forEach((obs, index) => {
+            console.log(`Time: ${moment(obs.date_time).format('YYYY-MM-DD HH:mm')}`, {
+              original_snow_depth: obs.snow_depth,
+              filtered_snow_depth: filteredTotalSnow[index]?.snow_depth ?? null,
+              original_snow_depth_24h: obs.snow_depth_24h,
+              filtered_snow_accum: snowAccum[index]?.snow_total ?? null
+            });
+          });
+
+          // Add filtered values to batch
+          for (let i = 0; i < dateStrings.length; i++) {
             const observationData = {
               station_id: observation.stid,
-              date_time: dateString,
+              date_time: dateStrings[i],
               air_temp: validateValue(
                 safeParseFloat(
                   safeGetArrayValue(observation.air_temp, i)
@@ -249,16 +235,8 @@ async function handleRequest(request: NextRequest) {
                   safeGetArrayValue(observation.wind_direction, i)
                 )
               ),
-              snow_depth: validateValue(
-                safeParseFloat(
-                  safeGetArrayValue(observation.snow_depth, i)
-                )
-              ),
-              snow_depth_24h: validateValue(
-                safeParseFloat(
-                  safeGetArrayValue(observation.snow_depth_24h, i)
-                )
-              ),
+              snow_depth: validateValue(safeParseFloat(safeGetArrayValue(observation.snow_depth, i))),
+              snow_depth_24h: validateValue(safeParseFloat(safeGetArrayValue(observation.snow_depth_24h, i))),
               intermittent_snow: validateValue(
                 safeParseFloat(
                   safeGetArrayValue(observation.intermittent_snow, i)
@@ -337,21 +315,14 @@ async function handleRequest(request: NextRequest) {
                   safeGetArrayValue(observation.soil_moisture_c, i)
                 )
               ),
+              error_filtered_total_snow: filteredTotalSnow[i]?.snow_depth ?? null,
+              error_filtered_24hr_snow_accum: snowAccum[i]?.snow_total ?? null,
             };
-
+            
             batch.push(observationData);
-
-            if (batch.length >= batchSize) {
-              await insertBatch(client, batch);
-              batch = [];
-            }
           }
         } catch (error) {
-          console.error(
-            'Error processing observation:',
-            error,
-            observation
-          );
+          console.error('Error processing observation:', error);
           continue;
         }
       }
@@ -482,8 +453,9 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       soil_moisture_a = EXCLUDED.soil_moisture_a,
       soil_moisture_b = EXCLUDED.soil_moisture_b,
       soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c;
-      -- api_fetch_time is included in INSERT but not in UPDATE
+      soil_moisture_c = EXCLUDED.soil_moisture_c,
+      error_filtered_total_snow = EXCLUDED.error_filtered_total_snow,
+      error_filtered_24hr_snow_accum = EXCLUDED.error_filtered_24hr_snow_accum
   `;
 
   try {

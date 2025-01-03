@@ -1,6 +1,5 @@
 // run by going to this URL when running the app locally:
-// http://localhost:3000/api/batchUploadLastHourRevised
-
+// http://localhost:3000/api/batchUploadLastHour
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -9,35 +8,35 @@ import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
 
 export async function GET(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 export async function POST(request: NextRequest) {
-  // Set no-cache headers for Vercel
-  const response = await handleRequest(request);
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-  response.headers.set('Pragma', 'no-cache');
-  response.headers.set('Expires', '0');
-  
-  return response;
+  return handleRequest(request);
 }
 
 async function handleRequest(request: NextRequest) {
   let client;
+  const startTime = new Date();
+  console.log('=== Batch Upload Started ===', startTime.toISOString());
 
   try {
     client = await db.connect();
-
-    let totalProcessed = 0;
-    const totalToProcess = 2;
+    
     const end_time_pst = moment().tz('America/Los_Angeles');
-    const chunk_size = 1;
+    const start_time_pst = moment(end_time_pst).subtract(2, 'hours');
+
+    console.log('Time Range:', {
+      start: start_time_pst.format(),
+      end: end_time_pst.format(),
+      currentServerTime: new Date().toISOString()
+    });
+
+    // Add request tracking
+    let totalAttempted = 0;
+    let totalSuccessful = 0;
+    let failedStations: string[] = [];
+
     const stids = [
       '1',
       '14',
@@ -94,83 +93,107 @@ async function handleRequest(request: NextRequest) {
     ];
     const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
 
-    for (
-      let hours_processed = 0;
-      hours_processed < totalToProcess;
-      hours_processed += chunk_size
-    ) {
-      const chunk_end = moment(end_time_pst).subtract(
-        hours_processed,
-        'hours'
-      );
-      const chunk_start = moment(chunk_end).subtract(
-        chunk_size,
-        'hours'
+    // Create Set of all stations we're trying to fetch
+    const attemptedStations = new Set(stids);
+    const updatedStations = new Set<string>();
+
+    let observationsData;
+    try {
+      const result = await retryOperation(() =>
+        processAllWxData(start_time_pst, end_time_pst, stids, auth)
       );
 
       console.log(
-        `Processing data from ${chunk_start.format()} to ${chunk_end.format()}`
+        'Result from processAllWxData:',
+        JSON.stringify(result, null, 2)
       );
 
-      let observationsData;
-      try {
-        const result = await retryOperation(() =>
-          processAllWxData(chunk_start, chunk_end, stids, auth)
-        );
-
-        console.log(
-          'Result from processAllWxData:',
-          JSON.stringify(result, null, 2)
-        );
-
-        if (!result || typeof result !== 'object') {
-          console.error(
-            'Invalid result from processAllWxData:',
-            result
-          );
-          continue;
-        }
-
-        observationsData = result.observationsData;
-
-        if (!Array.isArray(observationsData)) {
-          console.error(
-            'observationsData is not an array:',
-            observationsData
-          );
-          continue;
-        }
-
-        if (observationsData.length === 0) {
-          console.log(
-            'No observations data returned for this time period'
-          );
-          continue;
-        }
-
-        totalProcessed += chunk_size;
-        const progressPercentage =
-          (totalProcessed / totalToProcess) * 100;
-        console.log(
-          `Progress: ${progressPercentage.toFixed(
-            2
-          )}% (${totalProcessed}/${totalToProcess} hours processed)`
-        );
-      } catch (error) {
+      if (!result || typeof result !== 'object') {
         console.error(
-          `Error fetching weather data for chunk ${hours_processed} to ${
-            hours_processed + chunk_size
-          }:`,
-          error
+          'Invalid result from processAllWxData:',
+          result
         );
-        continue;
+        return NextResponse.json(
+          {
+            error:
+              'Invalid result from processAllWxData: ' +
+              // (result && typeof result === 'object' && result instanceof Error
+              //   ? (result as Error).message
+              //   : JSON.stringify(
+              //       result,
+              //       Object.getOwnPropertyNames(result)
+              //     ))
+              (isError(result)
+                ? (result as Error).message
+                : JSON.stringify(result, Object.getOwnPropertyNames(result))),
+            details: result,
+          },
+          { status: 500 }
+        );
       }
 
-      const batchSize = 1000; // Adjust this value based on your database performance
+      observationsData = result.observationsData;
+
+      if (!Array.isArray(observationsData)) {
+        console.error(
+          'observationsData is not an array:',
+          observationsData
+        );
+        return NextResponse.json(
+          {
+            error:
+              'observationsData is not an array: ' +
+              (isError(observationsData)
+                ? (observationsData as Error).message
+                : JSON.stringify(
+                    observationsData,
+                    Object.getOwnPropertyNames(observationsData)
+                  )),
+            details: observationsData,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (observationsData.length === 0) {
+        console.log(
+          'No observations data returned for this time period'
+        );
+        return NextResponse.json(
+          {
+            error:
+              'No observations data returned for this time period',
+            details: null,
+          },
+          { status: 200 }
+        );
+      }
+
+      const batchSize = 1000;
       let batch = [];
 
       for (const observation of observationsData) {
+        totalAttempted++;
         try {
+          const dateStrings = observation.date_time;
+          if (!dateStrings || !Array.isArray(dateStrings)) {
+            console.error('Invalid date_time array for station:', {
+              stid: observation.stid,
+              dateTimeValue: dateStrings
+            });
+            failedStations.push(observation.stid);
+            continue;
+          }
+
+          console.log(`Processing station ${observation.stid}:`, {
+            dataPoints: dateStrings.length,
+            firstDate: dateStrings[0],
+            lastDate: dateStrings[dateStrings.length - 1]
+          });
+
+          // Add station to tracking set
+          updatedStations.add(observation.stid);
+
           // Log the full observation data
           console.log(
             'Full observation data:',
@@ -199,15 +222,6 @@ async function handleRequest(request: NextRequest) {
           // Verify observation object and required properties
           if (!observation) {
             console.error('Invalid observation:', observation);
-            continue;
-          }
-
-          const dateStrings = observation.date_time;
-          if (!dateStrings) {
-            console.error(
-              'Missing date_time for observation:',
-              observation
-            );
             continue;
           }
 
@@ -346,13 +360,11 @@ async function handleRequest(request: NextRequest) {
               batch = [];
             }
           }
+
+          totalSuccessful++;
         } catch (error) {
-          console.error(
-            'Error processing observation:',
-            error,
-            observation
-          );
-          continue;
+          failedStations.push(observation.stid);
+          console.error(`Failed to process station ${observation.stid}:`, error);
         }
       }
 
@@ -360,11 +372,86 @@ async function handleRequest(request: NextRequest) {
       if (batch.length > 0) {
         await insertBatch(client, batch);
       }
+
+      // After all batches are processed
+      const stationsList = Array.from(updatedStations).sort();
+      const missingStations = Array.from(attemptedStations)
+        .filter(stid => !updatedStations.has(stid));
+      
+      // Get station names
+      const stationQuery = `
+        SELECT stid, station_name 
+        FROM stations 
+        WHERE stid = ANY($1)
+      `;
+      const stationResult = await client.query(stationQuery, [stids]);
+      const stationMap = stationResult.rows.reduce((acc, station) => ({
+        ...acc,
+        [station.stid]: station.station_name
+      }), {} as Record<string, string>);
+
+      // Check which stations have data in the database for the last hour
+      const dbDataQuery = `
+        SELECT DISTINCT s.stid 
+        FROM stations s
+        JOIN observations o ON s.id = o.station_id
+        WHERE o.date_time >= $1 AND o.date_time <= $2
+      `;
+      const dbResult = await client.query(dbDataQuery, [
+        start_time_pst.format('YYYY-MM-DD HH:mm:ssZ'),
+        end_time_pst.format('YYYY-MM-DD HH:mm:ssZ')
+      ]);
+      const stationsWithDbData = new Set(dbResult.rows.map(row => row.stid));
+
+      // Convert to arrays of station names with their status
+      const stationStatus = stids.map(stid => ({
+        name: stationMap[stid] || 'Unknown Station',
+        hasApiData: updatedStations.has(stid),
+        hasDbData: stationsWithDbData.has(stid)
+      })).sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log('Station Status:', stationStatus);
+
+      // Add summary logging
+      console.log('=== Batch Upload Complete ===', {
+        duration: `${(new Date().getTime() - startTime.getTime()) / 1000}s`,
+        stationsAttempted: totalAttempted,
+        stationsSuccessful: totalSuccessful,
+        failedStations: failedStations,
+      });
+
+      return NextResponse.json({
+        message: 'Hourly data update completed',
+        stationStatus,
+        summary: {
+          stationsAttempted: totalAttempted,
+          stationsSuccessful: totalSuccessful,
+          failedStations: failedStations,
+        }
+      });
+    } catch (error) {
+      console.error(
+        'Error fetching weather data:',
+        error
+      );
+      return NextResponse.json(
+        {
+          error:
+            'Error fetching weather data: ' +
+            (error instanceof Error
+              ? error.message
+              : JSON.stringify(
+                  error,
+                  Object.getOwnPropertyNames(error)
+                )),
+          details: error,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
-      message: 'Yearly data update completed',
-      progress: `${totalProcessed}/${totalToProcess} hours processed`,
+      message: 'Hourly data update completed',
     });
   } catch (error) {
     console.error('Error updating yearly data:', error);
@@ -392,14 +479,16 @@ async function handleRequest(request: NextRequest) {
 async function retryOperation<T>(
   operation: () => Promise<T>,
   maxRetries = 3,
-  delay = 1000
+  delay = 1000,
+  context?: string
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
     } catch (error) {
+      console.warn(`Attempt ${i + 1}/${maxRetries} failed${context ? ` for ${context}` : ''}:`, error);
       if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, i))); // Exponential backoff
     }
   }
   throw new Error('Operation failed after max retries');
@@ -420,42 +509,41 @@ function validateWindSpeed(value: number | null): number | null {
 }
 
 async function insertBatch(client: VercelPoolClient, batch: any[]) {
-  // Gets all column names from the first object in the batch
-  // and adds 'api_fetch_time' to the list
-  const columns = Object.keys(batch[0]).join(', ') + ', api_fetch_time';
-
-  // Transforms each observation in the batch into SQL values
-  const values = batch.map((obs, index) =>
-    // Creates a tuple of values for each observation
-    `(${Object.values(obs)
-      .map((v, i) => {
-        // Special handling for station_id (first column)
-        if (i === 0) {
-          return v === null
-            ? 'NULL'
-            : `(SELECT id FROM stations WHERE stid = '${v}')`; // Converts station code to ID
-        }
-        
-        // Special handling for date_time (second column)
-        if (i === 1) {
-          if (v === null || v === '') {
-            console.error(`Invalid date_time at index ${index}:`, obs);
-            return 'NULL';
-          }
-          return `'${v}'::timestamp with time zone`; // Converts to PostgreSQL timestamp
-        }
-        
-        // Handles numeric values
-        if (typeof v === 'number') {
-          const clampedValue = clampNumericValue(v, 5, 2);
-          return clampedValue === null ? 'NULL' : `'${clampedValue}'`;
-        }
-        
-        // Handles null values or converts to string
-        return v === null || v === '' ? 'NULL' : `'${v}'`;
-      })
-      .join(', ')}, NOW())` // Adds current timestamp for api_fetch_time
-  ).join(', ');
+  const columns = Object.keys(batch[0]).join(', ');
+  const values = batch
+    .map(
+      (obs, index) =>
+        `(${Object.values(obs)
+          .map((v, i) => {
+            if (i === 0) {
+              // Assuming station_id is the first column
+              return v === null
+                ? 'NULL'
+                : `(SELECT id FROM stations WHERE stid = '${v}')`;
+            }
+            if (i === 1) {
+              // Assuming date_time is the second column
+              if (v === null || v === '') {
+                console.error(
+                  `Invalid date_time at index ${index}:`,
+                  obs
+                );
+                return 'NULL';
+              }
+              return `'${v}'::timestamp with time zone`;
+            }
+            // Clamp numeric values
+            if (typeof v === 'number') {
+              const clampedValue = clampNumericValue(v, 5, 2);
+              return clampedValue === null
+                ? 'NULL'
+                : `'${clampedValue}'`;
+            }
+            return v === null || v === '' ? 'NULL' : `'${v}'`;
+          })
+          .join(', ')})`
+    )
+    .join(', ');
 
   const query = `
     INSERT INTO observations (${columns})
@@ -482,8 +570,7 @@ async function insertBatch(client: VercelPoolClient, batch: any[]) {
       soil_moisture_a = EXCLUDED.soil_moisture_a,
       soil_moisture_b = EXCLUDED.soil_moisture_b,
       soil_temperature_c = EXCLUDED.soil_temperature_c,
-      soil_moisture_c = EXCLUDED.soil_moisture_c;
-      -- api_fetch_time is included in INSERT but not in UPDATE
+      soil_moisture_c = EXCLUDED.soil_moisture_c
   `;
 
   try {
@@ -542,4 +629,8 @@ function clampNumericValue(
   const maxValue =
     Math.pow(10, precision - scale) - Math.pow(10, -scale);
   return Math.max(Math.min(value, maxValue), -maxValue);
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
 }
