@@ -8,6 +8,7 @@ import React, {
   useCallback,
   useTransition,
   useMemo,
+  startTransition,
 } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 
@@ -353,36 +354,19 @@ export default function Home() {
   // Modify the handleStationChange function
   const handleStationChange = useCallback(
     (event: SelectChangeEvent<string>) => {
-      setIsComponentVisible(false);
-      setIsTransitioning(true);
       const selectedStationId = event.target.value;
       
-      // Short delay before state changes
-      setTimeout(() => {
-        startTransition(() => {
-          if (!selectedStationId) {
-            setSelectedStation('');
-            setStationIds(stations.map(station => station.id));
-            setTableMode('summary');
-            setTimeRange(1);
-            setIsOneDay(true);
-            setSelectedDate(new Date());
-            setEndDate(new Date());
-            setUseCustomEndDate(false);
-          } else {
-            setSelectedStation(selectedStationId);
-            setStationIds([selectedStationId]);
-            setTableMode('daily');
-          }
-        });
-
-        // Show components after state changes
-        setTimeout(() => {
-          setIsComponentVisible(true);
-          setIsTransitioning(false);
-          setIsStationChanging(false);
-        }, 100);
-      }, 100);
+      startTransition(() => {
+        if (!selectedStationId) {
+          setSelectedStation('');
+          setStationIds(stations.map(station => station.id));
+          setTableMode('summary');
+        } else {
+          setSelectedStation(selectedStationId);
+          setStationIds([selectedStationId]);
+          setTableMode('daily');
+        }
+      });
     },
     [stations]
   );
