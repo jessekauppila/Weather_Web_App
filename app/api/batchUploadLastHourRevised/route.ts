@@ -8,6 +8,8 @@ import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
 
+const baseUrl = 'https://api.synopticdata.com/v2/stations/latest';
+
 export async function GET(request: NextRequest) {
   return handleRequest(request);
 }
@@ -102,6 +104,19 @@ async function handleRequest(request: NextRequest) {
 
       let observationsData;
       try {
+        const fetchOptions = {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        };
+
+        const timestamp = Date.now();
+        const apiUrl = `${baseUrl}?&token=${auth}&timestamp=${timestamp}`;
+
+        const response = await fetch(apiUrl, fetchOptions);
+
         const result = await retryOperation(() =>
           processAllWxData(chunk_start, chunk_end, stids, auth)
         );
