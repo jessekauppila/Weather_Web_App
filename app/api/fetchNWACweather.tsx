@@ -16,6 +16,39 @@ import axios from 'axios';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000; // 5 seconds
 
+const fetchDataWithRetry = async (url: string, options: any) => {
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      console.log(`Attempt ${i + 1}: Fetching data at ${new Date().toISOString()}`);
+      const response = await axios.get(url, options);
+      const data = response.data;
+      
+      // Debug response
+      console.log('API Response:', {
+        timestamp: new Date().toISOString(),
+        hasData: !!data,
+        stationCount: data?.STATION?.length || 0,
+        firstObservationTime: data?.STATION?.[0]?.observations?.date_time?.[0],
+        lastObservationTime: data?.STATION?.[0]?.observations?.date_time?.slice(-1)[0],
+        url: url
+      });
+      
+      // Check if data is valid and fresh
+      if (data && data.STATION && data.STATION.length > 0) {
+        return data;
+      }
+      
+      console.log(`Attempt ${i + 1}: Data not fresh, retrying after ${RETRY_DELAY}ms`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error.message);
+      if (i === MAX_RETRIES - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    }
+  }
+  throw new Error('Failed to fetch fresh data after max retries');
+};
+
 const getNWACobservations = async (
   start_time_pdt: moment.Moment,
   end_time_pdt: moment.Moment,
@@ -46,8 +79,8 @@ const getNWACobservations = async (
           }
         };
 
-        let response = await axios.get(url, fetchOptions);
-        let wx_data: WeatherData = response.data;
+        let response = await fetchDataWithRetry(url, fetchOptions);
+        let wx_data: WeatherData = response;
 
         if (!wx_data.hasOwnProperty('STATION')) {
           throw new Error(`'STATION' key not found in the response for ${site}`);
