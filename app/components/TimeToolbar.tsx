@@ -333,7 +333,7 @@ const TimeToolbar = ({
                       paddingLeft: '32px',
                       color: 'black',
                       '&:hover': {
-                        backgroundColor: 'rgba(100, 149, 237, 0.1)' // lighter cornflowerblue
+                        backgroundColor: 'rgba(100, 149, 237, 0.1)'
                       }
                     }
                   }
@@ -341,18 +341,18 @@ const TimeToolbar = ({
               }}
             >
               <MenuItem value="">All Stations</MenuItem>
-              {regions.map((region) => (
-                <div key={region.id}>
-                  <ListSubheader>{region.title}</ListSubheader>
-                  {stations
-                    .filter(station => region.stationIds.includes(station.id))
-                    .map((station) => (
-                      <MenuItem key={station.id} value={station.id}>
-                        {station.name}
-                      </MenuItem>
-                    ))}
-                </div>
-              ))}
+              {regions.map((region) => [
+                <ListSubheader key={`header-${region.id}`}>
+                  {region.title}
+                </ListSubheader>,
+                stations
+                  .filter(station => region.stationIds.includes(station.id))
+                  .map((station) => (
+                    <MenuItem key={station.id} value={station.id}>
+                      {station.name}
+                    </MenuItem>
+                  ))
+              ])}
             </Select>
           </FormControl>
         {/* )} */}
