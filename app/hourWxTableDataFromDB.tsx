@@ -53,7 +53,7 @@ function hourWxTableDataFromDB(
       "Air Temp": formatValueWithUnit(obs.air_temp, "°F"),
       "Wind Speed": formatValueWithUnit(obs.wind_speed, " mph"),
       "Wind Gust": formatValueWithUnit(obs.wind_gust, " mph"),
-      "Wind Direction": degreeToCompass(obs.wind_direction),
+      "Wind Direction": obs.wind_direction ? degreeToCompass(Number(obs.wind_direction)) : '-',
       "Total Snow Depth": formatValueWithUnit(obs.snow_depth, "in"),
       "Error Filtered Total Snow": formatValueWithUnit(obs.error_filtered_total_snow, "in"),
       "24h Snow Depth": formatValueWithUnit(obs.snow_depth_24h, "in"),
