@@ -37,7 +37,8 @@ const knownCategories = [
   },
   {
     category: 'Precipitation',
-    columns: ['Total Snow Depth',"Error Filtered Total Snow", '24h Snow Depth',"Error Filtered 24hr Snow Accum", 'Precip Accum' ],
+    columns: ['Total Snow Depth', '24h Snow Depth', 'Precip Accum' ],
+    // took out "Error Filtered Total Snow","Error Filtered 24hr Snow Accum",
 
 
   },
