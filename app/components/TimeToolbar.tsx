@@ -280,7 +280,7 @@ const TimeToolbar = ({
                 Page Loaded: {moment(filteredObservationsDataHour.data[filteredObservationsDataHour.data.length - 1].date_time).format('MM/DD/YYYY h:mm A')}
               </div>
               <div className="text-[10px]">
-                  (Data fetched 5 min past the hour)
+                  (Data fetched 5 and 20 min past the hour)
               </div>
 
 

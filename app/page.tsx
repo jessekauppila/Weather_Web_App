@@ -433,22 +433,6 @@ export default function Home() {
 
   //console.log('observationsDataDay', observationsDataDay);
 
-  // Define station groups by stids
-  // const stationGroups = {
-  //   westSlopesNorth: ['5', '6'],  // Example stids for alpine stations
-  //   westSlopesCentral: ['48', '49', '50', '51', '52', '53','57'],
-  //   westSlopesSouth: ['29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '54'],
-  //   eastSlopesNorth: ['7', '8', '9'],  // Example stids for alpine stations
-  //   eastSlopesCentral: ['11','24', '25', '26', '19'],  // Example stids for alpine stations
-  //   eastSlopesSouth: [],  // Example stids for alpine stations
-  //   olympics: ['4'],  // Example stids for alpine stations
-  //   mtHood: ['41', '42', '43', '44', '45', '46', '47','56'],
-  //   snoqualmie: ['1','2','20', '21', '22', '23'],  // Example stids for alpine stations
-  //   stevensPass: ['13', '14', '17', '18','50','51'],  // Example stids for alpine stations
-    
-  // };
-
-
 
   // Add click outside handler at the top level
   useEffect(() => {
@@ -464,19 +448,6 @@ export default function Home() {
     };
   }, [activeDropdown]);
 
-  // Define the regions configuration
-  // const regions = [
-  //   { id: 'olympics', title: 'Olympics', stationIds: stationGroups.olympics },
-  //   { id: 'westSlopesNorth', title: 'West Slopes North', stationIds: stationGroups.westSlopesNorth },
-  //   { id: 'westSlopesCentral', title: 'West Slopes Central', stationIds: stationGroups.westSlopesCentral },
-  //   { id: 'stevensPass', title: 'Stevens Pass', stationIds: stationGroups.stevensPass },
-  //   { id: 'snoqualmie', title: 'Snoqualmie', stationIds: stationGroups.snoqualmie },
-  //   { id: 'westSlopesSouth', title: 'West Slopes South', stationIds: stationGroups.westSlopesSouth },
-  //   { id: 'eastSlopesNorth', title: 'East Slopes North', stationIds: stationGroups.eastSlopesNorth },
-  //   { id: 'eastSlopesCentral', title: 'East Slopes Central', stationIds: stationGroups.eastSlopesCentral },
-  //   { id: 'eastSlopesSouth', title: 'East Slopes South', stationIds: stationGroups.eastSlopesSouth },
-  //   { id: 'mtHood', title: 'Mt Hood', stationIds: stationGroups.mtHood }
-  // ];
 
   // Usage in your render
   return (
@@ -540,7 +511,7 @@ export default function Home() {
 
         {/* region cards for each table  */}
 
-        {observationsDataDay && (
+        {observationsDataDay && tableMode === 'summary' && (
           <div className="space-y-4">
             {regions.map(region => {
               // Filter observations for this region
@@ -551,21 +522,9 @@ export default function Home() {
                   region.stationIds.includes(station.Stid)
                 )
               };
-
-              // Simplified condition for debugging
-              const shouldRenderTable = regionData.data.length > 0 && 
-                region.stationIds.includes(selectedStation);
-
-              // Debug logs
-              console.log('Region:', region.title);
-              console.log('Table Mode:', tableMode);
-              console.log('Selected Station:', selectedStation);
-              console.log('Has Data:', regionData.data.length > 0);
-              console.log('Station IDs:', region.stationIds);
-              console.log('Includes Selected Station:', region.stationIds.includes(selectedStation));
-              console.log('Should Render:', shouldRenderTable);
-
-              return shouldRenderTable ? (
+              
+              // Only render table if region has data
+              return regionData.data.length > 0 ? (
                 <div key={region.id} className="bg-white rounded-lg shadow">
                   {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
                     {region.title}
