@@ -1,3 +1,6 @@
+// This is placeholder data for the stations, observations, and units.
+// I think I can delete it safely...
+
 const stations = [
   {
     id: 'd13223c3-0692-4d23-8677-e093c8897efc',
