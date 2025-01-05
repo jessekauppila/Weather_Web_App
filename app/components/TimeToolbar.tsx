@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
 import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover, ListSubheader } from '@mui/material';
@@ -72,6 +72,19 @@ const TimeToolbar = ({
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   //const [lastApiCall, setLastApiCall] = useState<string | null>(null);
 
+  const handleCustomTimeButtonClick = async () => {
+    // First set the type to CUSTOM
+    await handleDayRangeTypeChange({ 
+      target: { value: DayRangeType.CUSTOM } 
+    } as SelectChangeEvent<DayRangeType>);
+    
+    // Update the time range
+    handleTimeRangeChange({ 
+      target: { value: calculateCurrentTimeRange() } 
+    } as SelectChangeEvent<string>);
+  };
+
+  const memoizedHandleCustomTime = useCallback(handleCustomTimeButtonClick, []);
 
   const handleDataPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
     setDataAnchorEl(event.currentTarget);
@@ -94,22 +107,6 @@ const TimeToolbar = ({
     await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
     //console.log('Updated last API call:', newLastApiCall);
   };
-
-  const handleCustomTimeButtonClick = async () => {
-    // First set the type to CUSTOM
-    await handleDayRangeTypeChange({ 
-      target: { value: DayRangeType.CUSTOM } 
-    } as SelectChangeEvent<DayRangeType>);
-    
-    // Update the time range
-    handleTimeRangeChange({ 
-      target: { value: calculateCurrentTimeRange() } 
-    } as SelectChangeEvent<string>);
-    
-
-  };
-
-
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -235,8 +232,20 @@ const TimeToolbar = ({
                         <Button 
                           variant="outlined" 
                           size="small" 
-                          onClick={handleCustomTimeButtonClick}
-                          className="mt-2"
+                          onClick={memoizedHandleCustomTime}
+                          sx={{
+                            minWidth: '120px',
+                            textAlign: 'left',
+                            padding: '4px 8px',
+                            backgroundColor: 'transparent',
+                            borderColor: '#49597F',
+                            transition: 'background-color 0.15s',
+                            '&:hover': {
+                              backgroundColor: 'rgba(107,123,164,0.1)',
+                              borderColor: '#6B7BA4'
+                            },
+                            marginTop: '8px'
+                          }}
                         >
                           Apply Custom Range
                         </Button>
