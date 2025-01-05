@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
-import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover } from '@mui/material';
+import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover, ListSubheader } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import moment from 'moment';
+import { regions, stationGroups } from '../config/regions';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -311,23 +312,50 @@ const TimeToolbar = ({
             {/* /////////////////////// */}
 
         {/* Station selector */}
-        {(selectedStation || stationIds.length === 1) && (
+        {/* {(selectedStation || stationIds.length === 1) && ( */}
           <FormControl variant="outlined" size="small" className="w-full sm:w-auto">
             <InputLabel>Station</InputLabel>
             <Select
               value={selectedStation}
               onChange={handleStationChange}
               label="Station"
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    '& .MuiListSubheader-root': {
+                      // Style for region headers
+                      //backgroundColor: 'cornflowerblue',
+                      color: 'black',
+                      fontWeight: 'bold',
+                    },
+                    '& .MuiMenuItem-root': {
+                      // Style for station items
+                      paddingLeft: '32px',
+                      color: 'black',
+                      '&:hover': {
+                        backgroundColor: 'rgba(100, 149, 237, 0.1)' // lighter cornflowerblue
+                      }
+                    }
+                  }
+                }
+              }}
             >
               <MenuItem value="">All Stations</MenuItem>
-              {stations.map((station) => (
-                <MenuItem key={station.id} value={station.id}>
-                  {station.name}
-                </MenuItem>
+              {regions.map((region) => (
+                <div key={region.id}>
+                  <ListSubheader>{region.title}</ListSubheader>
+                  {stations
+                    .filter(station => region.stationIds.includes(station.id))
+                    .map((station) => (
+                      <MenuItem key={station.id} value={station.id}>
+                        {station.name}
+                      </MenuItem>
+                    ))}
+                </div>
               ))}
             </Select>
           </FormControl>
-        )}
+        {/* )} */}
 
 
       </div>
