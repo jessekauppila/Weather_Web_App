@@ -11,7 +11,7 @@ export const SNOW_DEPTH_CONFIG = {
 
 export const SNOW_DEPTH_24H_CONFIG = {
   threshold: -1,
-  maxPositiveChange: 4,git c
+  maxPositiveChange: 4,
   maxNegativeChange: 4,
   windowSize: 24,
   upperIQRMultiplier: 1,
