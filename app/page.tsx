@@ -521,15 +521,16 @@ export default function Home() {
 
         {/*  Regions the BIG table */}
 
-        {/* 
-          {observationsDataDay && (
+      
+          {observationsDataDay && selectedStation && (
             <DayAveragesTable 
               dayAverages={observationsDataDay} 
               onStationClick={handleStationClick}
               mode={tableMode}
             />
           )}
-        */}
+ 
+        
         {/*  Regions  */}
 
 
@@ -537,7 +538,7 @@ export default function Home() {
 
         {/* region cards for each table  */}
 
-        {observationsDataDay && tableMode === 'summary' && (
+        {observationsDataDay && (
           <div className="space-y-4">
             {regions.map(region => {
               // Filter observations for this region
@@ -549,8 +550,20 @@ export default function Home() {
                 )
               };
 
-              // Only render table if region has data
-              return regionData.data.length > 0 ? (
+              // Simplified condition for debugging
+              const shouldRenderTable = regionData.data.length > 0 && 
+                region.stationIds.includes(selectedStation);
+
+              // Debug logs
+              console.log('Region:', region.title);
+              console.log('Table Mode:', tableMode);
+              console.log('Selected Station:', selectedStation);
+              console.log('Has Data:', regionData.data.length > 0);
+              console.log('Station IDs:', region.stationIds);
+              console.log('Includes Selected Station:', region.stationIds.includes(selectedStation));
+              console.log('Should Render:', shouldRenderTable);
+
+              return shouldRenderTable ? (
                 <div key={region.id} className="bg-white rounded-lg shadow">
                   {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
                     {region.title}
@@ -587,10 +600,9 @@ export default function Home() {
         )}
 
         {/* Individual STATION Components  */}
+
         
         {/* Graphs   */}
-
-
 
 <div className="flex flex-col gap-4">
           {filteredObservationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
