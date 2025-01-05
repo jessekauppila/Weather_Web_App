@@ -11,17 +11,17 @@ import React, {
 } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 
-import DayAveragesTable from './dayWxTable';
-import DayWxSnowGraph from './dayWxSnowGraph';
-import AccordionWrapper from './components/AccordionWrapper';
+import DayAveragesTable from './vis/dayWxTable';
+import DayWxSnowGraph from './vis/dayWxSnowGraph';
+import AccordionWrapper from './components/map/AccordionWrapper';
 
 //import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import HourWxTable from './hourWxTable';
-import WxSnowGraph from './wxSnowGraph';
+import HourWxTable from './vis/hourWxTable';
+import WxSnowGraph from './vis/wxSnowGraph';
 
 import { DayRangeType } from './types';
 
-import RegionCard from './components/RegionCard';
+import RegionCard from './components/map/RegionCard';
 
 import TimeToolbar from './components/TimeToolbar';
 import { fetchWeatherData } from './utils/fetchWeatherData';

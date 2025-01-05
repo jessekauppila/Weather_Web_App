@@ -1,7 +1,7 @@
-import { filteredObservationData } from '../filteredObservationData';
-import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
-import hourWxTableDataFromDB  from '../hourWxTableDataFromDB';
-import hourWxTableDataFiltered  from '../hourWxTableDataFiltered';
+import { filteredObservationData } from '../data/filteredObservationData';
+import wxTableDataDayFromDB from '../data/dayWxTableDataDayFromDB';
+import hourWxTableDataFromDB  from '../data/hourWxTableDataFromDB';
+import hourWxTableDataFiltered  from '../data/hourWxTableDataFiltered';
 import { DayRangeType } from '../types';
 
 interface FetchWeatherDataProps {
