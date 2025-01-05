@@ -232,8 +232,20 @@ const TimeToolbar = ({
                         <Button 
                           variant="outlined" 
                           size="small" 
-                          onClick={handleCustomTimeButtonClick}
-                          className="mt-2"
+                          onClick={memoizedHandleCustomTime}
+                          sx={{
+                            minWidth: '120px',
+                            textAlign: 'left',
+                            padding: '4px 8px',
+                            backgroundColor: 'transparent',
+                            borderColor: '#49597F',
+                            transition: 'background-color 0.15s',
+                            '&:hover': {
+                              backgroundColor: 'rgba(107,123,164,0.1)',
+                              borderColor: '#6B7BA4'
+                            },
+                            marginTop: '8px'
+                          }}
                         >
                           Apply Custom Range
                         </Button>
