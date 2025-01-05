@@ -235,8 +235,15 @@ const TimeToolbar = ({
                         <Button 
                           variant="outlined" 
                           size="small" 
+                          className="bg-transparent min-w-[120px] text-left px-2 py-1 rounded border border-[#49597F] hover:bg-[rgba(107,123,164,0.1)] mt-2"
+                          sx={{
+                            transition: 'background-color 0.2s',
+                            '&:hover': {
+                              borderColor: '#6B7BA4',
+                              backgroundColor: 'rgba(107,123,164,0.1)'
+                            }
+                          }}
                           onClick={handleCustomTimeButtonClick}
-                          className="mt-2"
                         >
                           Apply Custom Range
                         </Button>
