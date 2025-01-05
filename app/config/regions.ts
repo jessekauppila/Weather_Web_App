@@ -1,7 +1,7 @@
 // Define station groups by stids
 export const stationGroups = {
     westSlopesNorth: ['5', '6'],
-    westSlopesCentral: ['48', '49', '50', '51', '52', '53', '57'],
+    westSlopesCentral: ['57'],
     westSlopesSouth: ['29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '54'],
     eastSlopesNorth: ['7', '8', '9'],
     eastSlopesCentral: ['11', '24', '25', '26', '19'],
