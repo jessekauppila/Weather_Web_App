@@ -1,8 +1,8 @@
-import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from './snowDepthUtils';
+import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from '../utils/snowDepthUtils';
 import moment from 'moment-timezone';
 
 // Import the interface from types.ts
-import { WxTableOptions } from './types';
+import { WxTableOptions } from '../types';
 
 function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
