@@ -26,7 +26,7 @@ import RegionCard from './components/map/RegionCard';
 import TimeToolbar from './components/TimeToolbar';
 import { fetchWeatherData } from './utils/fetchWeatherData';
 
-import { regions, stationGroups } from './config/regions';
+import { regions, stationGroups } from '@/app/config/regions';
 
 interface Station {
   id: string;
@@ -104,6 +104,13 @@ export default function Home() {
 
   // Add this state at the top level where RegionCard is used
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Add state
+  const [isMetric, setIsMetric] = useState(false);
+
+  useEffect(() => {
+    console.log('📄 Page: isMetric state changed to:', isMetric);
+  }, [isMetric]);
 
   /**
    * Calculates the start and end times based on the selected date and range type
@@ -332,6 +339,7 @@ export default function Home() {
 
   // Create a refresh function
   const handleRefresh = async () => {
+    console.log('🔄 Page: Fetching weather data with isMetric:', isMetric);
     setIsLoading(true);
     await fetchWeatherData({
       timeRangeData,
@@ -343,7 +351,8 @@ export default function Home() {
       setObservationsDataDay,
       setObservationsDataHour,
       setFilteredObservationsDataHour,
-      setIsLoading
+      setIsLoading,
+      isMetric
     });
   };
 
@@ -480,6 +489,8 @@ export default function Home() {
           setObservationsDataHour={setObservationsDataHour}
           setFilteredObservationsDataHour={setFilteredObservationsDataHour}
           setIsLoading={setIsLoading}
+          isMetric={isMetric}
+          setIsMetric={setIsMetric}
         />
 
         {/* Should show if stuff is loading, but not showing anything now  */}

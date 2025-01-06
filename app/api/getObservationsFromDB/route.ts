@@ -9,12 +9,8 @@ import { convertObservationUnits } from '../../utils/unitConversions'; // Adjust
 
 export async function POST(request: Request) {
   try {
-    const { startDate, endDate, stationIds } = await request.json();
-    console.log('Received request:', {
-      startDate,
-      endDate,
-      stationIds,
-    });
+    const { startDate, endDate, stationIds, isMetric } = await request.json();
+    console.log('🌐 API: Processing request with isMetric:', isMetric);
 
     const client = await db.connect();
 
@@ -76,8 +72,9 @@ export async function POST(request: Request) {
     await client.release();
 
     // Convert units for each observation
-    const convertedObservations = observationsResult.rows.map(
-      convertObservationUnits
+    console.log('🔄 API: Converting units with isMetric:', isMetric);
+    const convertedObservations = observationsResult.rows.map(obs => 
+      convertObservationUnits(obs, isMetric)
     );
 
     //console.log('Query result converted:', convertedObservations);

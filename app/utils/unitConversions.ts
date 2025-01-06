@@ -1,6 +1,15 @@
 export function convertObservationUnits(
-  observation: Record<string, any>
+  observation: Record<string, any>,
+  isMetric: boolean = false
 ): Record<string, any> {
+  console.log('🔧 UnitConversions: Converting with isMetric:', isMetric);
+  
+  if (isMetric) {
+    console.log('🔧 UnitConversions: Returning metric values');
+    return observation;
+  }
+  console.log('🔧 UnitConversions: Converting to imperial values');
+
   const converted = { ...observation };
 
   // Temperature conversions (C to F)
