@@ -332,50 +332,55 @@ export function calculateSnowDepthAccumulation(data: any[]) {
 
 // Function to check for identical elements to the third decimal place against all other elements
 function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
-  //console.log('Starting applyIdenticalCheck with data:', data);
-  
-  return data.map((currentPoint, currentIndex, array) => {
-    // Skip if current point is already NaN or undefined
-    if (!currentPoint || !currentPoint.snow_depth || isNaN(currentPoint.snow_depth)) {
-      // console.log('Skipping point due to NaN or undefined:', currentPoint);
+  return data.map((currentPoint) => {
+    // Skip if point is invalid
+    if (!currentPoint || currentPoint.snow_depth === null || currentPoint.snow_depth === undefined) {
       return currentPoint;
     }
 
-    const currentDepth = parseFloat(currentPoint.snow_depth.toFixed(3));
-    // console.log('Checking currentDepth:', currentDepth, 'at index:', currentIndex);
-    
-    // Check if this depth appears anywhere else in the array
-    const hasIdenticalValue = array.some((comparePoint, compareIndex) => {
-      if (!comparePoint || !comparePoint.snow_depth || 
-          currentIndex === compareIndex || 
-          isNaN(comparePoint.snow_depth)) {
-        return false;
-      }
-      const compareDepth = parseFloat(comparePoint.snow_depth.toFixed(3));
-      const isIdentical = currentDepth === compareDepth;
-      
-      // if (isIdentical) {
-      //   console.log('Found identical value:', {
-      //     currentDepth,
-      //     compareDepth,
-      //     currentIndex,
-      //     compareIndex
-      //   });
-      // }
-      
-      return isIdentical;
-    });
+    try {
+      // Convert to number if it isn't already
+      const snowDepth = typeof currentPoint.snow_depth === 'string' 
+        ? parseFloat(currentPoint.snow_depth) 
+        : currentPoint.snow_depth;
 
-    // If we found an identical value, return NaN
-    if (hasIdenticalValue) {
-      // console.log('Setting NaN for point:', currentPoint);
+      // Check if conversion resulted in a valid number
+      if (isNaN(snowDepth)) {
+        return {
+          ...currentPoint,
+          snow_depth: NaN
+        };
+      }
+
+      // Now we can safely use toFixed
+      const currentDepth = Number(snowDepth.toFixed(3));
+
+      // Check for identical values
+      const hasIdenticalValue = data.some((comparePoint, compareIndex) => {
+        if (!comparePoint || comparePoint.snow_depth === null || 
+            comparePoint.snow_depth === undefined || 
+            isNaN(comparePoint.snow_depth)) {
+          return false;
+        }
+
+        const compareDepth = Number(comparePoint.snow_depth.toFixed(3));
+        return currentDepth === compareDepth && currentPoint !== comparePoint;
+      });
+
+      return hasIdenticalValue ? {
+        ...currentPoint,
+        snow_depth: NaN
+      } : {
+        ...currentPoint,
+        snow_depth: currentDepth
+      };
+    } catch (error) {
+      console.error('Error processing snow depth:', error);
       return {
         ...currentPoint,
         snow_depth: NaN
       };
     }
-
-    return currentPoint;
   });
 }
 

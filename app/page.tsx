@@ -106,7 +106,7 @@ export default function Home() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Add state
-  const [isMetric, setIsMetric] = useState(false);
+  const [isMetric, setIsMetric] = useState<boolean>(false);
 
   useEffect(() => {
     console.log('📄 Page: isMetric state changed to:', isMetric);
@@ -338,9 +338,8 @@ export default function Home() {
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
   // Create a refresh function
-  const handleRefresh = async () => {
-    console.log('🔄 Page: Fetching weather data with isMetric:', isMetric);
-    setIsLoading(true);
+  const handleRefresh = async (newIsMetric?: boolean) => {
+    console.log('🔄 Page: Fetching weather data with isMetric:', newIsMetric ?? isMetric);
     await fetchWeatherData({
       timeRangeData,
       stationIds,
@@ -352,7 +351,7 @@ export default function Home() {
       setObservationsDataHour,
       setFilteredObservationsDataHour,
       setIsLoading,
-      isMetric
+      isMetric: newIsMetric ?? isMetric  // Use new value if provided, otherwise use current state
     });
   };
 
