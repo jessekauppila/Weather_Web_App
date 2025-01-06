@@ -30,7 +30,7 @@ interface TimeToolbarProps {
     data: any[];
     title: string;
   } | null;
-  onRefresh: () => void;
+  onRefresh: (newIsMetric?: boolean) => Promise<void>;
   tableMode: 'summary' | 'daily';
   startHour: number;
   endHour: number;
@@ -390,9 +390,12 @@ const TimeToolbar = ({
                   <Typography>Imperial</Typography>
                   <AntSwitch 
                     checked={isMetric}
-                    onChange={(e) => {
-                      console.log('🔄 TimeToolbar: Unit switch toggled to:', e.target.checked);
-                      setIsMetric(e.target.checked);
+                    onChange={async (e) => {
+                      const newIsMetric = e.target.checked;
+                      console.log('🔄 TimeToolbar: Unit switch toggled to:', newIsMetric);
+                      setIsMetric(newIsMetric);
+                      console.log('🔄 TimeToolbar: State updated, refreshing with isMetric:', newIsMetric);
+                      await onRefresh(newIsMetric);
                     }}
                     inputProps={{ 'aria-label': 'unit switch' }}
                   />
