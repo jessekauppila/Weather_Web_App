@@ -8,11 +8,11 @@ function convertWindSpeed(metersPerSecond: number): number {
 }
 
 function convertPrecipitation(millimeters: number): number {
-  return millimeters * 0.0393701;  // mm to inches
+  return millimeters *  0.0393701;  // mm to inches
 }
 
 function convertSnowDepth(centimeters: number): number {
-  return centimeters * 0.02953;  // hPa to inHg * 0.393701;  // cm to inches
+  return centimeters *  0.393701;  // cm to inches
 }
 
 function convertPressure(hectoPascals: number): number {
