@@ -12,11 +12,15 @@ function convertPrecipitation(millimeters: number): number {
 }
 
 function convertSnowDepth(centimeters: number): number {
-  return centimeters * 0.393701;  // cm to inches
+  return centimeters * 0.02953;  // hPa to inHg * 0.393701;  // cm to inches
 }
 
 function convertPressure(hectoPascals: number): number {
-  return hectoPascals * 0.02953;  // hPa to inHg
+  return hectoPascals * 0.02953;  // cm to inches
+}
+
+function convertElevation(feet: number): number {
+  return Math.round(feet * 0.3048);  // Convert feet to meters and round to whole number
 }
 
 export function convertObservationUnits(
@@ -26,8 +30,17 @@ export function convertObservationUnits(
   console.log('🔧 UnitConversions: Converting with isMetric:', isMetric);
   
   if (isMetric) {
+    const convertedToMetric = { ...observation };
+
+
+    ['elevation'].forEach((key) => {
+      if (convertedToMetric[key] !== null) {
+        convertedToMetric[key] = convertElevation(convertedToMetric[key]);
+      }
+    });
+    
     console.log('🔧 UnitConversions: Returning metric values');
-    return observation;
+    return convertedToMetric;
   }
   
   console.log('🔧 UnitConversions: Converting to imperial values');

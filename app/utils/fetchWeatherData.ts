@@ -66,7 +66,7 @@ export async function fetchWeatherData({
       endHour,
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
     });
 
     console.log('filteredData:', filteredData);
@@ -82,10 +82,14 @@ export async function fetchWeatherData({
     
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
-      result.units
+      result.units,
+      isMetric
     ));
   
-    setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
+    setFilteredObservationsDataHour(hourWxTableDataFiltered(
+      Object.values(filteredData).flat(),
+      isMetric
+    ));
     setIsLoading(false);
   
   } catch (error) {

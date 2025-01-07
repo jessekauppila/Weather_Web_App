@@ -38,7 +38,7 @@ const MeasurementCard = ({
   station 
 }: MeasurementCardProps) => {
   const renderValue = (value: string, unit: string) => {
-    if (value === '-') {
+    if (!value || value === '-') {
       return (
         <Typography sx={{ fontSize: '0.625rem', color: '#9ca3af' }}>
           no data
@@ -48,7 +48,7 @@ const MeasurementCard = ({
 
     // Special handling for precipitation to round to 3 decimal places
     let displayValue = value;
-    if (value.includes('Precip Accum One Hour')) {
+    if (typeof value === 'string' && value.includes('Precip Accum One Hour')) {
       const numValue = parseFloat(value.replace(` ${unit}`, ''));
       displayValue = numValue.toFixed(3);
     } else {
