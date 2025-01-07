@@ -1,5 +1,6 @@
 import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 import { degreeToCompass } from "@/app/utils/angleInDegreeToCompass";
+import { UnitType } from "@/app/utils/units";
 
 
 interface Observation {
@@ -35,7 +36,7 @@ interface Observation {
     "API Fetch Time": string;
   }
   
-  export default function hourWxTableDataFiltered(data: any[], units?: any) {
+  export default function hourWxTableDataFiltered(data: any[], isMetric: boolean, units?: any) {
 
     console.log('data in hourWxTableDataFiltered:', data);
     // Flatten the nested structure into a single array
@@ -46,20 +47,20 @@ interface Observation {
         
         return {
           Station: obs.station_name,
-          Elevation: `${obs.elevation} ft`,
+          Elevation: formatValueWithUnit(obs.elevation, UnitType.ELEVATION, isMetric),          
           Day: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           Hour: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-          "Air Temp": formatValueWithUnit(obs.air_temp, "°F"),
-          "Wind Speed": formatValueWithUnit(obs.wind_speed, " mph"),
-          "Wind Gust": formatValueWithUnit(obs.wind_gust, " mph"),
+          "Air Temp": formatValueWithUnit(obs.air_temp, UnitType.TEMPERATURE, isMetric),
+          "Wind Speed": formatValueWithUnit(obs.wind_speed, UnitType.WIND_SPEED, isMetric),
+          "Wind Gust": formatValueWithUnit(obs.wind_gust, UnitType.WIND_SPEED, isMetric),
           "Wind Direction": obs.wind_direction ? degreeToCompass(Number(obs.wind_direction)) : '-',
-          "Total Snow Depth": isNaN(obs.snow_depth) ? "error" : formatValueWithUnit(obs.snow_depth, "in"),
-          "24h Snow Depth": isNaN(obs.snow_depth_24h) ? "error" : formatValueWithUnit(obs.snow_depth_24h, "in"),
-          "Precip Accum": formatValueWithUnit(obs.precip_accum_one_hour, "in"),
-          "Precipitation": formatValueWithUnit(obs.precipitation, "in"),
-          "Relative Humidity": formatValueWithUnit(obs.relative_humidity, "%"),
-          "Solar Radiation": formatValueWithUnit(obs.solar_radiation, "W/m²"),
-          "API Fetch Time": formatValueWithUnit(obs.api_fetch_time, "timestamp"),
+          "Total Snow Depth": formatValueWithUnit(obs.snow_depth, UnitType.PRECIPITATION, isMetric),
+          "24h Snow Depth": formatValueWithUnit(obs.snow_depth_24h, UnitType.PRECIPITATION, isMetric),
+          "Precip Accum": formatValueWithUnit(obs.precip_accum_one_hour, UnitType.PRECIPITATION, isMetric),
+          "Precipitation": formatValueWithUnit(obs.precipitation, UnitType.PRECIPITATION, isMetric),
+          "Relative Humidity": formatValueWithUnit(obs.relative_humidity, UnitType.HUMIDITY, isMetric),
+          "Solar Radiation": formatValueWithUnit(obs.solar_radiation, UnitType.SOLAR, isMetric),
+          "API Fetch Time": formatValueWithUnit(obs.api_fetch_time, UnitType.TIMESTAMP, isMetric)
         };
       })
       .sort((a, b) => {

@@ -1,5 +1,7 @@
 import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from '../utils/snowDepthUtils';
 import moment from 'moment-timezone';
+import { UnitType } from "@/app/utils/units";
+import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 
 // Import the interface from types.ts
 import { WxTableOptions } from '../types';
@@ -7,7 +9,8 @@ import { WxTableOptions } from '../types';
 function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
   _units: Array<Record<string, string>>,
-  options: WxTableOptions
+  options: WxTableOptions,
+  isMetric: boolean,
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
@@ -38,7 +41,7 @@ function wxTableDataDayFromDB(
         Station: stationObs[0].station_name,
         Latitude: Number(stationObs[0].latitude),
         Longitude: Number(stationObs[0].longitude),
-        Elevation: `${Number(stationObs[0].elevation)} ft`,
+        Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
 
       // Process each measurement type
@@ -153,7 +156,10 @@ function wxTableDataDayFromDB(
         min: 'Air Temp Min',
         cur: 'Cur Air Temp',
       },
-      '°F'
+      UnitType.TEMPERATURE,
+      0,
+      undefined,
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.TEMPERATURE, isMetric)
     );
 
     // Process wind speed
@@ -163,7 +169,10 @@ function wxTableDataDayFromDB(
         avg: 'Wind Speed Avg',
         cur: 'Cur Wind Speed',
       },
-      'mph'
+      UnitType.WIND_SPEED,
+      0,
+      undefined,
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.WIND_SPEED, isMetric)
     );
 
         // Process wind speed
@@ -173,7 +182,10 @@ function wxTableDataDayFromDB(
             avg: 'Solar Radiation Avg',
             //cur: 'Cur Solar Radiation',
           },
-          'W/m²'
+          UnitType.SOLAR,
+          0,
+          undefined,
+          (value, unit) => formatValueWithUnit(Number(value), UnitType.SOLAR, isMetric)
         );
 
     // Process wind gust
