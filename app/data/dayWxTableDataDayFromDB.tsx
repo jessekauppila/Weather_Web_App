@@ -16,7 +16,7 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
-  // console.log('inputObservations:', inputObservations);
+  //console.log('inputObservations:', inputObservations);
 
   const startHour = options.startHour;
   const endHour = options.endHour;
@@ -41,8 +41,10 @@ function wxTableDataDayFromDB(
         Station: stationObs[0].station_name,
         Latitude: Number(stationObs[0].latitude),
         Longitude: Number(stationObs[0].longitude),
+        //elevation: Number(stationObs[0].elevation),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
+      console.log('Elevation value:', averages.elevation);
 
       // Process each measurement type
       const measurementKeys = [
@@ -207,7 +209,7 @@ function wxTableDataDayFromDB(
         total: 'Total Snow Depth',      
         change: 'Total Snow Depth Change'  
       },
-      'in',
+      UnitType.PRECIPITATION,
       1,
       (numbers) => {
         // Step 1: Create timestamped data points
@@ -233,7 +235,7 @@ function wxTableDataDayFromDB(
           max: maxDepth
         };
       },
-      (value, unit) => `${value} ${unit}`
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process 24h snow depth
@@ -358,6 +360,16 @@ function wxTableDataDayFromDB(
       formatted['Api Fetch Time'] = moment(timestamps[timestamps.length - 1])
         .format('MMM D, h:mm A');
     }
+
+    // Process elevation
+    // processNumericField(
+    //   'elevation',
+    //   { value: 'Elevation' },
+    //   UnitType.ELEVATION,
+    //   0,
+    //   (numbers) => ({ value: numbers[0] }),
+    //   (value, unit) => formatValueWithUnit(Number(value), UnitType.ELEVATION, isMetric)
+    // );
 
     return formatted;
   });

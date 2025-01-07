@@ -1,10 +1,13 @@
 import { UnitType, UNITS } from "./units";
 
-export function formatValueWithUnit(value: any, unitType: UnitType, isMetric: boolean): string {
+export function formatValueWithUnit(value: any, unitType: UnitType, isMetric: boolean = false): string {
   if (value === null || value === undefined) return "-";
 
   // Get the appropriate unit label based on metric/imperial setting
-  const unit = isMetric ? UNITS[unitType].metric : UNITS[unitType].imperial;
+  const unit = UNITS[unitType][isMetric ? 'metric' : 'imperial'];
+  
+  // Log to verify unit selection
+  //console.log('Elevation unit:', unit, 'isMetric:', isMetric);
 
   // Handle timestamp formatting for API Fetch Time
   if (unitType === UnitType.TIMESTAMP) {

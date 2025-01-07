@@ -78,7 +78,7 @@ export async function fetchWeatherData({
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    }));
+    }, isMetric));
     
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
