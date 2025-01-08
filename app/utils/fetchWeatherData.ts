@@ -66,8 +66,8 @@ export async function fetchWeatherData({
       endHour,
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    });
+      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    }, isMetric);
 
     console.log('filteredData:', filteredData);
   
