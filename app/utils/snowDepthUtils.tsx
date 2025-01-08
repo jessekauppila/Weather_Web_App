@@ -214,9 +214,23 @@ function createFilterCacheKey(
 export function filterSnowDepthOutliers(
     data: SnowDataPoint[],
     config: SnowDepthConfig,
-    isMetric: boolean = false  // Add isMetric parameter
+    isMetric: boolean = false
 ): SnowDataPoint[] {
-  console.log('1. Initial data:', data);
+    // Convert all snow_depth values to numbers at the start
+    const numericData = data.map(point => ({
+        ...point,
+        snow_depth: point.snow_depth === null ? null : Number(point.snow_depth)
+    }));
+
+    console.log('1. Initial data (converted to numbers):', numericData);
+
+    // Log original config
+    console.log('Original config:', {
+        threshold: config.threshold,
+        maxPositiveChange: config.maxPositiveChange,
+        maxNegativeChange: config.maxNegativeChange,
+        isMetric
+    });
 
     // Convert config values to metric if needed
     const workingConfig = isMetric ? {
@@ -226,7 +240,15 @@ export function filterSnowDepthOutliers(
         maxNegativeChange: config.maxNegativeChange * 2.54,
     } : config;
 
-    console.log('2. After config conversion:', data);
+    // Log converted config
+    console.log('Working config:', {
+        threshold: workingConfig.threshold,
+        maxPositiveChange: workingConfig.maxPositiveChange,
+        maxNegativeChange: workingConfig.maxNegativeChange,
+        isMetric
+    });
+
+    console.log('1. Initial data:', data);
 
     const isSnow24h = workingConfig.applyIdenticalCheck === false;
     const logPrefix = isSnow24h ? '[24h Snow]' : '[Total Snow]';
@@ -269,11 +291,11 @@ export function filterSnowDepthOutliers(
     const processedData = workingConfig.applyIdenticalCheck 
       ? applyIdenticalCheck(sortedData)
       : sortedData;
-    console.log('3. After identical check:', processedData);
+    console.log('2. After identical check:', processedData);
     
     //console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
-    console.log('4. After IQR filter:', iqrFiltered);
+    console.log('3. After IQR filter:', iqrFiltered);
     
     const nanCountIQR = iqrFiltered.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;
     // console.log(`${logPrefix} 📊 After IQR filtering:`, {
@@ -286,7 +308,7 @@ export function filterSnowDepthOutliers(
 
     // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    console.log('5. Final result:', hourlyChangeLimits);
+    console.log('4. Final result:', hourlyChangeLimits);
 
     
     const nanCountFinal = hourlyChangeLimits.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;
@@ -354,8 +376,8 @@ function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
 
     try {
       const currentDepth = typeof currentPoint.snow_depth === 'string' 
-        ? Number(currentPoint.snow_depth).toFixed(3)
-        : currentPoint.snow_depth.toFixed(3);
+        ? Number(currentPoint.snow_depth)
+        : currentPoint.snow_depth;
 
       const hasIdenticalValue = data.some((comparePoint) => {
         if (!comparePoint || comparePoint.snow_depth === null || comparePoint.snow_depth === undefined) {
@@ -363,8 +385,8 @@ function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
         }
 
         const compareDepth = typeof comparePoint.snow_depth === 'string'
-          ? Number(comparePoint.snow_depth).toFixed(3)
-          : comparePoint.snow_depth.toFixed(3);
+          ? Number(comparePoint.snow_depth)
+          : comparePoint.snow_depth;
 
         return currentDepth === compareDepth && currentPoint !== comparePoint;
       });
@@ -375,10 +397,7 @@ function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
       } : currentPoint;
     } catch (error) {
       console.error('Error processing snow depth:', error);
-      return {
-        ...currentPoint,
-        snow_depth: null
-      };
+      return currentPoint;
     }
   });
 }
