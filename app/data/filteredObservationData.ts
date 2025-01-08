@@ -6,9 +6,10 @@ import { filterSnowDepthOutliers, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } fro
 
 export function filteredObservationData(
   observationsData: Array<Record<string, any>>,
-  options: WxTableOptions
+  options: WxTableOptions,
+  isMetric: boolean
 ) {
-  console.log('Filtering observations:', { observationsData, options });
+  //console.log('Filtering observations:', { observationsData, options });
 
   const { startHour, endHour, mode } = options;
 
@@ -22,14 +23,23 @@ export function filteredObservationData(
   // Process each station group separately
   const processedGroups = Object.entries(groupedObservations).reduce((acc, [stid, stationData]) => {
     // Filter snow depth for this stationß
+
+    console.log('Raw snow depth data:', stationData.map((obs: Record<string, any>) => ({
+      date_time: obs.date_time,
+      snow_depth: obs.snow_depth
+    })));
+    
     const filteredSnowDepth = filterSnowDepthOutliers(
       stationData.map((obs: Record<string, any>) => ({
         date_time: obs.date_time,
         snow_depth: obs.snow_depth,
         stid
       })),
-      SNOW_DEPTH_CONFIG
+      SNOW_DEPTH_CONFIG,
+      isMetric
     );
+    
+    console.log('filteredSnowDepth:', filteredSnowDepth);
 
     const filteredSnowDepth24h = filterSnowDepthOutliers(
       stationData.map((obs: Record<string, any>) => ({
@@ -37,8 +47,11 @@ export function filteredObservationData(
         snow_depth: obs.snow_depth_24h,
         stid
       })),
-      SNOW_DEPTH_24H_CONFIG
+      SNOW_DEPTH_24H_CONFIG,
+      isMetric
     );
+
+    console.log('filteredSnowDepth24h:', filteredSnowDepth24h);
 
     // Create lookup maps for this station
     const snowDepthMap = new Map(
