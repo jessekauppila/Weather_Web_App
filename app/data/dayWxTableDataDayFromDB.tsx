@@ -197,9 +197,12 @@ function wxTableDataDayFromDB(
     processNumericField(
       'precip_accum_one_hour',
       { sum: 'Precip Accum One Hour' },
-      'in',
+      UnitType.PRECIPITATION,
       2,
-      (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
+      (numbers) => ({ 
+        sum: Number(numbers.slice(1).reduce((a, b) => a + b, 0).toFixed(2)) 
+      }),
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process snow depth for both total and change
@@ -230,9 +233,9 @@ function wxTableDataDayFromDB(
         const depthChange = lastValue - firstValue;
 
         return {
-          total: lastValue,
+          total: Number(lastValue.toFixed(1)),
           change: depthChange,
-          max: maxDepth
+          max: Number(maxDepth.toFixed(1))
         };
       },
       (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
@@ -242,30 +245,22 @@ function wxTableDataDayFromDB(
     processNumericField(
       'snow_depth_24h',
       { total: '24h Snow Accumulation' },
-      'in',
+      UnitType.PRECIPITATION,
       1,
       (numbers) => {
-        //console.log('Raw snow_depth-24h data:', numbers);
-
-        const filteredSnowDepths = numbers.filter(d => !isNaN(d));
-        //console.log('Filtered snow depths 24h:', filteredSnowDepths);
-
-        const data = (averages.date_time as string[])
+        const dataPoints = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({
             date_time,
-            snow_depth: filteredSnowDepths[index],
+            snow_depth: numbers[index]
           }))
-          .filter((d) => !isNaN(d.snow_depth));
-        //console.log('Processed data points:', data);
+          .filter(d => !isNaN(d.snow_depth));
 
-        const results = calculateSnowDepthAccumulation(data);
-        //console.log('Accumulation results:', results);
-
-        const total = results[results.length - 1]?.snow_total ?? 0;
-        //console.log('Final total:', total);
+        const results = calculateSnowDepthAccumulation(dataPoints);
+        const total = Number((results[results.length - 1]?.snow_total ?? 0).toFixed(1));
 
         return { total };
-      }
+      },
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process relative humidity
