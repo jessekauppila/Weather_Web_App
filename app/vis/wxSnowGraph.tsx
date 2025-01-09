@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import moment from 'moment-timezone';
+import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
+import { UnitType } from "@/app/utils/units";
 
 interface DayAverage {
   [key: string]: string | number;
@@ -12,6 +14,7 @@ interface DayAveragesProps {
     title: string;
   };
   isHourly?: boolean;
+  isMetric?: boolean;
 }
 
 // Add this helper function before the main component
@@ -61,10 +64,18 @@ function interpolateValues(data: any[]) {
   return result;
 }
 
-function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
+function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAveragesProps) {
     const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [yScale, setYScale] = useState<d3.ScaleLinear<number, number>>();
+  const [data, setData] = useState<Array<{
+    date: Date;
+    totalSnowDepth: number;
+    snowDepth24h: number;
+    precipAccum: number;
+    temp: number;
+  }>>([]);
 
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
@@ -97,32 +108,43 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Add console logs to check data
     //console.log('Raw data before processing:', dayAverages.data);
 
-    // Process data with validation and interpolation
-    const rawData = dayAverages.data
+    // At the start of data processing
+    console.log('Raw data:', dayAverages.data);
+
+    // Process data first
+    const data = dayAverages.data
       .map((d) => {
         const date = isHourly 
           ? new Date(`${d.Day} ${d.Hour}`) 
           : new Date(d.Day);
-        const totalSnowDepth = parseFloat(String(d['Total Snow Depth']).replace(' in', ''));
-        const snowDepth24h = parseFloat(String(d['24h Snow Depth']).replace(' in', ''));
-        const precipAccum = parseFloat(String(d['Precip Accum']).replace(' in', ''));
-        const temp = parseFloat(String(d['Air Temp']).replace(' °F', ''));
 
-
-
-        return {
-          date,
-          totalSnowDepth,
-          snowDepth24h,
-          precipAccum: isNaN(precipAccum) ? 0 : precipAccum,
-          temp: isNaN(temp) ? 0 : temp
+        // Helper function to parse numeric values from strings with units
+        const parseValue = (value: string | number) => {
+          if (typeof value === 'string') {
+            return Number(value.split(' ')[0]);
+          }
+          return Number(value);
         };
-      })
-      .filter(d => d.date && !isNaN(d.date.getTime()))
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
 
-      //SNOW DEPTH CHANGES 
-      // Calculate snow depth changes with look-back for NaN values
+        const processed = {
+          date,
+          totalSnowDepth: parseValue(d['Total Snow Depth']),
+          snowDepth24h: parseValue(d['24h Snow Depth']),
+          precipAccum: parseValue(d['Precip Accum']),
+          temp: parseValue(d['Air Temp'])
+        };
+        console.log('Processed row:', processed);
+        return processed;
+      })
+      .filter(d => d.date && !isNaN(d.date.getTime()));
+
+    console.log('Final processed data:', data);
+    console.log('isMetric value:', isMetric);
+
+    //SNOW DEPTH CHANGES 
+    // Calculate snow depth changes with look-back for NaN values
+    const rawData = data
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
       .map((point, index, arr) => {
         if (index === 0) return { ...point, snowDepth24h: 0 };
 
@@ -141,22 +163,19 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
           };
         }
 
-
-        
-
         return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
       });
 
     //console.log('Data after initial processing:', rawData);
 
     // Apply interpolation after sorting and change calculation
-    const data = interpolateValues(rawData);
+    const dataInterpolated = interpolateValues(rawData);
 
     // Keep temperature scale
     const yScaleTemp = d3.scaleLinear()
       .domain([
-        Math.min(10, d3.min(data, d => d.temp) || 10),
-        Math.max(50, d3.max(data, d => d.temp) || 50)
+        Math.min(10, d3.min(dataInterpolated, d => d.temp) || 10),
+        Math.max(50, d3.max(dataInterpolated, d => d.temp) || 50)
       ])
       .range([height, 0])
       .nice();
@@ -196,7 +215,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Update scales with padding
     const xScale = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date) as [Date, Date])
+      .domain(d3.extent(dataInterpolated, d => d.date) as [Date, Date])
       .range([0, width])
       .nice();
 
@@ -220,7 +239,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     svg.append('g')
       .attr('transform', `translate(${width}, 0)`)
       .call(d3.axisRight(yScaleTemp)
-        .tickFormat(d => `${d}°F`))  // Add °F to temperature labels
+        .tickFormat(d => formatValueWithUnit(d, UnitType.TEMPERATURE, isMetric)))
       .selectAll('text')
       .style('fill', '#808080');
 
@@ -232,9 +251,9 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .text('Temperature (°F)');
 
     // Calculate snow depth statistics and scales
-    const avgSnowDepth = d3.mean(data, d => d.totalSnowDepth) || 0;
-    const minSnowDepth = d3.min(data, d => d.totalSnowDepth) || 0;
-    const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
+    const avgSnowDepth = d3.mean(dataInterpolated, d => d.totalSnowDepth) || 0;
+    const minSnowDepth = d3.min(dataInterpolated, d => d.totalSnowDepth) || 0;
+    const maxSnowDepth = d3.max(dataInterpolated, d => d.totalSnowDepth) || 0;
 
     // Calculate the range centered on the average
     const rangeMin = Math.min(minSnowDepth, avgSnowDepth - 6);
@@ -247,7 +266,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .nice();
 
     const yScaleBars = d3.scaleLinear()
-      .domain([0, Math.max(2, d3.max(data, d => Math.max(d.snowDepth24h, d.precipAccum)) || 0)])
+      .domain([0, Math.max(2, d3.max(dataInterpolated, d => Math.max(d.snowDepth24h, d.precipAccum)) || 0)])
       .range([height, 0]);
 
     // Add grid lines
@@ -262,11 +281,11 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Calculate optimal number of ticks based on data length
     const maxTicks = 24;
-    const tickCount = Math.min(data.length, maxTicks);
-    const tickInterval = Math.ceil(data.length / tickCount);
+    const tickCount = Math.min(dataInterpolated.length, maxTicks);
+    const tickInterval = Math.ceil(dataInterpolated.length / tickCount);
 
     // Generate tick values at regular intervals
-    const tickValues = data
+    const tickValues = dataInterpolated
       .filter((_, i) => i % tickInterval === 0)
       .map(d => d.date);
 
@@ -283,7 +302,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Create custom ticks for dates - only show first occurrence of each date
     const getDateTicks = () => {
       const seenDates = new Set();
-      return data
+      return dataInterpolated
         .filter(d => {
           const dateStr = moment(d.date).format('MM/DD');
           if (!seenDates.has(dateStr)) {
@@ -309,12 +328,29 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Add y-axis for total snow depth (left)
     svg.append('g')
       .call(d3.axisLeft(yScaleLine)
-        .tickFormat(d => d + ' in'))  // Add this line to format the actual axis ticks
+        .tickFormat(d => {
+          const formatted = formatValueWithUnit(d, UnitType.PRECIPITATION, isMetric);
+          console.log('Snow depth tick value:', d, 'formatted:', formatted, 'isMetric:', isMetric);
+          return formatted;
+        }))
       .selectAll('text')
       .style('fill', 'blue');
 
+    // Add temperature y-axis on the right
+    svg.append('g')
+      .attr('class', 'y-axis-temp')
+      .attr('transform', `translate(${width},0)`)  // Position it on the right side
+      .call(d3.axisRight(yScaleTemp)
+        .tickFormat(d => {
+          const formatted = formatValueWithUnit(d, UnitType.TEMPERATURE, isMetric);
+          console.log('Temperature tick value:', d, 'formatted:', formatted, 'isMetric:', isMetric);
+          return formatted;
+        }))
+      .selectAll('text')
+      .style('fill', '#808080');
+
     // Update snow depth label to blue
-    const firstDataPoint = data[0];
+    const firstDataPoint = dataInterpolated[0];
     svg.append('text')
       .attr('x', d => {
         const val = xScale(firstDataPoint.date);
@@ -338,7 +374,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .text('');
 
     // Create line for total snow depth
-    const line = d3.line<(typeof data)[0]>()
+    const line = d3.line<(typeof dataInterpolated)[0]>()
       .x(d => {
         const val = xScale(d.date);
         return isNaN(val) ? 0 : val;
@@ -352,14 +388,14 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     // Add the line
     svg.append('path')
-      .datum(data)
+      .datum(dataInterpolated)
       .attr('fill', 'none')
       .attr('stroke', 'blue')
       .attr('stroke-width', 2)
       .attr('d', line);
 
     // Adjust bar dimensions
-    const totalBarWidth = width / data.length * 0.9; // Increase from 0.8 to 0.9 for wider bars
+    const totalBarWidth = width / dataInterpolated.length * 0.9; // Increase from 0.8 to 0.9 for wider bars
     const individualBarWidth = totalBarWidth * 0.45; // Increase from 0.4 to 0.45
     const pairGap = totalBarWidth * 0.1; // Decrease from 0.2 to 0.1 for less gap between pairs
     const barGap = totalBarWidth * 0.025; // Decrease from 0.05 to 0.025 for less gap between bars in a pair
@@ -370,13 +406,13 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Create bar-specific scale with reduced width
     const barAreaWidth = width - (barMargin.left + barMargin.right);
     const xScaleBars = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date) as [Date, Date])
+      .domain(d3.extent(dataInterpolated, d => d.date) as [Date, Date])
       .range([barMargin.left, barMargin.left + barAreaWidth])
       .nice();
 
     // Use xScaleBars for the bars
     svg.selectAll('.snow-bars')
-      .data(data)
+      .data(dataInterpolated)
       .enter()
       .append('rect')
       .attr('class', 'snow-bars')
@@ -388,7 +424,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('opacity', 0.7);
 
     svg.selectAll('.precip-bars')
-      .data(data)
+      .data(dataInterpolated)
       .enter()
       .append('rect')
       .attr('class', 'precip-bars')
@@ -413,8 +449,8 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     svg.append('line')
       .attr('x1', 0)
       .attr('x2', width)
-      .attr('y1', yScaleTemp(32))
-      .attr('y2', yScaleTemp(32))
+      .attr('y1', yScaleTemp(isMetric ? 0 : 32))  // Use 0 for Celsius, 32 for Fahrenheit
+      .attr('y2', yScaleTemp(isMetric ? 0 : 32))
       .attr('stroke', '#A0A0A0')
       .attr('stroke-width', 1)
       .attr('stroke-dasharray', '4,4')
@@ -455,14 +491,14 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('height', height + margin.top + margin.bottom + spacing.legendOffset); 
 
     // Remove the temperature area and range code and replace with a single line
-    const tempLine = d3.line<(typeof data)[0]>()
+    const tempLine = d3.line<(typeof dataInterpolated)[0]>()
       .x(d => xScale(d.date))
       .y(d => yScaleTemp(d.temp))
       .curve(d3.curveMonotoneX);
 
     // Add the temperature line
     svg.append('path')
-      .datum(data)
+      .datum(dataInterpolated)
       .attr('fill', 'none')
       .attr('stroke', '#808080')  // Grey color for temperature
       .attr('stroke-width', 1.5)  // Slightly thicker than the grid lines
@@ -498,11 +534,11 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         const [xPos] = d3.pointer(event);
         const date = xScale.invert(xPos);
         const bisect = d3.bisector((d: any) => d.date).left;
-        const index = bisect(data, date);
+        const index = bisect(dataInterpolated, date);
         
         // Add safety check
-        if (index >= data.length || index < 0) return;
-        const d = data[index];
+        if (index >= dataInterpolated.length || index < 0) return;
+        const d = dataInterpolated[index];
 
         verticalLine
           .attr('x1', xScale(d.date))
@@ -518,10 +554,10 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
           .html(`
             <div class="tooltip-content">
               <strong>${d3.timeFormat(isHourly ? '%B %d %H:%M' : '%B %d')(d.date)}</strong><br/>
-              <span>Snow Depth: ${d.totalSnowDepth}″</span><br/>
-              <span>Hourly Snow: ${d.snowDepth24h}″</span><br/>
-              <span>Liquid Precip: ${d.precipAccum}″</span><br/>
-              <span>Temperature: ${d.temp}°F</span>
+              <span>Snow Depth: ${formatValueWithUnit(d.totalSnowDepth, UnitType.PRECIPITATION, isMetric)}</span><br/>
+              <span>Hourly Snow: ${formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric)}</span><br/>
+              <span>Liquid Precip: ${formatValueWithUnit(d.precipAccum, UnitType.PRECIPITATION, isMetric)}</span><br/>
+              <span>Temperature: ${formatValueWithUnit(d.temp, UnitType.TEMPERATURE, isMetric)}</span>
             </div>
           `);
       })
@@ -531,7 +567,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       });
 
     // Update temperature label positioning to use last data point
-    const lastDataPoint = data[data.length - 1];  // Get the last data point
+    const lastDataPoint = dataInterpolated[dataInterpolated.length - 1];  // Get the last data point
     svg.append('text')
       .attr('x', xScale(lastDataPoint.date)-70)  // Position at last data point's x coordinate
       .attr('y', yScaleTemp(lastDataPoint.temp) - 10)  // Position above the temperature line
@@ -541,10 +577,10 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .text('Temperature');
 
     // Calculate time span in hours and log values
-    const timeSpanHours = (d3.max(data, d => d.date.getTime()) - d3.min(data, d => d.date.getTime())) / (1000 * 60 * 60);
+    const timeSpanHours = (d3.max(dataInterpolated, d => d.date.getTime()) - d3.min(dataInterpolated, d => d.date.getTime())) / (1000 * 60 * 60);
     // console.log('Time span in hours:', timeSpanHours);
-    // console.log('First date:', d3.min(data, d => d.date));
-    // console.log('Last date:', d3.max(data, d => d.date));
+    // console.log('First date:', d3.min(dataInterpolated, d => d.date));
+    // console.log('Last date:', d3.max(dataInterpolated, d => d.date));
     const shouldShowAllTimes = timeSpanHours <= 72;
     // console.log('Should show times:', shouldShowAllTimes);
 
@@ -553,7 +589,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('class', 'x-axis-time')
       .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
       .call(d3.axisBottom(xScaleBars)
-        .tickValues(data.map(d => {
+        .tickValues(dataInterpolated.map(d => {
           // Only show ticks for the first hour of each day
           const hour = d.date.getHours();
           const minute = d.date.getMinutes();
@@ -567,7 +603,7 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Add date brackets above
     const dateRanges = getDateTicks();
     dateRanges.forEach((date, i) => {
-      const nextDate = i < dateRanges.length - 1 ? dateRanges[i + 1] : data[data.length - 1].date;
+      const nextDate = i < dateRanges.length - 1 ? dateRanges[i + 1] : dataInterpolated[dataInterpolated.length - 1].date;
       
       // Add bracket
       svg.append('path')
@@ -590,9 +626,65 @@ function WxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         .text(moment(date).format('MM/DD'));
     });
 
+    // Update bar labels
+    svg.selectAll('.snow-bars')
+      .data(data.filter(d => d.snowDepth24h > 0))
+      .enter()
+      .append('text')
+      .attr('class', 'snow-bar-label')
+      .attr('x', d => xScaleBars(d.date) - (individualBarWidth/2))
+      .attr('y', d => yScaleBars(d.snowDepth24h) - 5)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#4169E1')
+      .style('font-size', '10px')
+      .text(d => formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric));
+
+    // Add snow depth label (left axis)
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')  // Rotate for vertical text
+      .attr('y', -40)  // Adjust position as needed
+      .attr('x', -height/2)
+      .attr('text-anchor', 'middle')
+      .style('fill', 'blue')
+      //.text(`Snow Depth (${isMetric ? 'cm' : 'in'})`);
+
+    // Add temperature label (right axis)
+    svg.append('text')
+      .attr('transform', `translate(${width + 40},${height/2}) rotate(90)`)  // Position label
+      .style('text-anchor', 'middle')
+      .style('fill', '#808080')
+      //.text(`Temperature (${isMetric ? '°C' : '°F'})`);
+
     // Set loaded state after graph is created
     setIsLoaded(true);
-  }, [dayAverages, isHourly]); // This ensures the graph updates when dayAverages changes
+
+    // Inside your useEffect where the scales are created
+    const scale = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.totalSnowDepth) || 0])
+      .range([height, 0]);
+    setYScale(scale);
+
+    console.log('yScale domain:', yScale?.domain());
+    console.log('yScale range:', yScale?.range());
+  }, [dayAverages, isHourly, isMetric]); // This ensures the graph updates when dayAverages changes
+
+  // Add some debug logging to check the values
+  useEffect(() => {
+    if (!yScale) return;
+    console.log('yScale domain:', yScale.domain());
+    console.log('yScale range:', yScale.range());
+    
+    // Log a sample bar height calculation
+    if (data.length > 0) {
+      const sampleHeight = yScale(data[0].totalSnowDepth) - yScale(0);
+      console.log('Sample bar height:', sampleHeight);
+    }
+  }, [data, yScale]);
+
+  if (yScale) {
+    console.log('yScale domain:', yScale.domain());
+    console.log('yScale range:', yScale.range());
+  }
 
   return (
     <div 
