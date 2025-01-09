@@ -109,7 +109,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
     //console.log('Raw data before processing:', dayAverages.data);
 
     // At the start of data processing
-    console.log('Raw data:', dayAverages.data);
+    //console.log('Raw data:', dayAverages.data);
 
     // Process data first
     const data = dayAverages.data
@@ -133,13 +133,11 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
           precipAccum: parseValue(d['Precip Accum']),
           temp: parseValue(d['Air Temp'])
         };
-        console.log('Processed row:', processed);
         return processed;
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
 
-    console.log('Final processed data:', data);
-    console.log('isMetric value:', isMetric);
+
 
     //SNOW DEPTH CHANGES 
     // Calculate snow depth changes with look-back for NaN values
@@ -330,7 +328,6 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .call(d3.axisLeft(yScaleLine)
         .tickFormat(d => {
           const formatted = formatValueWithUnit(d, UnitType.PRECIPITATION, isMetric);
-          console.log('Snow depth tick value:', d, 'formatted:', formatted, 'isMetric:', isMetric);
           return formatted;
         }))
       .selectAll('text')
@@ -343,7 +340,6 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .call(d3.axisRight(yScaleTemp)
         .tickFormat(d => {
           const formatted = formatValueWithUnit(d, UnitType.TEMPERATURE, isMetric);
-          console.log('Temperature tick value:', d, 'formatted:', formatted, 'isMetric:', isMetric);
           return formatted;
         }))
       .selectAll('text')
@@ -578,11 +574,8 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
 
     // Calculate time span in hours and log values
     const timeSpanHours = (d3.max(dataInterpolated, d => d.date.getTime()) - d3.min(dataInterpolated, d => d.date.getTime())) / (1000 * 60 * 60);
-    // console.log('Time span in hours:', timeSpanHours);
-    // console.log('First date:', d3.min(dataInterpolated, d => d.date));
-    // console.log('Last date:', d3.max(dataInterpolated, d => d.date));
+
     const shouldShowAllTimes = timeSpanHours <= 72;
-    // console.log('Should show times:', shouldShowAllTimes);
 
     // Keep the original time axis but modify it based on time span
     svg.append('g')
@@ -664,15 +657,13 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .range([height, 0]);
     setYScale(scale);
 
-    console.log('yScale domain:', yScale?.domain());
-    console.log('yScale range:', yScale?.range());
+
   }, [dayAverages, isHourly, isMetric]); // This ensures the graph updates when dayAverages changes
 
   // Add some debug logging to check the values
   useEffect(() => {
     if (!yScale) return;
-    console.log('yScale domain:', yScale.domain());
-    console.log('yScale range:', yScale.range());
+
     
     // Log a sample bar height calculation
     if (data.length > 0) {
@@ -682,8 +673,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
   }, [data, yScale]);
 
   if (yScale) {
-    console.log('yScale domain:', yScale.domain());
-    console.log('yScale range:', yScale.range());
+
   }
 
   return (
