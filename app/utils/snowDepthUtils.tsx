@@ -23,7 +23,7 @@ export const SNOW_DEPTH_24H_CONFIG = {
 interface SnowDataPoint {
   date_time: string;
   snow_depth: number | null;
-  stid?: string;  // Add station ID as optional parameter
+  stid?: string;
 }
 
 // Update the type for the config parameter
@@ -158,7 +158,7 @@ function applyHourlyChangeLimits(
         i--;
       }
       
-      if (previousDepth !== null) {
+      if (previousDepth !== null && point.snow_depth !== null) {
         const hourlyChange = point.snow_depth - previousDepth;
         const scaledMaxPositiveChange = maxPositiveChange * hoursBack;
         const scaledMaxNegativeChange = maxNegativeChange * hoursBack;
