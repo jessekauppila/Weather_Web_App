@@ -1,7 +1,7 @@
-import { filteredObservationData } from '../filteredObservationData';
-import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
-import hourWxTableDataFromDB  from '../hourWxTableDataFromDB';
-import hourWxTableDataFiltered  from '../hourWxTableDataFiltered';
+import { filteredObservationData } from '../data/filteredObservationData';
+import wxTableDataDayFromDB from '../data/dayWxTableDataDayFromDB';
+import hourWxTableDataFromDB  from '../data/hourWxTableDataFromDB';
+import hourWxTableDataFiltered  from '../data/hourWxTableDataFiltered';
 import { DayRangeType } from '../types';
 
 interface FetchWeatherDataProps {
@@ -18,6 +18,7 @@ interface FetchWeatherDataProps {
   setObservationsDataHour: (data: any) => void;
   setFilteredObservationsDataHour: (data: any) => void;
   setIsLoading: (loading: boolean) => void;
+  isMetric: boolean;
 }
 
 export async function fetchWeatherData({
@@ -30,8 +31,11 @@ export async function fetchWeatherData({
   setObservationsDataDay,
   setObservationsDataHour,
   setFilteredObservationsDataHour,
-  setIsLoading
+  setIsLoading,
+  isMetric,
 }: FetchWeatherDataProps) {
+  console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
+  
   try {
     const { start_time_pdt, end_time_pdt } = timeRangeData;
     
@@ -45,7 +49,8 @@ export async function fetchWeatherData({
         startDate: start_time_pdt.toISOString(),
         endDate: end_time_pdt.toISOString(),
         stationIds: stationIds,
-        refresh: true
+        refresh: true,
+        isMetric,
       }),
     });
   
@@ -62,7 +67,7 @@ export async function fetchWeatherData({
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    });
+    }, isMetric);
 
     console.log('filteredData:', filteredData);
   
@@ -73,14 +78,18 @@ export async function fetchWeatherData({
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    }));
+    }, isMetric));
     
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
-      result.units
+      result.units,
+      isMetric
     ));
   
-    setFilteredObservationsDataHour(hourWxTableDataFiltered(Object.values(filteredData).flat()));
+    setFilteredObservationsDataHour(hourWxTableDataFiltered(
+      Object.values(filteredData).flat(),
+      isMetric
+    ));
     setIsLoading(false);
   
   } catch (error) {

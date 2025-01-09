@@ -249,7 +249,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   }, [sortedData, headerStructure, hourAverages.title]);
 
   useEffect(() => {
-    console.log('Hourly data:', hourAverages.data);
+    //console.log('Hourly data:', hourAverages.data);
   }, [hourAverages.data]);
 
   return (

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import moment from 'moment-timezone';
+import { UnitType } from "@/app/utils/units";
+import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 
 interface DayAverage {
   [key: string]: string | number;
@@ -12,10 +14,11 @@ interface DayAveragesProps {
     title: string;
   };
   isHourly?: boolean;
+  isMetric?: boolean;
 }
 
 // This is the core graph component without the accordion
-function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
+function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(true);
@@ -38,26 +41,34 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
 
     if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) return;
 
+    // At the start of data processing
+    console.log('Raw data:', dayAverages.data);
+
     // Process data first
     const data = dayAverages.data
       .map((d) => {
         const date = new Date(d.Date);
-        const totalSnowDepth = parseFloat(String(d['Total Snow Depth']).replace(' in', ''));
-        const snowDepth24h = parseFloat(String(d['24h Snow Accumulation']).replace(' in', ''));
-        const precipHour = parseFloat(String(d['Precip Accum One Hour']).replace(' in', ''));
-        const tempMin = parseFloat(String(d['Air Temp Min']).replace(' °F', ''));
-        const tempMax = parseFloat(String(d['Air Temp Max']).replace(' °F', ''));
+        
+        // Helper function to parse numeric values from strings with units
+        const parseValue = (value: string | number) => {
+          if (typeof value === 'string') {
+            return Number(value.split(' ')[0]);
+          }
+          return Number(value);
+        };
 
         return {
           date,
-          totalSnowDepth: isNaN(totalSnowDepth) ? 0 : totalSnowDepth,
-          snowDepth24h: isNaN(snowDepth24h) ? 0 : snowDepth24h,
-          precipHour: isNaN(precipHour) ? 0 : precipHour,
-          tempMin: isNaN(tempMin) ? 0 : tempMin,
-          tempMax: isNaN(tempMax) ? 0 : tempMax
+          totalSnowDepth: parseValue(d['Total Snow Depth']),
+          snowDepth24h: parseValue(d['24h Snow Accumulation']),
+          precipHour: parseValue(d['Precip Accum One Hour']),
+          tempMin: parseValue(d['Air Temp Min']),
+          tempMax: parseValue(d['Air Temp Max'])
         };
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
+
+    console.log('Final processed data:', data);
 
     // Add safety check before accessing first data point
     if (!data.length) return;  // Add this check
@@ -145,7 +156,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     // Add y-axis for total snow depth (left)
     svg.append('g')
       .call(d3.axisLeft(yScaleLine)
-        .tickFormat(d => d + ' in'))  // Add this line to format the actual axis ticks
+        .tickFormat(d => formatValueWithUnit(d, UnitType.PRECIPITATION, isMetric)))
       .selectAll('text')
       .style('fill', 'blue');
 
@@ -318,8 +329,8 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
     svg.append('line')
       .attr('x1', 0)
       .attr('x2', width)
-      .attr('y1', yScaleTemp(32))
-      .attr('y2', yScaleTemp(32))
+      .attr('y1', yScaleTemp(isMetric ? 0 : 32))  // Use 0 for Celsius, 32 for Fahrenheit
+      .attr('y2', yScaleTemp(isMetric ? 0 : 32))
       .attr('stroke', '#A0A0A0')
       .attr('stroke-width', 1)
       .attr('stroke-dasharray', '4,4')
@@ -430,7 +441,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('text-anchor', 'middle')
       .style('fill', '#4169E1')
       .style('font-size', '10px')
-      .text(d => `${(d.snowDepth24h % 1 === 0) ? d.snowDepth24h : d.snowDepth24h.toString().replace('0.', '.')} in`);
+      .text(d => formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric));
       
     // Add labels above the snow bars
     svg.selectAll('.liquid-bar-label')
@@ -443,11 +454,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('text-anchor', 'middle')
       .style('fill', '#4169E1')
       .style('font-size', '10px')
-      .text(d => {
-        const numValue = Number(d.precipHour);
-        const value = numValue.toFixed(2);
-        return `${(numValue % 1 === 0) ? value : value.toString().replace('0.', '.')} in`;
-      });
+      .text(d => formatValueWithUnit(d.precipHour, UnitType.PRECIPITATION, isMetric));
 
     // Update container height at the end
     d3.select(svgRef.current)
@@ -458,7 +465,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('class', 'y-axis-temp')
       .attr('transform', `translate(${width},0)`)  // Position it on the right side
       .call(d3.axisRight(yScaleTemp)
-        .tickFormat(d => `${d}°F`))
+        .tickFormat(d => formatValueWithUnit(d, UnitType.TEMPERATURE, isMetric)))
       .selectAll('text')
       .style('fill', '#808080');  // Gray color to match temperature lines
 
@@ -467,7 +474,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
       .attr('transform', `translate(${width + 40},${height/2}) rotate(90)`)  // Position label
       .style('text-anchor', 'middle')
       .style('fill', '#808080')
-      .text('Temperature (°F)');
+      //.text('Temperature (°F)');
 
     // Add tooltip div if it doesn't exist
     const tooltip = d3.select('body')
@@ -505,9 +512,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
             .html(`
               <div class="text-sm">
                 <div>Date: ${moment(d.date).format('MM/DD/YYYY')}</div>
-                <div>Snow Depth: ${d.totalSnowDepth}″</div>
-                <div>24h Snow: ${d.snowDepth24h}″</div>
-                <div>Temp Range: ${d.tempMin}°F - ${d.tempMax}°F</div>
+                <div>Snow Depth: ${formatValueWithUnit(d.totalSnowDepth, UnitType.PRECIPITATION, isMetric)}</div>
+                <div>24h Snow: ${formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric)}</div>
+                <div>Temp Range: ${formatValueWithUnit(d.tempMin, UnitType.TEMPERATURE, isMetric)} - ${formatValueWithUnit(d.tempMax, UnitType.TEMPERATURE, isMetric)}</div>
               </div>
             `);
         }
@@ -516,7 +523,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false }: DayAveragesProps) {
         tooltip.style('visibility', 'hidden');
       });
 
-  }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset]); // This ensures the graph updates when dayAverages changes
+  }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset, isMetric]); // AddisMetric here
 
   return (
     <div ref={containerRef}>

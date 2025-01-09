@@ -1,5 +1,7 @@
 //this is the drop down menu for the time range on the home page
 
+//was in components folder...
+
 import { DayRangeType, DAY_RANGE_OPTIONS } from '../types';
 
 interface DayRangeSelectProps {

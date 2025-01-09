@@ -11,22 +11,22 @@ import React, {
 } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 
-import DayAveragesTable from './dayWxTable';
-import DayWxSnowGraph from './dayWxSnowGraph';
-import AccordionWrapper from './components/AccordionWrapper';
+import DayAveragesTable from './vis/dayWxTable';
+import DayWxSnowGraph from './vis/dayWxSnowGraph';
+import AccordionWrapper from './components/map/AccordionWrapper';
 
 //import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import HourWxTable from './hourWxTable';
-import WxSnowGraph from './wxSnowGraph';
+import HourWxTable from './vis/hourWxTable';
+import WxSnowGraph from './vis/wxSnowGraph';
 
 import { DayRangeType } from './types';
 
-import RegionCard from './components/RegionCard';
+import RegionCard from './components/map/RegionCard';
 
 import TimeToolbar from './components/TimeToolbar';
 import { fetchWeatherData } from './utils/fetchWeatherData';
 
-import { regions, stationGroups } from './config/regions';
+import { regions, stationGroups } from '@/app/config/regions';
 
 interface Station {
   id: string;
@@ -104,6 +104,13 @@ export default function Home() {
 
   // Add this state at the top level where RegionCard is used
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Add state
+  const [isMetric, setIsMetric] = useState<boolean>(false);
+
+  useEffect(() => {
+    console.log('📄 Page: isMetric state changed to:', isMetric);
+  }, [isMetric]);
 
   /**
    * Calculates the start and end times based on the selected date and range type
@@ -331,8 +338,8 @@ export default function Home() {
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
   // Create a refresh function
-  const handleRefresh = async () => {
-    setIsLoading(true);
+  const handleRefresh = async (newIsMetric?: boolean) => {
+    console.log('🔄 Page: Fetching weather data with isMetric:', newIsMetric ?? isMetric);
     await fetchWeatherData({
       timeRangeData,
       stationIds,
@@ -343,7 +350,8 @@ export default function Home() {
       setObservationsDataDay,
       setObservationsDataHour,
       setFilteredObservationsDataHour,
-      setIsLoading
+      setIsLoading,
+      isMetric: newIsMetric ?? isMetric  // Use new value if provided, otherwise use current state
     });
   };
 
@@ -480,6 +488,8 @@ export default function Home() {
           setObservationsDataHour={setObservationsDataHour}
           setFilteredObservationsDataHour={setFilteredObservationsDataHour}
           setIsLoading={setIsLoading}
+          isMetric={isMetric}
+          setIsMetric={setIsMetric}
         />
 
         {/* Should show if stuff is loading, but not showing anything now  */}
@@ -576,6 +586,7 @@ export default function Home() {
               <WxSnowGraph 
                 dayAverages={filteredObservationsDataHour} 
                 isHourly={true}
+                isMetric={isMetric}
               />
                </AccordionWrapper>
             </>
@@ -589,7 +600,10 @@ export default function Home() {
                 subtitle={observationsDataDay.title}
                 defaultExpanded={false}
               >
-                <DayWxSnowGraph dayAverages={observationsDataDay} />
+                <DayWxSnowGraph 
+                  dayAverages={observationsDataDay} 
+                  isMetric={isMetric}
+                />
               </AccordionWrapper>
             </>
           )}
