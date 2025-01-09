@@ -55,7 +55,7 @@ function applyIQRFilter(
       const window = sortedData.slice(start, end)
         .map(p => p.snow_depth)
         .filter(d => d !== null && !isNaN(d))
-        .sort((a, b) => a - b);
+        .sort((a, b) => (a ?? 0) - (b ?? 0));
       
       if (window.length === 0) {
         return {
@@ -116,19 +116,20 @@ function applyHourlyChangeLimits(
         return point;
       }
 
-      // For first point, look ahead instead of back if it's significantly different from next valid points
+      // For first point, look ahead instead of back
       if (index === 0) {
-        let nextValidDepth = null;
+        let nextValidDepth: number | null = null;
         let j = 1;
         while (j < data.length) {
-          if (data[j].snow_depth !== null && !isNaN(data[j].snow_depth)) {
-            nextValidDepth = data[j].snow_depth;
+          const currentDepth = data[j].snow_depth;
+          if (currentDepth !== null && !isNaN(currentDepth)) {
+            nextValidDepth = currentDepth;
             break;
           }
           j++;
         }
 
-        if (nextValidDepth !== null) {
+        if (nextValidDepth !== null && point.snow_depth !== null) {
           const change = point.snow_depth - nextValidDepth;
           const hoursForward = j;
           const scaledMaxChange = maxPositiveChange * hoursForward;
@@ -148,8 +149,9 @@ function applyHourlyChangeLimits(
       let hoursBack = 0;
       
       while (i >= 0) {
-        if (data[i].snow_depth !== null && !isNaN(data[i].snow_depth)) {
-          previousDepth = data[i].snow_depth;
+        const currentDepth = data[i].snow_depth;
+        if (currentDepth !== null && !isNaN(currentDepth)) {
+          previousDepth = currentDepth;
           hoursBack = index - i;
           break;
         }
