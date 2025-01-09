@@ -42,7 +42,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
     if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) return;
 
     // At the start of data processing
-    console.log('Raw data:', dayAverages.data);
+    // console.log('Raw data:', dayAverages.data);
 
     // Process data first
     const data = dayAverages.data
@@ -68,7 +68,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
 
-    console.log('Final processed data:', data);
+    // console.log('Final processed data:', data);
 
     // Add safety check before accessing first data point
     if (!data.length) return;  // Add this check
@@ -131,7 +131,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipHour)) || 0])
       .range([height, 0]);
 
-    //console.log('yScaleBars domain:', yScaleBars.domain());
 
     // Add grid lines
     svg.append('g')
