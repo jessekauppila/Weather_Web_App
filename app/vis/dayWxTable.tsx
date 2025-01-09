@@ -1,9 +1,10 @@
 //main page
 
-import React, { useRef, useEffect, useMemo, memo } from 'react';
+import React, { useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
 import { createRoot } from 'react-dom/client';
+import { FixedSizeList } from 'react-window';
 //import { Button } from '@mui/material';
 
 interface DayAverage {
@@ -110,32 +111,38 @@ const StationButton = memo(({ stationName, stid, onClick }: {
   stationName: string, 
   stid: string,
   onClick: (stid: string) => void 
-}) => (
-  <button
-    onClick={() => onClick(stid)}
-    className={`
-      MuiButton-root 
-      MuiButton-outlined 
-      MuiButton-sizeSmall 
-      MuiButton-outlinedPrimary
-      bg-transparent
-      transition-all
-      duration-200
-      min-w-[120px]
-      text-left
-      px-2
-      py-1
-      rounded
-      border
-      border-solid
-      border-[#49597F]
-      hover:border-2
-      hover:border-[#6B7BA4]
-    `}
-  >
-    {stationName}
-  </button>
-));
+}) => {
+  const handleClick = useCallback(() => {
+    requestAnimationFrame(() => onClick(stid));
+  }, [stid, onClick]);
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`
+        MuiButton-root 
+        MuiButton-outlined 
+        MuiButton-sizeSmall 
+        MuiButton-outlinedPrimary
+        bg-transparent
+        transition-all
+        duration-200
+        min-w-[120px]
+        text-left
+        px-2
+        py-1
+        rounded
+        border
+        border-solid
+        border-[#49597F]
+        hover:border-2
+        hover:border-[#6B7BA4]
+      `}
+    >
+      {stationName}
+    </button>
+  );
+});
 
 StationButton.displayName = 'StationButton';
 
@@ -177,17 +184,19 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     if (!memoizedData.length || !ref.current) return;
 
     const renderTable = () => {
-      const table = d3
-        .select(ref.current)
-        .selectAll<HTMLTableElement, null>('table')
-        .data([null]);
-        
-      const tableEnter = table
-        .enter()
-        .append('table')
-        .attr('class', 'weatherTable');
-        
-      const tableUpdate = tableEnter.merge(table as any);
+      // Batch DOM updates
+      const batchUpdate = () => {
+        const table = d3
+          .select(ref.current)
+          .selectAll<HTMLTableElement, null>('table')
+          .data([null]);
+          
+        const tableEnter = table
+          .enter()
+          .append('table')
+          .attr('class', 'weatherTable');
+          
+        const tableUpdate = tableEnter.merge(table as any);
 
       // Update caption
       tableUpdate
@@ -330,9 +339,35 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       cells.exit().remove();
     };
 
-    // Use requestAnimationFrame for smoother rendering
-    requestAnimationFrame(renderTable);
+      // Use requestIdleCallback if available, fall back to setTimeout
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(batchUpdate);
+      } else {
+        setTimeout(batchUpdate, 0);
+      }
+    };
+
+    const timeoutId = setTimeout(renderTable, 0);
+    return () => clearTimeout(timeoutId);
   }, [memoizedData, headerStructure, onStationClick, dayAverages.title]);
+
+  if (memoizedData.length > 100) {
+    // Use virtualized list for large datasets
+    return (
+      <FixedSizeList
+        height={400}
+        width="100%"
+        itemCount={memoizedData.length}
+        itemSize={35}
+      >
+        {({ index, style }) => (
+          <div style={style}>
+            {/* Your row rendering logic */}
+          </div>
+        )}
+      </FixedSizeList>
+    );
+  }
 
   return (
     <div className="table-container" ref={ref}>
