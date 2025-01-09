@@ -586,6 +586,7 @@ export default function Home() {
               <WxSnowGraph 
                 dayAverages={filteredObservationsDataHour} 
                 isHourly={true}
+                isMetric={isMetric}
               />
                </AccordionWrapper>
             </>
@@ -599,7 +600,10 @@ export default function Home() {
                 subtitle={observationsDataDay.title}
                 defaultExpanded={false}
               >
-                <DayWxSnowGraph dayAverages={observationsDataDay} />
+                <DayWxSnowGraph 
+                  dayAverages={observationsDataDay} 
+                  isMetric={isMetric}
+                />
               </AccordionWrapper>
             </>
           )}
