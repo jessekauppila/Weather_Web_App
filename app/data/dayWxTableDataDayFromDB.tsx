@@ -1,19 +1,22 @@
-import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from './snowDepthUtils';
+import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H_CONFIG, SNOW_DEPTH_CONFIG } from '../utils/snowDepthUtils';
 import moment from 'moment-timezone';
+import { UnitType } from "@/app/utils/units";
+import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 
 // Import the interface from types.ts
-import { WxTableOptions } from './types';
+import { WxTableOptions } from '../types';
 
 function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
   _units: Array<Record<string, string>>,
-  options: WxTableOptions
+  options: WxTableOptions,
+  isMetric: boolean,
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
   
-  // console.log('inputObservations:', inputObservations);
+  //console.log('inputObservations:', inputObservations);
 
   const startHour = options.startHour;
   const endHour = options.endHour;
@@ -38,8 +41,10 @@ function wxTableDataDayFromDB(
         Station: stationObs[0].station_name,
         Latitude: Number(stationObs[0].latitude),
         Longitude: Number(stationObs[0].longitude),
-        Elevation: `${Number(stationObs[0].elevation)} ft`,
+        //elevation: Number(stationObs[0].elevation),
+        Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
+      console.log('Elevation value:', averages.elevation);
 
       // Process each measurement type
       const measurementKeys = [
@@ -153,7 +158,10 @@ function wxTableDataDayFromDB(
         min: 'Air Temp Min',
         cur: 'Cur Air Temp',
       },
-      '°F'
+      UnitType.TEMPERATURE,
+      0,
+      undefined,
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.TEMPERATURE, isMetric)
     );
 
     // Process wind speed
@@ -163,7 +171,10 @@ function wxTableDataDayFromDB(
         avg: 'Wind Speed Avg',
         cur: 'Cur Wind Speed',
       },
-      'mph'
+      UnitType.WIND_SPEED,
+      0,
+      undefined,
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.WIND_SPEED, isMetric)
     );
 
         // Process wind speed
@@ -173,7 +184,10 @@ function wxTableDataDayFromDB(
             avg: 'Solar Radiation Avg',
             //cur: 'Cur Solar Radiation',
           },
-          'W/m²'
+          UnitType.SOLAR,
+          0,
+          undefined,
+          (value, unit) => formatValueWithUnit(Number(value), UnitType.SOLAR, isMetric)
         );
 
     // Process wind gust
@@ -183,9 +197,12 @@ function wxTableDataDayFromDB(
     processNumericField(
       'precip_accum_one_hour',
       { sum: 'Precip Accum One Hour' },
-      'in',
+      UnitType.PRECIPITATION,
       2,
-      (numbers) => ({ sum: numbers.slice(1).reduce((a, b) => a + b, 0) })
+      (numbers) => ({ 
+        sum: Number(numbers.slice(1).reduce((a, b) => a + b, 0).toFixed(2)) 
+      }),
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process snow depth for both total and change
@@ -195,7 +212,7 @@ function wxTableDataDayFromDB(
         total: 'Total Snow Depth',      
         change: 'Total Snow Depth Change'  
       },
-      'in',
+      UnitType.PRECIPITATION,
       1,
       (numbers) => {
         // Step 1: Create timestamped data points
@@ -216,42 +233,34 @@ function wxTableDataDayFromDB(
         const depthChange = lastValue - firstValue;
 
         return {
-          total: lastValue,
+          total: Number(lastValue.toFixed(1)),
           change: depthChange,
-          max: maxDepth
+          max: Number(maxDepth.toFixed(1))
         };
       },
-      (value, unit) => `${value} ${unit}`
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process 24h snow depth
     processNumericField(
       'snow_depth_24h',
       { total: '24h Snow Accumulation' },
-      'in',
+      UnitType.PRECIPITATION,
       1,
       (numbers) => {
-        //console.log('Raw snow_depth-24h data:', numbers);
-
-        const filteredSnowDepths = numbers.filter(d => !isNaN(d));
-        //console.log('Filtered snow depths 24h:', filteredSnowDepths);
-
-        const data = (averages.date_time as string[])
+        const dataPoints = (averages.date_time as string[])
           .map((date_time: string, index: number) => ({
             date_time,
-            snow_depth: filteredSnowDepths[index],
+            snow_depth: numbers[index]
           }))
-          .filter((d) => !isNaN(d.snow_depth));
-        //console.log('Processed data points:', data);
+          .filter(d => !isNaN(d.snow_depth));
 
-        const results = calculateSnowDepthAccumulation(data);
-        //console.log('Accumulation results:', results);
-
-        const total = results[results.length - 1]?.snow_total ?? 0;
-        //console.log('Final total:', total);
+        const results = calculateSnowDepthAccumulation(dataPoints);
+        const total = Number((results[results.length - 1]?.snow_total ?? 0).toFixed(1));
 
         return { total };
-      }
+      },
+      (value, unit) => formatValueWithUnit(Number(value), UnitType.PRECIPITATION, isMetric)
     );
 
     // Process relative humidity
@@ -346,6 +355,16 @@ function wxTableDataDayFromDB(
       formatted['Api Fetch Time'] = moment(timestamps[timestamps.length - 1])
         .format('MMM D, h:mm A');
     }
+
+    // Process elevation
+    // processNumericField(
+    //   'elevation',
+    //   { value: 'Elevation' },
+    //   UnitType.ELEVATION,
+    //   0,
+    //   (numbers) => ({ value: numbers[0] }),
+    //   (value, unit) => formatValueWithUnit(Number(value), UnitType.ELEVATION, isMetric)
+    // );
 
     return formatted;
   });

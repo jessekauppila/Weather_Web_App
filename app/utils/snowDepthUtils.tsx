@@ -22,7 +22,7 @@ export const SNOW_DEPTH_24H_CONFIG = {
 // This interface defines the structure of each snow measurement data point
 interface SnowDataPoint {
   date_time: string;
-  snow_depth: number;
+  snow_depth: number | null;
   stid?: string;  // Add station ID as optional parameter
 }
 
@@ -54,25 +54,25 @@ function applyIQRFilter(
       const end = Math.min(sortedData.length, index + halfKernel + 1);
       const window = sortedData.slice(start, end)
         .map(p => p.snow_depth)
-        .filter(d => !isNaN(d))
+        .filter(d => d !== null && !isNaN(d))
         .sort((a, b) => a - b);
       
       if (window.length === 0) {
         return {
           date_time: point.date_time,
-          snow_depth: NaN
+          snow_depth: null
         };
       }
 
       const q1Index = Math.floor(window.length * 0.25);
       const q3Index = Math.floor(window.length * 0.75);
-      const q1 = window[q1Index];
-      const q3 = window[q3Index];
+      const q3 = window[q3Index] ?? 0;
+      const q1 = window[q1Index] ?? 0;
       const iqr = q3 - q1;
       const lowerBound = q1 - (lowerIQRMultiplier * iqr);
       const upperBound = q3 + (upperIQRMultiplier * iqr);
 
-      const isOutlier = point.snow_depth < lowerBound || point.snow_depth > upperBound;
+      const isOutlier = point.snow_depth === null || point.snow_depth < lowerBound || point.snow_depth > upperBound;
       //const median = window[Math.floor(window.length / 2)];
       
       // console.log(`IQR Filter - Point ${index}:`, {
@@ -96,7 +96,7 @@ function applyIQRFilter(
 
       return {
         date_time: point.date_time,
-        snow_depth: isOutlier ? NaN : point.snow_depth
+        snow_depth: isOutlier ? null : point.snow_depth
       };
     });
 
@@ -136,7 +136,7 @@ function applyHourlyChangeLimits(
           if (Math.abs(change) > scaledMaxChange) {
             return {
               ...point,
-              snow_depth: NaN
+              snow_depth: null
             };
           }
         }
@@ -167,7 +167,7 @@ function applyHourlyChangeLimits(
 
         return {
           ...point,
-          snow_depth: isInvalidChange ? NaN : point.snow_depth
+          snow_depth: isInvalidChange ? null : point.snow_depth
         };
       }
       
@@ -213,13 +213,48 @@ function createFilterCacheKey(
 // Main function with separated steps
 export function filterSnowDepthOutliers(
     data: SnowDataPoint[],
-    config: SnowDepthConfig
+    config: SnowDepthConfig,
+    isMetric: boolean = false
 ): SnowDataPoint[] {
-    const isSnow24h = config === SNOW_DEPTH_24H_CONFIG;
+    // Convert all snow_depth values to numbers at the start
+    const numericData = data.map(point => ({
+        ...point,
+        snow_depth: point.snow_depth === null ? null : Number(point.snow_depth)
+    }));
+
+    console.log('1. Initial data (converted to numbers):', numericData);
+
+    // Log original config
+    console.log('Original config:', {
+        threshold: config.threshold,
+        maxPositiveChange: config.maxPositiveChange,
+        maxNegativeChange: config.maxNegativeChange,
+        isMetric
+    });
+
+    // Convert config values to metric if needed
+    const workingConfig = isMetric ? {
+        ...config,
+        threshold: config.threshold * 2.54,
+        maxPositiveChange: config.maxPositiveChange * 2.54,
+        maxNegativeChange: config.maxNegativeChange * 2.54,
+    } : config;
+
+    // Log converted config
+    console.log('Working config:', {
+        threshold: workingConfig.threshold,
+        maxPositiveChange: workingConfig.maxPositiveChange,
+        maxNegativeChange: workingConfig.maxNegativeChange,
+        isMetric
+    });
+
+    console.log('1. Initial data:', data);
+
+    const isSnow24h = workingConfig.applyIdenticalCheck === false;
     const logPrefix = isSnow24h ? '[24h Snow]' : '[Total Snow]';
 
     // Generate cache key and check cache first
-    const cacheKey = createFilterCacheKey(data, config, isSnow24h);
+    const cacheKey = createFilterCacheKey(data, workingConfig, isSnow24h);
     const cached = filterCache.get(cacheKey);
     
     if (cached) {
@@ -242,7 +277,7 @@ export function filterSnowDepthOutliers(
       windowSize,
       upperIQRMultiplier = 1.5,
       lowerIQRMultiplier = 1.5
-    } = config;
+    } = workingConfig;
     
     if (data.length === 0) return [];
   
@@ -253,15 +288,16 @@ export function filterSnowDepthOutliers(
     // console.log(`${logPrefix} Sorted Data:`, sortedData);
 
    //Apply the identical check here
-    const processedData = config.applyIdenticalCheck 
+    const processedData = workingConfig.applyIdenticalCheck 
       ? applyIdenticalCheck(sortedData)
       : sortedData;
-    // console.log(`${logPrefix} Identical Check:`, processedData);
+    console.log('2. After identical check:', processedData);
     
     //console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
+    console.log('3. After IQR filter:', iqrFiltered);
     
-    const nanCountIQR = iqrFiltered.filter(p => isNaN(p.snow_depth)).length;
+    const nanCountIQR = iqrFiltered.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;
     // console.log(`${logPrefix} 📊 After IQR filtering:`, {
     //     totalPoints: iqrFiltered.length,
     //     validPoints: iqrFiltered.length - nanCountIQR,
@@ -272,16 +308,16 @@ export function filterSnowDepthOutliers(
 
     // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    // console.log(`${logPrefix} Data with hourly limits:`, hourlyChangeLimits);
+    console.log('4. Final result:', hourlyChangeLimits);
 
     
-    const nanCountFinal = hourlyChangeLimits.filter(p => isNaN(p.snow_depth)).length;
+    const nanCountFinal = hourlyChangeLimits.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;
     // console.log(`${logPrefix} 🏁 Final results:`, {
     //     totalPoints: hourlyChangeLimits.length,
     //     validPoints: hourlyChangeLimits.length - nanCountFinal,
     //     invalidPoints: nanCountFinal,
-    //     firstValidPoint: hourlyChangeLimits.find(p => !isNaN(p.snow_depth)),
-    //     lastValidPoint: [...hourlyChangeLimits].reverse().find(p => !isNaN(p.snow_depth))
+    //     firstValidPoint: hourlyChangeLimits.find(p => p.snow_depth !== null && !isNaN(p.snow_depth)),
+    //     lastValidPoint: [...hourlyChangeLimits].reverse().find(p => p.snow_depth !== null && !isNaN(p.snow_depth))
     // });
 
 
@@ -332,50 +368,37 @@ export function calculateSnowDepthAccumulation(data: any[]) {
 
 // Function to check for identical elements to the third decimal place against all other elements
 function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
-  //console.log('Starting applyIdenticalCheck with data:', data);
-  
-  return data.map((currentPoint, currentIndex, array) => {
-    // Skip if current point is already NaN or undefined
-    if (!currentPoint || !currentPoint.snow_depth || isNaN(currentPoint.snow_depth)) {
-      // console.log('Skipping point due to NaN or undefined:', currentPoint);
+  return data.map((currentPoint) => {
+    // Skip if point is invalid
+    if (!currentPoint || currentPoint.snow_depth === null || currentPoint.snow_depth === undefined) {
       return currentPoint;
     }
 
-    const currentDepth = parseFloat(currentPoint.snow_depth.toFixed(3));
-    // console.log('Checking currentDepth:', currentDepth, 'at index:', currentIndex);
-    
-    // Check if this depth appears anywhere else in the array
-    const hasIdenticalValue = array.some((comparePoint, compareIndex) => {
-      if (!comparePoint || !comparePoint.snow_depth || 
-          currentIndex === compareIndex || 
-          isNaN(comparePoint.snow_depth)) {
-        return false;
-      }
-      const compareDepth = parseFloat(comparePoint.snow_depth.toFixed(3));
-      const isIdentical = currentDepth === compareDepth;
-      
-      // if (isIdentical) {
-      //   console.log('Found identical value:', {
-      //     currentDepth,
-      //     compareDepth,
-      //     currentIndex,
-      //     compareIndex
-      //   });
-      // }
-      
-      return isIdentical;
-    });
+    try {
+      const currentDepth = typeof currentPoint.snow_depth === 'string' 
+        ? Number(currentPoint.snow_depth)
+        : currentPoint.snow_depth;
 
-    // If we found an identical value, return NaN
-    if (hasIdenticalValue) {
-      // console.log('Setting NaN for point:', currentPoint);
-      return {
+      const hasIdenticalValue = data.some((comparePoint) => {
+        if (!comparePoint || comparePoint.snow_depth === null || comparePoint.snow_depth === undefined) {
+          return false;
+        }
+
+        const compareDepth = typeof comparePoint.snow_depth === 'string'
+          ? Number(comparePoint.snow_depth)
+          : comparePoint.snow_depth;
+
+        return currentDepth === compareDepth && currentPoint !== comparePoint;
+      });
+
+      return hasIdenticalValue ? {
         ...currentPoint,
-        snow_depth: NaN
-      };
+        snow_depth: null
+      } : currentPoint;
+    } catch (error) {
+      console.error('Error processing snow depth:', error);
+      return currentPoint;
     }
-
-    return currentPoint;
   });
 }
 

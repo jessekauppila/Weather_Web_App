@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
-import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } from '../../snowDepthUtils';
+import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } from '../../utils/snowDepthUtils';
 
 export async function GET(request: NextRequest) {
   let client;

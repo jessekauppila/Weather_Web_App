@@ -4,7 +4,7 @@ export const stationGroups = {
     westSlopesCentral: ['57'],
     westSlopesSouth: ['29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '54'],
     eastSlopesNorth: ['7', '8', '9'],
-    eastSlopesCentral: ['11', '24', '25', '26', '19'],
+    eastSlopesCentral: ['11', '24', '25', '26', '19','48'],
     eastSlopesSouth: [],
     olympics: ['4'],
     mtHood: ['41', '42', '43', '44', '45', '46', '47', '56'],
