@@ -368,7 +368,7 @@ const TimeToolbar = ({
             {/* /////////////////////// */}
 
             {/* ////////////////// */}
-            {/* / REFRESH BUTTON /*/}
+            {/* / UNITS SWITCH BUTTON /*/}
             {/* ////////////////// */}
 
             <Button variant="outlined" size="small" onClick={handleUnitsPopupButtonClick}>
@@ -384,28 +384,54 @@ const TimeToolbar = ({
                 vertical: 'bottom',
                 horizontal: 'left',
               }}
+              PaperProps={{
+                sx: {
+                  width: 'auto',     // Allow width to be determined by content
+                  minWidth: 'auto',  // Remove minimum width constraint
+                  maxWidth: 'none',  // Remove maximum width constraint
+                  '& .MuiPopover-paper': {
+                    width: 'auto'
+                  }
+                }
+              }}
             >
-              <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
+              <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 bg-[cornflowerblue]">
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                  <Typography>Imperial</Typography>
+                  <Typography 
+                    sx={{ 
+                      fontSize: '1rem',
+                      //color: 'primary.main',
+                      fontWeight: 500
+                    }}
+                  >
+                    Imperial
+                  </Typography>
                   <AntSwitch 
                     checked={isMetric}
                     onChange={async (e) => {
                       const newIsMetric = e.target.checked;
-                      console.log('🔄 TimeToolbar: Unit switch toggled to:', newIsMetric);
+                      //console.log('🔄 TimeToolbar: Unit switch toggled to:', newIsMetric);
                       setIsMetric(newIsMetric);
-                      console.log('🔄 TimeToolbar: State updated, refreshing with isMetric:', newIsMetric);
+                      //console.log('🔄 TimeToolbar: State updated, refreshing with isMetric:', newIsMetric);
                       await onRefresh(newIsMetric);
                     }}
                     inputProps={{ 'aria-label': 'unit switch' }}
                   />
-                  <Typography>Metric</Typography>
+                  <Typography 
+                    sx={{ 
+                      fontSize: '1rem',
+                      //color: 'primary.main',
+                      fontWeight: 500
+                    }}
+                  >
+                    Metric
+                  </Typography>
                 </Stack>
               </div>
             </Popover>
 
            {/* //////////////////////// */}
-           {/* // END REFRESH BUTTON //*/}
+           {/* // END UNITS SWITCH BUTTON //*/}
           {/* ///////////////////////// */}
 
 

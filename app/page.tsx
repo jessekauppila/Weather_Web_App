@@ -28,6 +28,9 @@ import { fetchWeatherData } from './utils/fetchWeatherData';
 
 import { regions, stationGroups } from '@/app/config/regions';
 
+import { Analytics } from "@vercel/analytics/react"
+
+
 interface Station {
   id: string;
   name: string;
