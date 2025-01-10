@@ -11,10 +11,11 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^6.2.0",
-    "@mui/material": "^6.1.10",
+    "@mui/icons-material": "^5.15.11",
+    "@mui/material": "^5.15.11",
     "@types/react-datepicker": "^7.0.0",
     "@types/react-window": "^1.8.8",
+    "@vercel/analytics": "^1.4.1",
     "@vercel/kv": "^3.0.0",
     "@vercel/postgres": "^0.10.0",
     "axios": "^1.7.7",
