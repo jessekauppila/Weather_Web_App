@@ -34,7 +34,7 @@ export async function fetchWeatherData({
   setIsLoading,
   isMetric,
 }: FetchWeatherDataProps) {
-  console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
+  //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
   
   try {
     const { start_time_pdt, end_time_pdt } = timeRangeData;
@@ -69,7 +69,7 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
-    console.log('filteredData:', filteredData);
+    //console.log('filteredData:', filteredData);
   
     setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,

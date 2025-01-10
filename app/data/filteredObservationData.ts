@@ -39,7 +39,7 @@ export function filteredObservationData(
       isMetric
     );
     
-    console.log('filteredSnowDepth:', filteredSnowDepth);
+   // console.log('filteredSnowDepth:', filteredSnowDepth);
 
     const filteredSnowDepth24h = filterSnowDepthOutliers(
       stationData.map((obs: Record<string, any>) => ({
@@ -51,7 +51,7 @@ export function filteredObservationData(
       isMetric
     );
 
-    console.log('filteredSnowDepth24h:', filteredSnowDepth24h);
+    //console.log('filteredSnowDepth24h:', filteredSnowDepth24h);
 
     // Create lookup maps for this station
     const snowDepthMap = new Map(
