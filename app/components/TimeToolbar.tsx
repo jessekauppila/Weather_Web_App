@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
 import { Button, Select, MenuItem, InputLabel, FormControl, TextField, Popover, ListSubheader } from '@mui/material';
@@ -7,6 +7,7 @@ import moment from 'moment';
 import { regions, stationGroups } from '../config/regions';
 import { styled } from '@mui/material/styles';
 import { Switch, Stack, Typography } from '@mui/material';
+import debounce from 'lodash/debounce';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -158,6 +159,28 @@ const TimeToolbar = ({
     await handleDateChange({ target: { value: format(selectedDate, 'yyyy-MM-dd') } } as React.ChangeEvent<HTMLInputElement>);
     //console.log('Updated last API call:', newLastApiCall);
   };
+
+  const memoizedStationOptions = useMemo(() => (
+    regions.map((region) => [
+      <ListSubheader key={`header-${region.id}`}>
+        {region.title}
+      </ListSubheader>,
+      stations
+        .filter(station => region.stationIds.includes(station.id))
+        .map((station) => (
+          <MenuItem key={station.id} value={station.id}>
+            {station.name}
+          </MenuItem>
+        ))
+    ])
+  ), [stations]);
+
+  const debouncedHandleStationChange = useMemo(
+    () => debounce((event: SelectChangeEvent<string>) => {
+      handleStationChange(event);
+    }, 150),
+    [handleStationChange]
+  );
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -446,7 +469,7 @@ const TimeToolbar = ({
             <InputLabel>Station</InputLabel>
             <Select
               value={selectedStation}
-              onChange={handleStationChange}
+              onChange={debouncedHandleStationChange}
               label="Station"
               MenuProps={{
                 PaperProps: {
@@ -470,18 +493,7 @@ const TimeToolbar = ({
               }}
             >
               <MenuItem value="">All Stations</MenuItem>
-              {regions.map((region) => [
-                <ListSubheader key={`header-${region.id}`}>
-                  {region.title}
-                </ListSubheader>,
-                stations
-                  .filter(station => region.stationIds.includes(station.id))
-                  .map((station) => (
-                    <MenuItem key={station.id} value={station.id}>
-                      {station.name}
-                    </MenuItem>
-                  ))
-              ])}
+              {memoizedStationOptions}
             </Select>
           </FormControl>
         {/* )} */}
