@@ -31,6 +31,9 @@ export function formatValueWithUnit(value: any, unitType: UnitType, isMetric: bo
     if (unitType === UnitType.PRECIPITATION) {
       return `${numValue.toFixed(2)}${unit}`;
     }
+    if (unitType === UnitType.PRECIPITATIONMM) {
+      return `${numValue.toFixed(2)}${unit}`;
+    }
     if (unitType === UnitType.TEMPERATURE || 
         unitType === UnitType.WIND_SPEED || 
         unitType === UnitType.HUMIDITY ||

@@ -8,7 +8,11 @@ function convertWindSpeed(metersPerSecond: number): number {
 }
 
 function convertPrecipitation(millimeters: number): number {
-  return millimeters *  0.0393701;  // mm to inches
+  return millimeters *  0.00393701;  // mm to inches
+}
+
+function convertPrecipitationMMtoCM(centimeters: number): number {
+  return centimeters *  0.01;  // mm to inches
 }
 
 function convertSnowDepth(centimeters: number): number {
@@ -32,10 +36,17 @@ export function convertObservationUnits(
   if (isMetric) {
     const convertedToMetric = { ...observation };
 
-
+    // Elevation conversion
     ['elevation'].forEach((key) => {
       if (convertedToMetric[key] !== null) {
         convertedToMetric[key] = convertElevation(convertedToMetric[key]);
+      }
+    });
+        
+    // Precipitation conversions (mm to cm)
+    ['precip_accum_one_hour'].forEach((key) => {
+      if (convertedToMetric[key] !== null) {
+        convertedToMetric[key] = convertPrecipitationMMtoCM(convertedToMetric[key]);
       }
     });
     
