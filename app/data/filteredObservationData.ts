@@ -24,10 +24,10 @@ export function filteredObservationData(
   const processedGroups = Object.entries(groupedObservations).reduce((acc, [stid, stationData]) => {
     // Filter snow depth for this stationß
 
-    console.log('Raw snow depth data:', stationData.map((obs: Record<string, any>) => ({
-      date_time: obs.date_time,
-      snow_depth: obs.snow_depth
-    })));
+    // console.log('Raw snow depth data:', stationData.map((obs: Record<string, any>) => ({
+    //   date_time: obs.date_time,
+    //   snow_depth: obs.snow_depth
+    // })));
     
     const filteredSnowDepth = filterSnowDepthOutliers(
       stationData.map((obs: Record<string, any>) => ({

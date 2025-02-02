@@ -12,10 +12,10 @@ export const SNOW_DEPTH_CONFIG = {
 export const SNOW_DEPTH_24H_CONFIG = {
   threshold: -1,
   maxPositiveChange: 4,
-  maxNegativeChange: 4,
+  maxNegativeChange: 30,
   windowSize: 24,
-  upperIQRMultiplier: 1,
-  lowerIQRMultiplier: 2,
+  upperIQRMultiplier: 2,
+  lowerIQRMultiplier: 1,
   applyIdenticalCheck: false   // Disable for 24h snow
 } as const;
 
@@ -224,15 +224,15 @@ export function filterSnowDepthOutliers(
         snow_depth: point.snow_depth === null ? null : Number(point.snow_depth)
     }));
 
-    console.log('1. Initial data (converted to numbers):', numericData);
+    //console.log('1. Initial data (converted to numbers):', numericData);
 
-    // Log original config
-    console.log('Original config:', {
-        threshold: config.threshold,
-        maxPositiveChange: config.maxPositiveChange,
-        maxNegativeChange: config.maxNegativeChange,
-        isMetric
-    });
+    // // Log original config
+    // console.log('Original config:', {
+    //     threshold: config.threshold,
+    //     maxPositiveChange: config.maxPositiveChange,
+    //     maxNegativeChange: config.maxNegativeChange,
+    //     isMetric
+    // });
 
     // Convert config values to metric if needed
     const workingConfig = isMetric ? {
@@ -242,15 +242,15 @@ export function filterSnowDepthOutliers(
         maxNegativeChange: config.maxNegativeChange * 2.54,
     } : config;
 
-    // Log converted config
-    console.log('Working config:', {
-        threshold: workingConfig.threshold,
-        maxPositiveChange: workingConfig.maxPositiveChange,
-        maxNegativeChange: workingConfig.maxNegativeChange,
-        isMetric
-    });
+    // // Log converted config
+    // console.log('Working config:', {
+    //     threshold: workingConfig.threshold,
+    //     maxPositiveChange: workingConfig.maxPositiveChange,
+    //     maxNegativeChange: workingConfig.maxNegativeChange,
+    //     isMetric
+    // });
 
-    console.log('1. Initial data:', data);
+    //console.log('1. Initial data:', data);
 
     const isSnow24h = workingConfig.applyIdenticalCheck === false;
     const logPrefix = isSnow24h ? '[24h Snow]' : '[Total Snow]';
@@ -265,13 +265,6 @@ export function filterSnowDepthOutliers(
           // });
         return cached;
     }
-
-    // console.log(`${logPrefix} Starting filter with:`, {
-    //     dataPoints: data.length,
-    //     config,
-    //     firstPoint: data[0],
-    //     lastPoint: data[data.length - 1]
-    // });
 
     const {
       maxPositiveChange,
@@ -293,12 +286,12 @@ export function filterSnowDepthOutliers(
     const processedData = workingConfig.applyIdenticalCheck 
       ? applyIdenticalCheck(sortedData)
       : sortedData;
-    console.log('2. After identical check:', processedData);
+    //console.log('2. After identical check:', processedData);
     
     //console.log(`${logPrefix} 🔄 Applying IQR filter...`);
     const iqrFiltered = applyIQRFilter(processedData, windowSize, upperIQRMultiplier, lowerIQRMultiplier);
-    console.log('3. After IQR filter:', iqrFiltered);
-    
+    //console.log('3. After IQR filter:', iqrFiltered);
+
     const nanCountIQR = iqrFiltered.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;
     // console.log(`${logPrefix} 📊 After IQR filtering:`, {
     //     totalPoints: iqrFiltered.length,
@@ -310,7 +303,7 @@ export function filterSnowDepthOutliers(
 
     // console.log(`${logPrefix} 🔄 Applying hourly limits...`);
     const hourlyChangeLimits = applyHourlyChangeLimits(iqrFiltered, maxPositiveChange, maxNegativeChange);
-    console.log('4. Final result:', hourlyChangeLimits);
+    //console.log('4. Final result:', hourlyChangeLimits);
 
     
     const nanCountFinal = hourlyChangeLimits.filter(p => p.snow_depth === null || isNaN(p.snow_depth)).length;

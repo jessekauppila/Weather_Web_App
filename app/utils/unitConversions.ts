@@ -31,7 +31,7 @@ export function convertObservationUnits(
   observation: Record<string, any>,
   isMetric: boolean
 ): Record<string, any> {
-  console.log('🔧 UnitConversions: Converting with isMetric:', isMetric);
+  //console.log('🔧 UnitConversions: Converting with isMetric:', isMetric);
   
   if (isMetric) {
     const convertedToMetric = { ...observation };
@@ -50,11 +50,11 @@ export function convertObservationUnits(
       }
     });
     
-    console.log('🔧 UnitConversions: Returning metric values');
+    //console.log('🔧 UnitConversions: Returning metric values');
     return convertedToMetric;
   }
   
-  console.log('🔧 UnitConversions: Converting to imperial values');
+  //console.log('🔧 UnitConversions: Converting to imperial values');
   const converted = { ...observation };
 
   // Temperature conversions (C to F)
