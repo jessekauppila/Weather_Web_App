@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/infoExExport",
-      "schedule": "10,25 * * * *"
+      "schedule": "10 * * * *"
     }
   ]
 }
