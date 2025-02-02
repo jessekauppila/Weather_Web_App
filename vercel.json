@@ -5,11 +5,7 @@
       "schedule": "5,20 * * * *"
     },
     {
-      "path": "/api/infoExExportStid5",
-      "schedule": "10 * * * *"
-    },
-    {
-      "path": "/api/infoExExportStid6",
+      "path": "/api/infoExExport",
       "schedule": "10 * * * *"
     }
   ]
