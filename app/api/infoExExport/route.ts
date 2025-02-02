@@ -73,7 +73,7 @@ async function handleRequest(request: NextRequest) {
             FROM stations s
             WHERE s.stid = '5'
         )
-        AND o.date_time >= NOW() - INTERVAL '3 hours'
+        AND o.date_time >= NOW() - INTERVAL '12 hours'
         ORDER BY o.date_time DESC
         LIMIT 12;
     `;
