@@ -35,8 +35,24 @@ export async function fetchWeatherData({
   isMetric,
 }: FetchWeatherDataProps) {
   //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
+
+  
+
   
   try {
+    // First, fetch stations data
+    // console.log('🏔️ Fetching stations data...');
+    // const stationsResponse = await fetch('/api/getStations');
+    
+    // if (!stationsResponse.ok) {
+    //   throw new Error('Failed to fetch stations');
+    // }
+    
+    // const stations = await stationsResponse.json();
+    // console.log('📍 Stations data:', stations);
+    
+    //////////////////////////////////////////////////////////
+
     const { start_time_pdt, end_time_pdt } = timeRangeData;
     
     const response = await fetch('/api/getObservationsFromDB', {
@@ -97,3 +113,4 @@ export async function fetchWeatherData({
     console.error('Error fetching weather data:', error);
   }
 }
+

@@ -413,9 +413,15 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .append('rect')
       .attr('class', 'snow-bars')
       .attr('x', d => xScaleBars(d.date) - (individualBarWidth + barGap/2))
-      .attr('y', d => yScaleBars(d.snowDepth24h))
+      .attr('y', d => {
+        const val = yScaleBars(d.snowDepth24h);
+        return isNaN(val) ? height : val;
+      })
       .attr('width', individualBarWidth)
-      .attr('height', d => height - yScaleBars(d.snowDepth24h))
+      .attr('height', d => {
+        const val = height - yScaleBars(d.snowDepth24h);
+        return isNaN(val) ? 0 : val;
+      })
       .attr('fill', '#4169E1')
       .attr('opacity', 0.7);
 
@@ -489,8 +495,11 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
     // Remove the temperature area and range code and replace with a single line
     const tempLine = d3.line<(typeof dataInterpolated)[0]>()
       .x(d => xScale(d.date))
-      .y(d => yScaleTemp(d.temp))
-      .curve(d3.curveMonotoneX);
+      .y(d => {
+        const val = yScaleTemp(d.temp);
+        return isNaN(val) ? height : val;
+      })
+      .defined(d => !isNaN(d.temp)); // Skip points with NaN values
 
     // Add the temperature line
     svg.append('path')

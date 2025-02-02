@@ -10,7 +10,7 @@ import { convertObservationUnits } from '../../utils/unitConversions'; // Adjust
 export async function POST(request: Request) {
   try {
     const { startDate, endDate, stationIds, isMetric } = await request.json();
-    console.log('🌐 API: Processing request with isMetric:', isMetric);
+    //console.log('🌐 API: Processing request with isMetric:', isMetric);
 
     const client = await db.connect();
 
@@ -47,23 +47,14 @@ export async function POST(request: Request) {
       AND o.date_time < $3
       ORDER BY o.date_time ASC;
     `;
-    console.log('Executing query:', observationsQuery);
-    console.log('Query parameters:', [
-      stationIds,
-      startDate,
-      endDate,
-    ]);
+
 
     const observationsResult = await client.query(observationsQuery, [
       stationIds,
       startDate,
       endDate,
     ]);
-    // console.log(
-    //   'Query result:',
-    //   observationsResult.rows.length,
-    //   'rows'
-    // );
+
 
     // Query for units
     const unitsQuery = `SELECT measurement, unit FROM units;`;
@@ -72,12 +63,9 @@ export async function POST(request: Request) {
     await client.release();
 
     // Convert units for each observation
-    console.log('🔄 API: Converting units with isMetric:', isMetric);
     const convertedObservations = observationsResult.rows.map(obs => 
       convertObservationUnits(obs, isMetric)
     );
-
-    //console.log('Query result converted:', convertedObservations);
 
     return NextResponse.json({
       observations: convertedObservations,

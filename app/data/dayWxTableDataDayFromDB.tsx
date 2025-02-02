@@ -2,7 +2,7 @@ import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_24H
 import moment from 'moment-timezone';
 import { UnitType } from "@/app/utils/units";
 import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
-
+import { fetchStations } from '@/app/utils/fetchStaticStationData';
 // Import the interface from types.ts
 import { WxTableOptions } from '../types';
 
@@ -28,11 +28,12 @@ function wxTableDataDayFromDB(
     ? groupByStation(Object.values(inputObservations).flat())
     :groupBy24hrs(Object.values(inputObservations).flat(), startHour, endHour);
     //: groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
-    
-
-
 
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+  const stations =  fetchStations();
+  console.log('stations:', stations);
+  
 
   const processedData = Object.entries(groupedObservations).map(
     ([stid, stationObs]) => {
@@ -44,7 +45,7 @@ function wxTableDataDayFromDB(
         //elevation: Number(stationObs[0].elevation),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
-      console.log('Elevation value:', averages.elevation);
+      //console.log('Elevation value:', averages.elevation);
 
       // Process each measurement type
       const measurementKeys = [
@@ -356,23 +357,9 @@ function wxTableDataDayFromDB(
         .format('MMM D, h:mm A');
     }
 
-    // Process elevation
-    // processNumericField(
-    //   'elevation',
-    //   { value: 'Elevation' },
-    //   UnitType.ELEVATION,
-    //   0,
-    //   (numbers) => ({ value: numbers[0] }),
-    //   (value, unit) => formatValueWithUnit(Number(value), UnitType.ELEVATION, isMetric)
-    // );
 
     return formatted;
   });
-
-  // console.log(
-  //   'formattedDailyData from wxTableDataDayFromDB:',
-  //   formattedDailyData
-  // );
 
   // Sort the formattedDailyData array by station name
   formattedDailyData.sort((a, b) => {
@@ -398,7 +385,7 @@ function wxTableDataDayFromDB(
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
-
+  console.log('🚀 formattedDailyData:', formattedDailyData);
   return { data: formattedDailyData, title };
 }
 
@@ -441,6 +428,12 @@ function groupBy24hrs(
   startHour: number,
   endHour: number
 ) {
+  console.log('🚀 groupBy24hrs called with:', { 
+    dataLength: data.length,
+    startHour,
+    endHour 
+  });
+  
   // Sort data by date_time first
   const sortedData = [...data].sort((a, b) => 
     new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
@@ -472,6 +465,7 @@ function groupBy24hrs(
     });
   }
   
+  console.log('📊 result from groupBy24hrs:', result);
   return result;
 }
 
