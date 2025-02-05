@@ -1,6 +1,6 @@
 // this is used to upload data to BMR's InfoEx system
 
-// http://localhost:3000/api/infoExExportStid5
+// http://localhost:3000/api/infoExExportStid6
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -71,7 +71,7 @@ async function handleRequest(request: NextRequest) {
         WHERE o.station_id = (
             SELECT s.id
             FROM stations s
-            WHERE s.stid = '5'
+            WHERE s.stid = '6'
         )
         AND o.date_time >= NOW() - INTERVAL '3 hours'
         ORDER BY o.date_time DESC
@@ -91,51 +91,45 @@ async function handleRequest(request: NextRequest) {
     console.log('Processing data:', observations.rows.length, 'records');
 
     // 2. Process the data
-    const processedData = observations.rows.map(obs => {
-      // Convert UTC to Pacific time
-      const pacificDate = new Date(obs.date_time);
-      pacificDate.setHours(pacificDate.getHours() - 8); // Adjust for Pacific time (-8 hours from UTC)
-      
-      return {
-        Location_UUID: process.env.INFOEX_LOCATION_UUID || '',
-        obDate: pacificDate.toLocaleDateString('en-US', {
-          month: '2-digit',
-          day: '2-digit',
-          year: 'numeric'
-        }),
-        obTime: pacificDate.toLocaleTimeString('en-US', { 
-          hour12: false, 
-          hour: '2-digit', 
-          minute: '2-digit'
-        }),
-        timeZone: 'Pacific',
-        tempMaxHour: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
-        tempMaxHourUnit: 'C',
-        tempMinHour: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
-        tempMinHourUnit: 'C',
-        tempPres: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
-        tempPresUnit: 'C',
-        precipitationGauge: obs.precipitation || '',
-        precipitationGaugeUnit: 'mm',
-        windSpeedNum: obs.wind_speed || '',
-        windSpeedUnit: 'kph',
-        windDirectionNum: obs.wind_direction || '',
-        hS: obs.snow_depth ? Math.round(Number(obs.snow_depth)) : '',
-        hsUnit: 'cm',
-        baro: obs.pressure || '',
-        baroUnit: 'kPa',
-        rH: obs.relative_humidity ? Math.round(Number(obs.relative_humidity)) : '',
-        windGustSpeedNum: obs.wind_gust || '',
-        windGustSpeedNumUnit: 'kph',
-        windGustDirNum: obs.wind_gust_direction || '',
-        dewPoint:  '',
-        dewPointUnit: 'C',
-        hn24Auto: '',
-        hn24AutoUnit: 'cm',
-        hstAuto: '',
-        hstAutoUnit: 'cm'
-      }
-    }) as InfoExData[];
+    const processedData = observations.rows.map(obs => ({
+      Location_UUID: process.env.INFOEX_LOCATION_UUID_PANDOME || '',
+      obDate: new Date(obs.date_time).toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric'
+      }),
+      obTime: new Date(obs.date_time).toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit'
+      }),
+      timeZone: 'Pacific',
+      tempMaxHour: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
+      tempMaxHourUnit: 'C',
+      tempMinHour: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
+      tempMinHourUnit: 'C',
+      tempPres: obs.air_temp ? Number(obs.air_temp).toFixed(1) : '',
+      tempPresUnit: 'C',
+      precipitationGauge: obs.precipitation || '',
+      precipitationGaugeUnit: 'mm',
+      windSpeedNum: obs.wind_speed || '',
+      windSpeedUnit: 'kph',
+      windDirectionNum: obs.wind_direction || '',
+      hS: obs.snow_depth ? Math.round(Number(obs.snow_depth)) : '',
+      hsUnit: 'cm',
+      baro: obs.pressure || '',
+      baroUnit: 'kPa',
+      rH: obs.relative_humidity ? Math.round(Number(obs.relative_humidity)) : '',
+      windGustSpeedNum: obs.wind_gust || '',
+      windGustSpeedNumUnit: 'kph',
+      windGustDirNum: obs.wind_gust_direction || '',
+      dewPoint:  '',
+      dewPointUnit: 'C',
+      hn24Auto: '',
+      hn24AutoUnit: 'cm',
+      hstAuto: '',
+      hstAutoUnit: 'cm'
+    })) as InfoExData[];
 
     console.log('Data processed successfully');
 
@@ -205,7 +199,7 @@ async function uploadToInfoEx(csvData: string): Promise<boolean> {
     });
     console.log('Connected successfully');
 
-    const siteName = 'Heather-Meadows-Logger';
+    const siteName = 'Pandome-Logger';
     const fileName = `INFOEX-${siteName}.csv`;
     console.log(`Uploading file: ${fileName}`);
     

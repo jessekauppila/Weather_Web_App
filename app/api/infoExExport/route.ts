@@ -1,6 +1,6 @@
 // this is used to upload data to BMR's InfoEx system
 
-// http://localhost:3000/api/infoExExpor
+// http://localhost:3000/api/infoExExport
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
@@ -72,26 +72,32 @@ async function handleRequest(request: NextRequest) {
       const stations = [
         {
           stid: '5',
-          locationUuid: process.env.INFOEX_LOCATION_UUID || '',
+          locationUuid: '620f5af8-ac0b-4123-a7d2-b435ffa1a6e3',
           siteName: 'Heather-Meadows-Logger'
         },
         {
           stid: '6',
-          locationUuid: process.env.INFOEX_LOCATION_UUID_PANDOME || '',
+          locationUuid: '2e13b34a-3855-47c0-8dc3-842065259f4c',
           siteName: 'Pan-Dome-Logger'
         }
         // Add more stations as needed
       ];
   
-      // Process each station
+      const results = [];
       for (const station of stations) {
-        console.log(`Processing station ${station.siteName} (STID: ${station.stid})...`);
-        await processStation(client, station);
+        const stationData = await processStation(client, station);
+        if (stationData !== null) {
+          results.push({
+            station: station.siteName,
+            data: stationData
+          });
+        }
       }
   
       return NextResponse.json({ 
         success: true, 
-        message: 'Data uploaded to InfoEx for all stations'
+        message: 'Data uploaded to InfoEx for all stations',
+        results: results  // Make sure we're including the results
       });
   
     } catch (error) {
@@ -110,7 +116,7 @@ async function handleRequest(request: NextRequest) {
     }
   }
   
-  async function processStation(client: any, station: { stid: string, locationUuid: string, siteName: string }) {
+  async function processStation(client: any, station: { stid: string, locationUuid: string, siteName: string }): Promise<InfoExData | null> {
     console.log(`Querying database for station ${station.siteName}...`);
     
     const observationsQuery = `
@@ -141,7 +147,7 @@ async function handleRequest(request: NextRequest) {
     
     if (observations.rows.length === 0) {
       console.log(`No recent data found for station ${station.siteName}`);
-      return;
+      return null;
     }
   
     console.log(`Processing data for ${station.siteName}...`);
@@ -197,6 +203,8 @@ async function handleRequest(request: NextRequest) {
     console.log(`Starting FTP upload for ${station.siteName}...`);
     await uploadToInfoEx(csv, station.siteName);
     console.log(`Upload completed for ${station.siteName}`);
+    
+    return processedData[0]; // Return the processed data so it shows in browser
   }
   
   async function uploadToInfoEx(csvData: string, siteName: string): Promise<boolean> {
