@@ -30,6 +30,8 @@ import { regions, stationGroups } from '@/app/config/regions';
 
 import { Analytics } from "@vercel/analytics/react"
 
+import { useTimeRange } from '@/app/hooks/useTimeRange';
+import { WeatherDisplay } from '@/app/components/WeatherDisplay';
 
 interface Station {
   id: string;
@@ -62,8 +64,17 @@ interface StationCardProps {
 
 export default function Home() {
   // Get current time in PDT
-  const currentMoment = moment().tz('America/Los_Angeles');
-  const [customTime, setCustomTime] = useState(currentMoment.format('HH:mm'));
+  const {
+    selectedDate,
+    timeRange,
+    dayRangeType,
+    customTime,
+    calculateTimeRange,
+    setSelectedDate,
+    setTimeRange,
+    setDayRangeType,
+    setCustomTime
+  } = useTimeRange();
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -102,9 +113,6 @@ export default function Home() {
   // Add a new state for component visibility
   const [isComponentVisible, setIsComponentVisible] = useState(true);
 
-  // Move this up, before calculateTimeRange
-  const [timeRange, setTimeRange] = useState(1);
-
   // Add this state at the top level where RegionCard is used
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -121,78 +129,9 @@ export default function Home() {
    * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
    * @returns Object containing start time, end time, and corresponding hours
    */
-  const calculateTimeRange = (date: Date, type: DayRangeType) => {
-    const endMoment = moment(date).tz('America/Los_Angeles');
-    const currentMoment = moment().tz('America/Los_Angeles');
-    const currentHour = currentMoment.hour();
-    const currentMinute = currentMoment.minute();
 
-    switch (type) {
-      case DayRangeType.MIDNIGHT:
-        const midnightResult = {
-          start: endMoment.clone().startOf('day'),
-          end: endMoment.clone().startOf('day').add(24 * timeRange, 'hours'),
-          startHour: 0,
-          endHour: 24
-        };
-        return midnightResult;
-        
-      case DayRangeType.CURRENT:
-        const currentResult = {
-          start: endMoment.clone()
-            .subtract(timeRange, 'days')
-            .hour(currentHour)
-            .minute(currentMinute)
-            .second(0),
-          end: endMoment.clone()
-            .hour(currentHour)
-            .minute(currentMinute)
-            .second(0),
-          startHour: currentHour,
-          endHour: currentHour
-        };
-
-        return currentResult;
-
-        case DayRangeType.CUSTOM:
-          const [hours, minutes] = customTime.split(':').map(Number);
-          return {
-            start: endMoment.clone()
-              .subtract(timeRange, 'days')
-              .hour(hours)
-              .minute(minutes)
-              .second(0),
-            end: endMoment.clone()
-              .hour(hours)
-              .minute(minutes)
-              .second(0),
-            startHour: hours,
-            endHour: hours
-          };
-    
-        default:
-          // Fallback to CURRENT case if type is unknown
-          // const currentHour = currentMoment.hour();
-          // const currentMinute = currentMoment.minute();
-          
-          return {
-            start: endMoment.clone()
-              .subtract(timeRange, 'days')
-              .hour(currentHour)
-              .minute(currentMinute)
-              .second(0),
-            end: endMoment.clone()
-              .hour(currentHour)
-              .minute(currentMinute)
-              .second(0),
-            startHour: currentHour,
-            endHour: currentHour
-          };
-    }
-  };
 
   // Initialize with the current date
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
     // Remove unused state variables
@@ -200,9 +139,7 @@ export default function Home() {
     const [startHour, setStartHour] = useState<number>(0);
     const [endHour, setEndHour] = useState<number>(0);
   
-    // Add state for day range type
-    const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
-    // console.log('dayRangeType:', dayRangeType);
+
   
     const { 
       startHour: calculatedStartHour, 
@@ -495,7 +432,7 @@ export default function Home() {
           setIsMetric={setIsMetric}
         />
 
-        {/* Should show if stuff is loading, but not showing anything now  */}
+        {/* REPLACE all the visualization components with this: */}
         <div 
           className={`w-full max-w-6xl space-y-4 transition-opacity duration-200 ${
             isComponentVisible && !isLoading && !isPending 
@@ -503,141 +440,23 @@ export default function Home() {
               : 'opacity-0'
           }`}
         >
-
-
-        {/*  Regions the BIG table */}
-
-      
-          {observationsDataDay && selectedStation && (
-            <DayAveragesTable 
-              dayAverages={observationsDataDay} 
-              onStationClick={handleStationClick}
-              mode={tableMode}
-            />
-          )}
- 
-        
-        {/*  Regions  */}
-
-
-
-
-        {/* region cards for each table  */}
-
-        {observationsDataDay && tableMode === 'summary' && (
-          <div className="space-y-4">
-            {regions.map(region => {
-              // Filter observations for this region
-              const regionData = {
-                ...observationsDataDay,
-                title: `${region.title} - ${observationsDataDay.title}`,
-                data: observationsDataDay.data.filter(station => 
-                  region.stationIds.includes(station.Stid)
-                )
-              };
-              
-              // Only render table if region has data
-              return regionData.data.length > 0 ? (
-                <div key={region.id} className="bg-white rounded-lg shadow">
-                  {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
-                    {region.title}
-                  </h2> */}
-                  <DayAveragesTable 
-                    dayAverages={regionData}
-                    onStationClick={handleStationClick}
-                    mode={tableMode}
-                  />
-                </div>
-              ) : null;
-            })}
-          </div>
-        )}
-
-
-        {/* This is for when I eventually implement the region cards for the map  */}
-
-        {observationsDataDay && tableMode === 'summary' && (
-          <>
-            {regions.map(region => (
-              <RegionCard
-                key={region.id}
-                title={region.title}
-                stations={observationsDataDay.data}
-                stationIds={region.stationIds}
-                onStationClick={handleStationClick}
-                observationsData={observationsDataDay}
-                activeDropdown={activeDropdown}
-                onDropdownToggle={setActiveDropdown}
-              />
-            ))}
-          </>
-        )}
-
-        {/* Individual STATION Components  */}
-
-        
-        {/* Graphs   */}
-
-<div className="flex flex-col gap-4">
-          {filteredObservationsDataHour && observationsDataDay && selectedStation && stationIds.length === 1 && (
-            <>
-                <AccordionWrapper
-                  title="Hourly Snow and Temperature Graph"
-                  subtitle={observationsDataDay.title}
-                  defaultExpanded={false}
-                >
-              <WxSnowGraph 
-                dayAverages={filteredObservationsDataHour} 
-                isHourly={true}
-                isMetric={isMetric}
-              />
-               </AccordionWrapper>
-            </>
-          )}
-
-{     /* USED TO BE THIS timeRange > 3 &&  */}
-        {observationsDataDay && selectedStation && stationIds.length === 1 && ( 
-            <>
-              <AccordionWrapper
-                title="Daily Snow and Temperature Graph"
-                subtitle={observationsDataDay.title}
-                defaultExpanded={false}
-              >
-                <DayWxSnowGraph 
-                  dayAverages={observationsDataDay} 
-                  isMetric={isMetric}
-                />
-              </AccordionWrapper>
-            </>
-          )}
-</div>
-
-           {/* Tables   */}
-
-
-   {/* This is when I want the daily table to show up only on daily page   */}
-          {/* {observationsDataDay && tableMode === 'daily' && (
-            <DayAveragesTable 
-              dayAverages={observationsDataDay} 
-              onStationClick={handleStationClick}
-              mode={tableMode}
-            />
-          )} */}
-
-        {filteredObservationsDataHour && selectedStation && (
-                    <HourWxTable 
-                      hourAverages={filteredObservationsDataHour} 
-                    />
-                  )}
-
-
-          {observationsDataHour && selectedStation && (
-            <HourWxTable 
-              hourAverages={observationsDataHour} 
-            />
-          )}
+          <WeatherDisplay
+            observationsDataDay={observationsDataDay}
+            observationsDataHour={observationsDataHour}
+            filteredObservationsDataHour={filteredObservationsDataHour}
+            selectedStation={selectedStation}
+            isMetric={isMetric}
+            handleStationClick={handleStationClick}
+            tableMode={tableMode}
+          />
         </div>
 
+        {/* REMOVE all these:
+        - DayAveragesTable
+        - DayWxSnowGraph
+        - WxSnowGraph
+        - HourWxTable
+        - All the related conditional rendering */}
       </div>
     </main>
   );
