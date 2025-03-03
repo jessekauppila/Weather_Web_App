@@ -12,6 +12,17 @@ import { DayRangeType } from '../types';
  * - Custom time selection
  * - Calculates time ranges based on selected parameters
  */
+
+
+  /**
+   * Calculates the start and end times based on the selected date and range type
+   * @param date - The base date to calculate the range from
+   * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
+   * @returns Object containing start time, end time, and corresponding hours
+   */
+
+
+
 export function useTimeRange() {
   const currentMoment = moment().tz('America/Los_Angeles');
   const [selectedDate, setSelectedDate] = useState(new Date());
