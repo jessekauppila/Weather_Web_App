@@ -28,6 +28,7 @@ import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 import { useWeatherControls } from '@/app/hooks/useWeatherControls';
 import { useWeatherData } from '@/app/hooks/useWeatherData';
 import { useStations } from '@/app/hooks/useStations';
+import { LoadingWrapper } from '@/app/components/LoadingWrapper';
 
 interface Station {
   id: string;
@@ -94,14 +95,6 @@ export default function Home() {
 
   // Add this state at the top level where RegionCard is used
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  /**
-   * Calculates the start and end times based on the selected date and range type
-   * @param date - The base date to calculate the range from
-   * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
-   * @returns Object containing start time, end time, and corresponding hours
-   */
-
 
   // Initialize with the current date
   //const [selectedDate, setSelectedDate] = useState(new Date());
@@ -192,7 +185,6 @@ export default function Home() {
   }, [selectedStation]);
 
 
-
   // Updated calculateCurrentTimeRange to be more precise
   const calculateCurrentTimeRange = () => {
     if (useCustomEndDate && timeRange !== 1 && timeRange !== 3 && timeRange !== 7 && timeRange !== 14 && timeRange !== 30) {
@@ -204,12 +196,7 @@ export default function Home() {
   // Simplified handler - only updates the type and hours
   const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
     const newType = event.target.value as DayRangeType;
-    //console.log('DayRangeType changed:', {
-    //  newType,
-    //  selectedDate,
-    //  timeRange,
-    //  isCustom: newType === DayRangeType.CUSTOM
-    //});
+
     
     setDayRangeType(newType);
     
@@ -219,14 +206,10 @@ export default function Home() {
     setEndHour(endHour);
   };
 
-  // Add this effect or merge with existing dayRangeType-related effect
   useEffect(() => {
     //console.log('Current dayRangeType:', dayRangeType);
     //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
   }, [dayRangeType]);
-
-  //console.log('observationsDataDay', observationsDataDay);
-
 
   // Add click outside handler at the top level
   useEffect(() => {
@@ -291,13 +274,10 @@ export default function Home() {
           setIsMetric={setIsMetric}
         />
 
-        {/* Should show if stuff is loading, but not showing anything now  */}
-        <div 
-          className={`w-full max-w-6xl space-y-4 transition-opacity duration-200 ${
-            isComponentVisible && !isLoading && !isPending 
-              ? 'opacity-100' 
-              : 'opacity-0'
-          }`}
+        <LoadingWrapper
+          isComponentVisible={isComponentVisible}
+          isLoading={isLoading}
+          isPending={isPending}
         >
           <WeatherDisplay
             observationsDataDay={observationsDataDay}
@@ -370,15 +350,7 @@ export default function Home() {
               ))}
             </>
           )}
-
-          {/* Individual STATION Components  */}
-
-          {/* Graphs   */}
-
-          {/* Tables   */}
-
-
-        </div>
+        </LoadingWrapper>
       </div>
     </main>
   );
