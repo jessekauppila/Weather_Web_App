@@ -24,6 +24,7 @@ import { useStations } from '@/app/hooks/useStations';
 import { LoadingWrapper } from '@/app/components/LoadingWrapper';
 import { useViewState } from '@/app/hooks/useViewState';
 import { useDateState } from '@/app/hooks/useDateState';
+import RegionTables from '@/app/components/RegionTables';
 
 interface Station {
   id: string;
@@ -258,15 +259,11 @@ export default function Home() {
             tableMode={tableMode}
           />
 
-        {/*  Regions the BIG table */}
-
-          {observationsDataDay && selectedStation && (
-            <DayAveragesTable 
-              dayAverages={observationsDataDay} 
-              onStationClick={handleStationClick}
-              mode={tableMode}
-            />
-          )}
+          <RegionTables
+            observationsDataDay={observationsDataDay}
+            handleStationClick={handleStationClick}
+            tableMode={tableMode}
+          />
 
           {/*  Regions  */}
 
