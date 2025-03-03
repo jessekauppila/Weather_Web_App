@@ -56,10 +56,13 @@ interface StationCardProps {
 }
 
 export default function Home() {
+  // View state (UI-related)
+  const { tableMode, setTableMode, isComponentVisible, isTransitioning, setIsTransitioning } = useViewState();
   const { activeDropdown, setActiveDropdown } = useDropdown();
+  const [isPending, startTransition] = useTransition();
+  const [isOneDay, setIsOneDay] = useState(true);
 
-  const { tableMode, setTableMode } = useViewState();
-
+  // Station state
   const {
     stations,
     selectedStation,
@@ -69,6 +72,7 @@ export default function Home() {
     handleStationClick
   } = useStations({ setTableMode });
 
+  // Date and time state
   const {
     selectedDate,
     setSelectedDate,
@@ -92,23 +96,10 @@ export default function Home() {
     calculateCurrentTimeRange
   } = useTimeRange();
 
-  const [isPending, startTransition] = useTransition();
-  const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
-
-  const {
-    isComponentVisible,
-    setIsComponentVisible,
-    isTransitioning,
-    setIsTransitioning
-  } = useViewState();
-
   const { 
     startHour: calculatedStartHour, 
     endHour: calculatedEndHour 
   } = calculateTimeRange(selectedDate, dayRangeType);
-
-  useEffect(() => {
-  }, [dayRangeType]);
 
   const timeRangeData = useMemo(() => {
     let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
@@ -122,8 +113,9 @@ export default function Home() {
       start_time_pdt,
       end_time_pdt
     };
-  }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
+  }, [selectedDate, endDate, dayRangeType, timeRange]);
 
+  // Weather data state
   const {
     observationsDataDay,
     observationsDataHour,
@@ -159,7 +151,7 @@ export default function Home() {
     handleRefresh
   );
 
-  // Group related props
+  // Props grouping for components
   const timeProps = {
     selectedDate,
     endDate,
