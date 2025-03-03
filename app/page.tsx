@@ -32,6 +32,7 @@ import { Analytics } from "@vercel/analytics/react"
 
 import { useTimeRange } from '@/app/hooks/useTimeRange';
 import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
+import { useWeatherControls } from '@/app/hooks/useWeatherControls';
 
 interface Station {
   id: string;
@@ -155,71 +156,7 @@ export default function Home() {
       setEndHour(calculatedEndHour);
     }, [calculatedStartHour, calculatedEndHour]);
   
-
-        //This is what is making the date change when you change the date in the date picker, it used to go back two days before what you picked!
-        const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-          const newDate = moment(event.target.value)
-            .tz('America/Los_Angeles')
-            .startOf('day')
-            .toDate();
-          
-          setSelectedDate(newDate);
-          setEndDate(newDate);
-        };
     
-
-  // this is the function that determines what happens in the drop down menu for date range
-  const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
-    console.log('Time range changed:', value);
-    
-    if (value === 'custom') {
-      setUseCustomEndDate(true);
-      setIsOneDay(false);
-      return;
-    }
-    
-    setUseCustomEndDate(false);
-    setTimeRange(Number(value));
-    
-    const newEndDate = new Date();
-    let newStartDate: Date;
-    
-    switch (value) {
-      case '1':
-        newStartDate = subDays(newEndDate, 1);
-        setIsOneDay(true);
-        break;
-      case '3':
-        newStartDate = subDays(newEndDate, 3);
-        setIsOneDay(false);
-        break;
-      case '7':
-        newStartDate = subDays(newEndDate, 7);
-        setIsOneDay(false);
-        break;
-      case '14':
-        newStartDate = subDays(newEndDate, 14);
-        setIsOneDay(false);
-        break;
-      case '30':
-        newStartDate = subDays(newEndDate, 30);
-        setIsOneDay(false);
-        break;
-      default:
-        newStartDate = subDays(newEndDate, 1);
-        setIsOneDay(true);
-    }
-
-    // console.log('Setting dates:', {
-    //   start: newStartDate,
-    //   end: newEndDate
-    // });
-
-    setSelectedDate(newStartDate);
-    setEndDate(newEndDate);
-    setUseCustomEndDate(true);
-  };
 
   const handleEndDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -399,6 +336,19 @@ export default function Home() {
     };
   }, [activeDropdown]);
 
+  // Add the hook
+  const {
+    handleTimeRangeChange,
+    handleDateChange,
+  } = useWeatherControls(
+    setSelectedDate,
+    setEndDate,
+    setUseCustomEndDate,
+    setIsOneDay,
+    setTimeRange,
+    stations,
+    handleRefresh
+  );
 
   // Usage in your render
   return (
@@ -450,7 +400,7 @@ export default function Home() {
             isMetric={isMetric}
           />
 
-          {/*  Regions the BIG table */}
+        {/*  Regions the BIG table */}
 
           {observationsDataDay && selectedStation && (
             <DayAveragesTable 
@@ -464,34 +414,34 @@ export default function Home() {
 
           {/* region cards for each table  */}
 
-          {observationsDataDay && tableMode === 'summary' && (
-            <div className="space-y-4">
-              {regions.map(region => {
-                // Filter observations for this region
-                const regionData = {
-                  ...observationsDataDay,
-                  title: `${region.title} - ${observationsDataDay.title}`,
-                  data: observationsDataDay.data.filter(station => 
-                    region.stationIds.includes(station.Stid)
-                  )
-                };
-                
-                // Only render table if region has data
-                return regionData.data.length > 0 ? (
-                  <div key={region.id} className="bg-white rounded-lg shadow">
-                    {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
-                      {region.title}
-                    </h2> */}
-                    <DayAveragesTable 
-                      dayAverages={regionData}
-                      onStationClick={handleStationClick}
-                      mode={tableMode}
-                    />
-                  </div>
-                ) : null;
-              })}
-            </div>
-          )}
+        {observationsDataDay && tableMode === 'summary' && (
+          <div className="space-y-4">
+            {regions.map(region => {
+              // Filter observations for this region
+              const regionData = {
+                ...observationsDataDay,
+                title: `${region.title} - ${observationsDataDay.title}`,
+                data: observationsDataDay.data.filter(station => 
+                  region.stationIds.includes(station.Stid)
+                )
+              };
+              
+              // Only render table if region has data
+              return regionData.data.length > 0 ? (
+                <div key={region.id} className="bg-white rounded-lg shadow">
+                  {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
+                    {region.title}
+                  </h2> */}
+                  <DayAveragesTable 
+                    dayAverages={regionData}
+                    onStationClick={handleStationClick}
+                    mode={tableMode}
+                  />
+                </div>
+              ) : null;
+            })}
+          </div>
+        )}
 
           {/* This is for when I eventually implement the region cards for the map  */}
 
