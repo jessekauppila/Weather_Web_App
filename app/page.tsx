@@ -132,6 +132,7 @@ export default function Home() {
 
 
   // Initialize with the current date
+  //const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
     // Remove unused state variables
@@ -139,7 +140,9 @@ export default function Home() {
     const [startHour, setStartHour] = useState<number>(0);
     const [endHour, setEndHour] = useState<number>(0);
   
-
+    // Add state for day range type
+   // const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
+    // console.log('dayRangeType:', dayRangeType);
   
     const { 
       startHour: calculatedStartHour, 
@@ -432,7 +435,7 @@ export default function Home() {
           setIsMetric={setIsMetric}
         />
 
-        {/* REPLACE all the visualization components with this: */}
+        {/* Should show if stuff is loading, but not showing anything now  */}
         <div 
           className={`w-full max-w-6xl space-y-4 transition-opacity duration-200 ${
             isComponentVisible && !isLoading && !isPending 
@@ -442,21 +445,81 @@ export default function Home() {
         >
           <WeatherDisplay
             observationsDataDay={observationsDataDay}
-            observationsDataHour={observationsDataHour}
             filteredObservationsDataHour={filteredObservationsDataHour}
             selectedStation={selectedStation}
             isMetric={isMetric}
-            handleStationClick={handleStationClick}
-            tableMode={tableMode}
           />
-        </div>
 
-        {/* REMOVE all these:
-        - DayAveragesTable
-        - DayWxSnowGraph
-        - WxSnowGraph
-        - HourWxTable
-        - All the related conditional rendering */}
+          {/*  Regions the BIG table */}
+
+          {observationsDataDay && selectedStation && (
+            <DayAveragesTable 
+              dayAverages={observationsDataDay} 
+              onStationClick={handleStationClick}
+              mode={tableMode}
+            />
+          )}
+
+          {/*  Regions  */}
+
+          {/* region cards for each table  */}
+
+          {observationsDataDay && tableMode === 'summary' && (
+            <div className="space-y-4">
+              {regions.map(region => {
+                // Filter observations for this region
+                const regionData = {
+                  ...observationsDataDay,
+                  title: `${region.title} - ${observationsDataDay.title}`,
+                  data: observationsDataDay.data.filter(station => 
+                    region.stationIds.includes(station.Stid)
+                  )
+                };
+                
+                // Only render table if region has data
+                return regionData.data.length > 0 ? (
+                  <div key={region.id} className="bg-white rounded-lg shadow">
+                    {/* <h2 className="text-xl font-bold p-4 bg-gray-100 rounded-t-lg">
+                      {region.title}
+                    </h2> */}
+                    <DayAveragesTable 
+                      dayAverages={regionData}
+                      onStationClick={handleStationClick}
+                      mode={tableMode}
+                    />
+                  </div>
+                ) : null;
+              })}
+            </div>
+          )}
+
+          {/* This is for when I eventually implement the region cards for the map  */}
+
+          {observationsDataDay && tableMode === 'summary' && (
+            <>
+              {regions.map(region => (
+                <RegionCard
+                  key={region.id}
+                  title={region.title}
+                  stations={observationsDataDay.data}
+                  stationIds={region.stationIds}
+                  onStationClick={handleStationClick}
+                  observationsData={observationsDataDay}
+                  activeDropdown={activeDropdown}
+                  onDropdownToggle={setActiveDropdown}
+                />
+              ))}
+            </>
+          )}
+
+          {/* Individual STATION Components  */}
+
+          {/* Graphs   */}
+
+          {/* Tables   */}
+
+
+        </div>
       </div>
     </main>
   );
