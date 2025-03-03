@@ -10,25 +10,20 @@ import React, {
   useMemo,
 } from 'react';
 import { SelectChangeEvent } from '@mui/material';
-
 import DayAveragesTable from './vis/dayWxTable';
-
 import { DayRangeType } from './types';
-
 import RegionCard from './components/map/RegionCard';
-
 import TimeToolbar from './components/TimeToolbar';
-
 import { regions, stationGroups } from '@/app/config/regions';
-
 import { Analytics } from "@vercel/analytics/react"
-
 import { useTimeRange } from '@/app/hooks/useTimeRange';
 import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 import { useWeatherControls } from '@/app/hooks/useWeatherControls';
 import { useWeatherData } from '@/app/hooks/useWeatherData';
 import { useStations } from '@/app/hooks/useStations';
 import { LoadingWrapper } from '@/app/components/LoadingWrapper';
+import { useViewState } from '@/app/hooks/useViewState';
+import { useDateState } from '@/app/hooks/useDateState';
 
 interface Station {
   id: string;
@@ -69,14 +64,24 @@ export default function Home() {
     handleStationClick
   } = useStations();
 
-  // Get current time in PDT
   const {
     selectedDate,
+    setSelectedDate,
+    endDate,
+    setEndDate,
+    useCustomEndDate,
+    setUseCustomEndDate,
+    handlePrevDay,
+    handleNextDay,
+    handleDateChange
+  } = useDateState();
+
+  // Get current time in PDT
+  const {
     timeRange,
     dayRangeType,
     customTime,
     calculateTimeRange,
-    setSelectedDate,
     setTimeRange,
     setDayRangeType,
     setCustomTime
@@ -86,55 +91,41 @@ export default function Home() {
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
 
-  // Add state for table mode
-  const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const {
+    tableMode,
+    setTableMode,
+    isComponentVisible,
+    setIsComponentVisible,
+    activeDropdown,
+    setActiveDropdown,
+    isTransitioning,
+    setIsTransitioning
+  } = useViewState();
 
-  // Add a new state for component visibility
-  const [isComponentVisible, setIsComponentVisible] = useState(true);
+  // Remove these states as they're now in useDateState:
+  // const [selectedDate, setSelectedDate] = useState(new Date());
+  // const [endDate, setEndDate] = useState(new Date());
+  // const [useCustomEndDate, setUseCustomEndDate] = useState(false);
 
-  // Add this state at the top level where RegionCard is used
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  // Remove these functions as they're now in useDateState:
+  // const handlePrevDay = () => { ... }
+  // const handleNextDay = () => { ... }
+  // const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => { ... }
 
-  // Initialize with the current date
-  //const [selectedDate, setSelectedDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  // Add state for day range type
+  // const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
+  // console.log('dayRangeType:', dayRangeType);
 
-    // Remove unused state variables
-    const [useCustomEndDate, setUseCustomEndDate] = useState(false);
-    const [startHour, setStartHour] = useState<number>(0);
-    const [endHour, setEndHour] = useState<number>(0);
-  
-    // Add state for day range type
-   // const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
-    // console.log('dayRangeType:', dayRangeType);
-  
-    const { 
-      startHour: calculatedStartHour, 
-      endHour: calculatedEndHour 
-    } = calculateTimeRange(selectedDate, dayRangeType);
-  
-    // Add effect to update hours when time range changes
-    useEffect(() => {
-      setStartHour(calculatedStartHour);
-      setEndHour(calculatedEndHour);
-    }, [calculatedStartHour, calculatedEndHour]);
-  
-    
+  const { 
+    startHour: calculatedStartHour, 
+    endHour: calculatedEndHour 
+  } = calculateTimeRange(selectedDate, dayRangeType);
 
-  const handleEndDateChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setEndDate(new Date(event.target.value));
-  };
-
-  const handlePrevDay = () => {
-    setSelectedDate((prevDate) => subDays(prevDate, 1));
-  };
-
-  const handleNextDay = () => {
-    setSelectedDate((prevDate) => addDays(prevDate, 1));
-  };
+  // Add effect to update hours when time range changes
+  useEffect(() => {
+    //console.log('Current dayRangeType:', dayRangeType);
+    //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
+  }, [dayRangeType]);
 
   // First, memoize the time range calculation
   const timeRangeData = useMemo(() => {
@@ -168,8 +159,8 @@ export default function Home() {
     timeRangeData,
     stationIds,
     tableMode,
-    startHour,
-    endHour,
+    calculatedStartHour,
+    calculatedEndHour,
     dayRangeType
   );
 
@@ -184,7 +175,6 @@ export default function Home() {
     }
   }, [selectedStation]);
 
-
   // Updated calculateCurrentTimeRange to be more precise
   const calculateCurrentTimeRange = () => {
     if (useCustomEndDate && timeRange !== 1 && timeRange !== 3 && timeRange !== 7 && timeRange !== 14 && timeRange !== 30) {
@@ -197,38 +187,17 @@ export default function Home() {
   const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
     const newType = event.target.value as DayRangeType;
 
-    
     setDayRangeType(newType);
     
     // Update hours based on the selected type
     const { startHour, endHour } = calculateTimeRange(selectedDate, newType);
-    setStartHour(startHour);
-    setEndHour(endHour);
+    setSelectedDate(new Date(selectedDate.setHours(startHour, 0, 0)));
+    setEndDate(new Date(selectedDate.setHours(endHour, 0, 0)));
   };
-
-  useEffect(() => {
-    //console.log('Current dayRangeType:', dayRangeType);
-    //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
-  }, [dayRangeType]);
-
-  // Add click outside handler at the top level
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (activeDropdown && !(event.target as Element).closest('details')) {
-        setActiveDropdown(null);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [activeDropdown]);
 
   // Add the hook
   const {
     handleTimeRangeChange,
-    handleDateChange,
   } = useWeatherControls(
     setSelectedDate,
     setEndDate,
@@ -252,7 +221,7 @@ export default function Home() {
           selectedDate={selectedDate}
           handleDateChange={handleDateChange}
           endDate={endDate}
-          handleEndDateChange={handleEndDateChange}
+          handleEndDateChange={setEndDate}
           dayRangeType={dayRangeType}
           handleDayRangeTypeChange={handleDayRangeTypeChange}
           customTime={customTime}
@@ -264,8 +233,8 @@ export default function Home() {
           filteredObservationsDataHour={filteredObservationsDataHour}
           onRefresh={handleRefresh}
           tableMode ={tableMode}
-          startHour={startHour}
-          endHour={endHour}
+          startHour={calculatedStartHour}
+          endHour={calculatedEndHour}
           setObservationsDataDay={setObservationsDataDay}
           setObservationsDataHour={setObservationsDataHour}
           setFilteredObservationsDataHour={setFilteredObservationsDataHour}
