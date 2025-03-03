@@ -2,6 +2,16 @@ import { useState } from 'react';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 
+/**
+ * Custom hook for managing time range and date selections
+ * Handles:
+ * - Current date/time in LA timezone
+ * - Selected date state
+ * - Time range state (1, 3, 7, 14, 30 days)
+ * - Day range type (MIDNIGHT, CURRENT, CUSTOM)
+ * - Custom time selection
+ * - Calculates time ranges based on selected parameters
+ */
 export function useTimeRange() {
   const currentMoment = moment().tz('America/Los_Angeles');
   const [selectedDate, setSelectedDate] = useState(new Date());

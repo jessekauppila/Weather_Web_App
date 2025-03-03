@@ -4,6 +4,16 @@ import HourWxTable from '../vis/hourWxTable';
 import WxSnowGraph from '../vis/wxSnowGraph';
 import AccordionWrapper from './map/AccordionWrapper';
 
+/**
+ * Component for orchestrating weather visualization elements
+ * Manages:
+ * - Hourly and daily snow/temperature graphs in accordions
+ * - Daily averages tables
+ * - Hourly weather tables
+ * - Conditional rendering based on selected station and data availability
+ * - Metric/Imperial unit display
+ * Props include observation data (day/hour), station selection, and display modes
+ */
 interface WeatherDisplayProps {
   observationsDataDay: any;
   observationsDataHour: any;

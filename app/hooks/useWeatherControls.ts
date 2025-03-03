@@ -3,6 +3,15 @@ import moment from 'moment-timezone';
 import { subDays } from 'date-fns';
 import { DayRangeType } from '../types';
 
+/**
+ * Custom hook for handling weather control UI interactions
+ * Manages:
+ * - Time range selection changes (1-30 days)
+ * - Date selection changes
+ * - Custom date range toggles
+ * - Updates start/end dates based on selections
+ * Requires setters for dates, custom end date flag, and time range
+ */
 export function useWeatherControls(
   setSelectedDate: (date: Date) => void,
   setEndDate: (date: Date) => void,
