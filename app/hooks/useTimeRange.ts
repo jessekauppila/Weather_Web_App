@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 
@@ -13,22 +13,29 @@ import { DayRangeType } from '../types';
  * - Calculates time ranges based on selected parameters
  */
 
+const VALID_TIME_RANGES = [1, 3, 7, 14, 30];
 
-  /**
-   * Calculates the start and end times based on the selected date and range type
-   * @param date - The base date to calculate the range from
-   * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
-   * @returns Object containing start time, end time, and corresponding hours
-   */
-
-
+/**
+ * Calculates the start and end times based on the selected date and range type
+ * @param date - The base date to calculate the range from
+ * @param type - The type of range (MIDNIGHT, CURRENT, or FORECAST)
+ * @returns Object containing start time, end time, and corresponding hours
+ */
 
 export function useTimeRange() {
   const currentMoment = moment().tz('America/Los_Angeles');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timeRange, setTimeRange] = useState(1);
-  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
-  const [customTime, setCustomTime] = useState(currentMoment.format('HH:mm'));
+  const [dayRangeType, setDayRangeType] = useState<DayRangeType>('day');
+  const [useCustomEndDate, setUseCustomEndDate] = useState(false);
+  const [customTime, setCustomTime] = useState<string>('');
+
+  const calculateCurrentTimeRange = useCallback(() => {
+    if (useCustomEndDate && ![1, 3, 7, 14, 30].includes(timeRange)) {
+      return 'custom';
+    }
+    return timeRange.toString();
+  }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
     const endMoment = moment(date).tz('America/Los_Angeles');
@@ -102,8 +109,11 @@ export function useTimeRange() {
     setTimeRange,
     dayRangeType,
     setDayRangeType,
+    useCustomEndDate,
+    setUseCustomEndDate,
     customTime,
     setCustomTime,
+    calculateCurrentTimeRange,
     calculateTimeRange
   };
 }
