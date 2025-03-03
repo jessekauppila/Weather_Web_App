@@ -31,7 +31,7 @@ import { regions, stationGroups } from '@/app/config/regions';
 import { Analytics } from "@vercel/analytics/react"
 
 import { useTimeRange } from '@/app/hooks/useTimeRange';
-import { WeatherDisplay } from '@/app/components/WeatherDisplay';
+import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 
 interface Station {
   id: string;
