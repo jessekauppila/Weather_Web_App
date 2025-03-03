@@ -56,6 +56,9 @@ interface StationCardProps {
 }
 
 export default function Home() {
+
+  const { tableMode, setTableMode } = useViewState();
+
   const {
     stations,
     selectedStation,
@@ -63,7 +66,7 @@ export default function Home() {
     isStationChanging,
     handleStationChange,
     handleStationClick
-  } = useStations();
+  } = useStations({ setTableMode });
 
   const {
     selectedDate,
@@ -77,7 +80,6 @@ export default function Home() {
     handleDateChange
   } = useDateState();
 
-  // Get current time in PDT
   const {
     timeRange,
     dayRangeType,
@@ -88,13 +90,10 @@ export default function Home() {
     setCustomTime
   } = useTimeRange();
 
-  // Add loading state for station change
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
 
   const {
-    tableMode,
-    setTableMode,
     isComponentVisible,
     setIsComponentVisible,
     activeDropdown,
@@ -103,32 +102,14 @@ export default function Home() {
     setIsTransitioning
   } = useViewState();
 
-  // Remove these states as they're now in useDateState:
-  // const [selectedDate, setSelectedDate] = useState(new Date());
-  // const [endDate, setEndDate] = useState(new Date());
-  // const [useCustomEndDate, setUseCustomEndDate] = useState(false);
-
-  // Remove these functions as they're now in useDateState:
-  // const handlePrevDay = () => { ... }
-  // const handleNextDay = () => { ... }
-  // const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => { ... }
-
-  // Add state for day range type
-  // const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
-  // console.log('dayRangeType:', dayRangeType);
-
   const { 
     startHour: calculatedStartHour, 
     endHour: calculatedEndHour 
   } = calculateTimeRange(selectedDate, dayRangeType);
 
-  // Add effect to update hours when time range changes
   useEffect(() => {
-    //console.log('Current dayRangeType:', dayRangeType);
-    //console.log('Is CUSTOM?', dayRangeType === DayRangeType.CUSTOM);
   }, [dayRangeType]);
 
-  // First, memoize the time range calculation
   const timeRangeData = useMemo(() => {
     let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
     
@@ -143,7 +124,6 @@ export default function Home() {
     };
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
-  // Add the hook
   const {
     observationsDataDay,
     observationsDataHour,
@@ -165,18 +145,6 @@ export default function Home() {
     dayRangeType
   );
 
-  useEffect(() => {
-    //console.log('selectedStation changed to:', selectedStation);
-    if (selectedStation) {
-      //console.log(' Switching to daily mode - Station selected:', selectedStation);
-      setTableMode('daily');
-    } else {
-      //console.log('🔄 Switching to summary mode - No station selected');
-      setTableMode('summary');
-    }
-  }, [selectedStation]);
-
-  // Updated calculateCurrentTimeRange to be more precise
   const calculateCurrentTimeRange = () => {
     if (useCustomEndDate && timeRange !== 1 && timeRange !== 3 && timeRange !== 7 && timeRange !== 14 && timeRange !== 30) {
       return 'custom';
@@ -184,21 +152,10 @@ export default function Home() {
     return timeRange.toString();
   };
 
-  // Simplified handler - only updates the type and hours
-  const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
-    const newType = event.target.value as DayRangeType;
-
-    setDayRangeType(newType);
-    
-    // Update hours based on the selected type
-    const { startHour, endHour } = calculateTimeRange(selectedDate, newType);
-    setSelectedDate(new Date(selectedDate.setHours(startHour, 0, 0)));
-    setEndDate(new Date(selectedDate.setHours(endHour, 0, 0)));
-  };
-
-  // Add the hook
   const {
     handleTimeRangeChange,
+    handleDayRangeTypeChange,
+    handleEndDateChange
   } = useWeatherControls(
     setSelectedDate,
     setEndDate,
@@ -209,7 +166,6 @@ export default function Home() {
     handleRefresh
   );
 
-  // Usage in your render
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100 w-full">
       <div className="w-full max-w-6xl space-y-4">
@@ -222,7 +178,7 @@ export default function Home() {
           selectedDate={selectedDate}
           handleDateChange={handleDateChange}
           endDate={endDate}
-          handleEndDateChange={setEndDate}
+          handleEndDateChange={handleEndDateChange}
           dayRangeType={dayRangeType}
           handleDayRangeTypeChange={handleDayRangeTypeChange}
           customTime={customTime}
@@ -264,10 +220,6 @@ export default function Home() {
             handleStationClick={handleStationClick}
             tableMode={tableMode}
           />
-
-          {/*  Regions  */}
-
-          {/* region cards for each table  */}
 
         {observationsDataDay && tableMode === 'summary' && (
           <div className="space-y-4">

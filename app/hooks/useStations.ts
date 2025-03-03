@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SelectChangeEvent } from '@mui/material';
+import { TableMode } from './useViewState';  // Import the type
+
+interface UseStationsProps {
+  setTableMode: (mode: TableMode) => void;
+}
 
 interface Station {
   id: string;
   name: string;
 }
 
-export function useStations() {
+export function useStations({ setTableMode }: UseStationsProps) {
   const [stations, setStations] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedStation, setSelectedStation] = useState<string>('');
   const [stationIds, setStationIds] = useState<string[]>([]);
@@ -43,21 +48,24 @@ export function useStations() {
     if (!selectedStationId) {
       setSelectedStation('');
       setStationIds(stations.map(station => station.id));
+      setTableMode('summary');  // Set mode directly here
     } else {
       setSelectedStation(selectedStationId);
       setStationIds([selectedStationId]);
+      setTableMode('daily');    // Set mode directly here
     }
-  }, [stations]);
+  }, [stations, setTableMode]);
 
   const handleStationClick = useCallback((stationId: string) => {
     setIsStationChanging(true);
     setSelectedStation(stationId);
     setStationIds([stationId]);
+    setTableMode('daily');      // Set mode directly here
     
     setTimeout(() => {
       setIsStationChanging(false);
     }, 300);
-  }, []);
+  }, [setTableMode]);
 
   return {
     stations,
