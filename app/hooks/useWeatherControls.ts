@@ -68,18 +68,22 @@ export function useWeatherControls(
     setUseCustomEndDate(true);
   };
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
+    const newType = event.target.value as DayRangeType;
+    return newType;
+  };
+
+  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = moment(event.target.value)
       .tz('America/Los_Angeles')
       .startOf('day')
       .toDate();
-    
-    setSelectedDate(newDate);
     setEndDate(newDate);
   };
 
   return {
     handleTimeRangeChange,
-    handleDateChange,
+    handleDayRangeTypeChange,
+    handleEndDateChange,
   };
 } 
