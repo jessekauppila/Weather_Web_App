@@ -12,19 +12,12 @@ import React, {
 import { SelectChangeEvent } from '@mui/material';
 
 import DayAveragesTable from './vis/dayWxTable';
-import DayWxSnowGraph from './vis/dayWxSnowGraph';
-import AccordionWrapper from './components/map/AccordionWrapper';
-
-//import hourWxTableDataFromDB from './hourWxTableDataFromDB';
-import HourWxTable from './vis/hourWxTable';
-import WxSnowGraph from './vis/wxSnowGraph';
 
 import { DayRangeType } from './types';
 
 import RegionCard from './components/map/RegionCard';
 
 import TimeToolbar from './components/TimeToolbar';
-import { fetchWeatherData } from './utils/fetchWeatherData';
 
 import { regions, stationGroups } from '@/app/config/regions';
 
@@ -33,6 +26,8 @@ import { Analytics } from "@vercel/analytics/react"
 import { useTimeRange } from '@/app/hooks/useTimeRange';
 import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 import { useWeatherControls } from '@/app/hooks/useWeatherControls';
+import { useWeatherData } from '@/app/hooks/useWeatherData';
+import { useStations } from '@/app/hooks/useStations';
 
 interface Station {
   id: string;
@@ -64,6 +59,15 @@ interface StationCardProps {
 }
 
 export default function Home() {
+  const {
+    stations,
+    selectedStation,
+    stationIds,
+    isStationChanging,
+    handleStationChange,
+    handleStationClick
+  } = useStations();
+
   // Get current time in PDT
   const {
     selectedDate,
@@ -77,33 +81,7 @@ export default function Home() {
     setCustomTime
   } = useTimeRange();
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [observationsDataDay, setObservationsDataDay] = useState<{
-    data: any[];
-    title: string;
-  } | null>(null);
-
-  const [observationsDataHour, setObservationsDataHour] = useState<{
-    data: any[];
-    title: string;
-  } | null>(null);
-
-  // console.log('observationsDataHour', observationsDataHour);
-
-  const [filteredObservationsDataHour, setFilteredObservationsDataHour] = useState<{
-    data: any[];
-    title: string;
-  } | null>(null);
-
-  const [stations, setStations] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-  const [selectedStation, setSelectedStation] = useState<string>('');
-  const [stationIds, setStationIds] = useState<string[]>([]);
-
   // Add loading state for station change
-  const [isStationChanging, setIsStationChanging] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true); // Default to true since we start with 1 day view
 
@@ -116,13 +94,6 @@ export default function Home() {
 
   // Add this state at the top level where RegionCard is used
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  // Add state
-  const [isMetric, setIsMetric] = useState<boolean>(false);
-
-  useEffect(() => {
-    console.log('📄 Page: isMetric state changed to:', isMetric);
-  }, [isMetric]);
 
   /**
    * Calculates the start and end times based on the selected date and range type
@@ -172,36 +143,6 @@ export default function Home() {
     setSelectedDate((prevDate) => addDays(prevDate, 1));
   };
 
-  //Fetch the stations from the DB and then use the station ids to fetch the observations from the DB
-  useEffect(() => {
-    const fetchStations = async () => {
-      try {
-        const response = await fetch('/api/getStations');
-        if (!response.ok) {
-          throw new Error('Failed to fetch stations');
-        }
-        const data = await response.json();
-        const mappedStations = data
-          .map((station: any) => ({
-            id: station.stid,
-            name: station.station_name,
-          }))
-          .sort((a: Station, b: Station) =>
-            a.name.localeCompare(b.name)
-          );
-
-        setStations(mappedStations);
-        // Set stationIds to include all station IDs initially
-        const allStationIds = mappedStations.map((station: any) => station.id);
-        setStationIds(allStationIds);
-      } catch (error) {
-        console.error('Error fetching stations:', error);
-      }
-    };
-
-    fetchStations();
-  }, []);
-
   // First, memoize the time range calculation
   const timeRangeData = useMemo(() => {
     let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
@@ -217,62 +158,27 @@ export default function Home() {
     };
   }, [selectedDate, endDate, dayRangeType, timeRange]); // Minimal dependencies
 
-  // Create a refresh function
-  const handleRefresh = async (newIsMetric?: boolean) => {
-    console.log('🔄 Page: Fetching weather data with isMetric:', newIsMetric ?? isMetric);
-    await fetchWeatherData({
-      timeRangeData,
-      stationIds,
-      tableMode,
-      startHour,
-      endHour,
-      dayRangeType,
-      setObservationsDataDay,
-      setObservationsDataHour,
-      setFilteredObservationsDataHour,
-      setIsLoading,
-      isMetric: newIsMetric ?? isMetric  // Use new value if provided, otherwise use current state
-    });
-  };
-
-  // Use the same function in useEffect
-  useEffect(() => {
-    handleRefresh();
-  }, [timeRangeData, stationIds]);
-
-  // Modify the handleStationChange function
-  const handleStationChange = useCallback(
-    (event: SelectChangeEvent<string>) => {
-      const selectedStationId = event.target.value;
-      
-      startTransition(() => {
-        if (!selectedStationId) {
-          setSelectedStation('');
-          setStationIds(stations.map(station => station.id));
-          setTableMode('summary');
-        } else {
-          setSelectedStation(selectedStationId);
-          setStationIds([selectedStationId]);
-          setTableMode('daily');
-        }
-      });
-    },
-    [stations]
+  // Add the hook
+  const {
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
+    isLoading,
+    isMetric,
+    setIsMetric,
+    handleRefresh,
+    setObservationsDataDay,
+    setObservationsDataHour,
+    setFilteredObservationsDataHour,
+    setIsLoading
+  } = useWeatherData(
+    timeRangeData,
+    stationIds,
+    tableMode,
+    startHour,
+    endHour,
+    dayRangeType
   );
-
-  const handleStationClick = (stationId: string) => {
-    setIsStationChanging(true);
-    
-    startTransition(() => {
-      setSelectedStation(stationId);
-      setStationIds([stationId]);
-      setTableMode('daily');
-    });
-
-    setTimeout(() => {
-      setIsStationChanging(false);
-    }, 300);
-  };
 
   useEffect(() => {
     //console.log('selectedStation changed to:', selectedStation);
@@ -395,9 +301,12 @@ export default function Home() {
         >
           <WeatherDisplay
             observationsDataDay={observationsDataDay}
+            observationsDataHour={observationsDataHour}
             filteredObservationsDataHour={filteredObservationsDataHour}
             selectedStation={selectedStation}
             isMetric={isMetric}
+            handleStationClick={handleStationClick}
+            tableMode={tableMode}
           />
 
         {/*  Regions the BIG table */}
