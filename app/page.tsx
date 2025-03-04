@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from 'react';
 
-import TimeToolbar from './components/TimeToolbar';
+import TimeToolbar from './components/TimeToolbar/index';
 import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 import { LoadingWrapper } from '@/app/components/LoadingWrapper';
 import RegionTables from '@/app/components/RegionTables';

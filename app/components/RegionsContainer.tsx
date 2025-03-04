@@ -1,5 +1,5 @@
 import React from 'react';
-import RegionCard from './map/RegionCard';
+import RegionCard from './mapStationCards/RegionCard';
 import { regions } from '@/app/config/regions';
 
 interface RegionsContainerProps {
