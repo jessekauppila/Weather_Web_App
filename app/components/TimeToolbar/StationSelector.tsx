@@ -38,12 +38,13 @@ export function StationSelector({
   );
 
   return (
-    <FormControl variant="outlined" size="small" className="w-full sm:w-auto">
+    <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel>Station</InputLabel>
       <Select
         value={selectedStation}
         onChange={debouncedHandleStationChange}
         label="Station"
+        className="w-full"
         MenuProps={{
           PaperProps: {
             sx: {
@@ -59,6 +60,13 @@ export function StationSelector({
                 }
               }
             }
+          }
+        }}
+        sx={{
+          '& .MuiSelect-icon': {
+            color: 'rgba(0, 0, 0, 0.54)',
+            width: '20px',
+            height: '20px'
           }
         }}
       >

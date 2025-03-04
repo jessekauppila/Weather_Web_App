@@ -24,11 +24,17 @@ export function DateControls({
     <div className="flex items-center gap-2">
       <Button
         onClick={handlePrevDay}
-        variant="contained"
+        variant="text"
         size="small"
-        className="min-w-0 p-2"
+        className="min-w-0 p-1"
+        sx={{
+          color: 'rgba(0, 0, 0, 0.54)',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+          }
+        }}
       >
-        <ArrowBack />
+        <ArrowBack sx={{ fontSize: 20 }} />
       </Button>
 
       <TextField
@@ -51,11 +57,17 @@ export function DateControls({
 
       <Button
         onClick={handleNextDay}
-        variant="contained"
+        variant="text"
         size="small"
-        className="min-w-0 p-2"
+        className="min-w-0 p-1"
+        sx={{
+          color: 'rgba(0, 0, 0, 0.54)',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+          }
+        }}
       >
-        <ArrowForward />
+        <ArrowForward sx={{ fontSize: 20 }} />
       </Button>
     </div>
   );

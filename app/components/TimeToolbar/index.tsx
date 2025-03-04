@@ -112,7 +112,7 @@ export default function TimeToolbar({
 
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="flex flex-col space-y-2 bg-[cornflowerblue] p-2 sm:p-4 rounded-xl shadow-md w-full">
+      <div className="flex flex-col space-y-2 bg-[cornflowerblue] p-2 sm:p-4 rounded-xl shadow-md w-full max-w-[1200px]">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 w-full">
           <TimeRangeSelector
             calculateCurrentTimeRange={calculateCurrentTimeRange}
@@ -157,13 +157,15 @@ export default function TimeToolbar({
             handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
           />
         </div>
-      </div>
 
-      <StationSelector
-        selectedStation={selectedStation}
-        stations={stations}
-        handleStationChange={handleStationChange}
-      />
+        <div className="w-full max-w-[800px] mx-auto">
+          <StationSelector
+            selectedStation={selectedStation}
+            stations={stations}
+            handleStationChange={handleStationChange}
+          />
+        </div>
+      </div>
     </div>
   );
 } 
