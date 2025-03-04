@@ -700,10 +700,10 @@ details[open] .details-caret {
 .measurement-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;  /* Reduce gap between cards */
-  width: 100%;
-  padding: 0.25rem;  /* Add small padding around grid */
-} */
+  gap: 0.5rem;  /*
+  width: 100%;*/
+  /* padding: 0.25rem;
+}  */
 
 .station-metric {
   width: 100%;
