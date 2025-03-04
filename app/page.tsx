@@ -189,6 +189,9 @@ export default function Home() {
     setIsLoading,
     isMetric,
     setIsMetric,
+    calculateCurrentTimeRange,
+    isOneDay,
+    setCustomTime,
   };
 
   return (
@@ -226,6 +229,11 @@ export default function Home() {
             handleStationClick={handleStationClick}
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
+            observationsDataDay={observationsDataDay}
+            observationsDataHour={observationsDataHour}
+            filteredObservationsDataHour={filteredObservationsDataHour}
+            isMetric={isMetric}
+            tableMode={tableMode}
           />
         </LoadingWrapper>
       </div>

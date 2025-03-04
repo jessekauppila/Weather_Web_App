@@ -29,6 +29,12 @@ interface RegionCardProps {
   } | null;
   activeDropdown: string | null;
   onDropdownToggle: (stid: string | null) => void;
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+  isMetric: boolean;
+  tableMode: 'summary' | 'daily';
+  dayAverages: any;
 }
 
 const RegionCard = ({ 
@@ -38,7 +44,13 @@ const RegionCard = ({
   onStationClick,
   observationsData,
   activeDropdown,
-  onDropdownToggle
+  onDropdownToggle,
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric,
+  tableMode,
+  dayAverages
 }: RegionCardProps) => (
   <div className="bg-[cornflowerblue] bg-opacity-10 p-4 rounded-lg mb-4">
     <h2 className="text-xl text-black font-bold mb-4">{title}</h2>
@@ -53,6 +65,12 @@ const RegionCard = ({
           observationsData={observationsData}
           isActive={activeDropdown === station.Stid}
           onDropdownToggle={onDropdownToggle}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
+          dayAverages={dayAverages}
         />
       ))}
     </div>

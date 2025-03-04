@@ -2,7 +2,7 @@ import DayAveragesTable from '../vis/dayWxTable';
 import DayWxSnowGraph from '../vis/dayWxSnowGraph';
 import HourWxTable from '../vis/hourWxTable';
 import WxSnowGraph from '../vis/wxSnowGraph';
-import AccordionWrapper from './mapStationCards/AccordionWrapper';
+import AccordionWrapper from './map/AccordionWrapper';
 
 /**
  * Component for orchestrating weather visualization elements

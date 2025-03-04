@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import RegionCard from './mapStationCards/RegionCard';
 import { regions } from '@/app/config/regions';
 
@@ -26,29 +26,45 @@ interface RegionsContainerProps {
   } | null;
   handleStationClick: (stationId: string) => void;
   activeDropdown: string | null;
-  setActiveDropdown: (id: string | null) => void;
+  setActiveDropdown: Dispatch<SetStateAction<string | null>>;
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+  isMetric: boolean;
+  tableMode: 'summary' | 'daily';
 }
 
 export function RegionsContainer({
   observationsData,
   handleStationClick,
   activeDropdown,
-  setActiveDropdown
+  setActiveDropdown,
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric,
+  tableMode
 }: RegionsContainerProps) {
   if (!observationsData) return null;
   
   return (
     <div className="space-y-4">
-      {regions.map(region => (
+      {regions.map((region, index) => (
         <RegionCard
-          key={region.id}
+          key={index}
           title={region.title}
-          stations={observationsData.data}
           stationIds={region.stationIds}
+          stations={observationsData?.data || []}
           onStationClick={handleStationClick}
           observationsData={observationsData}
           activeDropdown={activeDropdown}
           onDropdownToggle={setActiveDropdown}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
+          dayAverages={observationsDataDay}
         />
       ))}
     </div>
