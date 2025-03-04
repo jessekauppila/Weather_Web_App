@@ -666,7 +666,7 @@ details[open] .details-caret {
 
 /* ////////////////////////////////////////////////////////////////////////////////////////// */
 /* Station Card Styles */
-.station-card {
+/* .station-card {
   background-color: white;
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -703,7 +703,7 @@ details[open] .details-caret {
   gap: 0.5rem;  /* Reduce gap between cards */
   width: 100%;
   padding: 0.25rem;  /* Add small padding around grid */
-}
+} */
 
 .station-metric {
   width: 100%;
