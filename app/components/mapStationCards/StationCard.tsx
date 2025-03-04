@@ -43,6 +43,9 @@ interface StationCardProps {
 }
 
 const StationCard = ({ station, onStationClick, observationsData, isActive, onDropdownToggle, tableMode }: StationCardProps) => {
+  console.log('Station data:', station);
+  console.log('Observations data:', observationsData);
+
   const [snowAccordionOpen, setSnowAccordionOpen] = useState(false);
   const [tempAccordionOpen, setTempAccordionOpen] = useState(false);
   const [windAccordionOpen, setWindAccordionOpen] = useState(false);
@@ -117,7 +120,10 @@ const StationCard = ({ station, onStationClick, observationsData, isActive, onDr
 
           {observationsData && (
             <DayAveragesTable 
-              dayAverages={observationsData} 
+              dayAverages={{ 
+                data: [station],
+                title: station.Station
+              }}
               onStationClick={onStationClick}
               mode={tableMode}
             />

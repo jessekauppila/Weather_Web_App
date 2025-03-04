@@ -12,8 +12,8 @@ interface Station {
 }
 
 export function useStations({ setTableMode }: UseStationsProps) {
-  const [stations, setStations] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedStation, setSelectedStation] = useState<string>('');
+  const [stations, setStations] = useState<Station[]>([]);
+    const [selectedStation, setSelectedStation] = useState<string>('');
   const [stationIds, setStationIds] = useState<string[]>([]);
   const [isStationChanging, setIsStationChanging] = useState(false);
 
