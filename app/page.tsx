@@ -202,7 +202,17 @@ export default function Home() {
           {...stationProps}
           {...dataProps}
         />
-
+          <RegionsContainer
+            observationsData={observationsDataDay}
+            handleStationClick={handleStationClick}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+            observationsDataDay={observationsDataDay}
+            observationsDataHour={observationsDataHour}
+            filteredObservationsDataHour={filteredObservationsDataHour}
+            isMetric={isMetric}
+            tableMode={tableMode}
+          />
         <LoadingWrapper
           isComponentVisible={isComponentVisible}
           isLoading={isLoading}
@@ -224,17 +234,7 @@ export default function Home() {
             tableMode={tableMode}
           />
 
-          <RegionsContainer
-            observationsData={observationsDataDay}
-            handleStationClick={handleStationClick}
-            activeDropdown={activeDropdown}
-            setActiveDropdown={setActiveDropdown}
-            observationsDataDay={observationsDataDay}
-            observationsDataHour={observationsDataHour}
-            filteredObservationsDataHour={filteredObservationsDataHour}
-            isMetric={isMetric}
-            tableMode={tableMode}
-          />
+
         </LoadingWrapper>
       </div>
     </main>
