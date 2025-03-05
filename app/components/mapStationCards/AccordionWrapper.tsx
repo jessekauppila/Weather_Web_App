@@ -68,7 +68,7 @@ export default function AccordionWrapper({
         <h2 
           className="section-subtitle"
           dangerouslySetInnerHTML={{
-             __html: subtitle.replace('\n', '<br/>')
+            __html: subtitle?.replace('\n', '<br/>') || ''
           }}
         />
         {children}

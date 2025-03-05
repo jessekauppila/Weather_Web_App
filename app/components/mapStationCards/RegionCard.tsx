@@ -55,19 +55,18 @@ const RegionCard = ({
   <div className="bg-[cornflowerblue] bg-opacity-10 p-4 rounded-lg mb-4">
     <h2 className="text-xl text-black font-bold mb-4">{title}</h2>
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {stations.filter(station => 
-        stationIds.includes(station.Stid)
-      ).map((station, index) => (
-        <StationCard 
-          key={index} 
-          station={station} 
+      {stations.map((station, index) => (
+        <StationCard
+          key={index}
+          station={station}
+          stationIds={stationIds}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
           onStationClick={onStationClick}
           observationsData={observationsData}
           isActive={activeDropdown === station.Stid}
           onDropdownToggle={onDropdownToggle}
-          observationsDataDay={observationsDataDay}
-          observationsDataHour={observationsDataHour}
-          filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
           dayAverages={dayAverages}

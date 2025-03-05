@@ -80,7 +80,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
-  //console.log(dayAverages.data)
+  console.log('Day averages data:', dayAverages);
 
   useEffect(() => {
     // Clear any existing content and reset loaded state
@@ -345,21 +345,23 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .selectAll('text')
       .style('fill', '#808080');
 
-    // Update snow depth label to blue
-    const firstDataPoint = dataInterpolated[0];
-    svg.append('text')
-      .attr('x', d => {
-        const val = xScale(firstDataPoint.date);
-        return isNaN(val) ? 0 : val;
-      })
-      .attr('y', d => {
-        const val = yScaleLine(firstDataPoint.totalSnowDepth);
-        return isNaN(val) ? 0 : val - 10;
-      })
-      .attr('text-anchor', 'start')  // Align text to start from this point
-      .style('fill', 'blue')
-      .style('font-size', '12px')
-      .text('Snow Depth');
+    // Add a check before using firstDataPoint
+    if (dataInterpolated.length > 0) {
+      const firstDataPoint = dataInterpolated[0];
+      svg.append('text')
+        .attr('x', d => {
+          const val = xScale(firstDataPoint.date);
+          return isNaN(val) ? 0 : val;
+        })
+        .attr('y', d => {
+          const val = yScaleLine(firstDataPoint.totalSnowDepth);
+          return isNaN(val) ? 0 : val - 10;
+        })
+        .attr('text-anchor', 'start')
+        .style('fill', 'blue')
+        .style('font-size', '12px')
+        .text('Snow Depth');
+    }
 
     // Add x-axis label
     svg.append('text')
@@ -571,15 +573,17 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
         tooltip.style('opacity', 0);
       });
 
-    // Update temperature label positioning to use last data point
-    const lastDataPoint = dataInterpolated[dataInterpolated.length - 1];  // Get the last data point
-    svg.append('text')
-      .attr('x', xScale(lastDataPoint.date)-70)  // Position at last data point's x coordinate
-      .attr('y', yScaleTemp(lastDataPoint.temp) - 10)  // Position above the temperature line
-      .attr('text-anchor', 'start')  // Align text to start from this point
-      .style('fill', '#808080')  // Match the temperature line color
-      .style('font-size', '12px')
-      .text('Temperature');
+    // Add safety check for last data point
+    if (dataInterpolated.length > 0) {
+      const lastDataPoint = dataInterpolated[dataInterpolated.length - 1];
+      svg.append('text')
+        .attr('x', xScale(lastDataPoint.date)-70)
+        .attr('y', yScaleTemp(lastDataPoint.temp) - 10)
+        .attr('text-anchor', 'start')
+        .style('fill', '#808080')
+        .style('font-size', '12px')
+        .text('Temperature');
+    }
 
     // Calculate time span in hours and log values
     const timeSpanHours = (d3.max(dataInterpolated, d => d.date.getTime()) - d3.min(dataInterpolated, d => d.date.getTime())) / (1000 * 60 * 60);
