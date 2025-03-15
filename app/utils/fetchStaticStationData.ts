@@ -8,7 +8,7 @@ export async function fetchStations() {
       }
       
       const stations = await stationsResponse.json();
-      console.log('📍 Stations data:', stations);
+      //console.log('📍 Stations data:', stations);
       return stations;
       
     } catch (error) {

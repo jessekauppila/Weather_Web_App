@@ -23,6 +23,8 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
   const containerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(true);
 
+  console.log('Day averages data:', dayAverages);
+
   const spacing = {
     dateAxisOffset: 15,
     legendOffset: 30

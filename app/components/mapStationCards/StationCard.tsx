@@ -43,7 +43,7 @@ interface StationCardProps {
   stationIds: string[];
 }
 
-const StationCard = ({ station, stationIds, onStationClick, observationsData, isActive, onDropdownToggle, filteredObservationsDataHour, tableMode, isMetric }: StationCardProps) => {
+const StationCard = ({ station, stationIds, onStationClick, observationsData, observationsDataDay, observationsDataHour, isActive, onDropdownToggle, filteredObservationsDataHour, tableMode, isMetric }: StationCardProps) => {
   const [snowAccordionOpen, setSnowAccordionOpen] = useState(false);
   const [tempAccordionOpen, setTempAccordionOpen] = useState(false);
   const [windAccordionOpen, setWindAccordionOpen] = useState(false);
@@ -53,25 +53,43 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, is
     return null;
   }
 
-  // console.log('Station data:', station);
-  // console.log('Observations data:', observationsData);\
-  console.log('Station data:', station);
-  console.log('Filtered observations data:', filteredObservationsDataHour);
-
-  // const stationDataDay = observationsData?.data?.filter((obs: { Stid: string }) => obs.Stid === station.Stid);
-  // const stationDataHour = observationsData?.data?.filter((obs: { Stid: string }) => obs.Stid === station.Stid);
-  const stationDataHourFiltered = filteredObservationsDataHour?.data?.filter(
-    (obs: { Station: string }) => obs.Station === station.Station
-  );
-
-  console.log('Station:', station.Station);
-  console.log('Filtered data for station:', stationDataHourFiltered);
-
   // Filter and format the data for the graph
-  const formattedData = {
+  const stationDataHourFiltered = {
     data: filteredObservationsDataHour?.data?.filter(
       (obs: { Station: string }) => obs.Station === station.Station
     ) || [],
+    title: `Filtered Hourly Data - ${station.Station}`
+  };
+
+  // Filter and format the data for the graph
+  const stationDataHourUnFiltered = {
+    data: observationsDataHour?.data?.filter(
+      (obs: { Station: string }) => obs.Station === station.Station
+    ) || [],
+    title: `Raw Hourly Data - ${station.Station}`
+  };
+
+  // Format daily data to match DayWxSnowGraph expectations
+  // Use the hourly data and format it for the graph
+  const stationDataForGraph = {
+    data: filteredObservationsDataHour?.data?.filter(
+      (obs: { Station: string }) => obs.Station === station.Station
+    ).map((obs: { 
+      Station: string; 
+      Day: string; 
+      Hour: string; 
+      'Snow Depth'?: string; 
+      'New Snow'?: string;
+      'Air Temp'?: string;
+      'Precip'?: string;
+    }) => ({
+      Date: `${obs.Day} ${obs.Hour}`,
+      'Total Snow Depth': obs['Snow Depth'] || '0 in',
+      '24h Snow Accumulation': obs['New Snow'] || '0 in',
+      'Air Temp Min': obs['Air Temp'],
+      'Air Temp Max': obs['Air Temp'],
+      'Precip Accum One Hour': obs['Precip'] || '0 in'
+    })) || [],
     title: station.Station
   };
 
@@ -84,7 +102,8 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, is
           </div>
           
           <p className="station-elevation">
-            {station.Elevation}
+            {station.Elevation}, {station.Latitude}, {station.Longitude}
+
           </p>
 
           <div className="measurement-grid">
@@ -125,45 +144,42 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, is
         <Popover.Content className="PopoverContent">
 
           
-          {/* <div className="station-card-header">
+          <div className="station-card-header">
             <h2 className="station-name">{station.Station}</h2>
           </div>
           
           <p className="station-elevation">
             {station.Elevation}
-          </p> */}
+          </p>
 
-          {observationsData  &&(
+          {stationDataHourFiltered  &&(
             <AccordionWrapper
               title="Hourly Snow and Temperature Graph"
               subtitle={station.title}
               defaultExpanded={false}
             >
               <WxSnowGraph 
-                dayAverages={formattedData}
+                dayAverages={stationDataHourFiltered}
                 isHourly={true}
                 isMetric={isMetric}
               />
             </AccordionWrapper>
           )}
-{/* 
-          {observationsData && (
+
+          {stationDataForGraph && (
             <AccordionWrapper
               title="Daily Snow and Temperature Graph"
               subtitle={station.title}
               defaultExpanded={false}
             >
               <DayWxSnowGraph 
-              dayAverages={{ 
-                data: [station],
-                title: station.Station
-              }}
+              dayAverages={stationDataForGraph}
                 isMetric={isMetric}
               />
             </AccordionWrapper>
-          )} */}
+          )}
 
-          {observationsData && (
+          {station && (
             <DayAveragesTable 
               dayAverages={{ 
                 data: [station],
@@ -174,17 +190,19 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, is
             />
           )}
 
-          {/* {filteredObservationsDataHour && (
+        {stationDataHourFiltered && (
             <HourWxTable 
-              hourAverages={filteredObservationsDataHour} 
+              hourAverages={stationDataHourFiltered} 
             />
           )}
 
-          {observationsDataHour && (
+
+        
+          {stationDataHourUnFiltered && (
             <HourWxTable 
-              hourAverages={observationsDataHour} 
+              hourAverages={stationDataHourUnFiltered} 
             />
-          )} */}
+          )}
 
 				<Popover.Close className="PopoverClose" aria-label="Close">
 					<Cross2Icon />
