@@ -42,10 +42,8 @@ function wxTableDataDayFromDB(
         Station: stationObs[0].station_name,
         Latitude: Number(stationObs[0].latitude),
         Longitude: Number(stationObs[0].longitude),
-        //elevation: Number(stationObs[0].elevation),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
-      //console.log('Elevation value:', averages.elevation);
 
       // Process each measurement type
       const measurementKeys = [
@@ -386,6 +384,26 @@ function wxTableDataDayFromDB(
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
   console.log('🚀 formattedDailyData:', formattedDailyData);
+
+  // We need to modify the data synchronously before returning
+  fetchStations().then(stationsData => {
+    // Once we have the stations data, update the formattedDailyData in place
+    formattedDailyData.forEach(station => {
+      const stationInfo = stationsData.find((s: { stid: string }) => s.stid === station.Stid);
+      if (stationInfo) {
+        // Directly modify the station object with coordinates
+        station.Latitude = parseFloat(stationInfo.latitude);
+        station.Longitude = parseFloat(stationInfo.longitude);
+      }
+    });
+    
+    console.log('Updated formattedDailyData with coordinates:', formattedDailyData);
+    // The data is now updated for future renders
+  }).catch(error => {
+    console.error('Error fetching station data:', error);
+  });
+
+  // Return the data immediately (it will be updated asynchronously for future renders)
   return { data: formattedDailyData, title };
 }
 
@@ -461,11 +479,13 @@ function groupBy24hrs(
       if (!result[periodKey]) {
         result[periodKey] = [];
       }
+
+      console.log('📊 RESULT', result);
       result[periodKey].push(obs);
     });
   }
   
-  console.log('📊 result from groupBy24hrs:', result);
+  console.log('📊 RESULT from groupBy24hrs:', result);
   return result;
 }
 
