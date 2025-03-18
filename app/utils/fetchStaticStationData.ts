@@ -1,6 +1,6 @@
 export async function fetchStations() {
     try {
-      console.log('🏔️ Fetching stations data...');
+      //console.log('🏔️ Fetching stations data...');
       const stationsResponse = await fetch('/api/getStations');
       
       if (!stationsResponse.ok) {

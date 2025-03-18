@@ -6,11 +6,12 @@ import { fetchStations } from '@/app/utils/fetchStaticStationData';
 // Import the interface from types.ts
 import { WxTableOptions } from '../types';
 
-function wxTableDataDayFromDB(
+export default function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
   _units: Array<Record<string, string>>,
   options: WxTableOptions,
   isMetric: boolean,
+  onDataReady?: (data: any[]) => void
 ): {
   data: Array<{ [key: string]: number | string }>;
   title: string;
@@ -376,7 +377,7 @@ function wxTableDataDayFromDB(
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
-  console.log('🚀 formattedDailyData:', formattedDailyData);
+  //console.log('🚀 formattedDailyData:', formattedDailyData);
 
   // We need to modify the data synchronously before returning
   fetchStations().then(stationsData => {
@@ -390,8 +391,12 @@ function wxTableDataDayFromDB(
       }
     });
     
-    console.log('Updated formattedDailyData with coordinates:', formattedDailyData);
+    console.log('🚀 formattedDailyData:', formattedDailyData);
     // The data is now updated for future renders
+
+    if (onDataReady && formattedDailyData.length > 0) {
+      onDataReady(formattedDailyData);
+    }
   }).catch(error => {
     console.error('Error fetching station data:', error);
   });
@@ -481,5 +486,3 @@ function groupBy24hrs(
   console.log('📊 RESULT from groupBy24hrs:', result);
   return result;
 }
-
-export default wxTableDataDayFromDB;
