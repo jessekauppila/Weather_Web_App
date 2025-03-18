@@ -6,12 +6,14 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
-import { station_data } from './test_station_data';
 import forecastZonesData from './forecastZones.json';
 import { map_weatherToGeoJSON } from '../../map/map';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map/map';
+import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
+import { WxTableOptions, DayRangeType } from '../../types';
 //import moment from 'moment-timezone';
 
 interface Station {
@@ -27,7 +29,7 @@ interface MapDataContextType {
       type: 'FeatureCollection';
       features: Feature<Geometry, Map_BlockProperties>[];
     };
-    forecastZones: { name: string; contour: [number, number][] }[];
+    forecastZones: { name: string; contour: number[][] }[];
   };
 
   // Weather data (will be used when merging)
@@ -97,11 +99,14 @@ export function MapDataProvider({
 }: {
   children: React.ReactNode;
 }) {
-  console.log('MapDataProvider station_data:', station_data);
+  //console.log('MapDataProvider station_data:', station_data);
 
-  // Initialize with map data
+  // Initialize with empty map data instead
   const [mapData, setMapData] = useState({
-    stationData: map_weatherToGeoJSON(station_data),
+    stationData: {
+      type: 'FeatureCollection',
+      features: [],
+    },
     forecastZones: forecastZonesData.forecastZones,
   });
 
@@ -112,10 +117,8 @@ export function MapDataProvider({
     filteredObservationsDataHour: [],
   });
 
-  // Minimal station state (can be expanded later)
-  const [stations, setStations] = useState<
-    { id: string; name: string }[]
-  >([]);
+  // Initialize with empty stations
+  const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
   const [selectedStation, setSelectedStation] = useState<
     string | null
   >(null);
@@ -130,18 +133,120 @@ export function MapDataProvider({
   // UI states
   const [isLoading, setIsLoading] = useState(false);
   const [isMetric, setIsMetric] = useState(false);
+  
+  // State to store the formatted daily data
+  const [formattedDailyData, setFormattedDailyData] = useState<any[]>([]);
+  
+  // Flag to track if we've started fetching data
+  const dataFetchStarted = useRef(false);
 
-  // Initialize station data from the station_data
+  // Fetch the data once on component mount
   useEffect(() => {
-    // Extract station information from your existing data
-    const stationList = station_data.map((station) => ({
-      id: station.Stid,
-      name: station.Station || station.name,
+    if (dataFetchStarted.current) return;
+    dataFetchStarted.current = true;
+    
+    const fetchData = async () => {
+      try {
+        const options = {
+          mode: 'summary' as 'summary' | 'daily',
+          startHour: 0,
+          endHour: 24,
+          start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          end: new Date().toISOString(),
+          dayRangeType: 'all' as DayRangeType
+        };
+        
+        const units: Array<Record<string, string>> = [];
+        const observations = {};
+        
+        // Call the function and store the result
+        const result = wxTableDataDayFromDB(
+          observations, 
+          units, 
+          options, 
+          false // isMetric
+        );
+        
+        console.log('Initial result:', result);
+        
+        // Set up a function to monitor the console for the specific log message
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+          originalConsoleLog.apply(console, args);
+          
+          // Check if this is the log message we're looking for
+          if (args.length > 0 && 
+              typeof args[0] === 'string' && 
+              args[0].includes('🚀 formattedDailyData') && 
+              args[1] && 
+              Array.isArray(args[1]) && 
+              args[1].length > 0) {
+            
+            console.log('Detected data update in console log:', args[1]);
+            setFormattedDailyData(args[1]);
+          }
+        };
+        
+        // Restore original console.log after 20 seconds
+        setTimeout(() => {
+          console.log = originalConsoleLog;
+        }, 20000);
+        
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Process the formatted data once it's available
+  useEffect(() => {
+    if (!formattedDailyData || formattedDailyData.length === 0) {
+      console.log('No formatted data yet');
+      return;
+    }
+    
+    console.log('Processing formattedDailyData:', formattedDailyData);
+    
+    // Transform the data for the map
+    const transformedData = formattedDailyData.map(station => ({
+      Stid: station.Stid,
+      Station: station.Station,
+      Latitude: station.Latitude,
+      Longitude: station.Longitude,
+      Elevation: station.Elevation,
+      'Air Temp Max': station['Air Temp Max'],
+      'Cur Air Temp': station['Cur Air Temp'],
+      'Cur Wind Speed': station['Cur Wind Speed'],
+      'Wind Direction': station['Wind Direction'],
+      'Total Snow Depth Change': station['Total Snow Depth Change'],
+      'Total Snow Depth': station['Total Snow Depth'],
+      '24h Snow Accumulation': station['24h Snow Accumulation'],
+      'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
+      'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
+      'Relative Humidity': station['Relative Humidity'] || 'N/A',
+      'Api Fetch Time': station['Api Fetch Time'] || new Date().toISOString()
     }));
-
+    
+    console.log('Transformed data ready:', transformedData);
+    
+    // Update the map data with the transformed data
+    setMapData({
+      stationData: map_weatherToGeoJSON(transformedData),
+      forecastZones: forecastZonesData.forecastZones,
+    });
+    
+    // Also update stations list
+    const stationList = transformedData.map((station) => ({
+      id: String(station.Stid),
+      name: String(station.Station),
+    }));
+    
     setStations(stationList);
     setStationIds(stationList.map((s) => s.id));
-  }, []);
+    
+  }, [formattedDailyData]);
 
   // Function to update map data (can be triggered when time range changes)
   const updateMapData = useCallback(() => {

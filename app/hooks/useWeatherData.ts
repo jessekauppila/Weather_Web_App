@@ -38,11 +38,9 @@ export function useWeatherData(
   const [isMetric, setIsMetric] = useState(false);
 
   useEffect(() => {
-    console.log('📄 Page: isMetric state changed to:', isMetric);
   }, [isMetric]);
 
   const handleRefresh = async (newIsMetric?: boolean) => {
-    console.log('🔄 Fetching weather data with isMetric:', newIsMetric ?? isMetric);
     await fetchWeatherData({
       timeRangeData,
       stationIds,
