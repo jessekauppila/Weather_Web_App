@@ -23,8 +23,10 @@ import { useStations } from '@/app/hooks/useStations';
 import { useViewState } from '@/app/hooks/useViewState';
 import { useDateState } from '@/app/hooks/useDateState';
 import { useDropdown } from '@/app/hooks/useDropdown';
-
 import { Analytics } from "@vercel/analytics/react"
+
+import MapComponent from './components/MapComponent';
+
 
 interface Station {
   id: string;
@@ -54,6 +56,13 @@ interface StationCardProps {
   isActive: boolean;
   onDropdownToggle: (stid: string | null) => void;
 }
+
+export type LayerId =
+  | 'forecastZones'
+  | 'windArrows'
+  | 'snowDepthChange'
+  | 'terrain'
+  | 'currentTemp';
 
 export default function Home() {
   // View state (UI-related)
@@ -202,17 +211,18 @@ export default function Home() {
           {...stationProps}
           {...dataProps}
         />
-          <RegionsContainer
-            observationsData={observationsDataDay}
-            handleStationClick={handleStationClick}
-            activeDropdown={activeDropdown}
-            setActiveDropdown={setActiveDropdown}
-            observationsDataDay={observationsDataDay}
-            observationsDataHour={observationsDataHour}
-            filteredObservationsDataHour={filteredObservationsDataHour}
-            isMetric={isMetric}
-            tableMode={tableMode}
-          />
+        <MapComponent />
+        <RegionsContainer
+          observationsData={observationsDataDay}
+          handleStationClick={handleStationClick}
+          activeDropdown={activeDropdown}
+          setActiveDropdown={setActiveDropdown}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
+        />
         <LoadingWrapper
           isComponentVisible={isComponentVisible}
           isLoading={isLoading}
