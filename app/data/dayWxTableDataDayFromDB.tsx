@@ -15,15 +15,10 @@ function wxTableDataDayFromDB(
   data: Array<{ [key: string]: number | string }>;
   title: string;
 } {
-  
-  //console.log('inputObservations:', inputObservations);
 
   const startHour = options.startHour;
   const endHour = options.endHour;
 
-  // console.log('startHour:', startHour);
-  // console.log('endHour:', endHour);
-  
   const groupedObservations = options.mode === 'summary' 
     ? groupByStation(Object.values(inputObservations).flat())
     :groupBy24hrs(Object.values(inputObservations).flat(), startHour, endHour);
@@ -32,7 +27,7 @@ function wxTableDataDayFromDB(
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   const stations =  fetchStations();
-  console.log('stations:', stations);
+  // console.log('stations:', stations);
   
 
   const processedData = Object.entries(groupedObservations).map(
@@ -88,8 +83,6 @@ function wxTableDataDayFromDB(
       return averages;
     }
   );
-
-  //console.log('processedData from wxTableDataDayFromDB:', processedData);
 
   // Format the averages with unit labels
   const formattedDailyData = processedData.map((averages) => {

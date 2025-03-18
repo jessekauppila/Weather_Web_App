@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,8 +23,15 @@ export default function RootLayout({
           href="/_next/static/css/app/layout.css" 
           as="style" 
         />
+        {/* Add Mapbox CSS */}
+        <link
+          rel="stylesheet"
+          href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
+        />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
