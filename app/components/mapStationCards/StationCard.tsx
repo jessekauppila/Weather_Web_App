@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import * as Popover from '@radix-ui/react-popover';
-import { Cross2Icon } from "@radix-ui/react-icons";
+import { motion } from 'framer-motion';
+import { grey } from '@mui/material/colors';
+import Typography from '@mui/material/Typography';
 import MeasurementCard from './MeasurementCard';
 import './StationCard.css';
 
-// Importing the DayAveragesTable component from the vis folder
+// Importing the visualization components
 import DayAveragesTable from '../../vis/dayWxTable';
 import DayWxSnowGraph from '../../vis/dayWxSnowGraph';
 import HourWxTable from '../../vis/hourWxTable';
 import WxSnowGraph from '../../vis/wxSnowGraph';
-import AccordionWrapper from '../../components/mapStationCards/AccordionWrapper';
-
+import AccordionWrapper from './AccordionWrapper';
 
 interface StationCardProps {
   station: {
@@ -43,7 +43,20 @@ interface StationCardProps {
   stationIds: string[];
 }
 
-const StationCard = ({ station, stationIds, onStationClick, observationsData, observationsDataDay, observationsDataHour, isActive, onDropdownToggle, filteredObservationsDataHour, tableMode, isMetric }: StationCardProps) => {
+const StationCard = ({ 
+  station, 
+  stationIds, 
+  onStationClick, 
+  observationsData, 
+  observationsDataDay, 
+  observationsDataHour, 
+  isActive, 
+  onDropdownToggle, 
+  filteredObservationsDataHour, 
+  tableMode, 
+  isMetric 
+}: StationCardProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [snowAccordionOpen, setSnowAccordionOpen] = useState(false);
   const [tempAccordionOpen, setTempAccordionOpen] = useState(false);
   const [windAccordionOpen, setWindAccordionOpen] = useState(false);
@@ -53,7 +66,7 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, ob
     return null;
   }
 
-  // Filter and format the data for the graph
+  // Filter and format the data for the graphs
   const stationDataHourFiltered = {
     data: filteredObservationsDataHour?.data?.filter(
       (obs: { Station: string }) => obs.Station === station.Station
@@ -61,7 +74,6 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, ob
     title: `Filtered Hourly Data - ${station.Station}`
   };
 
-  // Filter and format the data for the graph
   const stationDataHourUnFiltered = {
     data: observationsDataHour?.data?.filter(
       (obs: { Station: string }) => obs.Station === station.Station
@@ -69,8 +81,6 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, ob
     title: `Raw Hourly Data - ${station.Station}`
   };
 
-  // Format daily data to match DayWxSnowGraph expectations
-  // Use the hourly data and format it for the graph
   const stationDataForGraph = {
     data: filteredObservationsDataHour?.data?.filter(
       (obs: { Station: string }) => obs.Station === station.Station
@@ -94,122 +104,108 @@ const StationCard = ({ station, stationIds, onStationClick, observationsData, ob
   };
 
   return (
-    <Popover.Root>
-      <Popover.Trigger>
-        <div className="station-card">
-          <div className="station-card-header">
-            <h2 className="station-name">{station.Station}</h2>
-          </div>
+    <div>
+      <div className="station-card" onClick={() => setIsOpen(true)}>
+        <div className="station-card-header">
+          <h2 className="station-name">{station.Station}</h2>
+        </div>
+        
+        <p className="station-elevation">
+          {station.Elevation}
+        </p>
+
+        <div className="measurement-grid">
+          <MeasurementCard 
+            title="Snow"
+            isOpen={snowAccordionOpen}
+            onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
+            metricValue={station['24h Snow Accumulation'].replace(' in', '')}
+            metricUnit=" in"
+            subtitle="Accumulated"
+            station={station}
+          />
+
+          <MeasurementCard 
+            title="Temp"
+            isOpen={tempAccordionOpen}
+            onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
+            metricValue={station['Cur Air Temp'].replace(' °F', '')}
+            metricUnit="°F"
+            subtitle="Current"
+            station={station}
+          />
+
+          <MeasurementCard 
+            title="Wind"
+            isOpen={windAccordionOpen}
+            onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
+            metricValue={station['Cur Wind Speed'].replace(' mph', '')}
+            metricUnit=" mph"
+            subtitle="Current"
+            station={station}
+          />
+        </div>
+      </div>
+
+      <motion.div
+        className="fixed bottom-0 left-0 right-0 bg-white shadow-lg rounded-t-xl"
+        style={{
+          height: "60vh",
+          maxHeight: "90vh",
+          width: "100%",
+          zIndex: 1000,
+          display: isOpen ? 'block' : 'none'
+        }}
+        initial={{ y: "100%" }}
+        animate={{ y: isOpen ? "0%" : "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 500 }}
+        dragElastic={0.2}
+        onDragEnd={(event, info) => {
+          if (info.point.y > 300) {
+            setIsOpen(false);
+          } else {
+            setIsOpen(true);
+          }
+        }}
+      >
+        <div className="p-4">
+          <div
+            className="w-16 h-1.5 bg-gray-300 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
+            onClick={() => setIsOpen(!isOpen)}
+          />
+          <Typography className="text-gray-600 text-sm font-semibold mb-4">
+            {station.Station}
+          </Typography>
           
-          <p className="station-elevation">
-            {station.Elevation}, {station.Latitude}, {station.Longitude}
+          <div className="overflow-auto" style={{ height: 'calc(60vh - 100px)' }}>
+            {station && (
+              <DayAveragesTable 
+                dayAverages={{ 
+                  data: [station],
+                  title: station.Station
+                }}
+                onStationClick={onStationClick}
+                mode={tableMode}
+              />
+            )}
 
-          </p>
+            {stationDataHourFiltered && (
+              <HourWxTable 
+                hourAverages={stationDataHourFiltered} 
+              />
+            )}
 
-          <div className="measurement-grid">
-            <MeasurementCard 
-              title="Snow"
-              isOpen={snowAccordionOpen}
-              onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
-              metricValue={station['24h Snow Accumulation'].replace(' in', '')}
-              metricUnit=" in"
-              subtitle="Accumulated"
-              station={station}
-            />
-
-            <MeasurementCard 
-              title="Temp"
-              isOpen={tempAccordionOpen}
-              onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
-              metricValue={station['Cur Air Temp'].replace(' °F', '')}
-              metricUnit="°F"
-              subtitle="Current"
-              station={station}
-            />
-
-            <MeasurementCard 
-              title="Wind"
-              isOpen={windAccordionOpen}
-              onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
-              metricValue={station['Cur Wind Speed'].replace(' mph', '')}
-              metricUnit=" mph"
-              subtitle="Current"
-              station={station}
-            />
+            {stationDataHourUnFiltered && (
+              <HourWxTable 
+                hourAverages={stationDataHourUnFiltered} 
+              />
+            )}
           </div>
         </div>
-      </Popover.Trigger>
-
-      <Popover.Portal>
-        <Popover.Content className="PopoverContent">
-
-          
-          <div className="station-card-header">
-            <h2 className="station-name">{station.Station}</h2>
-          </div>
-          
-          <p className="station-elevation">
-            {station.Elevation}
-          </p>
-
-          {stationDataHourFiltered  &&(
-            <AccordionWrapper
-              title="Hourly Snow and Temperature Graph"
-              subtitle={station.title}
-              defaultExpanded={false}
-            >
-              <WxSnowGraph 
-                dayAverages={stationDataHourFiltered}
-                isHourly={true}
-                isMetric={isMetric}
-              />
-            </AccordionWrapper>
-          )}
-
-          {stationDataForGraph && (
-            <AccordionWrapper
-              title="Daily Snow and Temperature Graph"
-              subtitle={station.title}
-              defaultExpanded={false}
-            >
-              <DayWxSnowGraph 
-              dayAverages={stationDataForGraph}
-                isMetric={isMetric}
-              />
-            </AccordionWrapper>
-          )}
-
-          {station && (
-            <DayAveragesTable 
-              dayAverages={{ 
-                data: [station],
-                title: station.Station
-              }}
-              onStationClick={onStationClick}
-              mode={tableMode}
-            />
-          )}
-
-        {stationDataHourFiltered && (
-            <HourWxTable 
-              hourAverages={stationDataHourFiltered} 
-            />
-          )}
-
-
-        
-          {stationDataHourUnFiltered && (
-            <HourWxTable 
-              hourAverages={stationDataHourUnFiltered} 
-            />
-          )}
-
-				<Popover.Close className="PopoverClose" aria-label="Close">
-					<Cross2Icon />
-				</Popover.Close>            
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+      </motion.div>
+    </div>
   );
 };
 
