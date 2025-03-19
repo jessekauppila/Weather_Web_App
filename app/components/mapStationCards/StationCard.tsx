@@ -150,22 +150,43 @@ const StationCard = ({
       <motion.div
         className="fixed bottom-0 left-0 right-0 bg-white shadow-lg rounded-t-xl"
         style={{
-          height: "60vh",
-          maxHeight: "90vh",
+          height: "95vh",
           width: "100%",
           zIndex: 1000,
-          display: isOpen ? 'block' : 'none'
+          touchAction: 'none',
+          transformOrigin: "bottom"
         }}
-        initial={{ y: "100%" }}
-        animate={{ y: isOpen ? "0%" : "100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        initial={{ y: "100%", scale: 0.9 }}
+        animate={{ 
+          y: isOpen ? "0%" : "100%",
+          scale: isOpen ? 1 : 0.9
+        }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400,
+          damping: 40,
+          scale: {
+            type: "spring",
+            stiffness: 500,
+            damping: 30
+          }
+        }}
         drag="y"
-        dragConstraints={{ top: 0, bottom: 500 }}
+        dragPropagation={false}
+        dragConstraints={{ 
+          top: 0,
+          bottom: window.innerHeight * 0.95
+        }}
         dragElastic={0.2}
+        dragMomentum={false}
         onDragEnd={(event, info) => {
-          if (info.point.y > 300) {
+          const currentY = info.point.y;
+          const windowHeight = window.innerHeight;
+          
+          // Only close when released past threshold
+          if (currentY > windowHeight * 0.95) {
             setIsOpen(false);
-          } else {
+          } else if (currentY < windowHeight * 0.05) {
             setIsOpen(true);
           }
         }}
@@ -179,7 +200,7 @@ const StationCard = ({
             {station.Station}
           </Typography>
           
-          <div className="overflow-auto" style={{ height: 'calc(60vh - 100px)' }}>
+          <div className="overflow-auto" style={{ height: 'calc(95vh - 100px)' }}>
             {station && (
               <DayAveragesTable 
                 dayAverages={{ 
@@ -190,6 +211,33 @@ const StationCard = ({
                 mode={tableMode}
               />
             )}
+
+                {stationDataHourFiltered && (
+            <AccordionWrapper
+              title="Hourly Snow and Temperature Graph"
+              subtitle={station.title}
+              defaultExpanded={false}
+            >
+              <WxSnowGraph 
+                dayAverages={stationDataHourFiltered}
+                isHourly={true}
+                isMetric={isMetric}
+              />
+            </AccordionWrapper>
+          )}
+
+          {stationDataForGraph && (
+            <AccordionWrapper
+              title="Daily Snow and Temperature Graph"
+              subtitle={station.title}
+              defaultExpanded={false}
+            >
+              <DayWxSnowGraph 
+                dayAverages={stationDataForGraph}
+                isMetric={isMetric}
+              />
+            </AccordionWrapper>
+          )}
 
             {stationDataHourFiltered && (
               <HourWxTable 
