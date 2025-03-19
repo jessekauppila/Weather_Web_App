@@ -101,8 +101,8 @@ export function MapDataProvider({
 }) {
   //console.log('MapDataProvider station_data:', station_data);
 
-  // Initialize with empty map data instead
-  const [mapData, setMapData] = useState({
+  // Initialize with empty map data
+  const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
       type: 'FeatureCollection',
       features: [],
@@ -248,20 +248,24 @@ export function MapDataProvider({
     
   }, [formattedDailyData]);
 
-  // Function to update map data (can be triggered when time range changes)
+  // Function to update map data
   const updateMapData = useCallback(() => {
     setIsLoading(true);
-
-    // Here we'd make API calls if needed
-    // For now, just re-transform the static data
-    setTimeout(() => {
-      setMapData({
-        stationData: map_weatherToGeoJSON(station_data),
-        forecastZones: forecastZonesData.forecastZones,
-      });
-      setIsLoading(false);
-    }, 500);
-  }, []);
+    const options = {
+      mode: 'summary' as 'summary' | 'daily',
+      startHour: 0,
+      endHour: 24,
+      start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      dayRangeType: 'all' as DayRangeType
+    };
+    
+    const units: Array<Record<string, string>> = [];
+    const observations = {};
+    
+    wxTableDataDayFromDB(observations, units, options, isMetric);
+    setIsLoading(false);
+  }, [isMetric]);
 
   // These functions are placeholders until we merge with the data page
   const handleStationChange = useCallback((stid: string) => {
