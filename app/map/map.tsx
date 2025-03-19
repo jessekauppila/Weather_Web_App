@@ -92,10 +92,20 @@ export const map_landCover: Position[][] = [
 export function map_getTooltip(
   info: PickingInfo
 ): TooltipProps | null {
+  if (!info.object) {
+    return null;
+  }
+
   const object = info.object as Feature<
     Geometry,
     Map_BlockProperties
   >;
+
+  if (!object.properties) {
+    return null;
+  }
+
+  const props = object.properties;
 
   const getWindStrengthColor = (speed: number) => {
     if (speed <= 0.6) return 'rgb(255, 255, 255)';
@@ -126,39 +136,36 @@ export function map_getTooltip(
     else return '<b>Extreme</b> (> 37.3 mph)';
   };
 
-  return object
-    ? {
-        html: `\
+  const airTempMax = parseFloat(props.airTempMax?.toString() ?? '0');
+  const windSpeed = parseFloat(props.curWindSpeed ?? '0');
+
+  return {
+    html: `\
       <div style="text-decoration: underline; font-size: 1.2em;"><b>${
-        object.properties.stationName
+        props.stationName ?? 'Unknown Station'
       }</b></div>
       <div style="text-decoration: underline;"><b>Snow Depth Change</b></div>
-      <div>${object.properties.totalSnowDepthChange} in</div>
+      <div>${props.totalSnowDepthChange ?? 'N/A'} in</div>
       <div style="text-decoration: underline;"><b>Temperature Conditions</b></div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        ${getTempConditionWithRange(
-          parseFloat(object.properties.airTempMax?.toString() ?? '0')
-        )} 
+        ${getTempConditionWithRange(airTempMax)} 
         <div style="width: 20px; height: 20px; background-color: ${getTempConditionColor(
-          parseFloat(object.properties.airTempMax?.toString() ?? '0')
+          airTempMax
         )}; border: 1px solid black; display: inline-block;"></div>
-        (<b>${object.properties.airTempMax?.toString() ?? '0'} °F</b>)
+        (<b>${airTempMax} °F</b>)
       </div>
       <div style="text-decoration: underline;"><b>Wind Information</b></div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        ${getWindStrengthWithRange(
-          parseFloat(object.properties.curWindSpeed)
-        )} 
+        ${getWindStrengthWithRange(windSpeed)} 
         <div style="width: 20px; height: 20px; background-color: ${getWindStrengthColor(
-          parseFloat(object.properties.curWindSpeed)
+          windSpeed
         )}; border: 1px solid black; display: inline-block;"></div>
-        (<b>${object.properties.curWindSpeed}</b>)
+        (<b>${props.curWindSpeed ?? 'N/A'}</b>)
       </div>
       <div style="text-decoration: underline;"><b>Wind Direction</b></div>
-      <div>${object.properties.windDirection}</div>
+      <div>${props.windDirection ?? 'N/A'}</div>
     `,
-      }
-    : null;
+  };
 }
 
 interface WeatherStation {

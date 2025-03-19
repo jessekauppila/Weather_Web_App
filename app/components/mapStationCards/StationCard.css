@@ -163,4 +163,76 @@
     padding: 0.25rem;  /* Add small padding around grid */
   }
 
-/* Add any additional styles needed for MeasurementCard if they're not in a separate file */ 
+/* Add any additional styles needed for MeasurementCard if they're not in a separate file */
+
+/* Add this to your existing StationCard.css */
+.view-details-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 12px;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.view-details-btn:hover {
+  background: #0051a8;
+}
+
+.map-hover-card {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.map-hover-card .station-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  padding: 12px;
+  min-width: 220px;
+  pointer-events: auto;
+}
+
+.map-hover-card .station-card-header {
+  margin-bottom: 8px;
+}
+
+.map-hover-card .station-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.map-hover-card .station-elevation {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.map-hover-card .measurement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.map-hover-card .view-details-btn {
+  width: 100%;
+  padding: 8px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.map-hover-card .view-details-btn:hover {
+  background: #0056b3;
+} 
