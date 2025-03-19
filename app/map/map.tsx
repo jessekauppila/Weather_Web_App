@@ -24,14 +24,16 @@ export type Map_BlockProperties = {
   totalSnowDepthChange: number | null;
   snowAccumulation24h: number | null;
   curAirTemp: number | null;
+  airTempMin: number | null;
+  airTempMax: number | null;
   curWindSpeed: string;
   maxWindGust: string;
   windDirection: string;
   windSpeedAvg: string;
   elevation: number | null;
   relativeHumidity: number | null;
+  precipAccumOneHour: string | null;
   fetchTime: string;
-  airTempMax: number | null;
 };
 
 export const map_COLOR_SCALE = scaleThreshold<number, Color>()
@@ -109,6 +111,8 @@ interface WeatherStation {
   'Relative Humidity': string;
   'Api Fetch Time': string;
   'Air Temp Max': string;
+  'Air Temp Min': string;
+  'Precip Accum One Hour': string;
 }
 
 export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
@@ -116,7 +120,7 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
   features: Feature<Geometry, Map_BlockProperties>[];
 } {
   const parseValue = (value: string) => {
-    if (value === '-') return null;
+    if (!value || value === '-') return null;
     const num = parseFloat(value.split(' ')[0]);
     return isNaN(num) ? null : num;
   };
@@ -164,14 +168,16 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
           station['24h Snow Accumulation']
         ),
         curAirTemp: parseValue(station['Cur Air Temp']),
+        airTempMin: parseValue(station['Air Temp Min']),
+        airTempMax: parseValue(station['Air Temp Max']),
         curWindSpeed: station['Cur Wind Speed'],
         maxWindGust: station['Max Wind Gust'],
         windDirection: station['Wind Direction'],
         windSpeedAvg: station['Wind Speed Avg'],
         elevation: parseValue(station['Elevation']),
         relativeHumidity: parseValue(station['Relative Humidity']),
+        precipAccumOneHour: station['Precip Accum One Hour'] === '-' ? null : station['Precip Accum One Hour'],
         fetchTime: station['Api Fetch Time'],
-        airTempMax: parseValue(station['Air Temp Max']),
       },
     })),
   };
