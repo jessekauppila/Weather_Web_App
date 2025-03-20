@@ -8,6 +8,7 @@ import { map_COLOR_SCALE } from './map';
 import { MapConfig } from './config';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from './map';
+import { PickingInfo } from '@deck.gl/core';
 
 // Define LayerId directly in this file
 export type LayerId =
@@ -29,7 +30,8 @@ export function createMapLayers(
       type: 'FeatureCollection';
       features: Feature<Geometry, Map_BlockProperties>[];
     };
-  }
+  },
+  onStationClick?: (info: PickingInfo) => void
 ) {
   return [
     visibility.forecastZones &&
@@ -39,14 +41,16 @@ export function createMapLayers(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
-        }
+        },
+        onStationClick
       ),
     visibility.snowDepthChange &&
       createSnowDepthLayer(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
-        }
+        },
+        onStationClick
       ),
     visibility.terrain && createTerrainLayer(),
     visibility.currentTemp &&
@@ -54,7 +58,8 @@ export function createMapLayers(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
-        }
+        },
+        onStationClick
       ),
   ].filter(Boolean);
 }
@@ -75,10 +80,13 @@ function createForecastZoneLayer(
   });
 }
 
-function createWindArrowLayer(data: {
-  type: 'FeatureCollection';
-  features: Feature<Geometry, Map_BlockProperties>[];
-}) {
+function createWindArrowLayer(
+  data: {
+    type: 'FeatureCollection';
+    features: Feature<Geometry, Map_BlockProperties>[];
+  },
+  onClick?: (info: PickingInfo) => void
+) {
   return new IconLayer({
     id: 'windArrows',
     data: data.features,
@@ -106,16 +114,20 @@ function createWindArrowLayer(data: {
     iconAtlas: '/windAtlas/wind_arrows_location_icon_atlas.png',
     iconMapping: '/windAtlas/location-icon-mapping.json',
     pickable: true,
+    onClick,
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
   });
 }
 
-function createCurrentTempLayer(data: {
-  type: 'FeatureCollection';
-  features: Feature<Geometry, Map_BlockProperties>[];
-}) {
+function createCurrentTempLayer(
+  data: {
+    type: 'FeatureCollection';
+    features: Feature<Geometry, Map_BlockProperties>[];
+  },
+  onClick?: (info: PickingInfo) => void
+) {
   return new IconLayer({
     id: 'currentTemp',
     data: data.features,
@@ -147,16 +159,20 @@ function createCurrentTempLayer(data: {
       '/currentTempAtlas/currentTemp_location_icon_atlas.png',
     iconMapping: '/currentTempAtlas/location-icon-mapping.json',
     pickable: true,
+    onClick,
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
   });
 }
 
-function createSnowDepthLayer(data: {
-  type: 'FeatureCollection';
-  features: Feature<Geometry, Map_BlockProperties>[];
-}) {
+function createSnowDepthLayer(
+  data: {
+    type: 'FeatureCollection';
+    features: Feature<Geometry, Map_BlockProperties>[];
+  },
+  onClick?: (info: PickingInfo) => void
+) {
   return new GeoJsonLayer({
     id: 'snowDepthChange',
     data,
@@ -172,6 +188,7 @@ function createSnowDepthLayer(data: {
     getLineColor: (f) =>
       map_COLOR_SCALE(f.properties.airTempMax ?? 0),
     pickable: true,
+    onClick,
     material: {
       ambient: 0.64,
       diffuse: 0.6,
