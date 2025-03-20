@@ -30,6 +30,18 @@ interface MapDataContextType {
       features: Feature<Geometry, Map_BlockProperties>[];
     };
     forecastZones: { name: string; contour: number[][] }[];
+    observationsDataHour: {
+      data: any[];
+      title: string;
+    };
+    filteredObservationsDataHour: {
+      data: any[];
+      title: string;
+    };
+    observationsDataDay: {
+      data: any[];
+      title: string;
+    };
   };
 
   // Weather data (will be used when merging)
@@ -72,6 +84,18 @@ const MapDataContext = createContext<MapDataContextType>({
       features: [],
     },
     forecastZones: [],
+    observationsDataHour: {
+      data: [],
+      title: '',
+    },
+    filteredObservationsDataHour: {
+      data: [],
+      title: '',
+    },
+    observationsDataDay: {
+      data: [],
+      title: '',
+    },
   },
   weatherData: {
     observationsDataDay: [],
@@ -108,6 +132,18 @@ export function MapDataProvider({
       features: [],
     },
     forecastZones: forecastZonesData.forecastZones,
+    observationsDataHour: {
+      data: [],
+      title: '',
+    },
+    filteredObservationsDataHour: {
+      data: [],
+      title: '',
+    },
+    observationsDataDay: {
+      data: [],
+      title: '',
+    },
   });
 
   // These will be populated when we merge with the data page
@@ -217,6 +253,7 @@ export function MapDataProvider({
       Longitude: station.Longitude,
       Elevation: station.Elevation,
       'Air Temp Max': station['Air Temp Max'],
+      'Air Temp Min': station['Air Temp Min'] || '-',
       'Cur Air Temp': station['Cur Air Temp'],
       'Cur Wind Speed': station['Cur Wind Speed'],
       'Wind Direction': station['Wind Direction'],
@@ -226,15 +263,45 @@ export function MapDataProvider({
       'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
       'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
       'Relative Humidity': station['Relative Humidity'] || 'N/A',
+      'Precip Accum One Hour': station['Precip Accum One Hour'] || '-',
       'Api Fetch Time': station['Api Fetch Time'] || new Date().toISOString()
     }));
+
+    // Format observations data
+    const formatObservation = (obs: any) => ({
+      Station: obs.Station,
+      Day: obs.Day || new Date().toLocaleDateString(),
+      Hour: obs.Hour || new Date().toLocaleTimeString(),
+      'Snow Depth': obs['Snow Depth'] || '0 in',
+      'New Snow': obs['New Snow'] || '0 in',
+      'Air Temp': obs['Air Temp'] || '-',
+      'Precip': obs['Precip'] || '0 in'
+    });
+
+    // Process observations data
+    const observationsData = formattedDailyData.map(station => ({
+      ...station,
+      hourlyData: station.hourlyData?.map(formatObservation) || [],
+      filteredHourlyData: station.filteredHourlyData?.map(formatObservation) || [],
+      dailyData: station.dailyData?.map(formatObservation) || []
+    }));
     
-    console.log('Transformed data ready:', transformedData);
-    
-    // Update the map data with the transformed data
+    // Update the map data with all processed data
     setMapData({
       stationData: map_weatherToGeoJSON(transformedData),
       forecastZones: forecastZonesData.forecastZones,
+      observationsDataHour: {
+        data: observationsData.flatMap(station => station.hourlyData),
+        title: 'Hourly Data'
+      },
+      filteredObservationsDataHour: {
+        data: observationsData.flatMap(station => station.filteredHourlyData),
+        title: 'Filtered Hourly Data'
+      },
+      observationsDataDay: {
+        data: observationsData.flatMap(station => station.dailyData),
+        title: 'Daily Data'
+      }
     });
     
     // Also update stations list

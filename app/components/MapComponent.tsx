@@ -33,7 +33,7 @@ interface MapData {
 // The actual map component that uses the context
 export const MapApp = () => {
   // Get data from context
-  const { mapData, updateMapData } = useMapData();
+  const { mapData, isLoading } = useMapData();
 
   // Layer visibility state
   const [layerVisibility, setLayerVisibility] = useState({
