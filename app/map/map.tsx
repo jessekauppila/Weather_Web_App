@@ -4,6 +4,7 @@ import {
   PickingInfo,
   MapViewState,
 } from '@deck.gl/core';
+import React, { useState } from 'react';
 import type { Feature, Geometry } from 'geojson';
 import { scaleThreshold } from 'd3-scale';
 import {
@@ -13,6 +14,7 @@ import {
   _SunLight as SunLight,
 } from '@deck.gl/core';
 import { getMapTooltip } from './UI/MapTooltip';
+import StationDrawer from '../components/mapStationCards/StationDrawer';
 
 ////////////////////////
 
@@ -94,25 +96,81 @@ export const map_landCover: Position[][] = [
 
 export const map_getTooltip = getMapTooltip;
 
-interface WeatherStation {
+interface MapProps {
+  weatherData: WeatherStation[];
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+  isMetric: boolean;
+  tableMode: 'summary' | 'daily';
+}
+
+// Update WeatherStation interface to match StationDrawer's station prop type
+export interface WeatherStation {
   Station: string;
-  Latitude: string;
-  Longitude: string;
-  Elevation: string;
-  Stid: string;
-  'Total Snow Depth': string;
-  'Total Snow Depth Change': string;
-  '24h Snow Accumulation': string;
   'Cur Air Temp': string;
+  '24h Snow Accumulation': string;
   'Cur Wind Speed': string;
+  'Elevation': string;
+  'Stid': string;
+  'Air Temp Min': string;
+  'Air Temp Max': string;
+  'Wind Speed Avg': string;
   'Max Wind Gust': string;
   'Wind Direction': string;
-  'Wind Speed Avg': string;
+  'Total Snow Depth Change': string;
+  'Precip Accum One Hour': string;
+  'Total Snow Depth': string;
+  'Latitude': string;
+  'Longitude': string;
   'Relative Humidity': string;
   'Api Fetch Time': string;
-  'Air Temp Max': string;
-  'Air Temp Min': string;
-  'Precip Accum One Hour': string;
+  [key: string]: string;
+}
+
+export function Map({ 
+  weatherData,
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric,
+  tableMode
+}: MapProps) {
+  const [hoverInfo, setHoverInfo] = useState<PickingInfo | null>(null);
+  const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const handleStationClick = (info: PickingInfo) => {
+    if (info.object) {
+      const feature = info.object as Feature<Geometry, Map_BlockProperties>;
+      const station = weatherData.find(s => s.Station === feature.properties.stationName);
+      if (station) {
+        setSelectedStation(station);
+        setIsDrawerOpen(true);
+      }
+    }
+  };
+
+  return (
+    <>
+      {/* Your existing map rendering code here */}
+      {hoverInfo && <div dangerouslySetInnerHTML={{ __html: getMapTooltip(hoverInfo)?.html || '' }} />}
+      
+      <StationDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedStation(null);
+        }}
+        station={selectedStation}
+        observationsDataDay={observationsDataDay}
+        observationsDataHour={observationsDataHour}
+        filteredObservationsDataHour={filteredObservationsDataHour}
+        isMetric={isMetric}
+        tableMode={tableMode}
+      />
+    </>
+  );
 }
 
 export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
