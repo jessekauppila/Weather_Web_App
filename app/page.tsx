@@ -204,15 +204,24 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 bg-gray-100 w-full">
-      <div className="w-full max-w-6xl space-y-4">
+    <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
+      {/* Map component as fullscreen background */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <MapComponent />
+      </div>
+      
+      {/* Time toolbar with higher z-index to overlap the map */}
+      <div className="relative z-10 w-full max-w-6xl pt-4 px-4">
         <TimeToolbar
           {...timeProps}
           {...stationProps}
           {...dataProps}
         />
-        <MapComponent />
-        {/* <RegionsContainer
+      </div>
+      
+      {/* Additional components are commented out for now
+      <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
+        <RegionsContainer
           observationsData={observationsDataDay}
           handleStationClick={handleStationClick}
           activeDropdown={activeDropdown}
@@ -222,31 +231,8 @@ export default function Home() {
           filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
-        /> */}
-        {/* <LoadingWrapper
-          isComponentVisible={isComponentVisible}
-          isLoading={isLoading}
-          isPending={isPending}
-        > */}
-          {/* <WeatherDisplay
-            observationsDataDay={observationsDataDay}
-            observationsDataHour={observationsDataHour}
-            filteredObservationsDataHour={filteredObservationsDataHour}
-            selectedStation={selectedStation}
-            isMetric={isMetric}
-            handleStationClick={handleStationClick}
-            tableMode={tableMode}
-          /> */}
-
-          {/* <RegionTables
-            observationsDataDay={observationsDataDay}
-            handleStationClick={handleStationClick}
-            tableMode={tableMode}
-          /> */}
-
-
-        {/* </LoadingWrapper> */}
-      </div>
+        />
+      </div> */}
     </main>
   );
 }

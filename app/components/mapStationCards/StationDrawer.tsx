@@ -1,11 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import DayAveragesTable from '../../vis/dayWxTable';
 import DayWxSnowGraph from '../../vis/dayWxSnowGraph';
 import HourWxTable from '../../vis/hourWxTable';
 import WxSnowGraph from '../../vis/wxSnowGraph';
 import AccordionWrapper from './AccordionWrapper';
-import MeasurementCard from './MeasurementCard';
 
 interface StationDrawerProps {
   isOpen: boolean;
@@ -34,6 +33,80 @@ interface StationDrawerProps {
   tableMode: 'summary' | 'daily';
 }
 
+// Debug Info Panel Component
+const DebugInfoPanel = ({ 
+  station, 
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  stationDataHourFiltered,
+  stationDataHourUnFiltered 
+}: any) => {
+  return (
+    <div style={{
+      background: 'rgba(0, 0, 0, 0.2)',
+      padding: '8px',
+      marginBottom: '24px',
+      borderRadius: '5px',
+      color: '#e0e0e0',
+      fontSize: '0.75rem',
+      overflowX: 'auto',
+      maxHeight: '240px'
+    }}>
+      <div style={{ fontWeight: 500, marginBottom: '8px', color: '#9e9e9e' }}>
+        Debug Info
+      </div>
+      
+      <div className="mb-2">
+        <span style={{ fontWeight: 500 }}>Station:</span> {station ? station.Station : 'none'}<br />
+        <span style={{ fontWeight: 500 }}>Station Data:</span> {station ? 'Available' : 'Missing'}
+      </div>
+      
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <span style={{ fontWeight: 500 }}>Raw Data Sources:</span>
+          <ul style={{ listStyleType: 'disc', paddingLeft: '16px', marginTop: '4px' }}>
+            <li>Day Obs: {observationsDataDay?.data?.length || 0} items</li>
+            <li>Hour Obs: {observationsDataHour?.data?.length || 0} items</li>
+            <li>Filtered Hour: {filteredObservationsDataHour?.data?.length || 0} items</li>
+          </ul>
+        </div>
+        <div>
+          <span style={{ fontWeight: 500 }}>Processed Data:</span>
+          <ul style={{ listStyleType: 'disc', paddingLeft: '16px', marginTop: '4px' }}>
+            <li>Filtered: {stationDataHourFiltered?.data?.length || 0} items</li>
+            <li>Unfiltered: {stationDataHourUnFiltered?.data?.length || 0} items</li>
+          </ul>
+        </div>
+      </div>
+      
+      <details>
+        <summary style={{ fontWeight: 500, cursor: 'pointer', marginBottom: '4px' }}>
+          Raw Data Sample
+        </summary>
+        <pre style={{ 
+          fontSize: '9px', 
+          overflow: 'auto', 
+          maxHeight: '80px', 
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '3px',
+          padding: '4px'
+        }}>
+          {JSON.stringify(
+            {
+              station: station || {},
+              hourSample: stationDataHourFiltered?.data?.[0] || {},
+              unfilteredSample: stationDataHourUnFiltered?.data?.[0] || {}
+            },
+            null,
+            2
+          )}
+        </pre>
+      </details>
+    </div>
+  );
+};
+
 const StationDrawer: React.FC<StationDrawerProps> = ({
   isOpen,
   onClose,
@@ -51,6 +124,104 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     observationsDataHour: observationsDataHour?.data?.length,
     filteredObservationsDataHour: filteredObservationsDataHour?.data?.length
   });
+  
+  // State for debug mode
+  const [showDebug, setShowDebug] = useState(false);
+  
+  // ===== DRAWER POSITIONING CONFIGURATION =====
+  // Change these values to control drawer position and behavior
+  
+  // 1. TOOLBAR_HEIGHT: Height of the TimeToolbar component
+  //    This sets where the drawer starts when fully open
+  const TOOLBAR_HEIGHT = 135; 
+  
+  // 2. INITIAL_OPEN_HEIGHT: Starting height when drawer first opens
+  //    Set to a smaller value for a partially open initial state
+  //    Example: 400 will open to 400px height initially
+  const INITIAL_OPEN_HEIGHT = 500;
+  
+  // 3. MIN_DRAWER_HEIGHT: Minimum allowed height when resizing
+  //    Drawer can't be resized smaller than this
+  const MIN_DRAWER_HEIGHT = 50;
+  
+  // 4. CLOSED_Y_POSITION: Where drawer goes when closed
+  //    Use "100%" to hide it completely off-screen
+  //    Use a pixel value to keep part of it visible when closed
+  const CLOSED_Y_POSITION = "100%";
+  // ===============================================
+  
+  // Calculate the initial top position based on desired height
+  const initialTopPosition = window.innerHeight - INITIAL_OPEN_HEIGHT;
+  
+  // State to track the drawer's current top position
+  const [drawerTop, setDrawerTop] = useState<number>(initialTopPosition);
+  
+  // State for resize functionality
+  const [isResizing, setIsResizing] = useState(false);
+  const [lastMouseY, setLastMouseY] = useState(0);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  
+  // Reset drawer to initial position when opened
+  useEffect(() => {
+    if (isOpen) {
+      setDrawerTop(initialTopPosition);
+    }
+  }, [isOpen, initialTopPosition]);
+  
+  // Add event listeners for resize functionality
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      // Calculate the drag delta
+      const deltaY = e.clientY - lastMouseY;
+      setLastMouseY(e.clientY);
+      
+      // Update drawer position based on mouse movement
+      // Moving the mouse DOWN increases top position (shorter drawer)
+      // Moving the mouse UP decreases top position (taller drawer)
+      setDrawerTop(prevTop => {
+        let newTop = prevTop + deltaY;
+        
+        // Apply constraints
+        // 1. Can't go higher than toolbar
+        // 2. Can't be smaller than minimum height
+        const maxTop = window.innerHeight - MIN_DRAWER_HEIGHT;
+        
+        if (newTop < TOOLBAR_HEIGHT) {
+          newTop = TOOLBAR_HEIGHT;
+        } else if (newTop > maxTop) {
+          newTop = maxTop;
+        }
+        
+        return newTop;
+      });
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+    
+    // Add global event listeners when resizing
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    // Clean up event listeners
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, lastMouseY]);
+  
+  // Handle mouse down on the resize handle
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setLastMouseY(e.clientY);
+  };
   
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
@@ -172,60 +343,101 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   if (!station) return null;
 
+  // Calculate the drawer height based on top position
+  // This ensures the drawer is always anchored to the bottom of the screen
+  const drawerHeight = window.innerHeight - drawerTop;
+
   return (
     <motion.div
-      className="fixed bottom-0 left-0 right-0 bg-white shadow-lg rounded-t-xl"
+      ref={drawerRef}
+      className="fixed left-0 right-0 bottom-0 bg-white shadow-lg rounded-t-xl"
       style={{
-        height: "95vh",
+        top: isOpen ? `${drawerTop}px` : 'auto', // Position based on top when open
+        height: drawerHeight,
         width: "100%",
-        zIndex: 1000,
-        touchAction: 'none',
-        transformOrigin: "bottom"
+        zIndex: 9999,
+        transformOrigin: "bottom",
+        pointerEvents: isOpen ? 'auto' : 'none',
+        overflow: 'hidden'
       }}
-      initial={{ y: "100%", scale: 0.9 }}
+      // Initial state animation - where drawer starts from before animating
+      initial={{ y: "100%" }}
+      // Animation targets - where drawer animates to when opening/closing 
       animate={{ 
-        y: isOpen ? "0%" : "100%",
-        scale: isOpen ? 1 : 0.9
+        y: isOpen ? 0 : CLOSED_Y_POSITION,
       }}
       transition={{ 
         type: "spring", 
         stiffness: 400,
-        damping: 40,
-        scale: {
-          type: "spring",
-          stiffness: 500,
-          damping: 30
-        }
-      }}
-      drag="y"
-      dragPropagation={false}
-      dragConstraints={{ 
-        top: 0,
-        bottom: window.innerHeight * 0.95
-      }}
-      dragElastic={0.2}
-      dragMomentum={false}
-      onDragEnd={(event, info) => {
-        const currentY = info.point.y;
-        const windowHeight = window.innerHeight;
-        
-        if (currentY > windowHeight * 0.95) {
-          onClose();
-        } else if (currentY < windowHeight * 0.05) {
-          // Keep drawer open at full height
-        }
+        damping: 40
       }}
     >
+      {/* Resizable handle at the top */}
+      <div 
+        className="w-full h-6 cursor-ns-resize select-none bg-gray-100 border-b border-gray-200 flex justify-center items-center"
+        onMouseDown={handleMouseDown}
+        style={{
+          touchAction: 'none',
+          userSelect: 'none',
+        }}
+      >
+        <div className="w-16 h-1.5 bg-gray-300 rounded-full" />
+      </div>
+
       <div className="p-4">
-        <div
-          className="w-16 h-1.5 bg-gray-300 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
-          onClick={onClose}
-        />
-        <div className="text-sm font-semibold text-gray-600 mb-4">
-          {station.Station}
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-sm font-semibold text-gray-600">
+            {station.Station}
+          </div>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setShowDebug(!showDebug)}
+              style={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                color: showDebug ? '#9e9e9e' : '#424242',
+                fontSize: '0.75rem',
+                padding: '4px 8px',
+                borderRadius: '5px',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {showDebug ? 'Hide Debug' : 'Debug'}
+            </button>
+            
+            <button 
+              onClick={onClose}
+              style={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                color: '#424242',
+                fontSize: '0.75rem',
+                padding: '4px 8px',
+                borderRadius: '5px',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
         </div>
         
-        <div className="overflow-auto" style={{ height: 'calc(95vh - 100px)' }}>
+        <div className="overflow-auto" style={{ 
+          height: `calc(100% - 60px)`,
+          minHeight: '120px'
+        }}>
+          {/* Debug Info Panel */}
+          {showDebug && (
+            <DebugInfoPanel
+              station={station}
+              observationsDataDay={observationsDataDay}
+              observationsDataHour={observationsDataHour}
+              filteredObservationsDataHour={filteredObservationsDataHour}
+              stationDataHourFiltered={stationDataHourFiltered}
+              stationDataHourUnFiltered={stationDataHourUnFiltered}
+            />
+          )}
+          
           {/* Station Summary Table */}
           <div className="mb-6">
             <DayAveragesTable 
