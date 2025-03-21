@@ -212,7 +212,7 @@ export default function Home() {
           {...dataProps}
         />
         <MapComponent />
-        <RegionsContainer
+        {/* <RegionsContainer
           observationsData={observationsDataDay}
           handleStationClick={handleStationClick}
           activeDropdown={activeDropdown}
@@ -222,13 +222,13 @@ export default function Home() {
           filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
-        />
-        <LoadingWrapper
+        /> */}
+        {/* <LoadingWrapper
           isComponentVisible={isComponentVisible}
           isLoading={isLoading}
           isPending={isPending}
-        >
-          <WeatherDisplay
+        > */}
+          {/* <WeatherDisplay
             observationsDataDay={observationsDataDay}
             observationsDataHour={observationsDataHour}
             filteredObservationsDataHour={filteredObservationsDataHour}
@@ -236,16 +236,16 @@ export default function Home() {
             isMetric={isMetric}
             handleStationClick={handleStationClick}
             tableMode={tableMode}
-          />
+          /> */}
 
-          <RegionTables
+          {/* <RegionTables
             observationsDataDay={observationsDataDay}
             handleStationClick={handleStationClick}
             tableMode={tableMode}
-          />
+          /> */}
 
 
-        </LoadingWrapper>
+        {/* </LoadingWrapper> */}
       </div>
     </main>
   );
