@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DayAveragesTable from '../../vis/dayWxTable';
 import DayWxSnowGraph from '../../vis/dayWxSnowGraph';
@@ -44,63 +44,131 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   isMetric,
   tableMode
 }) => {
-  const [snowAccordionOpen, setSnowAccordionOpen] = React.useState(false);
-  const [tempAccordionOpen, setTempAccordionOpen] = React.useState(false);
-  const [windAccordionOpen, setWindAccordionOpen] = React.useState(false);
-
+  // Debug logs
+  console.log("StationDrawer rendered with:", {
+    station,
+    observationsDataDay: observationsDataDay?.data?.length,
+    observationsDataHour: observationsDataHour?.data?.length,
+    filteredObservationsDataHour: filteredObservationsDataHour?.data?.length
+  });
+  
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    return {
-      data: filteredObservationsDataHour?.data?.filter(
-        (obs: { Station: string }) => obs.Station === station.Station
-      ) || [],
-      title: `Filtered Hourly Data - ${station.Station}`
-    };
+    try {
+      if (!station || !filteredObservationsDataHour?.data) {
+        console.log("No station or filteredObservationsDataHour data for filtered hours");
+        return {
+          data: [],
+          title: station ? `Filtered Hourly Data - ${station.Station}` : ''
+        };
+      }
+      
+      const filteredData = filteredObservationsDataHour.data.filter(
+        (obs: { Station: string }) => obs?.Station === station.Station
+      );
+      
+      console.log(`Found ${filteredData.length} filtered observations for station ${station.Station}`);
+      
+      return {
+        data: filteredData,
+        title: `Filtered Hourly Data - ${station.Station}`
+      };
+    } catch (error) {
+      console.error("Error processing filtered hour data:", error);
+      return {
+        data: [],
+        title: station ? `Filtered Hourly Data - ${station.Station}` : ''
+      };
+    }
   }, [filteredObservationsDataHour, station]);
 
   const stationDataHourUnFiltered = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    return {
-      data: observationsDataHour?.data?.filter(
-        (obs: { Station: string }) => obs.Station === station.Station
-      ) || [],
-      title: `Raw Hourly Data - ${station.Station}`
-    };
+    try {
+      if (!station || !observationsDataHour?.data) {
+        console.log("No station or observationsDataHour data for unfiltered hours");
+        return {
+          data: [],
+          title: station ? `Raw Hourly Data - ${station.Station}` : ''
+        };
+      }
+      
+      const filteredData = observationsDataHour.data.filter(
+        (obs: { Station: string }) => obs?.Station === station.Station
+      );
+      
+      console.log(`Found ${filteredData.length} unfiltered observations for station ${station.Station}`);
+      
+      return {
+        data: filteredData,
+        title: `Raw Hourly Data - ${station.Station}`
+      };
+    } catch (error) {
+      console.error("Error processing unfiltered hour data:", error);
+      return {
+        data: [],
+        title: station ? `Raw Hourly Data - ${station.Station}` : ''
+      };
+    }
   }, [observationsDataHour, station]);
 
   const stationDataForGraph = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    return {
-      data: filteredObservationsDataHour?.data?.filter(
-        (obs: { Station: string }) => obs.Station === station.Station
-      ).map((obs: { 
-        Station: string; 
-        Day: string; 
-        Hour: string; 
-        'Snow Depth'?: string; 
-        'New Snow'?: string;
-        'Air Temp'?: string;
-        'Precip'?: string;
-      }) => ({
-        Date: `${obs.Day} ${obs.Hour}`,
-        'Total Snow Depth': obs['Snow Depth'] || '0 in',
-        '24h Snow Accumulation': obs['New Snow'] || '0 in',
-        'Air Temp Min': obs['Air Temp'],
-        'Air Temp Max': obs['Air Temp'],
-        'Precip Accum One Hour': obs['Precip'] || '0 in'
-      })) || [],
-      title: station.Station
-    };
+    try {
+      if (!station || !filteredObservationsDataHour?.data) {
+        console.log("No station or filteredObservationsDataHour data");
+        return {
+          data: [],
+          title: station?.Station || ''
+        };
+      }
+
+      const filteredData = filteredObservationsDataHour.data.filter(
+        (obs: { Station: string }) => obs?.Station === station.Station
+      );
+      
+      console.log(`Found ${filteredData.length} observations for station ${station.Station}`);
+      
+      const mappedData = filteredData.map((obs: any) => {
+        try {
+          return {
+            Date: obs.Day && obs.Hour ? `${obs.Day} ${obs.Hour}` : new Date().toLocaleString(),
+            'Total Snow Depth': obs['Snow Depth'] || '0 in',
+            '24h Snow Accumulation': obs['New Snow'] || '0 in',
+            'Air Temp Min': obs['Air Temp'] || '0 °F',
+            'Air Temp Max': obs['Air Temp'] || '0 °F',
+            'Precip Accum One Hour': obs['Precip'] || '0 in',
+            'Cur Air Temp': obs['Air Temp'] || '0 °F'
+          };
+        } catch (obsError) {
+          console.error("Error mapping observation:", obsError);
+          return {
+            Date: new Date().toLocaleString(),
+            'Total Snow Depth': '0 in',
+            '24h Snow Accumulation': '0 in',
+            'Air Temp Min': '0 °F',
+            'Air Temp Max': '0 °F',
+            'Precip Accum One Hour': '0 in',
+            'Cur Air Temp': '0 °F'
+          };
+        }
+      });
+      
+      return {
+        data: mappedData,
+        title: station?.Station || ''
+      };
+    } catch (error) {
+      console.error("Error processing graph data:", error);
+      return {
+        data: [],
+        title: station?.Station || ''
+      };
+    }
   }, [filteredObservationsDataHour, station]);
 
-  const stationDayData = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    return {
-      data: [station],
-      title: station.Station
-    };
-  }, [station]);
+  const stationDayData = useMemo(() => ({
+    data: station ? [station] : [],
+    title: station?.Station || ''
+  }), [station]);
 
   if (!station) return null;
 
@@ -153,60 +221,18 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           className="w-16 h-1.5 bg-gray-300 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
           onClick={onClose}
         />
-        
-        {/* Station Header */}
-        <div className="station-card-header mb-4">
-          <h2 className="station-name text-lg font-semibold text-gray-800">{station.Station}</h2>
-          <p className="station-elevation text-sm text-gray-600">{station.Elevation}</p>
-        </div>
-
-        {/* Measurement Cards */}
-        <div className="measurement-grid grid grid-cols-3 gap-4 mb-6">
-          <MeasurementCard 
-            title="Snow"
-            isOpen={snowAccordionOpen}
-            onToggle={() => setSnowAccordionOpen(!snowAccordionOpen)}
-            metricValue={station['24h Snow Accumulation'].replace(' in', '')}
-            metricUnit=" in"
-            subtitle="Accumulated"
-            station={station}
-          />
-
-          <MeasurementCard 
-            title="Temp"
-            isOpen={tempAccordionOpen}
-            onToggle={() => setTempAccordionOpen(!tempAccordionOpen)}
-            metricValue={station['Cur Air Temp'].replace(' °F', '')}
-            metricUnit="°F"
-            subtitle="Current"
-            station={station}
-          />
-
-          <MeasurementCard 
-            title="Wind"
-            isOpen={windAccordionOpen}
-            onToggle={() => setWindAccordionOpen(!windAccordionOpen)}
-            metricValue={station['Cur Wind Speed'].replace(' mph', '')}
-            metricUnit=" mph"
-            subtitle="Current"
-            station={station}
-          />
+        <div className="text-sm font-semibold text-gray-600 mb-4">
+          {station.Station}
         </div>
         
-        <div className="overflow-auto" style={{ height: 'calc(95vh - 250px)' }}>
+        <div className="overflow-auto" style={{ height: 'calc(95vh - 100px)' }}>
           {/* Station Summary Table */}
           <div className="mb-6">
-            <AccordionWrapper
-              title="Station Summary"
-              subtitle={station.Station}
-              defaultExpanded={false}
-            >
-              <DayAveragesTable 
-                dayAverages={stationDayData}
-                onStationClick={() => {}}
-                mode={tableMode}
-              />
-            </AccordionWrapper>
+            <DayAveragesTable 
+              dayAverages={stationDayData}
+              onStationClick={() => {}}
+              mode={tableMode}
+            />
           </div>
 
           {/* Hourly Snow and Temperature Graph */}
