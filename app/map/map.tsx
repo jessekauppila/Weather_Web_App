@@ -4,7 +4,7 @@ import {
   PickingInfo,
   MapViewState,
 } from '@deck.gl/core';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Feature, Geometry } from 'geojson';
 import { scaleThreshold } from 'd3-scale';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@deck.gl/core';
 import { getMapTooltip } from './UI/MapTooltip';
 import StationDrawer from '../components/mapStationCards/StationDrawer';
+import { useMapData } from '../data/map/MapDataContext';
 
 ////////////////////////
 
@@ -128,6 +129,27 @@ export interface WeatherStation {
   [key: string]: string;
 }
 
+// Define the MapData interface here to avoid import errors
+interface MapData {
+  stationData: {
+    type: 'FeatureCollection';
+    features: Feature<Geometry, Map_BlockProperties>[];
+  };
+  forecastZones: { name: string; contour: number[][] }[];
+  observationsDataHour: {
+    data: any[];
+    title: string;
+  };
+  filteredObservationsDataHour: {
+    data: any[];
+    title: string;
+  };
+  observationsDataDay: {
+    data: any[];
+    title: string;
+  };
+}
+
 export function Map({ 
   weatherData,
   observationsDataDay,
@@ -139,13 +161,100 @@ export function Map({
   const [hoverInfo, setHoverInfo] = useState<PickingInfo | null>(null);
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  // State for local observations data
+  const [localObservationsDataDay, setLocalObservationsDataDay] = useState(observationsDataDay);
+  const [localObservationsDataHour, setLocalObservationsDataHour] = useState(observationsDataHour);
+  const [localFilteredObservationsDataHour, setLocalFilteredObservationsDataHour] = useState(filteredObservationsDataHour);
+
+  // Create test data when component mounts if there's no real data
+  useEffect(() => {
+    if (!observationsDataHour?.data || observationsDataHour.data.length === 0) {
+      console.log("Creating test hourly data since none is available");
+      
+      // Create test data for all stations
+      const testHourlyData = weatherData.flatMap(station => 
+        Array.from({ length: 24 }, (_, i) => {
+          const date = new Date();
+          date.setHours(date.getHours() - i);
+          return {
+            Station: station.Station,
+            Day: date.toLocaleDateString(),
+            Hour: date.toLocaleTimeString(),
+            'Snow Depth': station['Total Snow Depth'] || '0 in',
+            'New Snow': station['24h Snow Accumulation'] || '0 in',
+            'Air Temp': station['Cur Air Temp'] || '0 °F',
+            'Precip': station['Precip Accum One Hour'] || '0 in'
+          };
+        })
+      );
+      
+      setLocalObservationsDataHour({
+        data: testHourlyData,
+        title: 'Test Hourly Data'
+      });
+      
+      setLocalFilteredObservationsDataHour({
+        data: testHourlyData,
+        title: 'Test Filtered Hourly Data'
+      });
+      
+      setLocalObservationsDataDay({
+        data: weatherData.map(station => ({
+          Station: station.Station,
+          Day: new Date().toLocaleDateString(),
+          'Snow Depth': station['Total Snow Depth'] || '0 in',
+          'New Snow': station['24h Snow Accumulation'] || '0 in',
+          'Air Temp': station['Cur Air Temp'] || '0 °F',
+          'Precip': station['Precip Accum One Hour'] || '0 in'
+        })),
+        title: 'Test Daily Data'
+      });
+    }
+  }, [weatherData, observationsDataHour, observationsDataDay, filteredObservationsDataHour]);
+  
+  // Log the data for debugging
+  useEffect(() => {
+    if (isDrawerOpen) {
+      console.log("StationDrawer props:", {
+        station: selectedStation,
+        observationsDataDay: localObservationsDataDay,
+        observationsDataHour: localObservationsDataHour,
+        filteredObservationsDataHour: localFilteredObservationsDataHour
+      });
+    }
+  }, [isDrawerOpen, selectedStation, localObservationsDataDay, localObservationsDataHour, localFilteredObservationsDataHour]);
 
   const handleStationClick = (info: PickingInfo) => {
     if (info.object) {
       const feature = info.object as Feature<Geometry, Map_BlockProperties>;
-      const station = weatherData.find(s => s.Station === feature.properties.stationName);
-      if (station) {
-        setSelectedStation(station);
+      const stationData = weatherData.find(s => s.Station === feature.properties.stationName);
+      
+      if (stationData) {
+        // Create a complete station object
+        const completedStation: WeatherStation = {
+          Station: stationData.Station,
+          'Cur Air Temp': stationData['Cur Air Temp'] || '0 °F',
+          '24h Snow Accumulation': stationData['24h Snow Accumulation'] || '0 in',
+          'Cur Wind Speed': stationData['Cur Wind Speed'] || '0 mph',
+          'Elevation': stationData['Elevation'] || '0 ft',
+          'Stid': stationData['Stid'] || '',
+          'Air Temp Min': stationData['Air Temp Min'] || '0 °F',
+          'Air Temp Max': stationData['Air Temp Max'] || '0 °F',
+          'Wind Speed Avg': stationData['Wind Speed Avg'] || '0 mph',
+          'Max Wind Gust': stationData['Max Wind Gust'] || '0 mph',
+          'Wind Direction': stationData['Wind Direction'] || '0°',
+          'Total Snow Depth Change': stationData['Total Snow Depth Change'] || '0 in',
+          'Precip Accum One Hour': stationData['Precip Accum One Hour'] || '0 in',
+          'Total Snow Depth': stationData['Total Snow Depth'] || '0 in',
+          'Latitude': stationData['Latitude'] || feature.properties.latitude.toString(),
+          'Longitude': stationData['Longitude'] || feature.properties.longitude.toString(),
+          'Relative Humidity': stationData['Relative Humidity'] || '0%',
+          'Api Fetch Time': stationData['Api Fetch Time'] || new Date().toISOString()
+        };
+        
+        console.log("Selected complete station:", completedStation);
+        setSelectedStation(completedStation);
         setIsDrawerOpen(true);
       }
     }
@@ -163,9 +272,9 @@ export function Map({
           setSelectedStation(null);
         }}
         station={selectedStation}
-        observationsDataDay={observationsDataDay}
-        observationsDataHour={observationsDataHour}
-        filteredObservationsDataHour={filteredObservationsDataHour}
+        observationsDataDay={localObservationsDataDay}
+        observationsDataHour={localObservationsDataHour}
+        filteredObservationsDataHour={localFilteredObservationsDataHour}
         isMetric={isMetric}
         tableMode={tableMode}
       />
