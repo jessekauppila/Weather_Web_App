@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Map } from 'react-map-gl/mapbox';
 import DeckGL from '@deck.gl/react';
 import {
@@ -30,6 +31,115 @@ interface MapData {
   filteredObservationsDataHour: any;
 }
 
+// Add this debug overlay component
+const DebugOverlay = ({ mapData, visibility, selectedStation }: any) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!visibility) return null;
+
+  return (
+    <div className="absolute bottom-10 right-10 z-50 pointer-events-auto" style={{
+      background: 'rgba(0, 0, 0, 0.2)',
+      borderRadius: '5px',
+      padding: '8px',
+      width: '220px',
+      color: '#e0e0e0',
+    }}>
+      <div 
+        className="flex justify-between items-center cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+        style={{ fontSize: '0.75rem' }}
+      >
+        <span style={{ color: '#9e9e9e', fontWeight: 500 }}>Map Debug Info</span>
+        <span>{expanded ? '▼' : '▶'}</span>
+      </div>
+      
+      {expanded && (
+        <div className="mt-2 overflow-auto" style={{ 
+          maxHeight: '300px', 
+          fontSize: '0.75rem',
+          color: '#9e9e9e' 
+        }}>
+          <div className="mb-2">
+            <span style={{ fontWeight: 500 }}>Map Data Status:</span>{' '}
+            {mapData ? 'Loaded' : 'Not Loaded'}
+          </div>
+          
+          <div className="mb-2">
+            <span style={{ fontWeight: 500 }}>Data Items:</span>
+            <ul className="mt-1 pl-4" style={{ listStyleType: 'disc' }}>
+              <li>Stations: {mapData?.stationData?.features?.length || 0}</li>
+              <li>Forecast Zones: {mapData?.forecastZones?.length || 0}</li>
+              <li>Day Obs: {mapData?.observationsDataDay?.data?.length || 0}</li>
+              <li>Hour Obs: {mapData?.observationsDataHour?.data?.length || 0}</li>
+              <li>Filtered Hour: {mapData?.filteredObservationsDataHour?.data?.length || 0}</li>
+            </ul>
+          </div>
+          
+          {selectedStation && (
+            <div className="mb-2">
+              <span style={{ fontWeight: 500 }}>Selected Station:</span> {selectedStation.Station}
+            </div>
+          )}
+          
+          <details>
+            <summary style={{ fontWeight: 500, cursor: 'pointer', marginBottom: '4px' }}>
+              Sample Station Data
+            </summary>
+            <pre className="overflow-auto p-1" style={{ 
+              fontSize: '9px', 
+              maxHeight: '120px',
+              background: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: '3px'
+            }}>
+              {JSON.stringify(mapData?.stationData?.features?.[0]?.properties || {}, null, 2)}
+            </pre>
+          </details>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Client-side portal component for Next.js
+const ClientPortal = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<Element | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Find existing portal root or create it
+    ref.current = document.querySelector('#drawer-portal-root');
+    if (!ref.current) {
+      // Create container if it doesn't exist
+      const div = document.createElement('div');
+      div.id = 'drawer-portal-root';
+      
+      // Critical styles for proper drawer behavior
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.height = '100%';
+      div.style.zIndex = '9999';
+      div.style.pointerEvents = 'none'; // Initially pass pointer events through
+      div.style.userSelect = 'none'; // Prevent text selection issues during drag
+      div.style.touchAction = 'manipulation'; // Better touch handling
+      div.style.overflow = 'visible'; // Allow drawer to overflow
+      
+      document.body.appendChild(div);
+      ref.current = div;
+    }
+    setMounted(true);
+    
+    // Cleanup function
+    return () => {
+      // Don't remove the div as other instances might use it
+    };
+  }, []);
+
+  return mounted && ref.current ? createPortal(children, ref.current) : null;
+};
+
 // The actual map component that uses the context
 export const MapApp = () => {
   // Get data from context
@@ -47,6 +157,33 @@ export const MapApp = () => {
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Add debug state
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Effect to manage drawer state
+  useEffect(() => {
+    // If drawer is open, add a class to prevent scrolling on the body
+    if (isDrawerOpen) {
+      document.body.classList.add('drawer-open');
+      
+      // Close drawer when escape key is pressed
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsDrawerOpen(false);
+          setSelectedStation(null);
+        }
+      };
+      
+      window.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        window.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.classList.remove('drawer-open');
+    }
+  }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
 
   // Handle station click
   const handleStationClick = (info: PickingInfo) => {
@@ -154,7 +291,7 @@ export const MapApp = () => {
   };
 
   return (
-    <div className="w-full h-[600px] relative">
+    <div className="w-full h-full relative">
       {isLoading && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-30 z-10">
           <div className="bg-white p-4 rounded shadow">
@@ -169,6 +306,7 @@ export const MapApp = () => {
         initialViewState={map_INITIAL_VIEW_STATE}
         controller={true}
         getTooltip={map_getTooltip}
+        style={{ width: '100%', height: '100%' }}
       >
         <Map
           reuseMaps
@@ -183,19 +321,46 @@ export const MapApp = () => {
         />
       </DeckGL>
 
-      <StationDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => {
-          setIsDrawerOpen(false);
-          setSelectedStation(null);
+      {/* Debug button */}
+      <button
+        onClick={() => setShowDebug(!showDebug)}
+        className="absolute top-4 right-4 z-50"
+        style={{
+          background: 'rgba(0, 0, 0, 0.2)',
+          color: showDebug ? '#9e9e9e' : '#424242',
+          fontSize: '0.75rem',
+          padding: '4px 8px',
+          borderRadius: '5px',
+          border: 'none',
+          cursor: 'pointer'
         }}
-        station={selectedStation}
-        observationsDataDay={(mapData as MapData).observationsDataDay}
-        observationsDataHour={(mapData as MapData).observationsDataHour}
-        filteredObservationsDataHour={(mapData as MapData).filteredObservationsDataHour}
-        isMetric={false}
-        tableMode="summary"
+      >
+        {showDebug ? 'Hide Debug' : 'Debug'}
+      </button>
+
+      {/* Debug overlay */}
+      <DebugOverlay 
+        mapData={mapData} 
+        visibility={showDebug} 
+        selectedStation={selectedStation}
       />
+
+      {/* Render StationDrawer using our custom portal */}
+      <ClientPortal>
+        <StationDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setSelectedStation(null);
+          }}
+          station={selectedStation}
+          observationsDataDay={(mapData as MapData).observationsDataDay}
+          observationsDataHour={(mapData as MapData).observationsDataHour}
+          filteredObservationsDataHour={(mapData as MapData).filteredObservationsDataHour}
+          isMetric={false}
+          tableMode="summary"
+        />
+      </ClientPortal>
     </div>
   );
 };
