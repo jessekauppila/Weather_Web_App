@@ -5,6 +5,7 @@ import DayWxSnowGraph from '../../vis/dayWxSnowGraph';
 import HourWxTable from '../../vis/hourWxTable';
 import WxSnowGraph from '../../vis/wxSnowGraph';
 import AccordionWrapper from './AccordionWrapper';
+import './StationDrawer.css';
 
 interface StationDrawerProps {
   isOpen: boolean;
@@ -234,14 +235,80 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         };
       }
       
+      // Filter the data for the current station
       const filteredData = filteredObservationsDataHour.data.filter(
         (obs: { Station: string }) => obs?.Station === station.Station
       );
       
+      // Process the data to ensure it has the correct format for HourWxTable
+      const processedData = filteredData.map((item: any) => {
+        // Format the date: convert numeric dates like "3/23/2025" to "Mar 23"
+        let formattedDate = item.Day;
+        if (typeof item.Day === 'string' && item.Day.includes('/')) {
+          try {
+            const dateParts = item.Day.split('/');
+            if (dateParts.length >= 2) {
+              const month = parseInt(dateParts[0], 10);
+              const day = parseInt(dateParts[1], 10);
+              
+              // Convert month number to abbreviation
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              if (month >= 1 && month <= 12) {
+                formattedDate = `${monthNames[month-1]} ${day}`;
+              }
+            }
+          } catch (e) {
+            console.error("Error formatting date:", e);
+          }
+        }
+        
+        // Handle hour conversion properly
+        let formattedHour = item.Hour;
+        if (typeof item.Hour === 'string') {
+          // If it's already in 12-hour format (contains AM/PM), keep it
+          if (item.Hour.includes('AM') || item.Hour.includes('PM')) {
+            formattedHour = item.Hour;
+          } else {
+            // Extract the hour part, handling formats like "0:00", "2:00", "14:00", or even just "14"
+            const hourParts = item.Hour.split(':');
+            const hour = parseInt(hourParts[0], 10);
+            
+            if (!isNaN(hour)) {
+              // Format to 12-hour time
+              const ampm = hour >= 12 ? 'PM' : 'AM';
+              const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+              formattedHour = `${hour12}:00 ${ampm}`;
+            }
+          }
+        }
+        
+        return {
+          ...item, // Keep all original properties
+          Day: formattedDate,
+          Hour: formattedHour,
+          "Station": item.Station,
+          "Elevation": station?.Elevation || '-',
+          "Air Temp": item['Air Temp'] || '-',
+          "Total Snow Depth": item['Snow Depth'] || item['Total Snow Depth'] || '-',
+          "24h Snow Depth": item['New Snow'] || item['24h Snow Accumulation'] || '-',
+          "Precipitation": item['Precip'] || item['Precip Accum One Hour'] || '-',
+          "Precip Accum": item['Precip Accum One Hour'] || '-',
+          "Wind Speed": item['Cur Wind Speed'] || item['Wind Speed Avg'] || '-',
+          "Wind Gust": item['Max Wind Gust'] || '-',
+          "Wind Direction": item['Wind Direction'] || '-',
+          "Relative Humidity": item['Relative Humidity'] || '-',
+          "Solar Radiation": '-', // Not available in our data
+          "API Fetch Time": item['Api Fetch Time'] || new Date().toLocaleString()
+        };
+      });
+      
       console.log(`Found ${filteredData.length} filtered observations for station ${station.Station}`);
+      if (processedData.length > 0) {
+        console.log("Sample processed data item:", processedData[0]);
+      }
       
       return {
-        data: filteredData,
+        data: processedData,
         title: `Filtered Hourly Data - ${station.Station}`
       };
     } catch (error) {
@@ -263,14 +330,80 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         };
       }
       
+      // Filter the data for the current station
       const filteredData = observationsDataHour.data.filter(
         (obs: { Station: string }) => obs?.Station === station.Station
       );
       
+      // Process the data to ensure it has the correct format for HourWxTable
+      const processedData = filteredData.map((item: any) => {
+        // Format the date: convert numeric dates like "3/23/2025" to "Mar 23"
+        let formattedDate = item.Day;
+        if (typeof item.Day === 'string' && item.Day.includes('/')) {
+          try {
+            const dateParts = item.Day.split('/');
+            if (dateParts.length >= 2) {
+              const month = parseInt(dateParts[0], 10);
+              const day = parseInt(dateParts[1], 10);
+              
+              // Convert month number to abbreviation
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              if (month >= 1 && month <= 12) {
+                formattedDate = `${monthNames[month-1]} ${day}`;
+              }
+            }
+          } catch (e) {
+            console.error("Error formatting date:", e);
+          }
+        }
+        
+        // Handle hour conversion properly
+        let formattedHour = item.Hour;
+        if (typeof item.Hour === 'string') {
+          // If it's already in 12-hour format (contains AM/PM), keep it
+          if (item.Hour.includes('AM') || item.Hour.includes('PM')) {
+            formattedHour = item.Hour;
+          } else {
+            // Extract the hour part, handling formats like "0:00", "2:00", "14:00", or even just "14"
+            const hourParts = item.Hour.split(':');
+            const hour = parseInt(hourParts[0], 10);
+            
+            if (!isNaN(hour)) {
+              // Format to 12-hour time
+              const ampm = hour >= 12 ? 'PM' : 'AM';
+              const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+              formattedHour = `${hour12}:00 ${ampm}`;
+            }
+          }
+        }
+        
+        return {
+          ...item, // Keep all original properties
+          Day: formattedDate,
+          Hour: formattedHour,
+          "Station": item.Station,
+          "Elevation": station?.Elevation || '-',
+          "Air Temp": item['Air Temp'] || '-',
+          "Total Snow Depth": item['Snow Depth'] || item['Total Snow Depth'] || '-',
+          "24h Snow Depth": item['New Snow'] || item['24h Snow Accumulation'] || '-',
+          "Precipitation": item['Precip'] || item['Precip Accum One Hour'] || '-',
+          "Precip Accum": item['Precip Accum One Hour'] || '-',
+          "Wind Speed": item['Cur Wind Speed'] || item['Wind Speed Avg'] || '-',
+          "Wind Gust": item['Max Wind Gust'] || '-',
+          "Wind Direction": item['Wind Direction'] || '-',
+          "Relative Humidity": item['Relative Humidity'] || '-',
+          "Solar Radiation": '-', // Not available in our data
+          "API Fetch Time": item['Api Fetch Time'] || new Date().toLocaleString()
+        };
+      });
+      
       console.log(`Found ${filteredData.length} unfiltered observations for station ${station.Station}`);
+      if (processedData.length > 0) {
+        console.log("Sample processed data item:", processedData[0]);
+      }
       
       return {
-        data: filteredData,
+        data: processedData,
         title: `Raw Hourly Data - ${station.Station}`
       };
     } catch (error) {
@@ -281,6 +414,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       };
     }
   }, [observationsDataHour, station]);
+
+  // Add debugging log
+  useEffect(() => {
+    if (isOpen && stationDataHourFiltered?.data?.length > 0) {
+      console.log("HOURLY DATA FORMAT CHECK:", {
+        sample: stationDataHourFiltered.data[0],
+        keys: Object.keys(stationDataHourFiltered.data[0])
+      });
+    }
+  }, [isOpen, stationDataHourFiltered]);
 
   const stationDataForGraph = useMemo(() => {
     try {
@@ -422,10 +565,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           </div>
         </div>
         
-        <div className="overflow-auto" style={{ 
-          height: `calc(100% - 60px)`,
-          minHeight: '120px'
-        }}>
+        {/* Simple scrollable content with just a visible scrollbar */}
+        <div 
+          className="custom-scrollbar overflow-y-auto pr-2" 
+          style={{ 
+            height: `calc(100% - 60px)`,
+            minHeight: '120px',
+            maxHeight: `${drawerHeight - 100}px`,
+            overflowY: 'auto',
+            position: 'relative'
+          }}
+        >
           {/* Debug Info Panel */}
           {showDebug && (
             <DebugInfoPanel
@@ -484,7 +634,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           {stationDataHourFiltered.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
-                title="Filtered Hourly Data"
+                title={`Filtered Hourly Data (${stationDataHourFiltered.data.length} records)`}
                 subtitle={station.Station}
                 defaultExpanded={false}
               >
@@ -499,7 +649,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           {stationDataHourUnFiltered.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
-                title="Raw Hourly Data"
+                title={`Raw Hourly Data (${stationDataHourUnFiltered.data.length} records)`}
                 subtitle={station.Station}
                 defaultExpanded={false}
               >

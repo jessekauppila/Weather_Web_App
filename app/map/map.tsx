@@ -163,14 +163,39 @@ export function Map({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // State for local observations data
-  const [localObservationsDataDay, setLocalObservationsDataDay] = useState(observationsDataDay);
-  const [localObservationsDataHour, setLocalObservationsDataHour] = useState(observationsDataHour);
-  const [localFilteredObservationsDataHour, setLocalFilteredObservationsDataHour] = useState(filteredObservationsDataHour);
+  const [localObservationsDataDay, setLocalObservationsDataDay] = useState(observationsDataDay || { data: [], title: 'Day Data' });
+  const [localObservationsDataHour, setLocalObservationsDataHour] = useState(observationsDataHour || { data: [], title: 'Hour Data' });
+  const [localFilteredObservationsDataHour, setLocalFilteredObservationsDataHour] = useState(filteredObservationsDataHour || { data: [], title: 'Filtered Hour Data' });
+
+  // Update local state when props change
+  useEffect(() => {
+    if (observationsDataDay?.data?.length) {
+      console.log("Updating localObservationsDataDay with data length:", observationsDataDay.data.length);
+      setLocalObservationsDataDay(observationsDataDay);
+    }
+    
+    if (observationsDataHour?.data?.length) {
+      console.log("Updating localObservationsDataHour with data length:", observationsDataHour.data.length);
+      setLocalObservationsDataHour(observationsDataHour);
+    }
+    
+    if (filteredObservationsDataHour?.data?.length) {
+      console.log("Updating localFilteredObservationsDataHour with data length:", filteredObservationsDataHour.data.length);
+      setLocalFilteredObservationsDataHour(filteredObservationsDataHour);
+    }
+  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour]);
 
   // Create test data when component mounts if there's no real data
   useEffect(() => {
-    if (!observationsDataHour?.data || observationsDataHour.data.length === 0) {
-      console.log("Creating test hourly data since none is available");
+    // Check if we need to create test data
+    const needsTestData = (
+      !localObservationsDataHour?.data?.length || 
+      !localFilteredObservationsDataHour?.data?.length ||
+      !localObservationsDataDay?.data?.length
+    );
+    
+    if (needsTestData && weatherData && weatherData.length > 0) {
+      console.log("Creating test data for observations since none is available");
       
       // Create test data for all stations
       const testHourlyData = weatherData.flatMap(station => 
@@ -181,47 +206,112 @@ export function Map({
             Station: station.Station,
             Day: date.toLocaleDateString(),
             Hour: date.toLocaleTimeString(),
+            // Include both naming formats for compatibility
             'Snow Depth': station['Total Snow Depth'] || '0 in',
+            'Total Snow Depth': station['Total Snow Depth'] || '0 in',
             'New Snow': station['24h Snow Accumulation'] || '0 in',
+            '24h Snow Accumulation': station['24h Snow Accumulation'] || '0 in',
+            // Temperature fields in both formats
             'Air Temp': station['Cur Air Temp'] || '0 °F',
-            'Precip': station['Precip Accum One Hour'] || '0 in'
+            'Cur Air Temp': station['Cur Air Temp'] || '0 °F',
+            'Air Temp Min': station['Air Temp Min'] || '0 °F',
+            'Air Temp Max': station['Air Temp Max'] || '0 °F',
+            // Precipitation fields in both formats
+            'Precip': station['Precip Accum One Hour'] || '0 in',
+            'Precip Accum One Hour': station['Precip Accum One Hour'] || '0 in',
+            // Add any other fields needed by visualizations
+            'Wind Direction': station['Wind Direction'] || '0°',
+            'Wind Speed Avg': station['Wind Speed Avg'] || '0 mph',
+            'Max Wind Gust': station['Max Wind Gust'] || '0 mph',
+            'Cur Wind Speed': station['Cur Wind Speed'] || '0 mph',
+            'Total Snow Depth Change': station['Total Snow Depth Change'] || '0 in',
+            'Relative Humidity': station['Relative Humidity'] || '0%'
           };
         })
       );
       
-      setLocalObservationsDataHour({
+      // Create the hourly data objects
+      const newHourlyData = {
         data: testHourlyData,
         title: 'Test Hourly Data'
-      });
-      
-      setLocalFilteredObservationsDataHour({
-        data: testHourlyData,
+      };
+
+      const newFilteredData = {
+        data: testHourlyData, // Using the same data for both for simplicity
         title: 'Test Filtered Hourly Data'
-      });
+      };
       
-      setLocalObservationsDataDay({
+      // Create daily data with same field format for compatibility
+      const newDailyData = {
         data: weatherData.map(station => ({
           Station: station.Station,
           Day: new Date().toLocaleDateString(),
+          // Include both naming formats
           'Snow Depth': station['Total Snow Depth'] || '0 in',
+          'Total Snow Depth': station['Total Snow Depth'] || '0 in',
           'New Snow': station['24h Snow Accumulation'] || '0 in',
+          '24h Snow Accumulation': station['24h Snow Accumulation'] || '0 in',
           'Air Temp': station['Cur Air Temp'] || '0 °F',
-          'Precip': station['Precip Accum One Hour'] || '0 in'
+          'Cur Air Temp': station['Cur Air Temp'] || '0 °F',
+          'Air Temp Min': station['Air Temp Min'] || '0 °F',
+          'Air Temp Max': station['Air Temp Max'] || '0 °F',
+          'Precip': station['Precip Accum One Hour'] || '0 in',
+          'Precip Accum One Hour': station['Precip Accum One Hour'] || '0 in',
+          'Wind Direction': station['Wind Direction'] || '0°',
+          'Wind Speed Avg': station['Wind Speed Avg'] || '0 mph',
+          'Max Wind Gust': station['Max Wind Gust'] || '0 mph',
+          'Cur Wind Speed': station['Cur Wind Speed'] || '0 mph',
+          'Total Snow Depth Change': station['Total Snow Depth Change'] || '0 in',
+          'Relative Humidity': station['Relative Humidity'] || '0%'
         })),
         title: 'Test Daily Data'
+      };
+
+      console.log("Setting test data:", {
+        hourly: newHourlyData.data.length,
+        filtered: newFilteredData.data.length,
+        daily: newDailyData.data.length
       });
+      
+      // Set all the state at once
+      setLocalObservationsDataHour(newHourlyData);
+      setLocalFilteredObservationsDataHour(newFilteredData);
+      setLocalObservationsDataDay(newDailyData);
     }
-  }, [weatherData, observationsDataHour, observationsDataDay, filteredObservationsDataHour]);
+  }, [weatherData, localObservationsDataHour, localObservationsDataDay, localFilteredObservationsDataHour]);
   
-  // Log the data for debugging
+  // Log the data for debugging every time the drawer opens
   useEffect(() => {
     if (isDrawerOpen) {
-      console.log("StationDrawer props:", {
-        station: selectedStation,
-        observationsDataDay: localObservationsDataDay,
-        observationsDataHour: localObservationsDataHour,
-        filteredObservationsDataHour: localFilteredObservationsDataHour
+      console.log("StationDrawer props - DATA CHECK:", {
+        selectedStation: selectedStation?.Station,
+        observationsDataDay: {
+          title: localObservationsDataDay?.title,
+          length: localObservationsDataDay?.data?.length || 0
+        },
+        observationsDataHour: {
+          title: localObservationsDataHour?.title,
+          length: localObservationsDataHour?.data?.length || 0
+        },
+        filteredObservationsDataHour: {
+          title: localFilteredObservationsDataHour?.title,
+          length: localFilteredObservationsDataHour?.data?.length || 0
+        }
       });
+
+      // Verify the data format is what StationDrawer expects
+      if (localFilteredObservationsDataHour?.data && selectedStation) {
+        const testFiltered = localFilteredObservationsDataHour.data.filter(
+          (obs: any) => obs.Station === selectedStation.Station
+        );
+        
+        console.log(`DATA CHECK: Found ${testFiltered.length} filtered data points for station ${selectedStation.Station}`);
+        if (testFiltered.length > 0) {
+          console.log("Sample filtered data point:", testFiltered[0]);
+        } else {
+          console.log("No filtered data found for this station");
+        }
+      }
     }
   }, [isDrawerOpen, selectedStation, localObservationsDataDay, localObservationsDataHour, localFilteredObservationsDataHour]);
 
@@ -253,7 +343,77 @@ export function Map({
           'Api Fetch Time': stationData['Api Fetch Time'] || new Date().toISOString()
         };
         
-        console.log("Selected complete station:", completedStation);
+        console.log("Selected station:", completedStation.Station);
+        
+        // Check if we need to generate test data for this station if none exists
+        if (localFilteredObservationsDataHour?.data?.length && 
+            !localFilteredObservationsDataHour.data.some((obs: any) => obs.Station === completedStation.Station)) {
+          console.log(`No data found for station ${completedStation.Station}, generating test data`);
+          
+          // Create test data specifically for this station
+          const stationTestData = Array.from({ length: 24 }, (_, i) => {
+            const date = new Date();
+            date.setHours(date.getHours() - i);
+            return {
+              Station: completedStation.Station,
+              Day: date.toLocaleDateString(),
+              Hour: date.toLocaleTimeString(),
+              'Snow Depth': completedStation['Total Snow Depth'] || '0 in',
+              'Total Snow Depth': completedStation['Total Snow Depth'] || '0 in',
+              'New Snow': completedStation['24h Snow Accumulation'] || '0 in', 
+              '24h Snow Accumulation': completedStation['24h Snow Accumulation'] || '0 in',
+              'Air Temp': completedStation['Cur Air Temp'] || '0 °F',
+              'Cur Air Temp': completedStation['Cur Air Temp'] || '0 °F',
+              'Air Temp Min': completedStation['Air Temp Min'] || '0 °F',
+              'Air Temp Max': completedStation['Air Temp Max'] || '0 °F',
+              'Precip': completedStation['Precip Accum One Hour'] || '0 in',
+              'Precip Accum One Hour': completedStation['Precip Accum One Hour'] || '0 in',
+              'Wind Direction': completedStation['Wind Direction'] || '0°',
+              'Wind Speed Avg': completedStation['Wind Speed Avg'] || '0 mph',
+              'Max Wind Gust': completedStation['Max Wind Gust'] || '0 mph',
+              'Cur Wind Speed': completedStation['Cur Wind Speed'] || '0 mph',
+              'Total Snow Depth Change': completedStation['Total Snow Depth Change'] || '0 in',
+              'Relative Humidity': completedStation['Relative Humidity'] || '0%'
+            };
+          });
+          
+          // Add the new test data to existing data
+          setLocalObservationsDataHour((prev: { data: any[]; title: string }) => ({
+            ...prev,
+            data: [...prev.data, ...stationTestData]
+          }));
+          
+          setLocalFilteredObservationsDataHour((prev: { data: any[]; title: string }) => ({
+            ...prev,
+            data: [...prev.data, ...stationTestData]
+          }));
+          
+          // Add to daily data as well
+          setLocalObservationsDataDay((prev: { data: any[]; title: string }) => ({
+            ...prev,
+            data: [...prev.data, {
+              Station: completedStation.Station,
+              Day: new Date().toLocaleDateString(),
+              'Snow Depth': completedStation['Total Snow Depth'] || '0 in',
+              'Total Snow Depth': completedStation['Total Snow Depth'] || '0 in',
+              'New Snow': completedStation['24h Snow Accumulation'] || '0 in',
+              '24h Snow Accumulation': completedStation['24h Snow Accumulation'] || '0 in',
+              'Air Temp': completedStation['Cur Air Temp'] || '0 °F',
+              'Cur Air Temp': completedStation['Cur Air Temp'] || '0 °F',
+              'Air Temp Min': completedStation['Air Temp Min'] || '0 °F',
+              'Air Temp Max': completedStation['Air Temp Max'] || '0 °F',
+              'Precip': completedStation['Precip Accum One Hour'] || '0 in',
+              'Precip Accum One Hour': completedStation['Precip Accum One Hour'] || '0 in',
+              'Wind Direction': completedStation['Wind Direction'] || '0°',
+              'Wind Speed Avg': completedStation['Wind Speed Avg'] || '0 mph',
+              'Max Wind Gust': completedStation['Max Wind Gust'] || '0 mph',
+              'Cur Wind Speed': completedStation['Cur Wind Speed'] || '0 mph',
+              'Total Snow Depth Change': completedStation['Total Snow Depth Change'] || '0 in',
+              'Relative Humidity': completedStation['Relative Humidity'] || '0%'
+            }]
+          }));
+        }
+        
         setSelectedStation(completedStation);
         setIsDrawerOpen(true);
       }
