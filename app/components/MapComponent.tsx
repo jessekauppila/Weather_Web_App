@@ -31,76 +31,6 @@ interface MapData {
   filteredObservationsDataHour: any;
 }
 
-// Add this debug overlay component
-const DebugOverlay = ({ mapData, visibility, selectedStation }: any) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  if (!visibility) return null;
-
-  return (
-    <div className="absolute bottom-10 right-10 z-50 pointer-events-auto" style={{
-      background: 'rgba(0, 0, 0, 0.2)',
-      borderRadius: '5px',
-      padding: '8px',
-      width: '220px',
-      color: '#e0e0e0',
-    }}>
-      <div 
-        className="flex justify-between items-center cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-        style={{ fontSize: '0.75rem' }}
-      >
-        <span style={{ color: '#9e9e9e', fontWeight: 500 }}>Map Debug Info</span>
-        <span>{expanded ? '▼' : '▶'}</span>
-      </div>
-      
-      {expanded && (
-        <div className="mt-2 overflow-auto" style={{ 
-          maxHeight: '300px', 
-          fontSize: '0.75rem',
-          color: '#9e9e9e' 
-        }}>
-          <div className="mb-2">
-            <span style={{ fontWeight: 500 }}>Map Data Status:</span>{' '}
-            {mapData ? 'Loaded' : 'Not Loaded'}
-          </div>
-          
-          <div className="mb-2">
-            <span style={{ fontWeight: 500 }}>Data Items:</span>
-            <ul className="mt-1 pl-4" style={{ listStyleType: 'disc' }}>
-              <li>Stations: {mapData?.stationData?.features?.length || 0}</li>
-              <li>Forecast Zones: {mapData?.forecastZones?.length || 0}</li>
-              <li>Day Obs: {mapData?.observationsDataDay?.data?.length || 0}</li>
-              <li>Hour Obs: {mapData?.observationsDataHour?.data?.length || 0}</li>
-              <li>Filtered Hour: {mapData?.filteredObservationsDataHour?.data?.length || 0}</li>
-            </ul>
-          </div>
-          
-          {selectedStation && (
-            <div className="mb-2">
-              <span style={{ fontWeight: 500 }}>Selected Station:</span> {selectedStation.Station}
-            </div>
-          )}
-          
-          <details>
-            <summary style={{ fontWeight: 500, cursor: 'pointer', marginBottom: '4px' }}>
-              Sample Station Data
-            </summary>
-            <pre className="overflow-auto p-1" style={{ 
-              fontSize: '9px', 
-              maxHeight: '120px',
-              background: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '3px'
-            }}>
-              {JSON.stringify(mapData?.stationData?.features?.[0]?.properties || {}, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
-    </div>
-  );
-};
-
 // Client-side portal component for Next.js
 const ClientPortal = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<Element | null>(null);
@@ -157,9 +87,6 @@ export const MapApp = () => {
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // Add debug state
-  const [showDebug, setShowDebug] = useState(false);
 
   // Effect to manage drawer state
   useEffect(() => {
@@ -320,30 +247,6 @@ export const MapApp = () => {
           toggleLayer={toggleLayer}
         />
       </DeckGL>
-
-      {/* Debug button */}
-      <button
-        onClick={() => setShowDebug(!showDebug)}
-        className="absolute top-4 right-4 z-50"
-        style={{
-          background: 'rgba(0, 0, 0, 0.2)',
-          color: showDebug ? '#9e9e9e' : '#424242',
-          fontSize: '0.75rem',
-          padding: '4px 8px',
-          borderRadius: '5px',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        {showDebug ? 'Hide Debug' : 'Debug'}
-      </button>
-
-      {/* Debug overlay */}
-      <DebugOverlay 
-        mapData={mapData} 
-        visibility={showDebug} 
-        selectedStation={selectedStation}
-      />
 
       {/* Render StationDrawer using our custom portal */}
       <ClientPortal>

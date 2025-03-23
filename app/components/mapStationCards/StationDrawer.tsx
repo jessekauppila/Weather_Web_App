@@ -34,80 +34,6 @@ interface StationDrawerProps {
   tableMode: 'summary' | 'daily';
 }
 
-// Debug Info Panel Component
-const DebugInfoPanel = ({ 
-  station, 
-  observationsDataDay,
-  observationsDataHour,
-  filteredObservationsDataHour,
-  stationDataHourFiltered,
-  stationDataHourUnFiltered 
-}: any) => {
-  return (
-    <div style={{
-      background: 'rgba(0, 0, 0, 0.2)',
-      padding: '8px',
-      marginBottom: '24px',
-      borderRadius: '5px',
-      color: '#e0e0e0',
-      fontSize: '0.75rem',
-      overflowX: 'auto',
-      maxHeight: '240px'
-    }}>
-      <div style={{ fontWeight: 500, marginBottom: '8px', color: '#9e9e9e' }}>
-        Debug Info
-      </div>
-      
-      <div className="mb-2">
-        <span style={{ fontWeight: 500 }}>Station:</span> {station ? station.Station : 'none'}<br />
-        <span style={{ fontWeight: 500 }}>Station Data:</span> {station ? 'Available' : 'Missing'}
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <span style={{ fontWeight: 500 }}>Raw Data Sources:</span>
-          <ul style={{ listStyleType: 'disc', paddingLeft: '16px', marginTop: '4px' }}>
-            <li>Day Obs: {observationsDataDay?.data?.length || 0} items</li>
-            <li>Hour Obs: {observationsDataHour?.data?.length || 0} items</li>
-            <li>Filtered Hour: {filteredObservationsDataHour?.data?.length || 0} items</li>
-          </ul>
-        </div>
-        <div>
-          <span style={{ fontWeight: 500 }}>Processed Data:</span>
-          <ul style={{ listStyleType: 'disc', paddingLeft: '16px', marginTop: '4px' }}>
-            <li>Filtered: {stationDataHourFiltered?.data?.length || 0} items</li>
-            <li>Unfiltered: {stationDataHourUnFiltered?.data?.length || 0} items</li>
-          </ul>
-        </div>
-      </div>
-      
-      <details>
-        <summary style={{ fontWeight: 500, cursor: 'pointer', marginBottom: '4px' }}>
-          Raw Data Sample
-        </summary>
-        <pre style={{ 
-          fontSize: '9px', 
-          overflow: 'auto', 
-          maxHeight: '80px', 
-          background: 'rgba(0, 0, 0, 0.3)',
-          borderRadius: '3px',
-          padding: '4px'
-        }}>
-          {JSON.stringify(
-            {
-              station: station || {},
-              hourSample: stationDataHourFiltered?.data?.[0] || {},
-              unfilteredSample: stationDataHourUnFiltered?.data?.[0] || {}
-            },
-            null,
-            2
-          )}
-        </pre>
-      </details>
-    </div>
-  );
-};
-
 const StationDrawer: React.FC<StationDrawerProps> = ({
   isOpen,
   onClose,
@@ -118,17 +44,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   isMetric,
   tableMode
 }) => {
-  // Debug logs
-  console.log("StationDrawer rendered with:", {
-    station,
-    observationsDataDay: observationsDataDay?.data?.length,
-    observationsDataHour: observationsDataHour?.data?.length,
-    filteredObservationsDataHour: filteredObservationsDataHour?.data?.length
-  });
-  
-  // State for debug mode
-  const [showDebug, setShowDebug] = useState(false);
-  
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
   
@@ -228,7 +143,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const stationDataHourFiltered = useMemo(() => {
     try {
       if (!station || !filteredObservationsDataHour?.data) {
-        console.log("No station or filteredObservationsDataHour data for filtered hours");
         return {
           data: [],
           title: station ? `Filtered Hourly Data - ${station.Station}` : ''
@@ -302,11 +216,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         };
       });
       
-      console.log(`Found ${filteredData.length} filtered observations for station ${station.Station}`);
-      if (processedData.length > 0) {
-        console.log("Sample processed data item:", processedData[0]);
-      }
-      
       return {
         data: processedData,
         title: `Filtered Hourly Data - ${station.Station}`
@@ -323,7 +232,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const stationDataHourUnFiltered = useMemo(() => {
     try {
       if (!station || !observationsDataHour?.data) {
-        console.log("No station or observationsDataHour data for unfiltered hours");
         return {
           data: [],
           title: station ? `Raw Hourly Data - ${station.Station}` : ''
@@ -397,11 +305,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         };
       });
       
-      console.log(`Found ${filteredData.length} unfiltered observations for station ${station.Station}`);
-      if (processedData.length > 0) {
-        console.log("Sample processed data item:", processedData[0]);
-      }
-      
       return {
         data: processedData,
         title: `Raw Hourly Data - ${station.Station}`
@@ -415,20 +318,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     }
   }, [observationsDataHour, station]);
 
-  // Add debugging log
-  useEffect(() => {
-    if (isOpen && stationDataHourFiltered?.data?.length > 0) {
-      console.log("HOURLY DATA FORMAT CHECK:", {
-        sample: stationDataHourFiltered.data[0],
-        keys: Object.keys(stationDataHourFiltered.data[0])
-      });
-    }
-  }, [isOpen, stationDataHourFiltered]);
-
   const stationDataForGraph = useMemo(() => {
     try {
       if (!station || !filteredObservationsDataHour?.data) {
-        console.log("No station or filteredObservationsDataHour data");
         return {
           data: [],
           title: station?.Station || ''
@@ -438,8 +330,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       const filteredData = filteredObservationsDataHour.data.filter(
         (obs: { Station: string }) => obs?.Station === station.Station
       );
-      
-      console.log(`Found ${filteredData.length} observations for station ${station.Station}`);
       
       const mappedData = filteredData.map((obs: any) => {
         try {
@@ -534,21 +424,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           </div>
           <div className="flex space-x-2">
             <button 
-              onClick={() => setShowDebug(!showDebug)}
-              style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                color: showDebug ? '#9e9e9e' : '#424242',
-                fontSize: '0.75rem',
-                padding: '4px 8px',
-                borderRadius: '5px',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {showDebug ? 'Hide Debug' : 'Debug'}
-            </button>
-            
-            <button 
               onClick={onClose}
               style={{
                 background: 'rgba(0, 0, 0, 0.2)',
@@ -576,18 +451,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             position: 'relative'
           }}
         >
-          {/* Debug Info Panel */}
-          {showDebug && (
-            <DebugInfoPanel
-              station={station}
-              observationsDataDay={observationsDataDay}
-              observationsDataHour={observationsDataHour}
-              filteredObservationsDataHour={filteredObservationsDataHour}
-              stationDataHourFiltered={stationDataHourFiltered}
-              stationDataHourUnFiltered={stationDataHourUnFiltered}
-            />
-          )}
-          
           {/* Station Summary Table */}
           <div className="mb-6">
             <DayAveragesTable 
