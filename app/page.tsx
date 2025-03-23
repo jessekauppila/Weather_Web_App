@@ -219,8 +219,8 @@ export default function Home() {
         />
       </div>
       
-      {/* Additional components are commented out for now
-      <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
+       {/* Additional components are commented out for now */}
+     {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
         <RegionsContainer
           observationsData={observationsDataDay}
           handleStationClick={handleStationClick}
