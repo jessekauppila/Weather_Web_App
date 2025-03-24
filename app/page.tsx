@@ -207,7 +207,12 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Map component as fullscreen background */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <MapComponent />
+        <MapComponent
+          observationsData={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+        />
       </div>
       
       {/* Time toolbar with higher z-index to overlap the map */}

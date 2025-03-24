@@ -9,6 +9,7 @@ import {
   map_MAP_STYLE,
   map_lightingEffect,
   map_getTooltip,
+  map_weatherToGeoJSON,
 } from '../map/map';
 import { MapLayerSwitchWidget } from '../map/UI/widgets/layer_switches';
 import { createMapLayers } from '../map/layers';
@@ -19,6 +20,14 @@ import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
+import forecastZonesData from '../data/map/forecastZones.json';
+
+interface MapComponentProps {
+  observationsDataDay: { data: any[]; title: string } | null;
+  observationsDataHour: { data: any[]; title: string } | null;
+  filteredObservationsDataHour: { data: any[]; title: string } | null;
+  isMetric: boolean;
+}
 
 interface MapData {
   stationData: {
@@ -26,9 +35,10 @@ interface MapData {
     features: Feature<Geometry, Map_BlockProperties>[];
   };
   forecastZones: { name: string; contour: [number, number][] }[];
-  observationsDataDay: any;
-  observationsDataHour: any;
-  filteredObservationsDataHour: any;
+  observationsDataDay: { data: any[]; title: string } | null;
+  observationsDataHour: { data: any[]; title: string } | null;
+  filteredObservationsDataHour: { data: any[]; title: string } | null;
+  isMetric: boolean;
 }
 
 // Client-side portal component for Next.js
@@ -71,7 +81,12 @@ const ClientPortal = ({ children }: { children: React.ReactNode }) => {
 };
 
 // The actual map component that uses the context
-export const MapApp = () => {
+export const MapApp = ({
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric
+}: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
 
@@ -159,15 +174,18 @@ export const MapApp = () => {
 
   // Create layers based on current visibility and data
   const layers = useMemo(
-    () => createMapLayers(layerVisibility, mapData as MapData, handleStationClick),
-    [layerVisibility, mapData]
+    () => createMapLayers(layerVisibility, {
+      stationData: map_weatherToGeoJSON(observationsDataDay?.data || []),
+      forecastZones: forecastZonesData.forecastZones as unknown as { name: string; contour: [number, number][] }[]
+    }, handleStationClick),
+    [layerVisibility, observationsDataDay]
   );
 
   // Get the filtered data for the selected station
   const stationDataHourFiltered = useMemo(() => {
     if (!selectedStation || !(mapData as MapData).filteredObservationsDataHour?.data) return null;
     return {
-      data: (mapData as MapData).filteredObservationsDataHour.data.filter(
+      data: (mapData as MapData).filteredObservationsDataHour!.data.filter(
         (obs: { Station: string }) => obs.Station === selectedStation.Station
       ),
       title: `Filtered Hourly Data - ${selectedStation.Station}`
@@ -176,14 +194,14 @@ export const MapApp = () => {
 
   // Get the unfiltered data for the selected station
   const stationDataHourUnFiltered = useMemo(() => {
-    if (!selectedStation || !(mapData as MapData).observationsDataHour?.data) return null;
-    return {
-      data: (mapData as MapData).observationsDataHour.data.filter(
-        (obs: { Station: string }) => obs.Station === selectedStation.Station
-      ),
-      title: `Raw Hourly Data - ${selectedStation.Station}`
-    };
-  }, [selectedStation, mapData]);
+      if (!selectedStation || !(mapData as MapData).filteredObservationsDataHour?.data) return null;
+      return {
+        data: (mapData as MapData).filteredObservationsDataHour!.data.filter(
+          (obs: { Station: string }) => obs.Station === selectedStation.Station
+        ),
+        title: `Un Filtered Hourly Data - ${selectedStation.Station}`
+      };
+    }, [selectedStation, mapData]);
 
   // Format data for graphs
   const stationDataForGraph = useMemo(() => {
@@ -257,10 +275,10 @@ export const MapApp = () => {
             setSelectedStation(null);
           }}
           station={selectedStation}
-          observationsDataDay={(mapData as MapData).observationsDataDay}
-          observationsDataHour={(mapData as MapData).observationsDataHour}
-          filteredObservationsDataHour={(mapData as MapData).filteredObservationsDataHour}
-          isMetric={false}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
           tableMode="summary"
         />
       </ClientPortal>
@@ -269,10 +287,27 @@ export const MapApp = () => {
 };
 
 // Wrapped component with provider
-export default function MapComponent() {
+export default function MapComponent({
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric
+}: MapComponentProps) {
   return (
-    <MapDataProvider>
-      <MapApp />
+    <MapDataProvider
+      observationsDataDay={observationsDataDay}
+      observationsDataHour={observationsDataHour}
+      filteredObservationsDataHour={filteredObservationsDataHour}
+      isMetric={isMetric}
+    >
+      <MapApp
+        observationsDataDay={observationsDataDay}
+        observationsDataHour={observationsDataHour}
+        filteredObservationsDataHour={filteredObservationsDataHour}
+        isMetric={isMetric}
+      />
     </MapDataProvider>
   );
-} 
+}
+
+
