@@ -22,17 +22,17 @@ interface Station {
   name: string;
 }
 
-interface MapData {
-  stationData: {
-    type: 'FeatureCollection';
-    features: Feature<Geometry, Map_BlockProperties>[];
-  };
-  forecastZones: { name: string; contour: [number, number][] }[];
-  observationsDataDay: { data: any[]; title: string } | null;
-  observationsDataHour: { data: any[]; title: string } | null;
-  filteredObservationsDataHour: { data: any[]; title: string } | null;
-  isMetric: boolean;
-}
+// interface MapData {
+//   stationData: {
+//     type: 'FeatureCollection';
+//     features: Feature<Geometry, Map_BlockProperties>[];
+//   };
+//   forecastZones: { name: string; contour: [number, number][] }[];
+//   observationsDataDay: { data: any[]; title: string } | null;
+//   observationsDataHour: { data: any[]; title: string } | null;
+//   filteredObservationsDataHour: { data: any[]; title: string } | null;
+//   isMetric: boolean;
+// }
 
 // Create context with comprehensive type definitions
 interface MapDataContextType {

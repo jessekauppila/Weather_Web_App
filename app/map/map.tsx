@@ -4,7 +4,7 @@ import {
   PickingInfo,
   MapViewState,
 } from '@deck.gl/core';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Feature, Geometry } from 'geojson';
 import { scaleThreshold } from 'd3-scale';
 import {
@@ -15,7 +15,7 @@ import {
 } from '@deck.gl/core';
 import { getMapTooltip } from './UI/MapTooltip';
 import StationDrawer from '../components/mapStationCards/StationDrawer';
-import { useMapData } from '../data/map/MapDataContext';
+//import { useMapData } from '../data/map/MapDataContext';
 
 ////////////////////////
 
