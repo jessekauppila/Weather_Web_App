@@ -31,6 +31,14 @@ interface MapData {
   filteredObservationsDataHour: any;
 }
 
+interface MapComponentProps {
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+  isMetric: boolean;
+  tableMode: 'summary' | 'daily';
+}
+
 // Client-side portal component for Next.js
 const ClientPortal = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<Element | null>(null);
@@ -71,7 +79,13 @@ const ClientPortal = ({ children }: { children: React.ReactNode }) => {
 };
 
 // The actual map component that uses the context
-export const MapApp = () => {
+export const MapApp = ({ 
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric,
+  tableMode 
+}: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
 
@@ -163,51 +177,51 @@ export const MapApp = () => {
     [layerVisibility, mapData]
   );
 
-  // Get the filtered data for the selected station
-  const stationDataHourFiltered = useMemo(() => {
-    if (!selectedStation || !(mapData as MapData).filteredObservationsDataHour?.data) return null;
-    return {
-      data: (mapData as MapData).filteredObservationsDataHour.data.filter(
-        (obs: { Station: string }) => obs.Station === selectedStation.Station
-      ),
-      title: `Filtered Hourly Data - ${selectedStation.Station}`
-    };
-  }, [selectedStation, mapData]);
+  // // Get the filtered data for the selected station
+  // const stationDataHourFiltered = useMemo(() => {
+  //   if (!selectedStation || !(mapData as MapData).filteredObservationsDataHour?.data) return null;
+  //   return {
+  //     data: (mapData as MapData).filteredObservationsDataHour.data.filter(
+  //       (obs: { Station: string }) => obs.Station === selectedStation.Station
+  //     ),
+  //     title: `Filtered Hourly Data - ${selectedStation.Station}`
+  //   };
+  // }, [selectedStation, mapData]);
 
-  // Get the unfiltered data for the selected station
-  const stationDataHourUnFiltered = useMemo(() => {
-    if (!selectedStation || !(mapData as MapData).observationsDataHour?.data) return null;
-    return {
-      data: (mapData as MapData).observationsDataHour.data.filter(
-        (obs: { Station: string }) => obs.Station === selectedStation.Station
-      ),
-      title: `Raw Hourly Data - ${selectedStation.Station}`
-    };
-  }, [selectedStation, mapData]);
+  // // Get the unfiltered data for the selected station
+  // const stationDataHourUnFiltered = useMemo(() => {
+  //   if (!selectedStation || !(mapData as MapData).observationsDataHour?.data) return null;
+  //   return {
+  //     data: (mapData as MapData).observationsDataHour.data.filter(
+  //       (obs: { Station: string }) => obs.Station === selectedStation.Station
+  //     ),
+  //     title: `Raw Hourly Data - ${selectedStation.Station}`
+  //   };
+  // }, [selectedStation, mapData]);
 
-  // Format data for graphs
-  const stationDataForGraph = useMemo(() => {
-    if (!selectedStation || !stationDataHourFiltered?.data) return null;
-    return {
-      data: stationDataHourFiltered.data.map((obs: { 
-        Station: string; 
-        Day: string; 
-        Hour: string; 
-        'Snow Depth'?: string; 
-        'New Snow'?: string;
-        'Air Temp'?: string;
-        'Precip'?: string;
-      }) => ({
-        Date: `${obs.Day} ${obs.Hour}`,
-        'Total Snow Depth': obs['Snow Depth'] || '0 in',
-        '24h Snow Accumulation': obs['New Snow'] || '0 in',
-        'Air Temp Min': obs['Air Temp'],
-        'Air Temp Max': obs['Air Temp'],
-        'Precip Accum One Hour': obs['Precip'] || '0 in'
-      })),
-      title: selectedStation.Station
-    };
-  }, [selectedStation, stationDataHourFiltered]);
+  // // Format data for graphs
+  // const stationDataForGraph = useMemo(() => {
+  //   if (!selectedStation || !stationDataHourFiltered?.data) return null;
+  //   return {
+  //     data: stationDataHourFiltered.data.map((obs: { 
+  //       Station: string; 
+  //       Day: string; 
+  //       Hour: string; 
+  //       'Snow Depth'?: string; 
+  //       'New Snow'?: string;
+  //       'Air Temp'?: string;
+  //       'Precip'?: string;
+  //     }) => ({
+  //       Date: `${obs.Day} ${obs.Hour}`,
+  //       'Total Snow Depth': obs['Snow Depth'] || '0 in',
+  //       '24h Snow Accumulation': obs['New Snow'] || '0 in',
+  //       'Air Temp Min': obs['Air Temp'],
+  //       'Air Temp Max': obs['Air Temp'],
+  //       'Precip Accum One Hour': obs['Precip'] || '0 in'
+  //     })),
+  //     title: selectedStation.Station
+  //   };
+  // }, [selectedStation, stationDataHourFiltered]);
 
   // Toggle layer visibility
   const toggleLayer = (layerId: LayerId) => {
@@ -257,11 +271,11 @@ export const MapApp = () => {
             setSelectedStation(null);
           }}
           station={selectedStation}
-          observationsDataDay={(mapData as MapData).observationsDataDay}
-          observationsDataHour={(mapData as MapData).observationsDataHour}
-          filteredObservationsDataHour={(mapData as MapData).filteredObservationsDataHour}
-          isMetric={false}
-          tableMode="summary"
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
         />
       </ClientPortal>
     </div>
@@ -269,10 +283,10 @@ export const MapApp = () => {
 };
 
 // Wrapped component with provider
-export default function MapComponent() {
+export default function MapComponent(props: MapComponentProps) {
   return (
     <MapDataProvider>
-      <MapApp />
+      <MapApp {...props} />
     </MapDataProvider>
   );
 } 
