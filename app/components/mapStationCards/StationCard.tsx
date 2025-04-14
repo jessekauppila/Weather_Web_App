@@ -217,7 +217,8 @@ const StationCard = ({
               />
             )}
 
-                {stationDataHourFiltered && (
+          {/* Hourly Snow and Temperature Graph */}
+          {stationDataHourFiltered && (
             <AccordionWrapper
               title="Hourly Snow and Temperature Graph"
               subtitle={station.title}
@@ -231,6 +232,7 @@ const StationCard = ({
             </AccordionWrapper>
           )}
 
+          {/* Daily Snow and Temperature Graph */}
           {stationDataForGraph && (
             <AccordionWrapper
               title="Daily Snow and Temperature Graph"
@@ -244,12 +246,14 @@ const StationCard = ({
             </AccordionWrapper>
           )}
 
+          {/* Filtered Hourly Data Table */}
             {stationDataHourFiltered && (
               <HourWxTable 
                 hourAverages={stationDataHourFiltered} 
               />
             )}
 
+          {/* Raw Hourly Data Table */}
             {stationDataHourUnFiltered && (
               <HourWxTable 
                 hourAverages={stationDataHourUnFiltered} 

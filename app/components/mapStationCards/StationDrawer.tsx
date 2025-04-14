@@ -176,6 +176,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [observationsDataHour, station]);
 
+  
+
   const stationDataForGraph = useMemo(() => {
     if (!station || !filteredObservationsDataHour?.data) {
       return {
