@@ -80,7 +80,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
   // Prevent React from re-rendering the SVG
   const shouldComponentUpdate = () => false;
 
-  //console.log('Day averages data:', dayAverages);
+  console.log('Day averages data in WxSnowGraph:', dayAverages);
 
   useEffect(() => {
     // Clear any existing content and reset loaded state
