@@ -149,6 +149,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       };
     }
 
+    
+
     return {
       data: filteredObservationsDataHour.data.filter(
         (obs: { Station: string }) => obs.Station === station.Station
@@ -178,38 +180,75 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   
 
-  const stationDataForGraph = useMemo(() => {
-    if (!station || !filteredObservationsDataHour?.data) {
+  // const stationDataForGraph = useMemo(() => {
+  //   if (!station || !filteredObservationsDataHour?.data) {
+  //     return {
+  //       data: [],
+  //       title: station?.Station || ''
+  //     };
+  //   }
+
+  //   return {
+  //     data: filteredObservationsDataHour.data.filter(
+  //       (obs: { Station: string }) => obs.Station === station.Station
+  //     ).map((obs: { 
+  //       Station: string; 
+  //       Day: string; 
+  //       Hour: string; 
+  //       'Snow Depth'?: string; 
+  //       'New Snow'?: string;
+  //       'Air Temp'?: string;
+  //       'Precip'?: string;
+  //     }) => ({
+  //       Date: `${obs.Day} ${obs.Hour}`,
+  //       'Total Snow Depth': obs['Snow Depth'] || '0 in',
+  //       '24h Snow Accumulation': obs['New Snow'] || '0 in',
+  //       'Air Temp Min': obs['Air Temp'],
+  //       'Air Temp Max': obs['Air Temp'],
+  //       'Precip Accum One Hour': obs['Precip'] || '0 in'
+  //     })),
+  //     title: station.Station
+  //   };
+  // }, [filteredObservationsDataHour, station]);
+
+  console.log('observationsDataDay', observationsDataDay);
+
+  const stationObservationsDataDay = useMemo(() => {
+    if (!station || !observationsDataDay?.data) {
       return {
         data: [],
-        title: station?.Station || ''
+        title: station ? `Daily Data - ${station.Station}` : ''
       };
     }
 
-    return {
-      data: filteredObservationsDataHour.data.filter(
-        (obs: { Station: string }) => obs.Station === station.Station
-      ).map((obs: { 
-        Station: string; 
-        Day: string; 
-        Hour: string; 
-        'Snow Depth'?: string; 
-        'New Snow'?: string;
-        'Air Temp'?: string;
-        'Precip'?: string;
-      }) => ({
-        Date: `${obs.Day} ${obs.Hour}`,
-        'Total Snow Depth': obs['Snow Depth'] || '0 in',
-        '24h Snow Accumulation': obs['New Snow'] || '0 in',
-        'Air Temp Min': obs['Air Temp'],
-        'Air Temp Max': obs['Air Temp'],
-        'Precip Accum One Hour': obs['Precip'] || '0 in'
-      })),
-      title: station.Station
-    };
-  }, [filteredObservationsDataHour, station]);
+    const filteredData = observationsDataDay.data.filter(
+      (obs: { Station: string }) => obs.Station === station.Station
+    );
 
-  console.log('stationDataForGraph', stationDataForGraph);
+    // Format the data to match the desired structure
+    const formattedData = filteredData.map((obs: { 
+      Station: string;
+      'Start Date Time': string;
+      'End Date Time': string;
+      [key: string]: any;
+    }) => ({
+      ...obs,
+      Date: obs['Start Date Time']?.split(',')[0] || '',
+      Stid: `${obs['Start Date Time']?.split(',')[1]?.trim()} - ${obs['End Date Time']?.split(',')[1]?.trim()}`,
+      Latitude: station.Latitude,
+      Longitude: station.Longitude
+    }));
+
+    // Create the title with elevation and date range
+    const title = `${station.Station} - ${station.Elevation}\n${formattedData[0]?.['Start Date Time']?.split(',')[1]?.trim()} - ${formattedData[0]?.['End Date Time']?.split(',')[1]?.trim()}`;
+
+    return {
+      data: formattedData,
+      title
+    };
+  }, [observationsDataDay, station]);
+
+  console.log('stationObservationsDataDay', stationObservationsDataDay);
 
 
   const stationDayData = useMemo(() => ({
@@ -303,8 +342,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               mode={tableMode}
             />
           </div>
+          
+          
+{/* //////////////////////////////////////////////////////////////// */}
 
-          {/* Hourly Snow and Temperature Graph */}
+
+          {/* Hourly Snow and Temperature Graph FIXED!!!!*/}
           {stationDataHourFiltered.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
@@ -322,7 +365,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           )}
 
           {/* Daily Snow and Temperature Graph */}
-          {stationDataForGraph.data.length > 0 && (
+          {stationObservationsDataDay.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
                 title="Daily Snow and Temperature Graph"
@@ -330,23 +373,25 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <DayWxSnowGraph 
-                  dayAverages={stationDataForGraph}
+                  dayAverages={stationObservationsDataDay}
                   isMetric={isMetric}
                 />
               </AccordionWrapper>
             </div>
           )}
 
+{/* //////////////////////////////////////////////////////////////// */}
+
           {/* Filtered Hourly Data Table */}
-          {stationDataHourFiltered.data.length > 0 && (
+          {stationDayData.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
-                title={`Filtered Hourly Data (${stationDataHourFiltered.data.length} records)`}
+                title={`Filtered Hourly Data`}
                 subtitle={station.Station}
                 defaultExpanded={false}
               >
                 <HourWxTable 
-                  hourAverages={stationDataHourFiltered} 
+                  hourAverages={stationDayData} 
                 />
               </AccordionWrapper>
             </div>
@@ -356,7 +401,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           {stationDataHourUnFiltered.data.length > 0 && (
             <div className="mb-6">
               <AccordionWrapper
-                title={`Raw Hourly Data (${stationDataHourUnFiltered.data.length} records)`}
+                title={`Raw Hourly Data`}
                 subtitle={station.Station}
                 defaultExpanded={false}
               >
