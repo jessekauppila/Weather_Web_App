@@ -74,6 +74,11 @@ const StationCard = ({
     title: `Filtered Hourly Data - ${station.Station}`
   };
 
+
+  console.log('filteredObservationsDataHour StationCard', filteredObservationsDataHour);
+
+  console.log('observationsDataDay StationCard', observationsDataDay);
+
   const stationDataHourUnFiltered = {
     data: observationsDataHour?.data?.filter(
       (obs: { Station: string }) => obs.Station === station.Station

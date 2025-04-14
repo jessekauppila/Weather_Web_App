@@ -76,6 +76,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [lastMouseY, setLastMouseY] = useState(0);
   const drawerRef = useRef<HTMLDivElement>(null);
+
   
   // Reset drawer to initial position when opened
   useEffect(() => {
@@ -141,239 +142,80 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
-    try {
-      if (!station || !filteredObservationsDataHour?.data) {
-        return {
-          data: [],
-          title: station ? `Filtered Hourly Data - ${station.Station}` : ''
-        };
-      }
-      
-      // Filter the data for the current station
-      const filteredData = filteredObservationsDataHour.data.filter(
-        (obs: { Station: string }) => obs?.Station === station.Station
-      );
-      
-      // Process the data to ensure it has the correct format for HourWxTable
-      const processedData = filteredData.map((item: any) => {
-        // Format the date: convert numeric dates like "3/23/2025" to "Mar 23"
-        let formattedDate = item.Day;
-        if (typeof item.Day === 'string' && item.Day.includes('/')) {
-          try {
-            const dateParts = item.Day.split('/');
-            if (dateParts.length >= 2) {
-              const month = parseInt(dateParts[0], 10);
-              const day = parseInt(dateParts[1], 10);
-              
-              // Convert month number to abbreviation
-              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-              if (month >= 1 && month <= 12) {
-                formattedDate = `${monthNames[month-1]} ${day}`;
-              }
-            }
-          } catch (e) {
-            console.error("Error formatting date:", e);
-          }
-        }
-        
-        // Handle hour conversion properly
-        let formattedHour = item.Hour;
-        if (typeof item.Hour === 'string') {
-          // If it's already in 12-hour format (contains AM/PM), keep it
-          if (item.Hour.includes('AM') || item.Hour.includes('PM')) {
-            formattedHour = item.Hour;
-          } else {
-            // Extract the hour part, handling formats like "0:00", "2:00", "14:00", or even just "14"
-            const hourParts = item.Hour.split(':');
-            const hour = parseInt(hourParts[0], 10);
-            
-            if (!isNaN(hour)) {
-              // Format to 12-hour time
-              const ampm = hour >= 12 ? 'PM' : 'AM';
-              const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-              formattedHour = `${hour12}:00 ${ampm}`;
-            }
-          }
-        }
-        
-        return {
-          ...item, // Keep all original properties
-          Day: formattedDate,
-          Hour: formattedHour,
-          "Station": item.Station,
-          "Elevation": station?.Elevation || '-',
-          "Air Temp": item['Air Temp'] || '-',
-          "Total Snow Depth": item['Snow Depth'] || item['Total Snow Depth'] || '-',
-          "24h Snow Depth": item['New Snow'] || item['24h Snow Accumulation'] || '-',
-          "Precipitation": item['Precip'] || item['Precip Accum One Hour'] || '-',
-          "Precip Accum": item['Precip Accum One Hour'] || '-',
-          "Wind Speed": item['Cur Wind Speed'] || item['Wind Speed Avg'] || '-',
-          "Wind Gust": item['Max Wind Gust'] || '-',
-          "Wind Direction": item['Wind Direction'] || '-',
-          "Relative Humidity": item['Relative Humidity'] || '-',
-          "Solar Radiation": '-', // Not available in our data
-          "API Fetch Time": item['Api Fetch Time'] || new Date().toLocaleString()
-        };
-      });
-      
-      return {
-        data: processedData,
-        title: `Filtered Hourly Data - ${station.Station}`
-      };
-    } catch (error) {
-      console.error("Error processing filtered hour data:", error);
+    if (!station || !filteredObservationsDataHour?.data) {
       return {
         data: [],
         title: station ? `Filtered Hourly Data - ${station.Station}` : ''
       };
     }
+
+    return {
+      data: filteredObservationsDataHour.data.filter(
+        (obs: { Station: string }) => obs.Station === station.Station
+      ),
+      title: `Filtered Hourly Data - ${station.Station}`
+    };
   }, [filteredObservationsDataHour, station]);
 
+  console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
+  console.log('stationDataHourFiltered in StationDrawer:', stationDataHourFiltered);
+
   const stationDataHourUnFiltered = useMemo(() => {
-    try {
-      if (!station || !observationsDataHour?.data) {
-        return {
-          data: [],
-          title: station ? `Raw Hourly Data - ${station.Station}` : ''
-        };
-      }
-      
-      // Filter the data for the current station
-      const filteredData = observationsDataHour.data.filter(
-        (obs: { Station: string }) => obs?.Station === station.Station
-      );
-      
-      // Process the data to ensure it has the correct format for HourWxTable
-      const processedData = filteredData.map((item: any) => {
-        // Format the date: convert numeric dates like "3/23/2025" to "Mar 23"
-        let formattedDate = item.Day;
-        if (typeof item.Day === 'string' && item.Day.includes('/')) {
-          try {
-            const dateParts = item.Day.split('/');
-            if (dateParts.length >= 2) {
-              const month = parseInt(dateParts[0], 10);
-              const day = parseInt(dateParts[1], 10);
-              
-              // Convert month number to abbreviation
-              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-              if (month >= 1 && month <= 12) {
-                formattedDate = `${monthNames[month-1]} ${day}`;
-              }
-            }
-          } catch (e) {
-            console.error("Error formatting date:", e);
-          }
-        }
-        
-        // Handle hour conversion properly
-        let formattedHour = item.Hour;
-        if (typeof item.Hour === 'string') {
-          // If it's already in 12-hour format (contains AM/PM), keep it
-          if (item.Hour.includes('AM') || item.Hour.includes('PM')) {
-            formattedHour = item.Hour;
-          } else {
-            // Extract the hour part, handling formats like "0:00", "2:00", "14:00", or even just "14"
-            const hourParts = item.Hour.split(':');
-            const hour = parseInt(hourParts[0], 10);
-            
-            if (!isNaN(hour)) {
-              // Format to 12-hour time
-              const ampm = hour >= 12 ? 'PM' : 'AM';
-              const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-              formattedHour = `${hour12}:00 ${ampm}`;
-            }
-          }
-        }
-        
-        return {
-          ...item, // Keep all original properties
-          Day: formattedDate,
-          Hour: formattedHour,
-          "Station": item.Station,
-          "Elevation": station?.Elevation || '-',
-          "Air Temp": item['Air Temp'] || '-',
-          "Total Snow Depth": item['Snow Depth'] || item['Total Snow Depth'] || '-',
-          "24h Snow Depth": item['New Snow'] || item['24h Snow Accumulation'] || '-',
-          "Precipitation": item['Precip'] || item['Precip Accum One Hour'] || '-',
-          "Precip Accum": item['Precip Accum One Hour'] || '-',
-          "Wind Speed": item['Cur Wind Speed'] || item['Wind Speed Avg'] || '-',
-          "Wind Gust": item['Max Wind Gust'] || '-',
-          "Wind Direction": item['Wind Direction'] || '-',
-          "Relative Humidity": item['Relative Humidity'] || '-',
-          "Solar Radiation": '-', // Not available in our data
-          "API Fetch Time": item['Api Fetch Time'] || new Date().toLocaleString()
-        };
-      });
-      
-      return {
-        data: processedData,
-        title: `Raw Hourly Data - ${station.Station}`
-      };
-    } catch (error) {
-      console.error("Error processing unfiltered hour data:", error);
+    if (!station || !observationsDataHour?.data) {
       return {
         data: [],
         title: station ? `Raw Hourly Data - ${station.Station}` : ''
       };
     }
+
+    return {
+      data: observationsDataHour.data.filter(
+        (obs: { Station: string }) => obs.Station === station.Station
+      ),
+      title: `Raw Hourly Data - ${station.Station}`
+    };
   }, [observationsDataHour, station]);
 
   const stationDataForGraph = useMemo(() => {
-    try {
-      if (!station || !filteredObservationsDataHour?.data) {
-        return {
-          data: [],
-          title: station?.Station || ''
-        };
-      }
-
-      const filteredData = filteredObservationsDataHour.data.filter(
-        (obs: { Station: string }) => obs?.Station === station.Station
-      );
-      
-      const mappedData = filteredData.map((obs: any) => {
-        try {
-          return {
-            Date: obs.Day && obs.Hour ? `${obs.Day} ${obs.Hour}` : new Date().toLocaleString(),
-            'Total Snow Depth': obs['Snow Depth'] || '0 in',
-            '24h Snow Accumulation': obs['New Snow'] || '0 in',
-            'Air Temp Min': obs['Air Temp'] || '0 °F',
-            'Air Temp Max': obs['Air Temp'] || '0 °F',
-            'Precip Accum One Hour': obs['Precip'] || '0 in',
-            'Cur Air Temp': obs['Air Temp'] || '0 °F'
-          };
-        } catch (obsError) {
-          console.error("Error mapping observation:", obsError);
-          return {
-            Date: new Date().toLocaleString(),
-            'Total Snow Depth': '0 in',
-            '24h Snow Accumulation': '0 in',
-            'Air Temp Min': '0 °F',
-            'Air Temp Max': '0 °F',
-            'Precip Accum One Hour': '0 in',
-            'Cur Air Temp': '0 °F'
-          };
-        }
-      });
-      
-      return {
-        data: mappedData,
-        title: station?.Station || ''
-      };
-    } catch (error) {
-      console.error("Error processing graph data:", error);
+    if (!station || !filteredObservationsDataHour?.data) {
       return {
         data: [],
         title: station?.Station || ''
       };
     }
+
+    return {
+      data: filteredObservationsDataHour.data.filter(
+        (obs: { Station: string }) => obs.Station === station.Station
+      ).map((obs: { 
+        Station: string; 
+        Day: string; 
+        Hour: string; 
+        'Snow Depth'?: string; 
+        'New Snow'?: string;
+        'Air Temp'?: string;
+        'Precip'?: string;
+      }) => ({
+        Date: `${obs.Day} ${obs.Hour}`,
+        'Total Snow Depth': obs['Snow Depth'] || '0 in',
+        '24h Snow Accumulation': obs['New Snow'] || '0 in',
+        'Air Temp Min': obs['Air Temp'],
+        'Air Temp Max': obs['Air Temp'],
+        'Precip Accum One Hour': obs['Precip'] || '0 in'
+      })),
+      title: station.Station
+    };
   }, [filteredObservationsDataHour, station]);
+
+  console.log('stationDataForGraph', stationDataForGraph);
+
 
   const stationDayData = useMemo(() => ({
     data: station ? [station] : [],
     title: station?.Station || ''
   }), [station]);
 
+  
   if (!station) return null;
 
   // Calculate the drawer height based on top position
@@ -469,7 +311,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <WxSnowGraph 
-                  dayAverages={stationDataHourFiltered}
+                  dayAverages={stationDayData}
                   isHourly={true}
                   isMetric={isMetric}
                 />

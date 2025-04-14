@@ -207,7 +207,13 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Map component as fullscreen background */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <MapComponent />
+        <MapComponent 
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
+        />
       </div>
       
       {/* Time toolbar with higher z-index to overlap the map */}
@@ -220,7 +226,7 @@ export default function Home() {
       </div>
       
        {/* Additional components are commented out for now */}
-     <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
+     {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
         <RegionsContainer
           observationsData={observationsDataDay}
           handleStationClick={handleStationClick}
@@ -232,7 +238,7 @@ export default function Home() {
           isMetric={isMetric}
           tableMode={tableMode}
         />
-      </div>
+      </div> */}
     </main>
   );
 }
