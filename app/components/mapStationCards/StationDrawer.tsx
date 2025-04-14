@@ -313,7 +313,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <WxSnowGraph 
-                  dayAverages={stationDayData}
+                  dayAverages={stationDataHourFiltered}
                   isHourly={true}
                   isMetric={isMetric}
                 />
