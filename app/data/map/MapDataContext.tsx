@@ -142,18 +142,9 @@ export function MapDataProvider({
       features: [],
     },
     forecastZones: forecastZonesData.forecastZones,
-    observationsDataHour: {
-      data: [],
-      title: '',
-    },
-    filteredObservationsDataHour: {
-      data: [],
-      title: '',
-    },
-    observationsDataDay: {
-      data: [],
-      title: '',
-    },
+    observationsDataHour: observationsDataHour,
+    filteredObservationsDataHour: filteredObservationsDataHour,
+    observationsDataDay: observationsDataDay
   });
 
   // Process the data when props change
@@ -186,7 +177,6 @@ export function MapDataProvider({
       'Precip Accum One Hour': string;
       'Api Fetch Time': string;
     }) => {
-      console.log('Processing station:', station.Station);
       return {
         Stid: station.Stid,
         Station: station.Station,
@@ -232,7 +222,7 @@ export function MapDataProvider({
     console.log('Updated station list:', stationList);
     setStations(stationList);
     setStationIds(stationList.map((s: { id: string; name: string }) => s.id));
-  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour]);
+  }, [observationsDataDay]);
 
   // These will be populated when we merge with the data page
   const [weatherData, setWeatherData] = useState({
@@ -382,31 +372,14 @@ export function MapDataProvider({
         dailyData: station.dailyData?.map(formatObservation) || []
       }));
     } else {
-      console.log('No observations data found, creating dummy data');
-      // Create dummy observations for each station
-      observationsData = transformedData.map(station => {
-        const stationName = station.Station;
-        
-        // Create an array of hourly observations for this station
-        const hourlyData = Array.from({ length: 24 }, (_, i) => ({
-          Station: stationName,
-          Day: new Date().toLocaleDateString(),
-          Hour: `${i}:00`,
-          'Snow Depth': `${20 + Math.round(Math.random() * 5)} in`,
-          'New Snow': `${Math.round(Math.random() * 2)} in`,
-          'Air Temp': `${25 + Math.round(Math.random() * 10)} °F`,
-          'Precip': `${Math.random() * 0.5} in`
-        }));
-        
-        return {
-          ...station,
-          hourlyData: hourlyData,
-          filteredHourlyData: hourlyData.filter((_, i) => i % 2 === 0), // Just every other hour
-          dailyData: hourlyData.filter((_, i) => i % 8 === 0) // Just a few hours per day
-        };
-      });
+      console.log('No observations data found, returning null values');
+      observationsData = transformedData.map(station => ({
+        ...station,
+        hourlyData: null,
+        filteredHourlyData: null,
+        dailyData: null
+      }));
     }
-    
     
     // Update the map data with all processed data
     setMapData({
@@ -492,6 +465,20 @@ export function MapDataProvider({
     setIsMetric,
     updateMapData,
   };
+
+  console.log('MapDataContext exporting:', {
+    mapData: {
+      stationData: mapData.stationData,
+      forecastZones: mapData.forecastZones,
+      observationsDataHour: mapData.observationsDataHour,
+      filteredObservationsDataHour: mapData.filteredObservationsDataHour,
+      observationsDataDay: mapData.observationsDataDay
+    },
+    weatherData,
+    stations,
+    selectedStation,
+    stationIds
+  });
 
   return (
     <MapDataContext.Provider value={value}>

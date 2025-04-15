@@ -89,6 +89,18 @@ export const MapApp = ({
   // Get data from context
   const { mapData, isLoading } = useMapData();
 
+  console.log('MapComponent received from context:', {
+    mapData: {
+      stationData: mapData.stationData,
+      forecastZones: mapData.forecastZones,
+      observationsDataHour: mapData.observationsDataHour,
+      filteredObservationsDataHour: mapData.filteredObservationsDataHour,
+      observationsDataDay: mapData.observationsDataDay
+    },
+    isLoading
+  });
+
+
   // Layer visibility state
   const [layerVisibility, setLayerVisibility] = useState({
     forecastZones: true,
