@@ -243,9 +243,7 @@ export function MapDataProvider({
 
   // Initialize with empty stations
   const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
-  const [selectedStation, setSelectedStation] = useState<
-    string | null
-  >(null);
+  const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [stationIds, setStationIds] = useState<string[]>([]);
 
   // Time-related state (placeholders for now)
@@ -327,58 +325,13 @@ export function MapDataProvider({
   // Process the formatted data once it's available
   useEffect(() => {
     if (!formattedDailyData || formattedDailyData.length === 0) {
-      console.log('No formatted data yet, initializing with dummy data');
-      
-      // Create dummy data for development/debugging
-      const dummyObservations = [
-        // Create some basic observations for each station
-        {
-          Station: "Mt Baker",
-          Day: "2023-04-01",
-          Hour: "12:00",
-          'Snow Depth': "24 in",
-          'New Snow': "4 in",
-          'Air Temp': "28 °F",
-          'Precip': "0.2 in"
-        },
-        {
-          Station: "Mt Baker",
-          Day: "2023-04-01",
-          Hour: "13:00",
-          'Snow Depth': "24.5 in",
-          'New Snow': "0.5 in",
-          'Air Temp': "29 °F",
-          'Precip': "0.1 in"
-        },
-        {
-          Station: "Stevens Pass",
-          Day: "2023-04-01",
-          Hour: "12:00",
-          'Snow Depth': "18 in",
-          'New Snow': "2 in",
-          'Air Temp': "30 °F",
-          'Precip': "0.1 in"
-        }
-      ];
-      
-      // Update the map data with dummy observations
+      console.log('No formatted data available');
       setMapData(prevData => ({
         ...prevData,
-        observationsDataHour: {
-          data: dummyObservations,
-          title: 'Hourly Data (Dummy)'
-        },
-        filteredObservationsDataHour: {
-          data: dummyObservations,
-          title: 'Filtered Hourly Data (Dummy)'
-        },
-        observationsDataDay: {
-          data: dummyObservations.filter((obs, index) => index % 2 === 0), // Just a subset for day data
-          title: 'Daily Data (Dummy)'
-        }
+        observationsDataHour: { data: [], title: '' },
+        filteredObservationsDataHour: { data: [], title: '' },
+        observationsDataDay: { data: [], title: '' }
       }));
-      
-      console.log('Added dummy observation data for development');
       return;
     }
     
