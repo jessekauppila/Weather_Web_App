@@ -149,8 +149,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       };
     }
 
-    
-
     return {
       data: filteredObservationsDataHour.data.filter(
         (obs: { Station: string }) => obs.Station === station.Station
@@ -159,8 +157,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [filteredObservationsDataHour, station]);
 
-  console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
-  console.log('stationDataHourFiltered in StationDrawer:', stationDataHourFiltered);
+
 
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
@@ -211,8 +208,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   //   };
   // }, [filteredObservationsDataHour, station]);
 
-  console.log('observationsDataDay', observationsDataDay);
-
   const stationObservationsDataDay = useMemo(() => {
     if (!station || !observationsDataDay?.data) {
       return {
@@ -247,9 +242,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title
     };
   }, [observationsDataDay, station]);
-
-  console.log('stationObservationsDataDay', stationObservationsDataDay);
-
 
   const stationDayData = useMemo(() => ({
     data: station ? [station] : [],

@@ -285,7 +285,11 @@ export const MapApp = ({
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
   return (
-    <MapDataProvider>
+    <MapDataProvider
+      observationsDataDay={props.observationsDataDay}
+      observationsDataHour={props.observationsDataHour}
+      filteredObservationsDataHour={props.filteredObservationsDataHour}
+    >
       <MapApp {...props} />
     </MapDataProvider>
   );

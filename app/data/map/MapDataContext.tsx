@@ -120,10 +120,20 @@ const MapDataContext = createContext<MapDataContextType>({
 
 export function MapDataProvider({
   children,
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour
 }: {
   children: React.ReactNode;
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
 }) {
-  //console.log('MapDataProvider station_data:', station_data);
+  console.log('MapDataProvider received props:', {
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour
+  });
 
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
@@ -145,6 +155,84 @@ export function MapDataProvider({
       title: '',
     },
   });
+
+  // Process the data when props change
+  useEffect(() => {
+    console.log('Processing new data in MapDataContext');
+    
+    if (!observationsDataDay?.data) {
+      console.log('No observationsDataDay data available');
+      return;
+    }
+
+    // Transform the data for the map
+    const transformedData = observationsDataDay.data.map((station: {
+      Stid: string;
+      Station: string;
+      Latitude: number;
+      Longitude: number;
+      Elevation: number;
+      'Air Temp Max': string;
+      'Air Temp Min': string;
+      'Cur Air Temp': string;
+      'Cur Wind Speed': string;
+      'Wind Direction': string;
+      'Total Snow Depth Change': string;
+      'Total Snow Depth': string;
+      '24h Snow Accumulation': string;
+      'Max Wind Gust': string;
+      'Wind Speed Avg': string;
+      'Relative Humidity': string;
+      'Precip Accum One Hour': string;
+      'Api Fetch Time': string;
+    }) => {
+      console.log('Processing station:', station.Station);
+      return {
+        Stid: station.Stid,
+        Station: station.Station,
+        Latitude: station.Latitude,
+        Longitude: station.Longitude,
+        Elevation: station.Elevation,
+        'Air Temp Max': station['Air Temp Max'],
+        'Air Temp Min': station['Air Temp Min'] || '-',
+        'Cur Air Temp': station['Cur Air Temp'],
+        'Cur Wind Speed': station['Cur Wind Speed'],
+        'Wind Direction': station['Wind Direction'],
+        'Total Snow Depth Change': station['Total Snow Depth Change'],
+        'Total Snow Depth': station['Total Snow Depth'],
+        '24h Snow Accumulation': station['24h Snow Accumulation'],
+        'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
+        'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
+        'Relative Humidity': station['Relative Humidity'] || 'N/A',
+        'Precip Accum One Hour': station['Precip Accum One Hour'] || '-',
+        'Api Fetch Time': station['Api Fetch Time'] || new Date().toISOString()
+      };
+    });
+
+    console.log('Transformed data:', transformedData);
+
+    // Update the map data
+    setMapData({
+      stationData: map_weatherToGeoJSON(transformedData),
+      forecastZones: forecastZonesData.forecastZones,
+      observationsDataHour: observationsDataHour,
+      filteredObservationsDataHour: filteredObservationsDataHour,
+      observationsDataDay: observationsDataDay
+    });
+
+    // Update stations list
+    const stationList = transformedData.map((station: {
+      Stid: string;
+      Station: string;
+    }) => ({
+      id: String(station.Stid),
+      name: String(station.Station),
+    }));
+    
+    console.log('Updated station list:', stationList);
+    setStations(stationList);
+    setStationIds(stationList.map((s: { id: string; name: string }) => s.id));
+  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour]);
 
   // These will be populated when we merge with the data page
   const [weatherData, setWeatherData] = useState({
@@ -366,7 +454,6 @@ export function MapDataProvider({
       });
     }
     
-    console.log('Processed observations data:', observationsData);
     
     // Update the map data with all processed data
     setMapData({
@@ -386,10 +473,12 @@ export function MapDataProvider({
       }
     });
     
-    console.log('Updated map data with observations');
     
     // Also update stations list
-    const stationList = transformedData.map((station) => ({
+    const stationList = transformedData.map((station: {
+      Stid: string;
+      Station: string;
+    }) => ({
       id: String(station.Stid),
       name: String(station.Station),
     }));
