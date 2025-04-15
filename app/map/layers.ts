@@ -33,6 +33,12 @@ export function createMapLayers(
   },
   onStationClick?: (info: PickingInfo) => void
 ) {
+  console.log('[Layers] createMapLayers received:', {
+    forecastZones: data.forecastZones?.length,
+    stationDataFeatures: data.stationData?.features.length,
+    stationDataSample: data.stationData?.features?.[0]
+  });
+
   return [
     visibility.forecastZones &&
       createForecastZoneLayer(data.forecastZones ?? []),
@@ -87,6 +93,7 @@ function createWindArrowLayer(
   },
   onClick?: (info: PickingInfo) => void
 ) {
+  console.log('[Layers] createWindArrowLayer features:', data.features.length, data.features[0]);
   return new IconLayer({
     id: 'windArrows',
     data: data.features,
@@ -128,6 +135,7 @@ function createCurrentTempLayer(
   },
   onClick?: (info: PickingInfo) => void
 ) {
+  console.log('[Layers] createCurrentTempLayer features:', data.features.length, data.features[0]);
   return new IconLayer({
     id: 'currentTemp',
     data: data.features,
@@ -155,8 +163,7 @@ function createCurrentTempLayer(
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
-    iconAtlas:
-      '/currentTempAtlas/currentTemp_location_icon_atlas.png',
+    iconAtlas: '/currentTempAtlas/currentTemp_location_icon_atlas.png',
     iconMapping: '/currentTempAtlas/location-icon-mapping.json',
     pickable: true,
     onClick,
@@ -173,6 +180,7 @@ function createSnowDepthLayer(
   },
   onClick?: (info: PickingInfo) => void
 ) {
+  console.log('[Layers] createSnowDepthLayer features:', data.features.length, data.features[0]);
   return new GeoJsonLayer({
     id: 'snowDepthChange',
     data,

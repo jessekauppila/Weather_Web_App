@@ -135,6 +135,8 @@ export function MapDataProvider({
     filteredObservationsDataHour
   });
 
+  console.log('observationsDataDay:', observationsDataDay);
+
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
@@ -155,6 +157,9 @@ export function MapDataProvider({
       console.log('No observationsDataDay data available');
       return;
     }
+
+    // Log the raw station data
+    console.log('Raw observationsDataDay.data:', observationsDataDay.data);
 
     // Transform the data for the map
     const transformedData = observationsDataDay.data.map((station: {
@@ -199,11 +204,14 @@ export function MapDataProvider({
       };
     });
 
-    console.log('Transformed data:', transformedData);
+    // Log the transformed data before GeoJSON conversion
+    console.log('Transformed data before GeoJSON:', transformedData);
 
     // Update the map data
+    const geoJsonData = map_weatherToGeoJSON(transformedData);
+    console.log('GeoJSON station data:', geoJsonData);
     setMapData({
-      stationData: map_weatherToGeoJSON(transformedData),
+      stationData: geoJsonData,
       forecastZones: forecastZonesData.forecastZones,
       observationsDataHour: observationsDataHour,
       filteredObservationsDataHour: filteredObservationsDataHour,
@@ -311,6 +319,8 @@ export function MapDataProvider({
     
     fetchData();
   }, []);
+
+  console.log('formattedDailyData:', formattedDailyData);
   
   // Process the formatted data once it's available
   useEffect(() => {
@@ -466,19 +476,15 @@ export function MapDataProvider({
     updateMapData,
   };
 
-  console.log('MapDataContext exporting:', {
-    mapData: {
-      stationData: mapData.stationData,
-      forecastZones: mapData.forecastZones,
-      observationsDataHour: mapData.observationsDataHour,
-      filteredObservationsDataHour: mapData.filteredObservationsDataHour,
-      observationsDataDay: mapData.observationsDataDay
-    },
-    weatherData,
-    stations,
-    selectedStation,
-    stationIds
-  });
+  console.log('mapData.stationData:', mapData.stationData );
+  console.log('mapData.forecastZones:', mapData.forecastZones );
+  console.log('mapData.observationsDataHour:', mapData.observationsDataHour );
+  console.log('mapData.filteredObservationsDataHour:', mapData.filteredObservationsDataHour );
+  console.log('mapData.observationsDataDay:', mapData.observationsDataDay );
+  console.log('mapData.weatherData:', weatherData );
+  console.log('mapData.stations:', stations );
+  console.log('mapData.selectedStation:', selectedStation );
+  console.log('mapData.forecastZones:', stationIds );
 
   return (
     <MapDataContext.Provider value={value}>

@@ -446,6 +446,8 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
   type: 'FeatureCollection';
   features: Feature<Geometry, Map_BlockProperties>[];
 } {
+  console.log('[GeoJSON] Received weatherData:', weatherData);
+
   const parseValue = (value: string) => {
     if (!value || value === '-') return null;
     const num = parseFloat(value.split(' ')[0]);
@@ -459,41 +461,35 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
     radius: number,
     numPoints: number = 32
   ) => {
+    console.log('[GeoJSON] Creating circle for:', { longitude, latitude });
     const coordinates = [];
     for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * 2 * Math.PI; // Distribute points evenly
+      const angle = (i / numPoints) * 2 * Math.PI;
       const dx = radius * Math.cos(angle);
       const dy = radius * Math.sin(angle);
       coordinates.push([longitude + dx, latitude + dy]);
     }
-    coordinates.push(coordinates[0]); // Close the polygon
-    return [coordinates]; // GeoJSON expects an array of rings
+    coordinates.push(coordinates[0]);
+    return [coordinates];
   };
 
-  return {
-    type: 'FeatureCollection' as const,
-    features: weatherData.map((station) => ({
+  const features = weatherData.map((station) => {
+    const longitude = parseFloat(station['Longitude']);
+    const latitude = parseFloat(station['Latitude']);
+    console.log('[GeoJSON] Station:', station['Station'], 'Parsed coords:', { longitude, latitude });
+    return {
       type: 'Feature' as const,
       geometry: {
         type: 'Polygon' as const,
-        coordinates: createCircle(
-          parseFloat(station['Longitude']),
-          parseFloat(station['Latitude']),
-          0.03, // Adjust radius as needed
-          8 // Adjust number of points as needed
-        ),
+        coordinates: createCircle(longitude, latitude, 0.03, 8),
       },
       properties: {
         stationName: station['Station'],
-        latitude: parseFloat(station['Latitude']),
-        longitude: parseFloat(station['Longitude']),
+        latitude,
+        longitude,
         totalSnowDepth: parseValue(station['Total Snow Depth']),
-        totalSnowDepthChange: parseValue(
-          station['Total Snow Depth Change']
-        ),
-        snowAccumulation24h: parseValue(
-          station['24h Snow Accumulation']
-        ),
+        totalSnowDepthChange: parseValue(station['Total Snow Depth Change']),
+        snowAccumulation24h: parseValue(station['24h Snow Accumulation']),
         curAirTemp: parseValue(station['Cur Air Temp']),
         airTempMin: parseValue(station['Air Temp Min']),
         airTempMax: parseValue(station['Air Temp Max']),
@@ -506,6 +502,13 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
         precipAccumOneHour: station['Precip Accum One Hour'] === '-' ? null : station['Precip Accum One Hour'],
         fetchTime: station['Api Fetch Time'],
       },
-    })),
+    };
+  });
+
+  console.log('[GeoJSON] Final features array:', features);
+
+  return {
+    type: 'FeatureCollection' as const,
+    features,
   };
 }
