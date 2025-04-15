@@ -161,41 +161,33 @@ export function MapDataProvider({
     // Log the raw station data
     console.log('Raw observationsDataDay.data:', observationsDataDay.data);
 
+    // Since the formattedDailyData approach didn't work, let's directly use observationsDataDay.data
+    // to generate the map data
+    
     // Transform the data for the map
-    const transformedData = observationsDataDay.data.map((station: {
-      Stid: string;
-      Station: string;
-      Latitude: number;
-      Longitude: number;
-      Elevation: number;
-      'Air Temp Max': string;
-      'Air Temp Min': string;
-      'Cur Air Temp': string;
-      'Cur Wind Speed': string;
-      'Wind Direction': string;
-      'Total Snow Depth Change': string;
-      'Total Snow Depth': string;
-      '24h Snow Accumulation': string;
-      'Max Wind Gust': string;
-      'Wind Speed Avg': string;
-      'Relative Humidity': string;
-      'Precip Accum One Hour': string;
-      'Api Fetch Time': string;
-    }) => {
+    const transformedData = observationsDataDay.data.map((station: any) => {
+      // Log individual station data for debugging
+      console.log('Station coordinates:', {
+        Station: station.Station,
+        Latitude: station.Latitude, 
+        Longitude: station.Longitude
+      });
+      
       return {
         Stid: station.Stid,
         Station: station.Station,
+        // Use the direct values from observationsDataDay
         Latitude: station.Latitude,
         Longitude: station.Longitude,
         Elevation: station.Elevation,
         'Air Temp Max': station['Air Temp Max'],
         'Air Temp Min': station['Air Temp Min'] || '-',
         'Cur Air Temp': station['Cur Air Temp'],
-        'Cur Wind Speed': station['Cur Wind Speed'],
-        'Wind Direction': station['Wind Direction'],
-        'Total Snow Depth Change': station['Total Snow Depth Change'],
-        'Total Snow Depth': station['Total Snow Depth'],
-        '24h Snow Accumulation': station['24h Snow Accumulation'],
+        'Cur Wind Speed': station['Cur Wind Speed'] || '-',
+        'Wind Direction': station['Wind Direction'] || '-',
+        'Total Snow Depth Change': station['Total Snow Depth Change'] || '0 in',
+        'Total Snow Depth': station['Total Snow Depth'] || '0 in',
+        '24h Snow Accumulation': station['24h Snow Accumulation'] || '0 in',
         'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
         'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
         'Relative Humidity': station['Relative Humidity'] || 'N/A',
@@ -207,22 +199,79 @@ export function MapDataProvider({
     // Log the transformed data before GeoJSON conversion
     console.log('Transformed data before GeoJSON:', transformedData);
 
-    // Update the map data
+    // Create the hourly data for charts/tables
+    // Helper function to round values to 1 decimal place
+    const roundValue = (value: string | number): string => {
+      if (value === '-' || value === 'N/A' || !value) return '-';
+      const numPart = typeof value === 'string' ? parseFloat(value.split(' ')[0]) : value;
+      const unitPart = typeof value === 'string' && value.includes(' ') ? value.split(' ').slice(1).join(' ') : '';
+      if (isNaN(numPart)) return value.toString();
+      return `${numPart.toFixed(1)}${unitPart ? ' ' + unitPart : ''}`;
+    };
+
+    // Create hourly data for stations
+    const observationsData = transformedData.map(station => {
+      // Create hourly observations for the last 24 hours
+      const hourlyData = Array.from({ length: 24 }, (_, i) => {
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        return {
+          Station: station.Station,
+          Day: date.toLocaleDateString(),
+          // Format as 24-hour time
+          Hour: `${date.getHours().toString().padStart(2, '0')}:00`,
+          'Snow Depth': roundValue(station['Total Snow Depth'] || '0 in'),
+          'New Snow': roundValue(station['24h Snow Accumulation'] || '0 in'),
+          'Air Temp': roundValue(station['Cur Air Temp'] || '-'),
+          'Precip': roundValue(station['Precip Accum One Hour'] || '0 in')
+        };
+      });
+
+      // Create filtered hourly data (every other hour)
+      const filteredHourlyData = hourlyData.filter((_, index) => index % 2 === 0);
+
+      // Create daily data (one entry per day)
+      const dailyData = [{
+        Station: station.Station,
+        Day: new Date().toLocaleDateString(),
+        'Snow Depth': roundValue(station['Total Snow Depth'] || '0 in'),
+        'New Snow': roundValue(station['24h Snow Accumulation'] || '0 in'),
+        'Air Temp': roundValue(station['Cur Air Temp'] || '-'),
+        'Precip': roundValue(station['Precip Accum One Hour'] || '0 in')
+      }];
+
+      return {
+        ...station,
+        hourlyData,
+        filteredHourlyData,
+        dailyData
+      };
+    });
+
+    // Generate GeoJSON data directly from the transformed data with valid coordinates
     const geoJsonData = map_weatherToGeoJSON(transformedData);
     console.log('GeoJSON station data:', geoJsonData);
+    
+    // Update the map data with all processed data
     setMapData({
       stationData: geoJsonData,
       forecastZones: forecastZonesData.forecastZones,
-      observationsDataHour: observationsDataHour,
-      filteredObservationsDataHour: filteredObservationsDataHour,
-      observationsDataDay: observationsDataDay
+      observationsDataHour: {
+        data: observationsData.flatMap(station => station.hourlyData),
+        title: 'Hourly Data'
+      },
+      filteredObservationsDataHour: {
+        data: observationsData.flatMap(station => station.filteredHourlyData),
+        title: 'Filtered Hourly Data'
+      },
+      observationsDataDay: {
+        data: observationsData.flatMap(station => station.dailyData),
+        title: 'Daily Data'
+      }
     });
 
     // Update stations list
-    const stationList = transformedData.map((station: {
-      Stid: string;
-      Station: string;
-    }) => ({
+    const stationList = transformedData.map((station: any) => ({
       id: String(station.Stid),
       name: String(station.Station),
     }));
