@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from 'react';
 import forecastZonesData from './forecastZones.json';
-import { map_weatherToGeoJSON } from '../../map/geoUtils';
+import { map_weatherToGeoJSON } from './geoUtils';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map/map';
 import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
@@ -19,6 +19,41 @@ import { WxTableOptions, DayRangeType } from '../../types';
 interface Station {
   id: string;
   name: string;
+}
+
+// Define types for station data and observation data
+interface StationData {
+  Stid: string;
+  Station: string;
+  Latitude: number;
+  Longitude: number;
+  Elevation: number;
+  'Air Temp Max': string | number;
+  'Air Temp Min': string | number;
+  'Cur Air Temp': string | number;
+  'Cur Wind Speed': string | number;
+  'Wind Direction': string | number;
+  'Total Snow Depth Change': string | number;
+  'Total Snow Depth': string | number;
+  '24h Snow Accumulation': string | number;
+  'Max Wind Gust'?: string | number;
+  'Wind Speed Avg'?: string | number;
+  'Relative Humidity'?: string | number;
+  'Precip Accum One Hour'?: string | number;
+  'Api Fetch Time'?: string;
+  hourlyData?: any[];
+  filteredHourlyData?: any[];
+  dailyData?: any[];
+}
+
+interface ObservationData {
+  Station: string;
+  Day?: string;
+  Hour?: string;
+  'Snow Depth'?: string;
+  'New Snow'?: string;
+  'Air Temp'?: string | number;
+  'Precip'?: string;
 }
 
 // Create context with comprehensive type definitions
@@ -118,12 +153,21 @@ const MapDataContext = createContext<MapDataContextType>({
   updateMapData: () => {},
 });
 
+// Utility function to round numeric values
+function roundValue(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === '' || value === '-') return '-';
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  return isNaN(numValue) ? '-' : numValue.toFixed(1);
+}
+
 export function MapDataProvider({
   children,
+  observationsDataDay
 }: {
   children: React.ReactNode;
+  observationsDataDay?: any;
 }) {
-  //console.log('MapDataProvider station_data:', station_data);
+  //console.log('observationsDataDay:', observationsDataDay);
 
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
@@ -140,7 +184,7 @@ export function MapDataProvider({
       data: [],
       title: '',
     },
-    observationsDataDay: {
+    observationsDataDay: observationsDataDay || {
       data: [],
       title: '',
     },
@@ -176,8 +220,17 @@ export function MapDataProvider({
   // Flag to track if we've started fetching data
   const dataFetchStarted = useRef(false);
 
+  //console.log('observationsDataDay:', observationsDataDay);
+
   // Fetch the data once on component mount
   useEffect(() => {
+    // Skip fetching if observationsDataDay is provided as a prop
+    if (observationsDataDay?.data?.length > 0) {
+      console.log('Using provided observationsDataDay, skipping fetch');
+      setFormattedDailyData(observationsDataDay.data);
+      return;
+    }
+    
     if (dataFetchStarted.current) return;
     dataFetchStarted.current = true;
     
@@ -232,7 +285,7 @@ export function MapDataProvider({
     };
     
     fetchData();
-  }, []);
+  }, [observationsDataDay]);
   
   // Process the formatted data once it's available
   useEffect(() => {
@@ -241,10 +294,10 @@ export function MapDataProvider({
       return;
     }
     
-    console.log('Processing formattedDailyData:', formattedDailyData);
+    //console.log('Processing formattedDailyData:', formattedDailyData);
     
     // Transform the data for the map
-    const transformedData = formattedDailyData.map(station => ({
+    const transformedData = formattedDailyData.map((station: StationData) => ({
       Stid: station.Stid,
       Station: station.Station,
       Latitude: station.Latitude,
@@ -266,7 +319,7 @@ export function MapDataProvider({
     }));
 
     // Format observations data
-    const formatObservation = (obs: any) => ({
+    const formatObservation = (obs: ObservationData) => ({
       Station: obs.Station,
       Day: obs.Day || new Date().toLocaleDateString(),
       Hour: obs.Hour || new Date().toLocaleTimeString(),
@@ -277,11 +330,11 @@ export function MapDataProvider({
     });
 
     // Process observations data or create dummy data if none exists
-    let observationsData: any[] = [];
+    let observationsData: StationData[] = [];
     
-    if (formattedDailyData.some(station => station.hourlyData?.length || station.filteredHourlyData?.length || station.dailyData?.length)) {
+    if (formattedDailyData.some((station: StationData) => station.hourlyData?.length || station.filteredHourlyData?.length || station.dailyData?.length)) {
       console.log('Using real observations data');
-      observationsData = formattedDailyData.map(station => ({
+      observationsData = formattedDailyData.map((station: StationData) => ({
         ...station,
         hourlyData: station.hourlyData?.map(formatObservation) || [],
         filteredHourlyData: station.filteredHourlyData?.map(formatObservation) || [],
@@ -290,7 +343,7 @@ export function MapDataProvider({
     } else {
       console.log('No observations data found');
       // Create minimal empty structure for each station
-      observationsData = transformedData.map(station => ({
+      observationsData = transformedData.map((station: StationData) => ({
         ...station,
         hourlyData: [],
         filteredHourlyData: [],
@@ -300,20 +353,42 @@ export function MapDataProvider({
     
     console.log('Processed observations data:', observationsData);
     
+    // Convert data to match WeatherStation type (all fields as strings)
+    const stationsForMap = transformedData.map(station => ({
+      Stid: String(station.Stid),
+      Station: String(station.Station),
+      Latitude: String(station.Latitude),
+      Longitude: String(station.Longitude),
+      Elevation: String(station.Elevation),
+      'Air Temp Max': String(station['Air Temp Max']),
+      'Air Temp Min': String(station['Air Temp Min']),
+      'Cur Air Temp': String(station['Cur Air Temp']),
+      'Cur Wind Speed': String(station['Cur Wind Speed']),
+      'Wind Direction': String(station['Wind Direction']),
+      'Total Snow Depth Change': String(station['Total Snow Depth Change']),
+      'Total Snow Depth': String(station['Total Snow Depth']),
+      '24h Snow Accumulation': String(station['24h Snow Accumulation']),
+      'Max Wind Gust': String(station['Max Wind Gust']),
+      'Wind Speed Avg': String(station['Wind Speed Avg']),
+      'Relative Humidity': String(station['Relative Humidity']),
+      'Precip Accum One Hour': String(station['Precip Accum One Hour']),
+      'Api Fetch Time': String(station['Api Fetch Time'])
+    }));
+    
     // Update the map data with all processed data
     setMapData({
-      stationData: map_weatherToGeoJSON(transformedData),
+      stationData: map_weatherToGeoJSON(stationsForMap),
       forecastZones: forecastZonesData.forecastZones,
       observationsDataHour: {
-        data: observationsData.flatMap(station => station.hourlyData || []),
+        data: observationsData.flatMap((station: StationData) => station.hourlyData || []),
         title: 'Hourly Data'
       },
       filteredObservationsDataHour: {
-        data: observationsData.flatMap(station => station.filteredHourlyData || []),
+        data: observationsData.flatMap((station: StationData) => station.filteredHourlyData || []),
         title: 'Filtered Hourly Data'
       },
       observationsDataDay: {
-        data: observationsData.flatMap(station => station.dailyData || []),
+        data: observationsData.flatMap((station: StationData) => station.dailyData || []),
         title: 'Daily Data'
       }
     });
@@ -321,13 +396,13 @@ export function MapDataProvider({
     console.log('Updated map data with observations');
     
     // Also update stations list
-    const stationList = transformedData.map((station) => ({
+    const stationList = transformedData.map((station: StationData) => ({
       id: String(station.Stid),
       name: String(station.Station),
     }));
     
     setStations(stationList);
-    setStationIds(stationList.map((s) => s.id));
+    setStationIds(stationList.map((s: {id: string}) => s.id));
     
   }, [formattedDailyData]);
 

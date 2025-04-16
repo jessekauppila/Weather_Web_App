@@ -1,6 +1,6 @@
 import type { Feature, Geometry } from 'geojson';
-import type { WeatherStation } from './map';
-import type { Map_BlockProperties } from './map';
+import type { WeatherStation } from '../../map/map';
+import type { Map_BlockProperties } from '../../map/map';
 
 /**
  * Converts weather station data to GeoJSON format for map rendering
