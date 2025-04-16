@@ -320,12 +320,23 @@ export function MapDataProvider({
         const observations = {};
         
         // Call the function and store the result
-        const result = wxTableDataDayFromDB(
-          observations, 
-          units, 
-          options, 
-          false // isMetric
-        );
+        try {
+          // Now we need to await the result since it's async
+          const result = await wxTableDataDayFromDB(
+            observations, 
+            units, 
+            options, 
+            false, // isMetric
+            (data) => {
+              console.log('🚀 formattedDailyData from callback', data);
+              setFormattedDailyData(data);
+            }
+          );
+          
+          console.log('Data from wxTableDataDayFromDB:', result);
+        } catch (error) {
+          console.error('Error calling wxTableDataDayFromDB:', error);
+        }
                 
         // Set up a function to monitor the console for the specific log message
         const originalConsoleLog = console.log;
@@ -484,7 +495,7 @@ export function MapDataProvider({
   }, [formattedDailyData]);
 
   // Function to update map data
-  const updateMapData = useCallback(() => {
+  const updateMapData = useCallback(async () => {
     setIsLoading(true);
     const options = {
       mode: 'summary' as 'summary' | 'daily',
@@ -498,8 +509,14 @@ export function MapDataProvider({
     const units: Array<Record<string, string>> = [];
     const observations = {};
     
-    wxTableDataDayFromDB(observations, units, options, isMetric);
-    setIsLoading(false);
+    try {
+      const result = await wxTableDataDayFromDB(observations, units, options, isMetric);
+      console.log('Updated data:', result);
+    } catch (error) {
+      console.error('Error in updateMapData:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [isMetric]);
 
   // These functions are placeholders until we merge with the data page

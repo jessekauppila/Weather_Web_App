@@ -87,14 +87,17 @@ export async function fetchWeatherData({
 
     //console.log('filteredData:', filteredData);
   
-    setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
+    // Since wxTableDataDayFromDB is now async, we need to await it
+    const dayData = await wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,
       startHour,
       endHour,
       dayRangeType,
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    }, isMetric));
+    }, isMetric);
+    
+    setObservationsDataDay(dayData);
     
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
