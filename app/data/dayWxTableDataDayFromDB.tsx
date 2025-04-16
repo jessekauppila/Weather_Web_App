@@ -6,16 +6,16 @@ import { fetchStations } from '@/app/utils/fetchStaticStationData';
 // Import the interface from types.ts
 import { WxTableOptions } from '../types';
 
-export default function wxTableDataDayFromDB(
+export default async function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
   _units: Array<Record<string, string>>,
   options: WxTableOptions,
   isMetric: boolean,
   onDataReady?: (data: any[]) => void
-): {
+): Promise<{
   data: Array<{ [key: string]: number | string }>;
   title: string;
-} {
+}> {
 
   const startHour = options.startHour;
   const endHour = options.endHour;
@@ -25,11 +25,18 @@ export default function wxTableDataDayFromDB(
     :groupBy24hrs(Object.values(inputObservations).flat(), startHour, endHour);
     //: groupByDay(Object.values(inputObservations).flat(), startHour, endHour);
 
+  // Fetch stations data synchronously to ensure we have coordinates
+  let stationsData: any[] = [];
+  try {
+    console.log('Fetching stations data...');
+    stationsData = await fetchStations();
+    console.log('📍 Fetched stations data:', stationsData.length);
+  } catch (error) {
+    console.error('Error fetching stations data:', error);
+  }
+
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  const stations =  fetchStations();
-  // console.log('stations:', stations);
-  
   // Debugging function to inspect station data
   function debugStation(stid: string, stationObs: any[]) {
     console.log('🔍 STATION DATA DEBUG:');
@@ -43,16 +50,15 @@ export default function wxTableDataDayFromDB(
       lonType: typeof stationObs[0].longitude
     });
     
-    // Log what we're converting it to
-    console.log('Converting to:', {
-      Latitude: String(stationObs[0].latitude),
-      Longitude: String(stationObs[0].longitude)
-    });
-    
-    // We can't use fetchStations here directly as it's async
-    // But we can check if the stationObs itself has the data we need
-    if (stationObs[0].latitude === undefined || stationObs[0].longitude === undefined) {
-      console.log('⚠️ Station has undefined coordinates in observation data');
+    // Check if there's station data available from the pre-fetch
+    const stationInfo = stationsData.find((s: any) => s.stid === stid);
+    if (stationInfo) {
+      console.log('Station data from pre-fetch:', {
+        latitude: stationInfo.latitude,
+        longitude: stationInfo.longitude
+      });
+    } else {
+      console.log('Station not found in pre-fetched data');
     }
   }
 
@@ -63,34 +69,41 @@ export default function wxTableDataDayFromDB(
         debugStation(stid, stationObs);
       }
     
-      // Helper function to safely convert coordinates
-      const safeCoordinateString = (value: any, coordType: 'lat' | 'lon'): string => {
-        if (value === undefined || value === null) {
-          // Use hardcoded defaults based on station ID
-          // These could be replaced with actual coordinates from a reference table
-          const defaultCoords: Record<string, {lat: string, lon: string}> = {
-            '1': {lat: '47.4276', lon: '-121.4288'}, // Alpental Base
-            '2': {lat: '47.4392', lon: '-121.4379'}, // Alpental Mid-Mountain
-            '3': {lat: '47.4527', lon: '-121.4346'}, // Alpental Summit
-            // Add more defaults as needed
-          };
-          
-          if (defaultCoords[stid]) {
-            return coordType === 'lat' ? defaultCoords[stid].lat : defaultCoords[stid].lon;
-          }
-          
-          console.warn(`No coordinate value for station ${stid}, using empty string`);
-          return '';
+      // Check for coordinates from stations data first
+      const stationInfo = stationsData.find((s: any) => s.stid === stid);
+      
+      // Create a function to get the best available coordinate data
+      const getBestCoordinate = (coordType: 'latitude' | 'longitude'): string => {
+        // Priority 1: Use station info if available
+        if (stationInfo && stationInfo[coordType] !== undefined && stationInfo[coordType] !== null) {
+          return String(stationInfo[coordType]);
         }
         
-        return String(value);
+        // Priority 2: Use observation data if available
+        if (stationObs[0][coordType] !== undefined && stationObs[0][coordType] !== null) {
+          return String(stationObs[0][coordType]);
+        }
+        
+        // Priority 3: Use hardcoded defaults for known stations
+        const defaultCoords: Record<string, {lat: string, lon: string}> = {
+          '1': {lat: '47.4276', lon: '-121.4288'}, // Alpental Base
+          '2': {lat: '47.4392', lon: '-121.4379'}, // Alpental Mid-Mountain
+          '3': {lat: '47.4527', lon: '-121.4346'}, // Alpental Summit
+        };
+        
+        if (defaultCoords[stid]) {
+          return coordType === 'latitude' ? defaultCoords[stid].lat : defaultCoords[stid].lon;
+        }
+        
+        // Last resort: return empty string
+        return '';
       };
       
       const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
         Station: stationObs[0].station_name,
-        Latitude: safeCoordinateString(stationObs[0].latitude, 'lat'),
-        Longitude: safeCoordinateString(stationObs[0].longitude, 'lon'),
+        Latitude: getBestCoordinate('latitude'),
+        Longitude: getBestCoordinate('longitude'),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
       
@@ -467,29 +480,12 @@ export default function wxTableDataDayFromDB(
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
   //console.log('🚀 formattedDailyData:', formattedDailyData);
 
-  // We need to modify the data synchronously before returning
-  fetchStations().then(stationsData => {
-    // Once we have the stations data, update the formattedDailyData in place
-    formattedDailyData.forEach(station => {
-      const stationInfo = stationsData.find((s: { stid: string }) => s.stid === station.Stid);
-      if (stationInfo) {
-        // Directly modify the station object with coordinates
-        station.Latitude = String(stationInfo.latitude);
-        station.Longitude = String(stationInfo.longitude);
-      }
-    });
-    
-    //console.log('🚀 formattedDailyData:', formattedDailyData);
-    // The data is now updated for future renders
+  // If there's a callback, call it directly now
+  if (onDataReady && formattedDailyData.length > 0) {
+    onDataReady(formattedDailyData);
+  }
 
-    if (onDataReady && formattedDailyData.length > 0) {
-      onDataReady(formattedDailyData);
-    }
-  }).catch(error => {
-    console.error('Error fetching station data:', error);
-  });
-
-  // Return the data immediately (it will be updated asynchronously for future renders)
+  // Return the data immediately (it now already includes the station data)
   return { data: formattedDailyData, title };
 }
 
