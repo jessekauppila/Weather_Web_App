@@ -159,8 +159,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [filteredObservationsDataHour, station]);
 
-  console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
-  console.log('stationDataHourFiltered in StationDrawer:', stationDataHourFiltered);
+  // console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
+  // console.log('stationDataHourFiltered in StationDrawer:', stationDataHourFiltered);
 
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
