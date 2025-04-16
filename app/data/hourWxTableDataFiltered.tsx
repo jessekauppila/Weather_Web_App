@@ -38,7 +38,7 @@ interface Observation {
   
   export default function hourWxTableDataFiltered(data: any[], isMetric: boolean, units?: any) {
 
-    console.log('data in hourWxTableDataFiltered:', data);
+    //console.log('data in hourWxTableDataFiltered:', data);
     // Flatten the nested structure into a single array
     const flattenedData: FormattedObservation[] = Object.values(data)
       .flat()

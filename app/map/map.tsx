@@ -16,7 +16,7 @@ import {
 import { getMapTooltip } from './UI/MapTooltip';
 import StationDrawer from '../components/mapStationCards/StationDrawer';
 import { useMapData } from '../data/map/MapDataContext';
-import { map_weatherToGeoJSON } from './geoUtils';
+import { map_weatherToGeoJSON } from '../data/map/geoUtils';
 
 ////////////////////////
 
