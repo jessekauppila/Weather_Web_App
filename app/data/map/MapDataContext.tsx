@@ -169,6 +169,74 @@ export function MapDataProvider({
 }) {
   //console.log('observationsDataDay:', observationsDataDay);
 
+  // Debugging function to inspect coordinate transformation
+  function inspectCoordinateTransformation(data: any) {
+    if (!data || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+      console.log('❌ Data is empty or invalid');
+      return;
+    }
+
+    // Log the original data structure
+    const firstStation = data.data[0];
+    console.log('🔍 COORDINATE INSPECTION:');
+    console.log('Original station data structure:', {
+      station: firstStation.Station,
+      stid: firstStation.Stid,
+      coordinates: {
+        latitude: {
+          value: firstStation.Latitude,
+          type: typeof firstStation.Latitude
+        },
+        longitude: {
+          value: firstStation.Longitude,
+          type: typeof firstStation.Longitude
+        }
+      }
+    });
+
+    // Track the transformation steps
+    const afterParsing = {
+      ...firstStation,
+      Latitude: typeof firstStation.Latitude === 'number' 
+        ? firstStation.Latitude 
+        : parseFloat(String(firstStation.Latitude)),
+      Longitude: typeof firstStation.Longitude === 'number' 
+        ? firstStation.Longitude 
+        : parseFloat(String(firstStation.Longitude))
+    };
+
+    console.log('After parsing:', {
+      latitude: {
+        value: afterParsing.Latitude,
+        type: typeof afterParsing.Latitude,
+        isNaN: isNaN(afterParsing.Latitude)
+      },
+      longitude: {
+        value: afterParsing.Longitude,
+        type: typeof afterParsing.Longitude,
+        isNaN: isNaN(afterParsing.Longitude)
+      }
+    });
+
+    // Check for stringification
+    const stringified = {
+      Latitude: String(afterParsing.Latitude),
+      Longitude: String(afterParsing.Longitude)
+    };
+
+    console.log('After stringification:', stringified);
+
+    // Check the source entries looking for stations with valid coordinates
+    if (data.data.length > 1) {
+      for (let i = 0; i < Math.min(5, data.data.length); i++) {
+        const station = data.data[i];
+        console.log(`Station ${i} (${station.Station}):`);
+        console.log(`  Latitude: ${station.Latitude} (${typeof station.Latitude})`);
+        console.log(`  Longitude: ${station.Longitude} (${typeof station.Longitude})`);
+      }
+    }
+  }
+
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
@@ -220,13 +288,16 @@ export function MapDataProvider({
   // Flag to track if we've started fetching data
   const dataFetchStarted = useRef(false);
 
-  //console.log('observationsDataDay:', observationsDataDay);
+  console.log('observationsDataDay:', observationsDataDay);
+
+////////////////////////////////////////////////////////////
 
   // Fetch the data once on component mount
   useEffect(() => {
     // Skip fetching if observationsDataDay is provided as a prop
     if (observationsDataDay?.data?.length > 0) {
       console.log('Using provided observationsDataDay, skipping fetch');
+      inspectCoordinateTransformation(observationsDataDay);
       setFormattedDailyData(observationsDataDay.data);
       return;
     }
@@ -271,6 +342,9 @@ export function MapDataProvider({
             
             console.log('Detected data update in console log:', args[1]);
             setFormattedDailyData(args[1]);
+            
+            // Use our debugging function
+            inspectCoordinateTransformation({data: args[1]});
           }
         };
         
@@ -286,6 +360,9 @@ export function MapDataProvider({
     
     fetchData();
   }, [observationsDataDay]);
+
+  ////////////////////////////////////////////////////////////
+
   
   // Process the formatted data once it's available
   useEffect(() => {
@@ -300,8 +377,8 @@ export function MapDataProvider({
     const transformedData = formattedDailyData.map((station: StationData) => ({
       Stid: station.Stid,
       Station: station.Station,
-      Latitude: station.Latitude,
-      Longitude: station.Longitude,
+      Latitude: typeof station.Latitude === 'number' ? station.Latitude : parseFloat(String(station.Latitude)),
+      Longitude: typeof station.Longitude === 'number' ? station.Longitude : parseFloat(String(station.Longitude)),
       Elevation: station.Elevation,
       'Air Temp Max': station['Air Temp Max'],
       'Air Temp Min': station['Air Temp Min'] || '-',

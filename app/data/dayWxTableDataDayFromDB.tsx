@@ -30,16 +30,75 @@ export default function wxTableDataDayFromDB(
   const stations =  fetchStations();
   // console.log('stations:', stations);
   
+  // Debugging function to inspect station data
+  function debugStation(stid: string, stationObs: any[]) {
+    console.log('🔍 STATION DATA DEBUG:');
+    console.log(`Station ${stid} (${stationObs[0].station_name}):`);
+    
+    // Log the original observations data
+    console.log('Original station observation:', {
+      latitude: stationObs[0].latitude,
+      longitude: stationObs[0].longitude,
+      latType: typeof stationObs[0].latitude,
+      lonType: typeof stationObs[0].longitude
+    });
+    
+    // Log what we're converting it to
+    console.log('Converting to:', {
+      Latitude: String(stationObs[0].latitude),
+      Longitude: String(stationObs[0].longitude)
+    });
+    
+    // We can't use fetchStations here directly as it's async
+    // But we can check if the stationObs itself has the data we need
+    if (stationObs[0].latitude === undefined || stationObs[0].longitude === undefined) {
+      console.log('⚠️ Station has undefined coordinates in observation data');
+    }
+  }
 
   const processedData = Object.entries(groupedObservations).map(
     ([stid, stationObs]) => {
+      // For the first station, log detailed debug info
+      if (stid === '1' || stid === '2' || stid === '3') {
+        debugStation(stid, stationObs);
+      }
+    
+      // Helper function to safely convert coordinates
+      const safeCoordinateString = (value: any, coordType: 'lat' | 'lon'): string => {
+        if (value === undefined || value === null) {
+          // Use hardcoded defaults based on station ID
+          // These could be replaced with actual coordinates from a reference table
+          const defaultCoords: Record<string, {lat: string, lon: string}> = {
+            '1': {lat: '47.4276', lon: '-121.4288'}, // Alpental Base
+            '2': {lat: '47.4392', lon: '-121.4379'}, // Alpental Mid-Mountain
+            '3': {lat: '47.4527', lon: '-121.4346'}, // Alpental Summit
+            // Add more defaults as needed
+          };
+          
+          if (defaultCoords[stid]) {
+            return coordType === 'lat' ? defaultCoords[stid].lat : defaultCoords[stid].lon;
+          }
+          
+          console.warn(`No coordinate value for station ${stid}, using empty string`);
+          return '';
+        }
+        
+        return String(value);
+      };
+      
       const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
         Station: stationObs[0].station_name,
-        Latitude: String(stationObs[0].latitude),
-        Longitude: String(stationObs[0].longitude),
+        Latitude: safeCoordinateString(stationObs[0].latitude, 'lat'),
+        Longitude: safeCoordinateString(stationObs[0].longitude, 'lon'),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
+      
+      // Additional debug for coordinates specifically
+      if (stationObs[0].latitude === undefined || stationObs[0].longitude === undefined) {
+        console.log(`⚠️ Station ${stid} (${stationObs[0].station_name}) has undefined coordinates:`);
+        console.log('  - First observation:', stationObs[0]);
+      }
 
       // Process each measurement type
       const measurementKeys = [
@@ -360,6 +419,35 @@ export default function wxTableDataDayFromDB(
     return stationA.localeCompare(stationB);
   });
 
+  // Debug formattedDailyData before returning
+  if (formattedDailyData.length > 0) {
+    const sampleStation = formattedDailyData[0];
+    console.log('📊 FINAL DATA INSPECTION:');
+    console.log('Sample station from formattedDailyData:', {
+      station: sampleStation.Station,
+      coordinates: {
+        latitude: {
+          value: sampleStation.Latitude,
+          type: typeof sampleStation.Latitude
+        },
+        longitude: {
+          value: sampleStation.Longitude,
+          type: typeof sampleStation.Longitude
+        }
+      }
+    });
+    
+    // Check for undefined values converted to strings
+    const undefinedCoords = formattedDailyData.filter(
+      station => station.Latitude === 'undefined' || station.Longitude === 'undefined'
+    );
+    
+    if (undefinedCoords.length > 0) {
+      console.log(`⚠️ Found ${undefinedCoords.length} stations with 'undefined' coordinate strings`);
+      console.log('First problematic station:', undefinedCoords[0]);
+    }
+  }
+
   const title = formattedDailyData.length > 0
     ? (() => {
         // Get the actual end time from the data
@@ -391,7 +479,7 @@ export default function wxTableDataDayFromDB(
       }
     });
     
-    console.log('🚀 formattedDailyData:', formattedDailyData);
+    //console.log('🚀 formattedDailyData:', formattedDailyData);
     // The data is now updated for future renders
 
     if (onDataReady && formattedDailyData.length > 0) {
