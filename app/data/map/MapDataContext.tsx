@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from 'react';
 import forecastZonesData from './forecastZones.json';
-import { map_weatherToGeoJSON } from '../../map/map';
+import { map_weatherToGeoJSON } from '../../map/geoUtils';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map/map';
 import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
