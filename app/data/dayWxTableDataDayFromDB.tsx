@@ -36,8 +36,8 @@ export default function wxTableDataDayFromDB(
       const averages: { [key: string]: number | string | any[] } = {
         Stid: stid,
         Station: stationObs[0].station_name,
-        Latitude: Number(stationObs[0].latitude),
-        Longitude: Number(stationObs[0].longitude),
+        Latitude: String(stationObs[0].latitude),
+        Longitude: String(stationObs[0].longitude),
         Elevation: formatValueWithUnit(Number(stationObs[0].elevation), UnitType.ELEVATION, isMetric),
       };
 
@@ -386,8 +386,8 @@ export default function wxTableDataDayFromDB(
       const stationInfo = stationsData.find((s: { stid: string }) => s.stid === station.Stid);
       if (stationInfo) {
         // Directly modify the station object with coordinates
-        station.Latitude = parseFloat(stationInfo.latitude);
-        station.Longitude = parseFloat(stationInfo.longitude);
+        station.Latitude = String(stationInfo.latitude);
+        station.Longitude = String(stationInfo.longitude);
       }
     });
     
