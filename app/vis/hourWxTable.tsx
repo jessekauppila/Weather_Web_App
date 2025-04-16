@@ -75,6 +75,24 @@ const measurementDescriptions: Record<string, string> = {
 function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [sortedData, setSortedData] = useState(hourAverages.data);
+  // Add timestamp to force table refreshes
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
+
+  // Use an effect to track data changes and force refreshes
+  useEffect(() => {
+    if (hourAverages?.data?.length) {
+      console.log("HourWxTable received new data, forcing refresh");
+      setRefreshTimestamp(Date.now());
+      
+      // Don't clear existing table - let D3 update it smoothly
+      // This is more seamless visually
+      // if (ref.current) {
+      //   const tableContainer = ref.current;
+      //   // Remove any existing tables
+      //   tableContainer.innerHTML = '';
+      // }
+    }
+  }, [hourAverages]);
 
 //console.log("hourAverages.data:", hourAverages.data);
 
@@ -86,7 +104,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       return dateB.valueOf() - dateA.valueOf(); // Reverse chronological order
     });
     setSortedData(sorted);
-  }, [hourAverages.data]);
+  }, [hourAverages.data, refreshTimestamp]); // Add refreshTimestamp to dependencies
 
   // Memoize the header structure to avoid recalculating on every render
   const headerStructure = useMemo(() => {
@@ -246,7 +264,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
       .merge(cells as any)
       .text((d) => d.value);
     cells.exit().remove();
-  }, [sortedData, headerStructure, hourAverages.title]);
+  }, [sortedData, headerStructure, hourAverages.title, refreshTimestamp]);
 
   useEffect(() => {
     //console.log('Hourly data:', hourAverages.data);
