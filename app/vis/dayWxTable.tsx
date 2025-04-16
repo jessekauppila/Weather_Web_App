@@ -1,6 +1,6 @@
 //main page
 
-import React, { useRef, useEffect, useMemo, memo, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, memo, useCallback, useState } from 'react';
 import * as d3 from 'd3';
 import { Tooltip } from 'react-tooltip';
 import { createRoot } from 'react-dom/client';
@@ -149,6 +149,8 @@ StationButton.displayName = 'StationButton';
 function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
   //console.log('Table mode in table code:', mode);
   const ref = useRef<HTMLDivElement>(null);
+  // Add timestamp to force table refreshes
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   // Memoize the header structure
   const headerStructure = useMemo(() => {
@@ -180,12 +182,35 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     return dayAverages.data;
   }, [dayAverages.data]);
 
+  // Use an effect to track data changes and force refreshes
+  useEffect(() => {
+    if (dayAverages?.data?.length) {
+      console.log("DayAveragesTable received new data, forcing refresh");
+      setRefreshTimestamp(Date.now());
+      
+      // Don't clear the entire container - just update the data
+      // This is more seamless visually
+      // if (ref.current) {
+      //   const tableContainer = ref.current;
+      //   // Remove any existing tables
+      //   tableContainer.innerHTML = '';
+      // }
+    }
+  }, [dayAverages]);
+
   useEffect(() => {
     if (!memoizedData.length || !ref.current) return;
 
     const renderTable = () => {
+      // Instead of clearing the container, let D3's update pattern handle transitions
+      // if (ref.current) {
+      //   // Start with a clean slate
+      //   d3.select(ref.current).selectAll('table').remove();
+      // }
+      
       // Batch DOM updates
       const batchUpdate = () => {
+        // Use D3's enter/update/exit pattern for smooth updates
         const table = d3
           .select(ref.current)
           .selectAll<HTMLTableElement, null>('table')
@@ -339,17 +364,22 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       cells.exit().remove();
     };
 
-      // Use requestIdleCallback if available, fall back to setTimeout
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(batchUpdate);
-      } else {
-        setTimeout(batchUpdate, 0);
-      }
+      // Skip requestIdleCallback and directly run the update for more reliability
+      setTimeout(batchUpdate, 0);
     };
 
-    const timeoutId = setTimeout(renderTable, 0);
-    return () => clearTimeout(timeoutId);
-  }, [memoizedData, headerStructure, onStationClick, dayAverages.title]);
+    // Force render immediately instead of using setTimeout
+    renderTable();
+    
+    // Return a cleanup function
+    return () => {
+      // Only clean up on unmount, not on every update
+      // This helps prevent the visible "blinking"
+      if (ref.current && !memoizedData.length) {
+        d3.select(ref.current).selectAll('*').remove();
+      }
+    };
+  }, [memoizedData, headerStructure, onStationClick, dayAverages.title, refreshTimestamp]);
 
   if (memoizedData.length > 100) {
     // Use virtualized list for large datasets

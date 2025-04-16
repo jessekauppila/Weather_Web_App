@@ -170,13 +170,34 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       };
     }
 
+    // Get data for this specific station
+    const filteredData = observationsDataHour.data.filter(
+      (obs: { Station: string }) => obs.Station === station.Station
+    );
+    
+    // If we have data, enhance it with the current station properties for consistency
+    if (filteredData.length > 0) {
+      // Add some station properties to each hourly observation
+      const enhancedData = filteredData.map((hourData: { [key: string]: any }) => ({
+        ...hourData,
+        // Add any important station properties here
+        'Stid': station.Stid,
+        'Elevation': station.Elevation,
+        // Use the observation's own date/time as an identifier instead of a random timestamp
+        'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
+      }));
+      
+      return {
+        data: enhancedData,
+        title: `Raw Hourly Data - ${station.Station}`
+      };
+    }
+
     return {
-      data: observationsDataHour.data.filter(
-        (obs: { Station: string }) => obs.Station === station.Station
-      ),
+      data: filteredData,
       title: `Raw Hourly Data - ${station.Station}`
     };
-  }, [observationsDataHour, station]);
+  }, [observationsDataHour, station, station?.Stid]);
 
   console.log('observationsDataDay', observationsDataDay);
 
@@ -192,6 +213,14 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       (obs: { Station: string }) => obs.Station === station.Station
     );
 
+    // If no data found, return empty
+    if (!filteredData.length) {
+      return {
+        data: [],
+        title: station ? `Daily Data - ${station.Station}` : ''
+      };
+    }
+
     // Format the data to match the desired structure
     const formattedData = filteredData.map((obs: { 
       Station: string;
@@ -203,7 +232,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       Date: obs['Start Date Time']?.split(',')[0] || '',
       Stid: `${obs['Start Date Time']?.split(',')[1]?.trim()} - ${obs['End Date Time']?.split(',')[1]?.trim()}`,
       Latitude: station.Latitude,
-      Longitude: station.Longitude
+      Longitude: station.Longitude,
+      // Use the actual observation dates as identifiers instead of random timestamps
+      'ObservationPeriod': `${obs['Start Date Time'] || ''}-${obs['End Date Time'] || ''}`
     }));
 
     // Create the title with elevation and date range
@@ -213,15 +244,62 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: formattedData,
       title
     };
-  }, [observationsDataDay, station]);
+  }, [observationsDataDay, station, station?.['Cur Air Temp'], station?.['Total Snow Depth']]);
 
   console.log('stationObservationsDataDay', stationObservationsDataDay);
 
 
-  const stationDayData = useMemo(() => ({
-    data: station ? [station] : [],
-    title: station?.Station || ''
-  }), [station]);
+  // Update stationDayData to incorporate date-specific data
+  const stationDayData = useMemo(() => {
+    if (!station) return { data: [], title: '' };
+    
+    // If we have observationsDataDay with data for this station, use it to enhance station data
+    if (observationsDataDay?.data?.length) {
+      // Try to find the station's data in the observations
+      const stationDayObservation = observationsDataDay.data.find(
+        (obs: any) => obs.Station === station.Station
+      );
+      
+      if (stationDayObservation) {
+        console.log(`Found station ${station.Station} data in observationsDataDay`);
+        
+        // Create an enhanced station object with properties from both the station
+        // and its corresponding observation data
+        const enhancedStation = {
+          ...station, // Keep all existing station properties
+          // Update temperature properties
+          'Cur Air Temp': stationDayObservation['Cur Air Temp'] || station['Cur Air Temp'] || '-',
+          'Air Temp Min': stationDayObservation['Air Temp Min'] || station['Air Temp Min'] || '-',
+          'Air Temp Max': stationDayObservation['Air Temp Max'] || station['Air Temp Max'] || '-',
+          // Update snow properties
+          'Total Snow Depth': stationDayObservation['Total Snow Depth'] || station['Total Snow Depth'] || '-',
+          'Total Snow Depth Change': stationDayObservation['Total Snow Depth Change'] || station['Total Snow Depth Change'] || '-',
+          '24h Snow Accumulation': stationDayObservation['24h Snow Accumulation'] || station['24h Snow Accumulation'] || '-',
+          // Update wind properties
+          'Wind Speed Avg': stationDayObservation['Wind Speed Avg'] || station['Wind Speed Avg'] || '-',
+          'Max Wind Gust': stationDayObservation['Max Wind Gust'] || station['Max Wind Gust'] || '-',
+          'Wind Direction': stationDayObservation['Wind Direction'] || station['Wind Direction'] || '-',
+          // Update precipitation property
+          'Precip Accum One Hour': stationDayObservation['Precip Accum One Hour'] || station['Precip Accum One Hour'] || '-',
+          // Add the observation date to the station (important for tables)
+          'Date': stationDayObservation['Date'] || stationDayObservation['Day'] || new Date().toLocaleDateString(),
+          // Instead of a timestamp, use the actual observation date as an identifier
+          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString()
+        };
+        
+        return {
+          data: [enhancedStation],
+          title: `${enhancedStation.Station} - ${observationsDataDay.title}`
+        };
+      }
+    }
+    
+    // Fallback to just using the station data if no observation data available
+    return {
+      data: [station],
+      title: station.Station || ''
+    };
+  }, [station, observationsDataDay]);
 
   
   if (!station) return null;
@@ -301,12 +379,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             position: 'relative'
           }}
         >
+
+{/* //////////////////////////////////////////////////////////////// */}
+
+
           {/* Station Summary Table */}
           <div className="mb-6">
             <DayAveragesTable 
               dayAverages={stationDayData}
               onStationClick={() => {}}
               mode={tableMode}
+              key={`summary-${station.Station}`}
             />
           </div>
           
@@ -358,7 +441,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <HourWxTable 
-                  hourAverages={stationDayData} 
+                  hourAverages={stationDayData}
+                  key={`filtered-${station.Station}`}
                 />
               </AccordionWrapper>
             </div>
@@ -373,7 +457,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <HourWxTable 
-                  hourAverages={stationDataHourUnFiltered} 
+                  hourAverages={stationDataHourUnFiltered}
+                  key={`raw-${station.Station}`}
                 />
               </AccordionWrapper>
             </div>
