@@ -178,39 +178,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [observationsDataHour, station]);
 
-  
-
-  // const stationDataForGraph = useMemo(() => {
-  //   if (!station || !filteredObservationsDataHour?.data) {
-  //     return {
-  //       data: [],
-  //       title: station?.Station || ''
-  //     };
-  //   }
-
-  //   return {
-  //     data: filteredObservationsDataHour.data.filter(
-  //       (obs: { Station: string }) => obs.Station === station.Station
-  //     ).map((obs: { 
-  //       Station: string; 
-  //       Day: string; 
-  //       Hour: string; 
-  //       'Snow Depth'?: string; 
-  //       'New Snow'?: string;
-  //       'Air Temp'?: string;
-  //       'Precip'?: string;
-  //     }) => ({
-  //       Date: `${obs.Day} ${obs.Hour}`,
-  //       'Total Snow Depth': obs['Snow Depth'] || '0 in',
-  //       '24h Snow Accumulation': obs['New Snow'] || '0 in',
-  //       'Air Temp Min': obs['Air Temp'],
-  //       'Air Temp Max': obs['Air Temp'],
-  //       'Precip Accum One Hour': obs['Precip'] || '0 in'
-  //     })),
-  //     title: station.Station
-  //   };
-  // }, [filteredObservationsDataHour, station]);
-
   console.log('observationsDataDay', observationsDataDay);
 
   const stationObservationsDataDay = useMemo(() => {
