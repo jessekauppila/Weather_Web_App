@@ -51,7 +51,7 @@ const switchStyle = {
 
 const formControlStyle = (isChecked: boolean) => ({
   '& .MuiTypography-root': {
-    color: isChecked ? '#9e9e9e' : '#424242',
+    color: isChecked ? 'var(--app-text-primary)' : 'var(--app-text-secondary)',
     fontSize: '0.75rem',
   },
 });
@@ -68,21 +68,13 @@ export const MapLayerSwitchWidget: React.FC<{
   });
 
   return createPortal(
-    <div
-      style={{
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        width: '200px',
-        background: 'rgb(0, 0, 0, .2)',
-        padding: '8px',
-        borderRadius: '5px',
-        //boxShadow: '0px 4px 6px rgba(0,0,0,0)',
-        pointerEvents: 'auto',
-        zIndex: 1,
-        color: '#e0e0e0',
-      }}
-    >
+    <div className="app-card" style={{
+      position: 'absolute',
+      top: 10,
+      left: 10,
+      width: '200px',
+      zIndex: 1,
+    }}>
       <Typography
         variant="h6"
         sx={{ fontSize: '1rem', mb: 1, color: 'inherit' }}

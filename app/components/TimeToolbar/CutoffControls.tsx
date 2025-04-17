@@ -25,7 +25,12 @@ export function CutoffControls({
 }: CutoffControlsProps) {
   return (
     <>
-      <Button variant="outlined" size="small" onClick={handleCutOffPopupButtonClick}>
+      <Button 
+        variant="outlined" 
+        size="small" 
+        onClick={handleCutOffPopupButtonClick}
+        className="app-button"
+      >
         Cut Offs
       </Button>
 
@@ -37,14 +42,23 @@ export function CutoffControls({
           vertical: 'bottom',
           horizontal: 'left',
         }}
+        classes={{
+          paper: 'app-popover-paper'
+        }}
       >
-        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
+        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px]">
           <FormControl variant="outlined" size="small" className="w-full">
             <InputLabel>Range</InputLabel>
             <Select
               value={dayRangeType}
               onChange={handleDayRangeTypeChange}
               label="Range"
+              className="app-select"
+              MenuProps={{
+                classes: {
+                  paper: 'app-menu-paper'
+                }
+              }}
             >
               <MenuItem value={DayRangeType.MIDNIGHT}>Midnight to Midnight</MenuItem>
               <MenuItem value={DayRangeType.CURRENT}>Rolling 24 hours</MenuItem>
@@ -60,24 +74,18 @@ export function CutoffControls({
                 onChange={(e) => setCustomTime(e.target.value)}
                 variant="outlined"
                 size="small"
-                className="w-full"
+                className="w-full app-textfield"
               />
               
               <Button 
                 variant="outlined" 
                 size="small" 
                 onClick={handleCustomTimeButtonClick}
+                className="app-button"
                 sx={{
                   minWidth: '120px',
                   textAlign: 'left',
                   padding: '4px 8px',
-                  backgroundColor: 'transparent',
-                  borderColor: '#49597F',
-                  transition: 'background-color 0.15s',
-                  '&:hover': {
-                    backgroundColor: 'rgba(107,123,164,0.1)',
-                    borderColor: '#6B7BA4'
-                  },
                   marginTop: '8px'
                 }}
               >

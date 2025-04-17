@@ -26,13 +26,7 @@ export function DateControls({
         onClick={handlePrevDay}
         variant="text"
         size="small"
-        className="min-w-0 p-1"
-        sx={{
-          color: 'rgba(0, 0, 0, 0.54)',
-          '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)'
-          }
-        }}
+        className="min-w-0 p-1 app-button"
       >
         <ArrowBack sx={{ fontSize: 20 }} />
       </Button>
@@ -42,7 +36,7 @@ export function DateControls({
         size="small"
         value={selectedDate.toISOString().split('T')[0]}
         onChange={handleDateChange}
-        className="w-[130px]"
+        className="w-[130px] app-textfield"
       />
 
       {useCustomEndDate && (
@@ -51,7 +45,7 @@ export function DateControls({
           size="small"
           value={endDate.toISOString().split('T')[0]}
           onChange={handleEndDateChange}
-          className="w-[130px]"
+          className="w-[130px] app-textfield"
         />
       )}
 
@@ -59,13 +53,7 @@ export function DateControls({
         onClick={handleNextDay}
         variant="text"
         size="small"
-        className="min-w-0 p-1"
-        sx={{
-          color: 'rgba(0, 0, 0, 0.54)',
-          '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)'
-          }
-        }}
+        className="min-w-0 p-1 app-button"
       >
         <ArrowForward sx={{ fontSize: 20 }} />
       </Button>

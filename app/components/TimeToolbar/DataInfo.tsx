@@ -21,7 +21,12 @@ export function DataInfo({
 }: DataInfoProps) {
   return (
     <>
-      <Button variant="outlined" size="small" onClick={handleDataPopupButtonClick}>
+      <Button 
+        variant="outlined" 
+        size="small" 
+        onClick={handleDataPopupButtonClick}
+        className="app-button"
+      >
         Data Info
       </Button>
 
@@ -33,9 +38,12 @@ export function DataInfo({
           vertical: 'bottom',
           horizontal: 'left',
         }}
+        classes={{
+          paper: 'app-popover-paper'
+        }}
       >
-        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px] bg-[cornflowerblue]">
-          <div className="text-[11px] text-[lightgrey] mt-2 text-center space-y-1 bg-[cornflowerblue]">
+        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px]">
+          <div className="text-[11px] mt-2 text-center space-y-1">
             {filteredObservationsDataHour && filteredObservationsDataHour.data.length > 0 && (
               <>
                 <div>
@@ -52,6 +60,7 @@ export function DataInfo({
               variant="outlined" 
               size="small" 
               onClick={handleRefreshButtonClick}
+              className="app-button"
             >
               Refresh Data
             </Button>

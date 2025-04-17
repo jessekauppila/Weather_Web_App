@@ -2,19 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/***************************************************************
+ * ROOT VARIABLES
+ ***************************************************************/
+
 :root {
-  /* --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255; */
+  /* Original system theme variables */
   --background: #ffffff;
   --foreground: #171717;
+  
+  /***************************************************************
+   * APP THEME VARIABLES FOR DARK UI COMPONENTS
+   * For components like Time Toolbar, Station Selector, Layer Switches, etc.
+   ***************************************************************/
+  
+  /* Background colors */
+  --app-card-bg: rgba(0, 0, 0, 0.2);        /* Semi-transparent black for card backgrounds */
+  --app-dropdown-bg: rgba(0, 0, 0, 0.8);    /* Darker semi-transparent black for dropdowns */
+  
+  /* Text colors */
+  --app-text-primary: #c6c6c6;              /* Light gray for primary text (active elements) */
+  --app-text-secondary: #757575;            /* Medium gray for secondary text (inactive elements) */
+  
+  /* Border colors */
+  --app-border-color: #616161;              /* Medium gray for borders */
+  --app-border-hover: #9e9e9e;              /* Lighter gray for hover states */
+  
+  /* Interaction states */
+  --app-hover-bg: rgba(255, 255, 255, 0.08);       /* Subtle white highlight for hover */
+  --app-selected-bg: rgba(255, 255, 255, 0.16);    /* Stronger white highlight for selected items */
+  --app-selected-hover-bg: rgba(255, 255, 255, 0.24); /* Even stronger for hover+selected */
+  
+  /* Effects */
+  --app-box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  --app-border-radius: 5px;                /* Consistent rounded corners */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0; */
+    /* System dark theme overrides */
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -42,7 +68,147 @@ html, #__next, main {
   }
 }
 
-/* This is the original butto */
+/***************************************************************
+ * APP COMPONENT STYLES
+ * Global classes that can be applied to create consistent UI components
+ ***************************************************************/
+
+/* Card container for UI components */
+.app-card {
+  position: relative;
+  background: var(--app-card-bg);
+  color: var(--app-text-primary);
+  border-radius: var(--app-border-radius);
+  padding: 8px;
+  pointer-events: auto;
+}
+
+/***************************************************************
+ * MUI COMPONENTS STYLING
+ * Classes for styling Material UI components consistently
+ ***************************************************************/
+
+/* Select field styling */
+.app-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-color);
+}
+
+.app-select:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-hover);
+}
+
+.app-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-hover);
+}
+
+.app-select .MuiSvgIcon-root {
+  color: var(--app-text-primary);
+}
+
+/* Fix for select labels */
+.MuiInputLabel-root {
+  color: var(--app-text-secondary) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: var(--app-text-primary) !important;
+}
+
+.app-select .MuiSelect-select {
+  color: var(--app-text-primary);
+}
+
+/* Menu and dropdown styling */
+.app-menu-paper {
+  background-color: var(--app-dropdown-bg);
+}
+
+.app-menu-paper .MuiMenuItem-root {
+  color: var(--app-text-primary);
+}
+
+.app-menu-paper .MuiMenuItem-root:hover {
+  background-color: var(--app-hover-bg);
+}
+
+.app-menu-paper .MuiMenuItem-root.Mui-selected {
+  background-color: var(--app-selected-bg);
+}
+
+.app-menu-paper .MuiMenuItem-root.Mui-selected:hover {
+  background-color: var(--app-selected-hover-bg);
+}
+
+.app-menu-paper .MuiListSubheader-root {
+  color: var(--app-text-primary);
+  font-weight: bold;
+  background-color: var(--app-dropdown-bg);
+}
+
+/* Force consistent text colors for menu items */
+.MuiMenuItem-root {
+  color: var(--app-text-primary) !important;
+}
+
+.MuiListSubheader-root {
+  color: var(--app-text-primary) !important;
+  background-color: var(--app-dropdown-bg) !important;
+}
+
+/* Button styling */
+.app-button {
+  color: var(--app-text-primary);
+  border-color: var(--app-border-color);
+}
+
+.app-button:hover {
+  border-color: var(--app-border-hover);
+  background-color: var(--app-hover-bg);
+}
+
+/* Text field styling */
+.app-textfield .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-color);
+}
+
+.app-textfield:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-hover);
+}
+
+.app-textfield.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border-hover);
+}
+
+.app-textfield .MuiInputBase-input {
+  color: var(--app-text-primary);
+}
+
+.app-textfield input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+
+/* Popover styling */
+.app-popover-paper {
+  background-color: var(--app-dropdown-bg);
+  color: var(--app-text-primary);
+  border-radius: var(--app-border-radius);
+}
+
+/* Color helper classes */
+.app-text-primary {
+  color: var(--app-text-primary) !important;
+}
+
+.app-text-secondary {
+  color: var(--app-text-secondary) !important;
+}
+
+/***************************************************************
+ * LEGACY STYLES
+ * Original application styles - kept for backward compatibility
+ ***************************************************************/
+
+/* This is the original button */
 .my-button {
   background-color: cornflowerblue;
   color: lightgrey;
