@@ -17,13 +17,13 @@ export function StationSelector({
 }: StationSelectorProps) {
   const memoizedStationOptions = useMemo(() => (
     regions.map((region) => [
-      <ListSubheader key={`header-${region.id}`}>
+      <ListSubheader key={`header-${region.id}`} className="!text-[var(--app-text-primary)]">
         {region.title}
       </ListSubheader>,
       stations
         .filter(station => region.stationIds.includes(station.id))
         .map((station) => (
-          <MenuItem key={station.id} value={station.id}>
+          <MenuItem key={station.id} value={station.id} className="!text-[var(--app-text-primary)]">
             {station.name}
           </MenuItem>
         ))
@@ -39,38 +39,19 @@ export function StationSelector({
 
   return (
     <FormControl variant="outlined" size="small" className="w-full">
-      <InputLabel>Station</InputLabel>
+      <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
         value={selectedStation}
         onChange={debouncedHandleStationChange}
         label="Station"
-        className="w-full"
+        className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
-          PaperProps: {
-            sx: {
-              '& .MuiListSubheader-root': {
-                color: 'black',
-                fontWeight: 'bold',
-              },
-              '& .MuiMenuItem-root': {
-                paddingLeft: '32px',
-                color: 'black',
-                '&:hover': {
-                  backgroundColor: 'rgba(100, 149, 237, 0.1)'
-                }
-              }
-            }
-          }
-        }}
-        sx={{
-          '& .MuiSelect-icon': {
-            color: 'rgba(0, 0, 0, 0.54)',
-            width: '20px',
-            height: '20px'
+          classes: {
+            paper: 'app-menu-paper'
           }
         }}
       >
-        <MenuItem value="">All Stations</MenuItem>
+        <MenuItem value="" className="!text-[var(--app-text-primary)]">All Stations</MenuItem>
         {memoizedStationOptions}
       </Select>
     </FormControl>

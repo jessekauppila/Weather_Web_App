@@ -61,7 +61,12 @@ export function UnitsSwitch({
 }: UnitsSwitchProps) {
   return (
     <>
-      <Button variant="outlined" size="small" onClick={handleUnitsPopupButtonClick}>
+      <Button 
+        variant="outlined" 
+        size="small" 
+        onClick={handleUnitsPopupButtonClick}
+        className="app-button"
+      >
         Units
       </Button>
 
@@ -72,6 +77,9 @@ export function UnitsSwitch({
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'left',
+        }}
+        classes={{
+          paper: 'app-popover-paper'
         }}
         PaperProps={{
           sx: {
@@ -84,9 +92,9 @@ export function UnitsSwitch({
           }
         }}
       >
-        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 bg-[cornflowerblue]">
+        <div className="p-2 sm:p-4 space-y-2 sm:space-y-4">
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Typography sx={{ fontSize: '1rem', fontWeight: 500 }}>
+            <Typography>
               Imperial
             </Typography>
             <AntSwitch 
@@ -98,7 +106,7 @@ export function UnitsSwitch({
               }}
               inputProps={{ 'aria-label': 'unit switch' }}
             />
-            <Typography sx={{ fontSize: '1rem', fontWeight: 500 }}>
+            <Typography>
               Metric
             </Typography>
           </Stack>

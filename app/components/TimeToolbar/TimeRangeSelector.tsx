@@ -17,6 +17,12 @@ export function TimeRangeSelector({
         value={calculateCurrentTimeRange()}
         onChange={handleTimeRangeChange}
         label="Range"
+        className="app-select"
+        MenuProps={{
+          classes: {
+            paper: 'app-menu-paper'
+          }
+        }}
       >
         <MenuItem value="1">1 Day</MenuItem>
         <MenuItem value="3">3 Days</MenuItem>
