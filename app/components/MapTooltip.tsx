@@ -1,6 +1,6 @@
 import { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
-import type { Map_BlockProperties } from '../../map/map';
+import type { Map_BlockProperties } from '../map/map';
 
 interface TooltipProps {
   html: string;
@@ -69,13 +69,14 @@ export function getMapTooltip(info: PickingInfo): TooltipProps | null {
   `;
 
   const cardStyle = `
-    background-color: white;
-    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
     padding: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     width: 280px;
     border: none;
     pointer-events: auto;
+    color: var(--app-text-primary, #c6c6c6);
   `;
 
 const headerStyle = `
@@ -85,13 +86,13 @@ const headerStyle = `
 const stationNameStyle = `
   font-size: 0.875rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--app-text-primary, #c6c6c6);
   margin: 0;
 `;
 
 const elevationStyle = `
   font-size: 0.625rem;
-  color: #6b7280;
+  color: var(--app-text-secondary, #757575);
   margin: 0;
 `;
 
@@ -102,10 +103,10 @@ const gridStyle = `
 `;
 
 const sectionStyle = `
-  background: white;
-  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
   padding: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0px 0px 2px rgba(255, 255, 255, 0.1);
   transition: box-shadow 0.2s;
 `;
 
@@ -113,7 +114,7 @@ const sectionStyle = `
   const sectionTitleStyle = `
     font-size: 0.625rem;
     font-weight: 500;
-    color: #4b5563;
+    color: var(--app-text-primary, #c6c6c6);
     margin-bottom: 0.25rem;
     display: flex;
     align-items: center;
@@ -127,27 +128,27 @@ const sectionStyle = `
   const valueStyle = `
     font-size: 1rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--app-text-primary, #c6c6c6);
     margin: 0;
     display: inline;
   `;
 
   const unitStyle = `
     font-size: 0.625rem;
-    color: #6b7280;
+    color: var(--app-text-secondary, #757575);
     margin-left: 2px;
   `;
 
   const labelStyle = `
     font-size: 0.5rem;
-    color: #6b7280;
+    color: var(--app-text-secondary, #757575);
     margin: 0;
     white-space: nowrap;
   `;
 
   const conditionStyle = `
     font-size: 0.625rem;
-    color: #4b5563;
+    color: var(--app-text-primary, #c6c6c6);
     margin-top: 0.25rem;
     display: flex;
     align-items: center;
@@ -157,13 +158,13 @@ const sectionStyle = `
   const swatchStyle = `
     width: 10px;
     height: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #616161;
     border-radius: 2px;
   `;
 
   const noDataStyle = `
     font-size: 0.625rem;
-    color: #9ca3af;
+    color: var(--app-text-secondary, #757575);
   `;
 
   const renderValue = (value: string | null, unit: string) => {
