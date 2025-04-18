@@ -13,7 +13,7 @@ import {
   // Remove: PointLight,
   _SunLight as SunLight,
 } from '@deck.gl/core';
-import { getMapTooltip } from './UI/MapTooltip';
+import { getMapTooltip } from '../components/MapTooltip';
 import StationDrawer from '../components/StationDrawer';
 import { useMapData } from '../data/map/MapDataContext';
 import { map_weatherToGeoJSON } from '../data/map/geoUtils';

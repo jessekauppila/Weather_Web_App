@@ -36,7 +36,7 @@ export function DateControls({
         size="small"
         value={selectedDate.toISOString().split('T')[0]}
         onChange={handleDateChange}
-        className="w-[130px] app-textfield"
+        className="w-[140px] app-textfield"
       />
 
       {useCustomEndDate && (
