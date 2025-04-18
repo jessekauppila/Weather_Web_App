@@ -178,10 +178,14 @@ const sectionStyle = `
     html: `
     <div class="map-station-tooltip" style="${containerStyle}">
       <div style="${cardStyle}">
-          <div style="${headerStyle}">
-            <div style="${stationNameStyle}">${props.stationName ?? 'Unknown Station'}</div>
-            <div style="${elevationStyle}">${props.elevation ? `${props.elevation} ft` : 'N/A'}</div>
-          </div>
+
+            
+            <div style="${sectionStyle}">
+              <div style="${headerStyle}">
+                <div style="${stationNameStyle}">${props.stationName ?? 'Unknown Station'}</div>
+                <div style="${elevationStyle}">${props.elevation ? `${props.elevation} ft` : 'N/A'}</div>
+              </div>
+            </div>
 
           <div style="${gridStyle}">
             <!-- Snow Section -->

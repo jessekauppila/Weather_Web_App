@@ -22,6 +22,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   console.log('Day averages data in dayWxSnowGraph:', dayAverages);
 
@@ -96,6 +97,14 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .attr('height', containerHeight)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Add white background like WxSnowGraph does
+    svg.append('rect')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .attr('x', -margin.left)
+      .attr('y', -margin.top)
+      .attr('fill', 'white');
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -250,16 +259,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
         .attr('stroke', 'black')
         .attr('fill', 'none');
 
-      // Add vertical tick
-      // svg.append('path')
-      //   .attr('d', `
-      //     M ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 5}
-      //     L ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 10}
-      //   `)
-      //   .attr('stroke', 'black')
-      //   .attr('fill', 'none');
-
-              // Add vertical tick to left of bar
+      // Add vertical tick to left of bar
       svg.append('path')
         .attr('d', `
           M ${xScaleBars(date) - individualBarWidth} ${height + spacing.dateAxisOffset - 5}  
@@ -482,7 +482,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .selectAll('.graph-tooltip')
       .data([null])
       .join('div')
-      .attr('class', 'graph-tooltip')
+      .attr('class', 'graph-tooltip snow-accum-tooltip')
       .style('position', 'absolute')
       .style('visibility', 'hidden')
       .style('background-color', 'white')
@@ -511,11 +511,11 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
             .style('left', `${event.pageX + 10}px`)
             .style('top', `${event.pageY - 10}px`)
             .html(`
-              <div class="text-sm">
-                <div>Date: ${moment(d.date).format('MM/DD/YYYY')}</div>
-                <div>Snow Depth: ${formatValueWithUnit(d.totalSnowDepth, UnitType.PRECIPITATION, isMetric)}</div>
-                <div>24h Snow: ${formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric)}</div>
-                <div>Temp Range: ${formatValueWithUnit(d.tempMin, UnitType.TEMPERATURE, isMetric)} - ${formatValueWithUnit(d.tempMax, UnitType.TEMPERATURE, isMetric)}</div>
+              <div class="tooltip-content">
+                <strong>${moment(d.date).format('MM/DD/YYYY')}</strong><br/>
+                <span>Snow Depth: ${formatValueWithUnit(d.totalSnowDepth, UnitType.PRECIPITATION, isMetric)}</span><br/>
+                <span>24h Snow: ${formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric)}</span><br/>
+                <span>Temp Range: ${formatValueWithUnit(d.tempMin, UnitType.TEMPERATURE, isMetric)} - ${formatValueWithUnit(d.tempMax, UnitType.TEMPERATURE, isMetric)}</span>
               </div>
             `);
         }
@@ -524,10 +524,22 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
         tooltip.style('visibility', 'hidden');
       });
 
+    // Set loaded state after graph is created
+    setIsLoaded(true);
+
   }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset, isMetric]); // AddisMetric here
 
   return (
-    <div ref={containerRef}>
+    <div 
+      ref={containerRef}
+      className={`graph-container bg-white p-4 rounded-xl shadow-md transition-opacity duration-500 ${
+        isLoaded ? 'opacity-100' : 'opacity-0'
+      }`}
+      style={{ 
+        width: '100%',
+        overflow: 'hidden'
+      }}
+    >
       <svg
         ref={svgRef}
         style={{
