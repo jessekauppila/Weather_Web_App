@@ -48,7 +48,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
         variant="h6"
         sx={{ fontSize: '1rem', mb: 1, color: 'inherit' }}
       >
-        Map Layers
+        {/* Map Layers */}
       </Typography>
       <FormGroup>
         <FormControlLabel
