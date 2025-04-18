@@ -69,14 +69,14 @@ export function getMapTooltip(info: PickingInfo): TooltipProps | null {
   `;
 
   const cardStyle = `
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
+    background: var(--app-toolbar-bg);
+    border-radius: var(--app-border-radius);
     padding: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--app-box-shadow);
     width: 280px;
     border: none;
     pointer-events: auto;
-    color: var(--app-text-primary, #c6c6c6);
+    color: var(--app-text-primary);
   `;
 
 const headerStyle = `
@@ -103,7 +103,7 @@ const gridStyle = `
 `;
 
 const sectionStyle = `
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--app-section-bg);
   border-radius: 0.375rem;
   padding: 0.5rem;
   box-shadow: inset 0px 0px 2px rgba(255, 255, 255, 0.1);

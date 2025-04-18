@@ -17,11 +17,12 @@
    ***************************************************************/
   
   /* Background colors */
-  --app-card-bg: rgba(0, 0, 0, 0.2);        /* Semi-transparent black for card backgrounds */
+  --app-toolbar-bg: rgba(0, 0, 0, 0.6);        /* Semi-transparent black for card backgrounds */
+  --app-section-bg: rgba(0, 0, 0, 0.8);        /* Lighter background for inner sections */
   --app-dropdown-bg: rgba(0, 0, 0, 0.8);    /* Darker semi-transparent black for dropdowns */
   
   /* Text colors */
-  --app-text-primary: #c6c6c6;              /* Light gray for primary text (active elements) */
+  --app-text-primary: #a9a9a9;              /* Light gray for primary text (active elements) */
   --app-text-secondary: #757575;            /* Medium gray for secondary text (inactive elements) */
   
   /* Border colors */
@@ -74,13 +75,45 @@ html, #__next, main {
  ***************************************************************/
 
 /* Card container for UI components */
-.app-card {
+.app-toolbar {
   position: relative;
-  background: var(--app-card-bg);
+  background: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border-radius: var(--app-border-radius);
   padding: 8px;
   pointer-events: auto;
+}
+
+/* Section container for inner components */
+.app-section-solid {
+  position: relative;
+  background: var(--app-section-bg);
+  color: var(--app-text-primary);
+  border-radius: var(--app-border-radius);
+  padding: 8px;
+  box-shadow: inset 0px 0px 2px rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+/* Map station tooltip - specifically for the map tooltips */
+.map-station-tooltip {
+  position: absolute;
+  z-index: 1001 !important; /* Higher than other tooltips */
+  pointer-events: auto;
+}
+
+.map-station-tooltip > div {
+  background: var(--app-toolbar-bg) !important;
+  color: var(--app-text-primary) !important;
+  border: none !important;
+  box-shadow: var(--app-box-shadow) !important;
+  border-radius: var(--app-border-radius) !important;
+}
+
+/* Ensure any other tooltip styles don't interfere */
+.map-station-tooltip.snow-accum-tooltip,
+.map-station-tooltip .snow-accum-tooltip {
+  background: var(--app-toolbar-bg) !important;
 }
 
 /***************************************************************
@@ -1019,23 +1052,3 @@ body.drawer-open {
 
 /* The drawer itself will have pointer-events: auto to capture interactions */
 
-/* Map station tooltip - specifically for the map tooltips */
-.map-station-tooltip {
-  position: absolute;
-  z-index: 1001 !important; /* Higher than other tooltips */
-  pointer-events: auto;
-}
-
-.map-station-tooltip > div {
-  background: rgba(0, 0, 0, 0.2) !important;
-  color: var(--app-text-primary, #c6c6c6) !important;
-  border: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-  border-radius: 5px !important;
-}
-
-/* Ensure any other tooltip styles don't interfere */
-.map-station-tooltip.snow-accum-tooltip,
-.map-station-tooltip .snow-accum-tooltip {
-  background: rgba(0, 0, 0, 0.2) !important;
-}

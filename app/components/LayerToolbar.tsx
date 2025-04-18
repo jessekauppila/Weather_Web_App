@@ -43,7 +43,7 @@ const formControlStyle = (isChecked: boolean) => ({
 
 const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer }) => {
   return (
-    <div className="app-card">
+    <div className="app-toolbar">
       <Typography
         variant="h6"
         sx={{ fontSize: '1rem', mb: 1, color: 'inherit' }}

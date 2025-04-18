@@ -320,10 +320,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         transformOrigin: "bottom",
         pointerEvents: isOpen ? 'auto' : 'none',
         overflow: 'hidden',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        color: 'var(--app-text-primary, #c6c6c6)',
-        borderTop: '1px solid var(--app-border-color, #616161)',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+        backgroundColor: 'var(--app-dropdown-bg)', // Use the dropdown bg for drawer as it's darker
+        color: 'var(--app-text-primary)',
+        borderTop: '1px solid var(--app-border-color)',
+        boxShadow: 'var(--app-box-shadow)'
       }}
       // Initial state animation - where drawer starts from before animating
       initial={{ y: "100%" }}
@@ -344,8 +344,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         style={{
           touchAction: 'none',
           userSelect: 'none',
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          borderBottom: '1px solid rgba(97, 97, 97, 0.5)'
+          backgroundColor: 'var(--app-toolbar-bg)',
+          borderBottom: '1px solid var(--app-border-color)'
         }}
       >
         <div className="w-16 h-1.5 bg-gray-500 rounded-full" />
@@ -353,7 +353,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="text-sm font-semibold" style={{ color: 'var(--app-text-primary, #c6c6c6)' }}>
+          <div className="text-sm font-semibold" style={{ color: 'var(--app-text-primary)' }}>
             {station.Station}
           </div>
           <div className="flex space-x-2">
@@ -361,12 +361,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               onClick={onClose}
               className="app-button"
               style={{
-                background: 'rgba(0, 0, 0, 0.5)',
-                color: 'var(--app-text-primary, #c6c6c6)',
+                background: 'var(--app-section-bg)',
+                color: 'var(--app-text-primary)',
                 fontSize: '0.75rem',
                 padding: '4px 8px',
-                borderRadius: '5px',
-                border: '1px solid var(--app-border-color, #616161)',
+                borderRadius: 'var(--app-border-radius)',
+                border: '1px solid var(--app-border-color)',
                 cursor: 'pointer'
               }}
             >
