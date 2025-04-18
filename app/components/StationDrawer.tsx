@@ -311,7 +311,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   return (
     <motion.div
       ref={drawerRef}
-      className="fixed left-0 right-0 bottom-0 bg-white shadow-lg rounded-t-xl"
+      className="fixed left-0 right-0 bottom-0 shadow-lg rounded-t-xl"
       style={{
         top: isOpen ? `${drawerTop}px` : 'auto', // Position based on top when open
         height: drawerHeight,
@@ -319,7 +319,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         zIndex: 9999,
         transformOrigin: "bottom",
         pointerEvents: isOpen ? 'auto' : 'none',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        color: 'var(--app-text-primary, #c6c6c6)',
+        borderTop: '1px solid var(--app-border-color, #616161)',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
       }}
       // Initial state animation - where drawer starts from before animating
       initial={{ y: "100%" }}
@@ -335,31 +339,34 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     >
       {/* Resizable handle at the top */}
       <div 
-        className="w-full h-6 cursor-ns-resize select-none bg-gray-100 border-b border-gray-200 flex justify-center items-center"
+        className="w-full h-6 cursor-ns-resize select-none flex justify-center items-center"
         onMouseDown={handleMouseDown}
         style={{
           touchAction: 'none',
           userSelect: 'none',
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          borderBottom: '1px solid rgba(97, 97, 97, 0.5)'
         }}
       >
-        <div className="w-16 h-1.5 bg-gray-300 rounded-full" />
+        <div className="w-16 h-1.5 bg-gray-500 rounded-full" />
       </div>
 
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="text-sm font-semibold text-gray-600">
+          <div className="text-sm font-semibold" style={{ color: 'var(--app-text-primary, #c6c6c6)' }}>
             {station.Station}
           </div>
           <div className="flex space-x-2">
             <button 
               onClick={onClose}
+              className="app-button"
               style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                color: '#424242',
+                background: 'rgba(0, 0, 0, 0.5)',
+                color: 'var(--app-text-primary, #c6c6c6)',
                 fontSize: '0.75rem',
                 padding: '4px 8px',
                 borderRadius: '5px',
-                border: 'none',
+                border: '1px solid var(--app-border-color, #616161)',
                 cursor: 'pointer'
               }}
             >
@@ -368,7 +375,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           </div>
         </div>
         
-        {/* Simple scrollable content with just a visible scrollbar */}
+        {/* Scrollable content with dark theme scrollbar */}
         <div 
           className="custom-scrollbar overflow-y-auto pr-2" 
           style={{ 
@@ -379,10 +386,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             position: 'relative'
           }}
         >
-
-{/* //////////////////////////////////////////////////////////////// */}
-
-
           {/* Station Summary Table */}
           <div className="mb-6">
             <DayAveragesTable 
@@ -393,13 +396,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             />
           </div>
           
-          
-{/* //////////////////////////////////////////////////////////////// */}
-
-
-          {/* Hourly Snow and Temperature Graph FIXED!!!!*/}
+          {/* Hourly Snow and Temperature Graph */}
           {stationDataHourFiltered.data.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 app-section-solid">
               <AccordionWrapper
                 title="Hourly Snow and Temperature Graph"
                 subtitle={station.Station}
@@ -416,7 +415,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Daily Snow and Temperature Graph */}
           {stationObservationsDataDay.data.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 app-section-solid">
               <AccordionWrapper
                 title="Daily Snow and Temperature Graph"
                 subtitle={station.Station}
@@ -430,11 +429,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             </div>
           )}
 
-{/* //////////////////////////////////////////////////////////////// */}
-
           {/* Filtered Hourly Data Table */}
           {stationDayData.data.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 app-section-solid">
               <AccordionWrapper
                 title={`Filtered Hourly Data`}
                 subtitle={station.Station}
@@ -450,7 +447,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Raw Hourly Data Table */}
           {stationDataHourUnFiltered.data.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 app-section-solid">
               <AccordionWrapper
                 title={`Raw Hourly Data`}
                 subtitle={station.Station}
