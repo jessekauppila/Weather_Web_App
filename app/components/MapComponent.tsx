@@ -13,7 +13,7 @@ import {
 import { createMapLayers } from '../map/layers';
 import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
 import { LayerId } from '../page';
-import StationDrawer from '../components/mapStationCards/StationDrawer';
+import StationDrawer from './StationDrawer';
 import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
