@@ -217,13 +217,13 @@ export default function Home() {
       </div>
       
       {/* Time toolbar with higher z-index to overlap the map */}
-      {/* <div className="relative z-10 w-full max-w-6xl pt-4 px-4">
+      <div className="relative z-10 w-full max-w-6xl pt-4 px-4">
         <TimeToolbar
           {...timeProps}
           {...stationProps}
           {...dataProps}
         />
-      </div> */}
+      </div>
       
        {/* Additional components are commented out for now */}
      {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
