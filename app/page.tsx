@@ -9,10 +9,12 @@ import React, {
 } from 'react';
 
 import TimeToolbar from './components/TimeToolbar/TimeToolbarWidget';
-import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
-import { LoadingWrapper } from '@/app/components/LoadingWrapper';
-import RegionTables from '@/app/components/RegionTables';
-import { RegionsContainer } from '@/app/components/RegionsContainer';
+// Comment out imports that cause errors and aren't used
+// import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
+// import { LoadingWrapper } from '@/app/components/LoadingWrapper';
+// import RegionTables from '@/app/components/RegionTables';
+// import { RegionsContainer } from '@/app/components/RegionsContainer';
+import LayerControls from './components/LayerControls';
 
 import moment from 'moment-timezone';
 
@@ -203,6 +205,23 @@ export default function Home() {
     setCustomTime,
   };
 
+  // Add layer visibility state
+  const [layerVisibility, setLayerVisibility] = useState({
+    forecastZones: true,
+    windArrows: true,
+    snowDepthChange: false,
+    terrain: false,
+    currentTemp: true,
+  });
+  
+  // Handle layer toggle
+  const handleToggleLayer = (layerId: LayerId) => {
+    setLayerVisibility((prev) => ({
+      ...prev,
+      [layerId]: !prev[layerId],
+    }));
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Map component as fullscreen background */}
@@ -213,11 +232,13 @@ export default function Home() {
           filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
+          layerVisibility={layerVisibility}
+          onToggleLayer={handleToggleLayer}
         />
       </div>
       
-      {/* Time toolbar with higher z-index to overlap the map */}
-      <div className="relative z-10 w-full max-w-6xl pt-4 px-4">
+      {/* UI Controls with higher z-index to overlap the map */}
+      <div className="fixed top-4 right-4 z-10" style={{ pointerEvents: 'auto' }}>
         <TimeToolbar
           {...timeProps}
           {...stationProps}
@@ -225,8 +246,16 @@ export default function Home() {
         />
       </div>
       
-       {/* Additional components are commented out for now */}
-     {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
+      {/* Layer controls positioned at the top-left */}
+      <div className="fixed top-4 left-4 z-10" style={{ pointerEvents: 'auto', width: '200px' }}>
+        <LayerControls 
+          layersState={layerVisibility}
+          toggleLayer={handleToggleLayer}
+        />
+      </div>
+      
+      {/* Additional components are commented out for now */}
+      {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
         <RegionsContainer
           observationsData={observationsDataDay}
           handleStationClick={handleStationClick}

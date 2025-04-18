@@ -8,7 +8,7 @@ import {
   FormControlLabel,
   Typography,
 } from '@mui/material';
-import { LayerId } from '../../../page';
+import { LayerId } from '../../page';
 
 interface LayersWidgetProps {
   element: HTMLDivElement;
