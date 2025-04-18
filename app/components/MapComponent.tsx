@@ -10,7 +10,6 @@ import {
   map_lightingEffect,
   map_getTooltip,
 } from '../map/map';
-import { MapLayerSwitchWidget } from '../map/UI/widgets/layer_switches';
 import { createMapLayers } from '../map/layers';
 import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
 import { LayerId } from '../page';
@@ -37,6 +36,14 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
+  layerVisibility?: {
+    forecastZones: boolean;
+    windArrows: boolean;
+    snowDepthChange: boolean;
+    terrain: boolean;
+    currentTemp: boolean;
+  };
+  onToggleLayer?: (id: LayerId) => void;
 }
 
 // Client-side portal component for Next.js
@@ -84,19 +91,24 @@ export const MapApp = ({
   observationsDataHour,
   filteredObservationsDataHour,
   isMetric,
-  tableMode 
+  tableMode,
+  layerVisibility: externalLayerVisibility,
+  onToggleLayer
 }: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
 
-  // Layer visibility state
-  const [layerVisibility, setLayerVisibility] = useState({
+  // Layer visibility state - use external if provided, or local state if not
+  const [internalLayerVisibility, setInternalLayerVisibility] = useState({
     forecastZones: true,
     windArrows: true,
     snowDepthChange: false,
     terrain: false,
     currentTemp: true,
   });
+
+  // Use either external or internal state
+  const layerVisibility = externalLayerVisibility || internalLayerVisibility;
 
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
@@ -177,58 +189,16 @@ export const MapApp = ({
     [layerVisibility, mapData]
   );
 
-  // // Get the filtered data for the selected station
-  // const stationDataHourFiltered = useMemo(() => {
-  //   if (!selectedStation || !(mapData as MapData).filteredObservationsDataHour?.data) return null;
-  //   return {
-  //     data: (mapData as MapData).filteredObservationsDataHour.data.filter(
-  //       (obs: { Station: string }) => obs.Station === selectedStation.Station
-  //     ),
-  //     title: `Filtered Hourly Data - ${selectedStation.Station}`
-  //   };
-  // }, [selectedStation, mapData]);
-
-  // // Get the unfiltered data for the selected station
-  // const stationDataHourUnFiltered = useMemo(() => {
-  //   if (!selectedStation || !(mapData as MapData).observationsDataHour?.data) return null;
-  //   return {
-  //     data: (mapData as MapData).observationsDataHour.data.filter(
-  //       (obs: { Station: string }) => obs.Station === selectedStation.Station
-  //     ),
-  //     title: `Raw Hourly Data - ${selectedStation.Station}`
-  //   };
-  // }, [selectedStation, mapData]);
-
-  // // Format data for graphs
-  // const stationDataForGraph = useMemo(() => {
-  //   if (!selectedStation || !stationDataHourFiltered?.data) return null;
-  //   return {
-  //     data: stationDataHourFiltered.data.map((obs: { 
-  //       Station: string; 
-  //       Day: string; 
-  //       Hour: string; 
-  //       'Snow Depth'?: string; 
-  //       'New Snow'?: string;
-  //       'Air Temp'?: string;
-  //       'Precip'?: string;
-  //     }) => ({
-  //       Date: `${obs.Day} ${obs.Hour}`,
-  //       'Total Snow Depth': obs['Snow Depth'] || '0 in',
-  //       '24h Snow Accumulation': obs['New Snow'] || '0 in',
-  //       'Air Temp Min': obs['Air Temp'],
-  //       'Air Temp Max': obs['Air Temp'],
-  //       'Precip Accum One Hour': obs['Precip'] || '0 in'
-  //     })),
-  //     title: selectedStation.Station
-  //   };
-  // }, [selectedStation, stationDataHourFiltered]);
-
-  // Toggle layer visibility
+  // Toggle layer visibility - use external handler if provided, or internal state if not
   const toggleLayer = (layerId: LayerId) => {
-    setLayerVisibility((prev) => ({
-      ...prev,
-      [layerId]: !prev[layerId],
-    }));
+    if (onToggleLayer) {
+      onToggleLayer(layerId);
+    } else {
+      setInternalLayerVisibility((prev) => ({
+        ...prev,
+        [layerId]: !prev[layerId],
+      }));
+    }
   };
 
   return (
@@ -255,10 +225,6 @@ export const MapApp = ({
           mapboxAccessToken={
             process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
           }
-        />
-        <MapLayerSwitchWidget
-          layersState={layerVisibility}
-          toggleLayer={toggleLayer}
         />
       </DeckGL>
 
