@@ -83,26 +83,6 @@ html, #__next, main {
   pointer-events: auto;
 }
 
-/* Solid dark background version of app-card (like MapTooltip) */
-.app-card-solid {
-  position: relative;
-  background: rgba(0, 0, 0, 0.8); /* Solid dark background like MapTooltip */
-  color: var(--app-text-primary);
-  border-radius: var(--app-border-radius);
-  padding: 8px;
-  pointer-events: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Similar shadow to MapTooltip */
-}
-
-/* Inner section style for app-card-solid */
-.app-section-solid {
-  background: rgba(0, 0, 0, 0.4); /* Slightly lighter but still solid */
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-  box-shadow: inset 0px 0px 2px rgba(255, 255, 255, 0.1);
-  transition: box-shadow 0.2s;
-}
-
 /***************************************************************
  * MUI COMPONENTS STYLING
  * Classes for styling Material UI components consistently
@@ -1038,3 +1018,24 @@ body.drawer-open {
 }
 
 /* The drawer itself will have pointer-events: auto to capture interactions */
+
+/* Map station tooltip - specifically for the map tooltips */
+.map-station-tooltip {
+  position: absolute;
+  z-index: 1001 !important; /* Higher than other tooltips */
+  pointer-events: auto;
+}
+
+.map-station-tooltip > div {
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: var(--app-text-primary, #c6c6c6) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 5px !important;
+}
+
+/* Ensure any other tooltip styles don't interfere */
+.map-station-tooltip.snow-accum-tooltip,
+.map-station-tooltip .snow-accum-tooltip {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
