@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 import { format } from 'date-fns';
-import { DayRangeType } from '../../types';
+import { DayRangeType } from '../types';
 
-import { TimeRangeSelector } from './TimeRangeSelector';
-import { DateControls } from './DateControls';
-import { CutoffControls } from './CutoffControls';
-import { DataInfo } from './DataInfo';
-import { UnitsSwitch } from './UnitsSwitch';
-import { StationSelector } from './StationSelector';
+import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
+import { DateControls } from './TimeToolbar/DateControls';
+import { CutoffControls } from './TimeToolbar/CutoffControls';
+import { DataInfo } from './TimeToolbar/DataInfo';
+import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
+import { StationSelector } from './TimeToolbar/StationSelector';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;

@@ -8,13 +8,13 @@ import React, {
   useMemo,
 } from 'react';
 
-import TimeToolbar from './components/TimeToolbar/TimeToolbarWidget';
+import TimeToolbar from './components/TimeToolbar';
 // Comment out imports that cause errors and aren't used
 // import { WeatherDisplay } from '@/app/components/wxTablesGraphsOrchestrator';
 // import { LoadingWrapper } from '@/app/components/LoadingWrapper';
 // import RegionTables from '@/app/components/RegionTables';
 // import { RegionsContainer } from '@/app/components/RegionsContainer';
-import LayerControls from './components/LayerControls';
+import LayerControls from './components/LayerToolbar';
 
 import moment from 'moment-timezone';
 
