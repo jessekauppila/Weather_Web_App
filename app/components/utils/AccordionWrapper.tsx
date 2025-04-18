@@ -1,10 +1,55 @@
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import React from 'react';
+import { styled } from '@mui/material/styles';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ReactNode, useState } from 'react';
 
+// Custom styled components
+const StyledAccordion = styled(Accordion)(({ theme }) => ({
+  backgroundColor: 'transparent',
+  color: 'var(--app-text-primary, #c6c6c6)',
+  boxShadow: 'none',
+  '&:before': {
+    display: 'none',
+  },
+  '&.Mui-expanded': {
+    margin: 0,
+  },
+  border: '1px solid rgba(97, 97, 97, 0.3)'
+}));
+
+const StyledAccordionSummary = styled(AccordionSummary)(({ theme }) => ({
+  padding: '0 0.5rem',
+  minHeight: '48px',
+  borderBottom: '1px solid rgba(97, 97, 97, 0.5)',
+  background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 100%)',
+  '&.Mui-expanded': {
+    minHeight: '48px',
+  },
+  '& .MuiAccordionSummary-content': {
+    margin: '0.5rem 0',
+    '&.Mui-expanded': {
+      margin: '0.5rem 0',
+    }
+  },
+  '& .MuiSvgIcon-root': {
+    color: 'var(--app-text-primary, #c6c6c6)',
+  }
+}));
+
+const StyledAccordionDetails = styled(AccordionDetails)(({ theme }) => ({
+  padding: '0.75rem 0.75rem 0.25rem',
+  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  color: 'var(--app-text-primary, #c6c6c6)',
+  borderTop: '1px solid rgba(97, 97, 97, 0.2)'
+}));
+
 interface AccordionWrapperProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: ReactNode;
   defaultExpanded?: boolean;
   onExpandChange?: (isExpanded: boolean) => void;
@@ -27,52 +72,40 @@ export default function AccordionWrapper({
   };
 
   return (
-    <Accordion 
-      defaultExpanded={defaultExpanded}
-      className="bg-white rounded-lg shadow-sm mb-4"
-      onChange={(_, isExpanded) => handleChange(isExpanded)}
-      sx={{
-        '& .MuiAccordionSummary-root': {
-          minHeight: '20px',
-          padding: '0px 8px'
-        },
-        '& .MuiAccordionSummary-content': {
-          margin: '4px 0'
-        },
-        '& .MuiAccordionSummary-expandIconWrapper': {
-          transform: 'scale(0.8)',
-          position: 'relative',
-          right: 'auto',
-          marginLeft: '4px'
-        },
-        '&:before': {
-          display: 'none'
-        },
-        marginBottom: '1rem !important'
-      }}
-    >
-      <AccordionSummary
+    <StyledAccordion defaultExpanded={defaultExpanded}>
+      <StyledAccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel-content"
         id="panel-header"
-        className="flex items-center justify-center"
       >
-        <div className="flex items-center gap-2 w-full">
-          <h3 className="section-title">
+        <div>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600,
+              color: 'var(--app-text-primary, #c6c6c6)'
+            }}
+          >
             {title}
-          </h3>
+          </Typography>
+          {subtitle && (
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                display: 'block', 
+                color: 'var(--app-text-secondary, #757575)',
+                fontSize: '0.675rem' 
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
         </div>
-      </AccordionSummary>
-
-      <AccordionDetails className="pt-0 px-2 pb-1">
-        <h2 
-          className="section-subtitle"
-          dangerouslySetInnerHTML={{
-            __html: subtitle?.replace('\n', '<br/>') || ''
-          }}
-        />
+      </StyledAccordionSummary>
+      <StyledAccordionDetails>
         {children}
-      </AccordionDetails>
-    </Accordion>
+      </StyledAccordionDetails>
+    </StyledAccordion>
   );
 } 
