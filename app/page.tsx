@@ -237,21 +237,36 @@ export default function Home() {
         />
       </div>
       
-      {/* UI Controls with higher z-index to overlap the map */}
-      <div className="fixed top-4 right-4 z-10" style={{ pointerEvents: 'auto' }}>
-        <TimeToolbar
-          {...timeProps}
-          {...stationProps}
-          {...dataProps}
-        />
-      </div>
-      
-      {/* Layer controls positioned at the top-left */}
-      <div className="fixed top-4 left-4 z-10" style={{ pointerEvents: 'auto', width: '200px' }}>
-        <LayerControls 
-          layersState={layerVisibility}
-          toggleLayer={handleToggleLayer}
-        />
+      {/* Container for both controls positioned at the top */}
+      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start" 
+        style={{ 
+          pointerEvents: 'auto',
+          maxHeight: 'calc(100vh - 2rem)',
+          overflowY: 'auto'
+        }}
+      >
+        {/* Layer controls */}
+        <div className="w-full md:w-auto md:sticky md:top-0" 
+          style={{ 
+            minWidth: '200px', 
+            maxWidth: '250px',
+            alignSelf: 'flex-start'
+          }}
+        >
+          <LayerControls 
+            layersState={layerVisibility}
+            toggleLayer={handleToggleLayer}
+          />
+        </div>
+        
+        {/* Time toolbar */}
+        <div className="w-full flex-grow">
+          <TimeToolbar
+            {...timeProps}
+            {...stationProps}
+            {...dataProps}
+          />
+        </div>
       </div>
       
       {/* Additional components are commented out for now */}
