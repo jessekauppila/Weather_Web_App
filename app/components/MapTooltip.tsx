@@ -146,21 +146,21 @@ const sectionStyle = `
     white-space: nowrap;
   `;
 
-  const conditionStyle = `
-    font-size: 0.625rem;
-    color: var(--app-text-primary, #c6c6c6);
-    margin-top: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.15rem;
-  `;
+  // const conditionStyle = `
+  //   font-size: 0.625rem;
+  //   color: var(--app-text-primary, #c6c6c6);
+  //   margin-top: 0.25rem;
+  //   display: flex;
+  //   align-items: center;
+  //   gap: 0.15rem;
+  // `;
 
-  const swatchStyle = `
-    width: 10px;
-    height: 10px;
-    border: 1px solid #616161;
-    border-radius: 2px;
-  `;
+  // const swatchStyle = `
+  //   width: 10px;
+  //   height: 10px;
+  //   border: 1px solid #616161;
+  //   border-radius: 2px;
+  // `;
 
   const noDataStyle = `
     font-size: 0.625rem;
@@ -176,8 +176,8 @@ const sectionStyle = `
 
   return {
     html: `
-      <div style="${containerStyle}">
-        <div style="${cardStyle}">
+    <div class="map-station-tooltip" style="${containerStyle}">
+      <div style="${cardStyle}">
           <div style="${headerStyle}">
             <div style="${stationNameStyle}">${props.stationName ?? 'Unknown Station'}</div>
             <div style="${elevationStyle}">${props.elevation ? `${props.elevation} ft` : 'N/A'}</div>
@@ -245,8 +245,8 @@ const sectionStyle = `
               </div>
             </div>
           </div>
-        </div>
       </div>
+    </div>
     `
   };
 }
