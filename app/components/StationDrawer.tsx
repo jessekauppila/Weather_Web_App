@@ -337,6 +337,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         damping: 40
       }}
     >
+      
       {/* Resizable handle at the top */}
       <div 
         className="w-full h-6 cursor-ns-resize select-none flex justify-center items-center"
@@ -386,6 +387,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             position: 'relative'
           }}
         >
+
+{/* //////////////////////////////////////////////////////////////// */}
+ 
           {/* Station Summary Table */}
           <div className="mb-6">
             <DayAveragesTable 
@@ -395,6 +399,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               key={`summary-${station.Station}`}
             />
           </div>
+
+{/* //////////////////////////////////////////////////////////////// */}
+
           
           {/* Hourly Snow and Temperature Graph */}
           {stationDataHourFiltered.data.length > 0 && (
@@ -429,6 +436,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             </div>
           )}
 
+
+{/* //////////////////////////////////////////////////////////////// */}
+
+
           {/* Filtered Hourly Data Table */}
           {stationDayData.data.length > 0 && (
             <div className="mb-6 app-section-solid">
@@ -438,7 +449,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 defaultExpanded={false}
               >
                 <HourWxTable 
-                  hourAverages={stationDayData}
+                  hourAverages={stationDataHourFiltered}
                   key={`filtered-${station.Station}`}
                 />
               </AccordionWrapper>
