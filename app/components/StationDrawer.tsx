@@ -5,6 +5,8 @@ import DayWxSnowGraph from '../vis/dayWxSnowGraph';
 import HourWxTable from '../vis/hourWxTable';
 import WxSnowGraph from '../vis/wxSnowGraph';
 import AccordionWrapper from './utils/AccordionWrapper';
+import moment from 'moment-timezone';
+import { DayRangeType } from '../types';
 import './StationDrawer.css';
 
 interface StationDrawerProps {
@@ -32,6 +34,8 @@ interface StationDrawerProps {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
+  dayRangeType: DayRangeType;
+  customTime: string;
 }
 
 const StationDrawer: React.FC<StationDrawerProps> = ({
@@ -42,7 +46,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   observationsDataHour,
   filteredObservationsDataHour,
   isMetric,
-  tableMode
+  tableMode,
+  dayRangeType,
+  customTime
 }) => {
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
@@ -301,6 +307,333 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [station, observationsDataDay]);
 
+  // This is a NEW function to process hourly data into daily summaries
+  const processedDailyFromHourly = useMemo(() => {
+    if (!station || !stationDataHourFiltered?.data?.length) {
+      return {
+        data: [],
+        title: station ? `Daily Data from Hourly - ${station.Station}` : ''
+      };
+    }
+
+    // Group hourly data by day
+    const hoursByDay: { [key: string]: any[] } = {};
+    
+    // Process each hourly data point
+    stationDataHourFiltered.data.forEach(hourData => {
+      const day = hourData.Day;
+      if (!hoursByDay[day]) {
+        hoursByDay[day] = [];
+      }
+      hoursByDay[day].push(hourData);
+    });
+
+    // Get all days in order
+    const days = Object.keys(hoursByDay).sort((a, b) => {
+      return moment(a, 'MMM DD').diff(moment(b, 'MMM DD'));
+    });
+
+    // Process into daily summaries based on cutoff type
+    const dailySummaries: any[] = [];
+    
+    days.forEach((day, index) => {
+      const dayData = hoursByDay[day];
+      const nextDay = days[index + 1];
+      const nextDayData = nextDay ? hoursByDay[nextDay] : [];
+      
+      // Calculate time boundaries based on cutoff type
+      let startHour, endHour;
+      let startTime, endTime;
+      
+      switch (dayRangeType) {
+        case DayRangeType.MIDNIGHT:
+          // Midnight to midnight
+          startHour = "12:00 AM";
+          endHour = "11:59 PM";
+          break;
+          
+        case DayRangeType.CURRENT:
+          // Current time
+          const currentTime = moment().format('h:mm A');
+          startHour = currentTime;
+          endHour = currentTime;
+          break;
+          
+        case DayRangeType.CUSTOM:
+          // Custom time
+          const [hours, minutes] = customTime.split(':').map(Number);
+          const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+          startHour = timeStr;
+          endHour = timeStr;
+          break;
+          
+        default:
+          startHour = "12:00 AM";
+          endHour = "11:59 PM";
+      }
+      
+      // Format time strings for display
+      startTime = `${day}, 2025, ${startHour}`;
+      
+      // For midnight, end time is same day
+      if (dayRangeType === DayRangeType.MIDNIGHT) {
+        endTime = `${day}, 2025, ${endHour}`;
+      } 
+      // For current or custom, end time is next day
+      else {
+        const endDay = nextDay || moment(day, 'MMM DD').add(1, 'day').format('MMM DD');
+        endTime = `${endDay}, 2025, ${endHour}`;
+      }
+      
+      // Define cutoff function based on day range type
+      const isInRange = (hourData: any): boolean => {
+        const hourMoment = moment(`${hourData.Day} ${hourData.Hour}`, 'MMM DD h:mm A');
+        
+        // Different cutoff logic based on type
+        if (dayRangeType === DayRangeType.MIDNIGHT) {
+          // Midnight: all hours of the current day
+          return hourData.Day === day;
+        } else {
+          // Current or Custom: Get the current or custom time on this day
+          let cutoffTime: moment.Moment;
+          
+          if (dayRangeType === DayRangeType.CURRENT) {
+            cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
+          } else {
+            // Custom time
+            const [hours, minutes] = customTime.split(':').map(Number);
+            cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
+          }
+          
+          // Hours from cutoff time on current day to same time on next day
+          const nextDayCutoff = cutoffTime.clone().add(1, 'day');
+          
+          return hourMoment.isSameOrAfter(cutoffTime) && hourMoment.isBefore(nextDayCutoff);
+        }
+      };
+      
+      // Get hours that match our time cutoff
+      const hoursInRange = [...dayData.filter(isInRange)];
+      
+      // For non-midnight cutoffs, we might need hours from next day too
+      if (dayRangeType !== DayRangeType.MIDNIGHT && nextDayData) {
+        const nextDayHoursInRange = nextDayData.filter(isInRange);
+        hoursInRange.push(...nextDayHoursInRange);
+      }
+      
+      // Skip if no data in range
+      if (!hoursInRange.length) return;
+      
+      // Create summary for this day based on hours in range
+      const daySummary: any = {
+        Station: station.Station,
+        Elevation: station.Elevation,
+        Date: day,
+        'Date Time': `${startHour} - ${endHour}, ${day}, 2025`,
+        'Start Date Time': startTime,
+        'End Date Time': endTime,
+        Latitude: station.Latitude || 'NaN',
+        Longitude: station.Longitude || 'NaN',
+        // Format Stid based on date cutoff
+        Stid: formatStid(day, startHour, endHour, dayRangeType),
+        // Process snow and temperature data
+        'Total Snow Depth': findLatestValue(hoursInRange, 'Total Snow Depth'),
+        'Air Temp Min': findMinValue(hoursInRange, 'Air Temp'),
+        'Air Temp Max': findMaxValue(hoursInRange, 'Air Temp'),
+        'Cur Air Temp': findLatestValue(hoursInRange, 'Air Temp'),
+        'Wind Speed Avg': calculateAverage(hoursInRange, 'Wind Speed'),
+        'Max Wind Gust': findMaxValue(hoursInRange, 'Wind Gust'),
+        'Wind Direction': findMostCommon(hoursInRange, 'Wind Direction'),
+        'Relative Humidity': findLatestValue(hoursInRange, 'Relative Humidity'),
+        'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
+        'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
+        
+        // Calculate snow accumulation (change in snow depth)
+        '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
+        'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
+        'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
+        
+        // For api fields
+        'Api Fetch Time': `${day}, ${hoursInRange[hoursInRange.length - 1]?.Hour || '11:59 PM'}`,
+        'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
+        'precipitation': [''],
+        'intermittent_snow': ['']
+      };
+      
+      dailySummaries.push(daySummary);
+    });
+    
+    // Create a title with appropriate time range
+    let timeRangeInfo = '';
+    if (dailySummaries.length > 0) {
+      const startDay = dailySummaries[0].Date;
+      const endDay = dailySummaries[dailySummaries.length - 1].Date;
+      
+      let timeFormat;
+      switch (dayRangeType) {
+        case DayRangeType.MIDNIGHT:
+          timeFormat = '12 AM - 11:59 PM';
+          break;
+        case DayRangeType.CURRENT:
+          timeFormat = moment().format('h:mm A') + ' cutoff';
+          break;
+        case DayRangeType.CUSTOM:
+          const [hours, minutes] = customTime.split(':').map(Number);
+          timeFormat = moment().hour(hours).minute(minutes).format('h:mm A') + ' cutoff';
+          break;
+        default:
+          timeFormat = '12 AM - 11:59 PM';
+      }
+      
+      timeRangeInfo = `${startDay} to ${endDay} (${timeFormat})`;
+    }
+
+    return {
+      data: dailySummaries,
+      title: `${station.Station} - ${station.Elevation}\n${timeRangeInfo}`
+    };
+  }, [station, stationDataHourFiltered, dayRangeType, customTime]);
+
+  console.log('processedDailyFromHourly:', processedDailyFromHourly);
+
+  // Helper functions for data processing
+  function findMinValue(data: any[], field: string): string {
+    const values = data
+      .map(item => parseFloat(item[field]))
+      .filter(val => !isNaN(val));
+    
+    if (!values.length) return "-";
+    return `${Math.min(...values)} °F`;
+  }
+
+  function findMaxValue(data: any[], field: string): string {
+    const values = data
+      .map(item => parseFloat(item[field]))
+      .filter(val => !isNaN(val));
+    
+    if (!values.length) return "-";
+    return `${Math.max(...values)} °F`;
+  }
+
+  function findLatestValue(data: any[], field: string): string {
+    // Sort by time and get the latest
+    const latestData = [...data].sort((a, b) => {
+      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+      return timeB.diff(timeA);
+    })[0];
+    
+    if (!latestData) return "-";
+    
+    // Add units if needed
+    const value = latestData[field];
+    if (!value) return "-";
+    
+    if (field === 'Air Temp') return `${value}`;
+    if (field === 'Total Snow Depth' && value !== "-") return `${value}`;
+    if (field === 'Relative Humidity' && value !== "-") return `${value}`;
+    
+    return value;
+  }
+
+  function calculateAverage(data: any[], field: string): string {
+    const values = data
+      .map(item => {
+        const value = item[field];
+        if (!value || value === "-") return NaN;
+        return parseFloat(value);
+      })
+      .filter(val => !isNaN(val));
+    
+    if (!values.length) return "-";
+    
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    return `${Math.round(avg * 10) / 10}`;
+  }
+
+  function findMostCommon(data: any[], field: string): string {
+    const values = data.map(item => item[field]).filter(val => val && val !== "-");
+    if (!values.length) return "-";
+    
+    // Count occurrences of each value
+    const counts: {[key: string]: number} = {};
+    values.forEach(val => {
+      counts[val] = (counts[val] || 0) + 1;
+    });
+    
+    // Find the most common
+    let maxCount = 0;
+    let mostCommon = "-";
+    
+    Object.entries(counts).forEach(([val, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        mostCommon = val;
+      }
+    });
+    
+    return mostCommon;
+  }
+
+  function calculateSnowAccumulation(hourData: any[]): string {
+    // Sort data by time
+    const sortedData = [...hourData].sort((a, b) => {
+      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+      return timeA.diff(timeB);
+    });
+    
+    // Find first and last valid snow depth
+    const startDepth = parseFloat(sortedData[0]?.['Total Snow Depth']);
+    const endDepth = parseFloat(sortedData[sortedData.length - 1]?.['Total Snow Depth']);
+    
+    if (isNaN(startDepth) || isNaN(endDepth)) return "0.00 in";
+    
+    // Calculate the difference (positive means accumulation)
+    const diff = Math.max(0, endDepth - startDepth);
+    return `${diff.toFixed(2)} in`;
+  }
+
+  function calculateTotalSnowDepthChange(hourData: any[]): string {
+    // Sort data by time
+    const sortedData = [...hourData].sort((a, b) => {
+      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+      return timeA.diff(timeB);
+    });
+    
+    // Find first and last valid snow depth
+    const startDepth = parseFloat(sortedData[0]?.['Total Snow Depth']);
+    const endDepth = parseFloat(sortedData[sortedData.length - 1]?.['Total Snow Depth']);
+    
+    if (isNaN(startDepth) || isNaN(endDepth)) return "0.00 in";
+    
+    // Calculate the difference (can be positive or negative)
+    const diff = endDepth - startDepth;
+    return `${diff.toFixed(2)} in`;
+  }
+
+  function calculateTotalPrecipitation(hourData: any[]): string {
+    // Sum all valid precipitation values
+    const total = hourData.reduce((sum, hour) => {
+      const precip = parseFloat(hour['Precip Accum'] || "0");
+      return sum + (isNaN(precip) ? 0 : precip);
+    }, 0);
+    
+    return `${total.toFixed(2)} in`;
+  }
+
+  function formatStid(day: string, startHour: string, endHour: string, dayRangeType: DayRangeType): string {
+    const dayFormat = moment(day, 'MMM DD').format('MM-DD');
+    
+    if (dayRangeType === DayRangeType.MIDNIGHT) {
+      return `${dayFormat} ${startHour} - ${dayFormat} ${endHour}`;
+    } else {
+      // For CURRENT or CUSTOM, include next day
+      const nextDay = moment(day, 'MMM DD').add(1, 'day').format('MM-DD');
+      return `${dayFormat} ${startHour} - ${nextDay} ${endHour}`;
+    }
+  }
   
   if (!station) return null;
 
@@ -420,12 +753,28 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             </div>
           )}
 
-          {/* Daily Snow and Temperature Graph */}
+          {/* Daily Snow and Temperature Graph using processed hourly data */}
+          {processedDailyFromHourly.data.length > 0 && (
+            <div className="mb-6 app-section-solid">
+              <AccordionWrapper
+                title="Daily Snow and Temperature Graph (from Hourly)"
+                subtitle={processedDailyFromHourly.title}
+                defaultExpanded={false}
+              >
+                <DayWxSnowGraph 
+                  dayAverages={processedDailyFromHourly}
+                  isMetric={isMetric}
+                />
+              </AccordionWrapper>
+            </div>
+          )}
+
+          {/* Original Daily Snow and Temperature Graph */}
           {stationObservationsDataDay.data.length > 0 && (
             <div className="mb-6 app-section-solid">
               <AccordionWrapper
-                title="Daily Snow and Temperature Graph"
-                subtitle={station.Station}
+                title="Daily Snow and Temperature Graph (Original)"
+                subtitle={stationObservationsDataDay.title}
                 defaultExpanded={false}
               >
                 <DayWxSnowGraph 

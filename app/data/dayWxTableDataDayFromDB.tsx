@@ -108,10 +108,10 @@ export default async function wxTableDataDayFromDB(
       };
       
       // Additional debug for coordinates specifically
-      if (stationObs[0].latitude === undefined || stationObs[0].longitude === undefined) {
-        console.log(`⚠️ Station ${stid} (${stationObs[0].station_name}) has undefined coordinates:`);
-        console.log('  - First observation:', stationObs[0]);
-      }
+      // if (stationObs[0].latitude === undefined || stationObs[0].longitude === undefined) {
+      //   console.log(`⚠️ Station ${stid} (${stationObs[0].station_name}) has undefined coordinates:`);
+      //   console.log('  - First observation:', stationObs[0]);
+      // }
 
       // Process each measurement type
       const measurementKeys = [
@@ -432,34 +432,12 @@ export default async function wxTableDataDayFromDB(
     return stationA.localeCompare(stationB);
   });
 
-  // Debug formattedDailyData before returning
-  if (formattedDailyData.length > 0) {
-    const sampleStation = formattedDailyData[0];
-    console.log('📊 FINAL DATA INSPECTION:');
-    console.log('Sample station from formattedDailyData:', {
-      station: sampleStation.Station,
-      coordinates: {
-        latitude: {
-          value: sampleStation.Latitude,
-          type: typeof sampleStation.Latitude
-        },
-        longitude: {
-          value: sampleStation.Longitude,
-          type: typeof sampleStation.Longitude
-        }
-      }
-    });
     
     // Check for undefined values converted to strings
     const undefinedCoords = formattedDailyData.filter(
       station => station.Latitude === 'undefined' || station.Longitude === 'undefined'
     );
     
-    if (undefinedCoords.length > 0) {
-      console.log(`⚠️ Found ${undefinedCoords.length} stations with 'undefined' coordinate strings`);
-      console.log('First problematic station:', undefinedCoords[0]);
-    }
-  }
 
   const title = formattedDailyData.length > 0
     ? (() => {
@@ -478,7 +456,6 @@ export default async function wxTableDataDayFromDB(
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
-  //console.log('🚀 formattedDailyData:', formattedDailyData);
 
   // If there's a callback, call it directly now
   if (onDataReady && formattedDailyData.length > 0) {
@@ -562,11 +539,9 @@ function groupBy24hrs(
         result[periodKey] = [];
       }
 
-      console.log('📊 RESULT', result);
       result[periodKey].push(obs);
     });
   }
   
-  console.log('📊 RESULT from groupBy24hrs:', result);
   return result;
 }
