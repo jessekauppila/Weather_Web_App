@@ -179,7 +179,8 @@ export function MapDataProvider({
     // Log the original data structure
     const firstStation = data.data[0];
     console.log('🔍 COORDINATE INSPECTION:');
-    console.log('Original station data structure:', {
+    console.log('Original station data structure:', 
+      {
       station: firstStation.Station,
       stid: firstStation.Stid,
       coordinates: {
@@ -224,17 +225,9 @@ export function MapDataProvider({
       Longitude: String(afterParsing.Longitude)
     };
 
-    console.log('After stringification:', stringified);
 
     // Check the source entries looking for stations with valid coordinates
-    if (data.data.length > 1) {
-      for (let i = 0; i < Math.min(5, data.data.length); i++) {
-        const station = data.data[i];
-        console.log(`Station ${i} (${station.Station}):`);
-        console.log(`  Latitude: ${station.Latitude} (${typeof station.Latitude})`);
-        console.log(`  Longitude: ${station.Longitude} (${typeof station.Longitude})`);
-      }
-    }
+
   }
 
   // Initialize with empty map data
