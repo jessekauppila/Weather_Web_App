@@ -26,7 +26,7 @@ export function useTimeRange() {
   const currentMoment = moment().tz('America/Los_Angeles');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timeRange, setTimeRange] = useState(1);
-  const [dayRangeType, setDayRangeType] = useState<DayRangeType>('day');
+  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [customTime, setCustomTime] = useState<string>('');
 
