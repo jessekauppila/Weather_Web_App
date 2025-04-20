@@ -172,28 +172,28 @@ export function MapDataProvider({
   // Debugging function to inspect coordinate transformation
   function inspectCoordinateTransformation(data: any) {
     if (!data || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
-      console.log('❌ Data is empty or invalid');
+      // console.log('❌ Data is empty or invalid');
       return;
     }
 
     // Log the original data structure
     const firstStation = data.data[0];
-    console.log('🔍 COORDINATE INSPECTION:');
-    console.log('Original station data structure:', 
-      {
-      station: firstStation.Station,
-      stid: firstStation.Stid,
-      coordinates: {
-        latitude: {
-          value: firstStation.Latitude,
-          type: typeof firstStation.Latitude
-        },
-        longitude: {
-          value: firstStation.Longitude,
-          type: typeof firstStation.Longitude
-        }
-      }
-    });
+    // console.log('🔍 COORDINATE INSPECTION:');
+    // console.log('Original station data structure:', 
+    //   {
+    //   station: firstStation.Station,
+    //   stid: firstStation.Stid,
+    //   coordinates: {
+    //     latitude: {
+    //       value: firstStation.Latitude,
+    //       type: typeof firstStation.Latitude
+    //     },
+    //     longitude: {
+    //       value: firstStation.Longitude,
+    //       type: typeof firstStation.Longitude
+    //     }
+    //   }
+    // });
 
     // Track the transformation steps
     const afterParsing = {
@@ -206,18 +206,18 @@ export function MapDataProvider({
         : parseFloat(String(firstStation.Longitude))
     };
 
-    console.log('After parsing:', {
-      latitude: {
-        value: afterParsing.Latitude,
-        type: typeof afterParsing.Latitude,
-        isNaN: isNaN(afterParsing.Latitude)
-      },
-      longitude: {
-        value: afterParsing.Longitude,
-        type: typeof afterParsing.Longitude,
-        isNaN: isNaN(afterParsing.Longitude)
-      }
-    });
+    // console.log('After parsing:', {
+    //   latitude: {
+    //     value: afterParsing.Latitude,
+    //     type: typeof afterParsing.Latitude,
+    //     isNaN: isNaN(afterParsing.Latitude)
+    //   },
+    //   longitude: {
+    //     value: afterParsing.Longitude,
+    //     type: typeof afterParsing.Longitude,
+    //     isNaN: isNaN(afterParsing.Longitude)
+    //   }
+    // });
 
     // Check for stringification
     const stringified = {
@@ -347,7 +347,7 @@ export function MapDataProvider({
     let observationsData: StationData[] = [];
     
     if (formattedDailyData.some((station: StationData) => station.hourlyData?.length || station.filteredHourlyData?.length || station.dailyData?.length)) {
-      console.log('Using real observations data');
+      // console.log('Using real observations data');
       observationsData = formattedDailyData.map((station: StationData) => ({
         ...station,
         hourlyData: station.hourlyData?.map(formatObservation) || [],
@@ -355,7 +355,7 @@ export function MapDataProvider({
         dailyData: station.dailyData?.map(formatObservation) || []
       }));
     } else {
-      console.log('No observations data found');
+      // console.log('No observations data found');
       // Create minimal empty structure for each station
       observationsData = transformedData.map((station: StationData) => ({
         ...station,
@@ -365,7 +365,7 @@ export function MapDataProvider({
       }));
     }
     
-    console.log('Processed observations data:', observationsData);
+    // console.log('Processed observations data:', observationsData);
     
     // Convert data to match WeatherStation type (all fields as strings)
     const stationsForMap = transformedData.map(station => ({
@@ -407,7 +407,7 @@ export function MapDataProvider({
       }
     });
     
-    console.log('Updated map data with observations');
+    // console.log('Updated map data with observations');
     
     // Also update stations list
     const stationList = transformedData.map((station: StationData) => ({
@@ -437,9 +437,9 @@ export function MapDataProvider({
     
     try {
       const result = await wxTableDataDayFromDB(observations, units, options, isMetric);
-      console.log('Updated data:', result);
+      // console.log('Updated data:', result);
     } catch (error) {
-      console.error('Error in updateMapData:', error);
+      // console.error('Error in updateMapData:', error);
     } finally {
       setIsLoading(false);
     }
