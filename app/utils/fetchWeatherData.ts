@@ -75,6 +75,10 @@ export async function fetchWeatherData({
     }
   
     const result = await response.json();
+
+    console.log('result:', result);
+
+    //////////////////////////////////////////////////////////
     
     const filteredData = filteredObservationData(result.observations, {
       mode: tableMode,
@@ -86,6 +90,8 @@ export async function fetchWeatherData({
     }, isMetric);
 
     console.log('filteredData:', filteredData);
+
+    //////////////////////////////////////////////////////////
   
     setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,
