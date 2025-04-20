@@ -35,6 +35,15 @@ export async function fetchWeatherData({
   setIsLoading,
   isMetric,
 }: FetchWeatherDataProps) {
+  // Add clear console logs for time parameters
+  console.log('⏰ Time Parameters:', { 
+    startHour, 
+    endHour, 
+    dayRangeType,
+    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+  });
+
   //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
 
   
@@ -90,6 +99,7 @@ export async function fetchWeatherData({
 
     console.log('filteredData:', filteredData);
 
+
   //////////////////////////////////////////////////////////
 
   
@@ -102,8 +112,9 @@ export async function fetchWeatherData({
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
-    
+ 
     console.log('dayData', dayData);
+
     setObservationsDataDay(dayData);
 
     //////////////////////////////////////////////////////////
