@@ -281,7 +281,6 @@ export function MapDataProvider({
   // Flag to track if we've started fetching data
   const dataFetchStarted = useRef(false);
 
-  console.log('observationsDataDay:', observationsDataDay);
 
 ////////////////////////////////////////////////////////////
 
@@ -289,7 +288,7 @@ export function MapDataProvider({
   useEffect(() => {
     // Skip fetching if observationsDataDay is provided as a prop
     if (observationsDataDay?.data?.length > 0) {
-      console.log('Using provided observationsDataDay, skipping fetch');
+      //console.log('Using provided observationsDataDay, skipping fetch');
       inspectCoordinateTransformation(observationsDataDay);
       setFormattedDailyData(observationsDataDay.data);
       return;
@@ -306,7 +305,6 @@ export function MapDataProvider({
   // Process the formatted data once it's available
   useEffect(() => {
     if (!formattedDailyData || formattedDailyData.length === 0) {
-      console.log('No formatted data available yet');
       return;
     }
     

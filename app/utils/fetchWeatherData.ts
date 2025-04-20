@@ -2,6 +2,7 @@ import { filteredObservationData } from '../data/filteredObservationData';
 import wxTableDataDayFromDB from '../data/dayWxTableDataDayFromDB';
 import hourWxTableDataFromDB  from '../data/hourWxTableDataFromDB';
 import hourWxTableDataFiltered  from '../data/hourWxTableDataFiltered';
+import wxTableDataDaySplit from '../data/daySplitWxTableDataDayFromDB';
 import { DayRangeType } from '../types';
 
 interface FetchWeatherDataProps {
@@ -75,6 +76,8 @@ export async function fetchWeatherData({
     }
   
     const result = await response.json();
+
+    //////////////////////////////////////////////////////////
     
     const filteredData = filteredObservationData(result.observations, {
       mode: tableMode,
@@ -85,7 +88,10 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
-    //console.log('filteredData:', filteredData);
+    console.log('filteredData:', filteredData);
+
+  //////////////////////////////////////////////////////////
+
   
     // Since wxTableDataDayFromDB is now async, we need to await it
     const dayData = await wxTableDataDayFromDB(filteredData, result.units, {
@@ -97,8 +103,24 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
     
+    console.log('dayData', dayData);
     setObservationsDataDay(dayData);
+
+    //////////////////////////////////////////////////////////
+
+    const dayDataSplit = await wxTableDataDaySplit(filteredData, result.units, {
+      mode: tableMode,
+      startHour,
+      endHour,
+      dayRangeType,
+      start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    }, isMetric);
     
+    console.log('dayDataSplit', dayDataSplit);
+
+    //////////////////////////////////////////////////////////
+
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],
       result.units,
