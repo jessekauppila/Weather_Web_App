@@ -50,9 +50,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   dayRangeType,
   customTime
 }) => {
-  // Define a default time to use when customTime is not provided
-  const defaultTime = "12:00"; // Default to noon
-  
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
   
@@ -208,8 +205,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [observationsDataHour, station, station?.Stid]);
 
-  console.log('observationsDataDay', observationsDataDay);
-
   const stationObservationsDataDay = useMemo(() => {
     if (!station || !observationsDataDay?.data) {
       return {
@@ -254,8 +249,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title
     };
   }, [observationsDataDay, station, station?.['Cur Air Temp'], station?.['Total Snow Depth']]);
-
-  console.log('stationObservationsDataDay', stationObservationsDataDay);
 
 
   // Update stationDayData to incorporate date-specific data
@@ -364,11 +357,20 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           
         case DayRangeType.CUSTOM:
           // Custom time
-          const safeCustomTime = customTime || defaultTime;
-          const [hours, minutes] = safeCustomTime.split(':').map(Number);
-          const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
-          startHour = timeStr;
-          endHour = timeStr;
+          if (!customTime) {
+            // Use current time as fallback
+            const now = new Date();
+            const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
+            const [hours, minutes] = defaultTime.split(':').map(Number);
+            const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+            startHour = timeStr;
+            endHour = timeStr;
+          } else {
+            const [hours, minutes] = customTime.split(':').map(Number);
+            const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+            startHour = timeStr;
+            endHour = timeStr;
+          }
           break;
           
         default:
@@ -409,9 +411,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               // Use current time as fallback
               cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
             } else {
-              // Custom time
-              const safeCustomTime = customTime || defaultTime;
-              const [hours, minutes] = safeCustomTime.split(':').map(Number);
+              const [hours, minutes] = customTime.split(':').map(Number);
               cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
             }
           }
@@ -489,8 +489,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           timeFormat = moment().format('h:mm A') + ' cutoff';
           break;
         case DayRangeType.CUSTOM:
-          const safeCustomTime = customTime || defaultTime;
-          const [hours, minutes] = safeCustomTime.split(':').map(Number);
+          const [hours, minutes] = customTime.split(':').map(Number);
           timeFormat = moment().hour(hours).minute(minutes).format('h:mm A') + ' cutoff';
           break;
         default:
@@ -505,8 +504,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title: `${station.Station} - ${station.Elevation}\n${timeRangeInfo}`
     };
   }, [station, stationDataHourFiltered, dayRangeType, customTime]);
-
-  console.log('processedDailyFromHourly:', processedDailyFromHourly);
 
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
