@@ -32,7 +32,7 @@ function wxTableDataDaySplit(
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   const stations =  fetchStations();
-  console.log('stations:', stations);
+  // console.log('stations:', stations);
   
 
   const processedData = Object.entries(groupedObservations).map(
@@ -385,7 +385,7 @@ function wxTableDataDaySplit(
         }
       })()
     : options.mode === 'daily' ? 'Daily -' : 'Summary -';
-  console.log('🚀 formattedDailyData:', formattedDailyData);
+  // console.log('🚀 formattedDailyData:', formattedDailyData);
   return { data: formattedDailyData, title };
 }
 
@@ -428,11 +428,11 @@ function groupBy24hrs(
   startHour: number,
   endHour: number
 ) {
-  console.log('🚀 groupBy24hrs called with:', { 
-    dataLength: data.length,
-    startHour,
-    endHour 
-  });
+  // console.log('🚀 groupBy24hrs called with:', { 
+  //   dataLength: data.length,
+  //   startHour,
+  //   endHour 
+  // });
   
   // Sort data by date_time first
   const sortedData = [...data].sort((a, b) => 
@@ -465,7 +465,7 @@ function groupBy24hrs(
     });
   }
   
-  console.log('📊 result from groupBy24hrs:', result);
+  // console.log('📊 result from groupBy24hrs:', result);
   return result;
 }
 

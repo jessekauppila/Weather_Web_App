@@ -28,37 +28,37 @@ export default async function wxTableDataDayFromDB(
   // Fetch stations data synchronously to ensure we have coordinates
   let stationsData: any[] = [];
   try {
-    console.log('Fetching stations data...');
+    // console.log('Fetching stations data...');
     stationsData = await fetchStations();
-    console.log('📍 Fetched stations data:', stationsData.length);
+    // console.log('📍 Fetched stations data:', stationsData.length);
   } catch (error) {
-    console.error('Error fetching stations data:', error);
+    // console.error('Error fetching stations data:', error);
   }
 
   //////////////////////////||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   // Debugging function to inspect station data
   function debugStation(stid: string, stationObs: any[]) {
-    console.log('🔍 STATION DATA DEBUG:');
-    console.log(`Station ${stid} (${stationObs[0].station_name}):`);
+    // console.log('🔍 STATION DATA DEBUG:');
+    // console.log(`Station ${stid} (${stationObs[0].station_name}):`);
     
     // Log the original observations data
-    console.log('Original station observation:', {
-      latitude: stationObs[0].latitude,
-      longitude: stationObs[0].longitude,
-      latType: typeof stationObs[0].latitude,
-      lonType: typeof stationObs[0].longitude
-    });
+    // console.log('Original station observation:', {
+    //   latitude: stationObs[0].latitude,
+    //   longitude: stationObs[0].longitude,
+    //   latType: typeof stationObs[0].latitude,
+    //   lonType: typeof stationObs[0].longitude
+    // });
     
     // Check if there's station data available from the pre-fetch
     const stationInfo = stationsData.find((s: any) => s.stid === stid);
     if (stationInfo) {
-      console.log('Station data from pre-fetch:', {
-        latitude: stationInfo.latitude,
-        longitude: stationInfo.longitude
-      });
+      // console.log('Station data from pre-fetch:', {
+      //   latitude: stationInfo.latitude,
+      //   longitude: stationInfo.longitude
+      // });
     } else {
-      console.log('Station not found in pre-fetched data');
+      // console.log('Station not found in pre-fetched data');
     }
   }
 
@@ -505,11 +505,11 @@ function groupBy24hrs(
   startHour: number,
   endHour: number
 ) {
-  console.log('🚀 groupBy24hrs called with:', { 
-    dataLength: data.length,
-    startHour,
-    endHour 
-  });
+  // console.log('🚀 groupBy24hrs called with:', { 
+  //   dataLength: data.length,
+  //   startHour,
+  //   endHour 
+  // });
   
   // Sort data by date_time first
   const sortedData = [...data].sort((a, b) => 
@@ -543,5 +543,6 @@ function groupBy24hrs(
     });
   }
   
+  // console.log('📊 result from groupBy24hrs:', result);
   return result;
 }
