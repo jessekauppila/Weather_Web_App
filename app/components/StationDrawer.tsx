@@ -50,6 +50,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   dayRangeType,
   customTime
 }) => {
+  // Define a default time to use when customTime is not provided
+  const defaultTime = "12:00"; // Default to noon
+  
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
   
@@ -320,7 +323,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     const hoursByDay: { [key: string]: any[] } = {};
     
     // Process each hourly data point
-    stationDataHourFiltered.data.forEach(hourData => {
+    stationDataHourFiltered.data.forEach((hourData: any) => {
       const day = hourData.Day;
       if (!hoursByDay[day]) {
         hoursByDay[day] = [];
@@ -361,7 +364,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           
         case DayRangeType.CUSTOM:
           // Custom time
-          const [hours, minutes] = customTime.split(':').map(Number);
+          const safeCustomTime = customTime || defaultTime;
+          const [hours, minutes] = safeCustomTime.split(':').map(Number);
           const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
           startHour = timeStr;
           endHour = timeStr;
@@ -401,8 +405,15 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
           } else {
             // Custom time
-            const [hours, minutes] = customTime.split(':').map(Number);
-            cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
+            if (!customTime) {
+              // Use current time as fallback
+              cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
+            } else {
+              // Custom time
+              const safeCustomTime = customTime || defaultTime;
+              const [hours, minutes] = safeCustomTime.split(':').map(Number);
+              cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
+            }
           }
           
           // Hours from cutoff time on current day to same time on next day
@@ -478,7 +489,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           timeFormat = moment().format('h:mm A') + ' cutoff';
           break;
         case DayRangeType.CUSTOM:
-          const [hours, minutes] = customTime.split(':').map(Number);
+          const safeCustomTime = customTime || defaultTime;
+          const [hours, minutes] = safeCustomTime.split(':').map(Number);
           timeFormat = moment().hour(hours).minute(minutes).format('h:mm A') + ' cutoff';
           break;
         default:
