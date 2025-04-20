@@ -16,7 +16,7 @@ function wxTableDataDayFromDB(
   title: string;
 } {
   
-  //console.log('inputObservations:', inputObservations);
+  console.log('INPUT OBESERVATIONS inputObservations:', inputObservations);
 
   const startHour = options.startHour;
   const endHour = options.endHour;

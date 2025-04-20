@@ -85,7 +85,7 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
-    //console.log('filteredData:', filteredData);
+    console.log('filteredData:', filteredData);
   
     setObservationsDataDay(wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,
