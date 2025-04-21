@@ -323,6 +323,34 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     console.log("Current time range:", currentTimeRange);
 
+    // ADDED: Debug the time parameters from the raw data
+    const timeRangeStr = calculateCurrentTimeRange();
+    console.log("Current time range string:", timeRangeStr);
+    console.log("First hour data:", stationDataHourFiltered.data[0]);
+    
+    // ADDED: Check for multi-day view date range issue
+    // NOTE: This issue has been fixed in the useTimeRange hook, but we'll keep this check
+    // to verify that the fix is working properly
+    if (currentTimeRange > 1 && dayRangeType === 'CURRENT' && stationDataHourFiltered.data.length > 0) {
+      const firstDataPoint = stationDataHourFiltered.data[0];
+      const firstDay = firstDataPoint.Day;
+      const firstHour = firstDataPoint.Hour;
+      
+      console.log(`First data point is on ${firstDay} at ${firstHour}`);
+      
+      // If first hour is midnight (12:00 AM), we still have the issue
+      if (firstHour === '12:00 AM') {
+        // Calculate what should be the real start day (one day earlier)
+        const expectedStartDay = moment(firstDay, 'MMM DD').subtract(1, 'day');
+        const formattedExpectedStartDay = expectedStartDay.format('MMM DD');
+        
+        console.log(`WARNING: Multi-day view starts at midnight on ${firstDay} but should start at 3:00 PM on ${formattedExpectedStartDay}`);
+        console.log(`If you see this warning, the fix in useTimeRange.ts may not be applied yet. Try refreshing the page.`);
+      } else if (firstHour === '3:00 PM') {
+        console.log(`SUCCESS: Multi-day view correctly starts at 3:00 PM on the day before the first full day`);
+      }
+    }
+
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
     

@@ -2,6 +2,12 @@ import { useState } from 'react';
 import moment from 'moment-timezone';
 import { addDays, subDays } from 'date-fns';
 
+/**
+ * Custom hook for managing date state in the application
+ * Note: While we set dates to the start of day here, 
+ * the actual time of day for multi-day ranges (3 PM cutoff)
+ * is handled by calculateTimeRange in useTimeRange.ts
+ */
 export function useDateState() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -28,6 +34,9 @@ export function useDateState() {
   };
 
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // This sets the date to start of day for UI consistency
+    // Note: The actual time used for multi-day ranges (starting at 3 PM)
+    // is applied in calculateTimeRange within useTimeRange.ts
     const newDate = moment(event.target.value)
       .tz('America/Los_Angeles')
       .startOf('day')

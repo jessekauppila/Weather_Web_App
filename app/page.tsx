@@ -113,21 +113,21 @@ export default function Home() {
   } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
 
   const timeRangeData = useMemo(() => {
-    // Use calculateTimeRange for one day cases with different day range types
-    if (timeRange === 1) {
-      const { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
-      return { start_time_pdt, end_time_pdt };
-    } 
+    // Always use calculateTimeRange for consistency
+    // This ensures we respect the 3 PM start time for multi-day ranges
+    const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
     
-    // For multi-day ranges, we use the explicit date range:
-    // selectedDate = start date
-    // endDate = end date
-    const start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
-    const end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
+    // Log what's happening for debugging
+    console.log('⏰ Calculated time range:', {
+      start: start.format('YYYY-MM-DD HH:mm:ss'),
+      end: end.format('YYYY-MM-DD HH:mm:ss'),
+      type: dayRangeType,
+      range: timeRange
+    });
     
     return {
-      start_time_pdt,
-      end_time_pdt
+      start_time_pdt: start,
+      end_time_pdt: end
     };
   }, [selectedDate, endDate, dayRangeType, timeRange, calculateTimeRange]);
 
