@@ -349,7 +349,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     }
 
     // Special case for 1-day time range with non-midnight cutoff
-    // In this case, we want to show a single 24-hour period instead of calendar days
     if (currentTimeRange === 1 && dayRangeType !== DayRangeType.MIDNIGHT) {
       // Get cutoff time based on dayRangeType
       let cutoffTimeStr;
@@ -388,12 +387,24 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       days.forEach(day => {
         hoursByDay[day].forEach(hourData => {
           const hourTime = moment(`${hourData.Day} ${hourData.Hour}`, 'MMM DD h:mm A');
-          if (hourTime.isSameOrAfter(startTime) && hourTime.isSameOrBefore(cutoffTime)) {
-            hoursInRange.push(hourData);
+          // Important: Make sure to include only hours up to the cutoff time on the last day
+          const isOnLatestDay = hourData.Day === latestDay;
+          if (isOnLatestDay) {
+            // On latest day, only include hours before or at cutoff time
+            if (hourTime.isSameOrAfter(startTime) && (hourTime.isBefore(cutoffTime) || hourTime.isSame(cutoffTime, 'minute'))) {
+              hoursInRange.push(hourData);
+            }
+          } else {
+            // On other days, include all hours in the 24-hour window
+            if (hourTime.isSameOrAfter(startTime) && hourTime.isBefore(cutoffTime)) {
+              hoursInRange.push(hourData);
+            }
           }
         });
       });
 
+      console.log(`Found ${hoursInRange.length} hours in the 24-hour range`);
+      
       if (hoursInRange.length === 0) {
         console.log("No hours found in the 24-hour range");
         return {
@@ -526,7 +537,13 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             }
           }
           
-          // Hours from cutoff time on current day to same time on next day
+          // For the last day in the range, we should only include hours before or equal to the cutoff time
+          const isLastDay = day === days[days.length - 1];
+          if (isLastDay) {
+            return hourMoment.isBefore(cutoffTime) || hourMoment.isSame(cutoffTime, 'minute');
+          }
+          
+          // For all other days, include hours from cutoff time on current day to same time on next day
           const nextDayCutoff = cutoffTime.clone().add(1, 'day');
           
           return hourMoment.isSameOrAfter(cutoffTime) && hourMoment.isBefore(nextDayCutoff);
