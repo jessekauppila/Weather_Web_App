@@ -86,6 +86,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   calculateCurrentTimeRange
 }) => {
   // ===== DRAWER POSITIONING CONFIGURATION =====
+  // TO ADJUST DRAWER HEIGHT: Change the INITIAL_OPEN_HEIGHT value below
   // Change these values to control drawer position and behavior
   
   // 1. TOOLBAR_HEIGHT: Height of the TimeToolbar component
@@ -95,7 +96,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   // 2. INITIAL_OPEN_HEIGHT: Starting height when drawer first opens
   //    Set to a smaller value for a partially open initial state
   //    Example: 400 will open to 400px height initially
-  const INITIAL_OPEN_HEIGHT = 500;
+  const INITIAL_OPEN_HEIGHT = 700;
   
   // 3. MIN_DRAWER_HEIGHT: Minimum allowed height when resizing
   //    Drawer can't be resized smaller than this
@@ -1111,46 +1112,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       </div>
 
       <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-sm font-semibold" style={{ color: 'var(--app-text-primary)' }}>
-            {station.Station}
-          </div>
-          <div className="flex space-x-2">
-            <button 
-              onClick={onClose}
-              className="app-button"
-              style={{
-                background: 'var(--app-section-bg)',
-                color: 'var(--app-text-primary)',
-                fontSize: '0.75rem',
-                padding: '4px 8px',
-                borderRadius: 'var(--app-border-radius)',
-                border: '1px solid var(--app-border-color)',
-                cursor: 'pointer'
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-        
-        {/* Scrollable content with dark theme scrollbar */}
-        <div 
-          className="custom-scrollbar overflow-y-auto pr-2" 
-          style={{ 
-            height: `calc(100% - 60px)`,
-            minHeight: '120px',
-            maxHeight: `${drawerHeight - 100}px`,
-            overflowY: 'auto',
-            position: 'relative'
-          }}
-        >
-
-
-          <div className="mt-4 mb-2 border-t border-gray-700"></div>
-
-          {/* Tab Interface */}
-          <Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.2)', mb: 3 }}>
+        {/* Header with tabs and close button */}
+        <div className="flex items-center justify-between mb-4">
+          {/* Tabs */}
+          <Box sx={{ flexGrow: 1, mr: 2, maxWidth: 'calc(100% - 40px)' }}>
             <Tabs 
               value={activeTab} 
               onChange={handleTabChange} 
@@ -1158,13 +1123,14 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               scrollButtons="auto"
               allowScrollButtonsMobile
               sx={{ 
-                minHeight: '42px',
+                minHeight: '36px',
                 '& .MuiTab-root': { 
                   color: 'var(--app-text-secondary)',
-                  minHeight: '42px',
-                  padding: '6px 16px',
+                  minHeight: '36px',
+                  minWidth: '80px',
+                  padding: '6px 10px',
                   textTransform: 'none',
-                  fontSize: '0.85rem',
+                  fontSize: '0.75rem',
                   fontWeight: 500,
                   '&.Mui-selected': { 
                     color: 'var(--app-text-primary)',
@@ -1177,7 +1143,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 },
                 '& .MuiTabs-scrollButtons': {
                   color: 'var(--app-text-secondary)',
-                  '&.Mui-disabled': { opacity: 0.3 }
+                  '&.Mui-disabled': { opacity: 0.3 },
+                  padding: '0 4px'
                 }
               }}
             >
@@ -1209,6 +1176,50 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             </Tabs>
           </Box>
 
+          {/* Close button */}
+          <button 
+            onClick={onClose}
+            className="app-button flex-shrink-0"
+            style={{
+              background: 'var(--app-section-bg)',
+              color: 'var(--app-text-primary)',
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              lineHeight: 1,
+              padding: '0',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--app-border-radius)',
+              border: '1px solid var(--app-border-color)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            aria-label="Close drawer"
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'var(--app-section-bg)';
+            }}
+          >
+            ×
+          </button>
+        </div>
+        
+        {/* Scrollable content with dark theme scrollbar */}
+        <div 
+          className="custom-scrollbar overflow-y-auto pr-2" 
+          style={{ 
+            height: `calc(100% - 50px)`,
+            minHeight: '120px',
+            maxHeight: `${drawerHeight - 90}px`,
+            overflowY: 'auto',
+            position: 'relative'
+          }}
+        >
           {/* Tab Panels */}
           
           {/* Tab 1: Daily Summary from Hourly */}
