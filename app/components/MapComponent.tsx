@@ -18,6 +18,7 @@ import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
+import { DayRangeType } from '../types';
 
 interface MapData {
   stationData: {
@@ -44,6 +45,9 @@ interface MapComponentProps {
     currentTemp: boolean;
   };
   onToggleLayer?: (id: LayerId) => void;
+  dayRangeType?: DayRangeType;
+  customTime?: string;
+  calculateCurrentTimeRange?: () => string;
 }
 
 // Client-side portal component for Next.js
@@ -93,7 +97,10 @@ export const MapApp = ({
   isMetric,
   tableMode,
   layerVisibility: externalLayerVisibility,
-  onToggleLayer
+  onToggleLayer,
+  dayRangeType,
+  customTime,
+  calculateCurrentTimeRange
 }: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
@@ -242,6 +249,9 @@ export const MapApp = ({
           filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
+          dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
+          customTime={customTime || ''}
+          calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
         />
       </ClientPortal>
     </div>
