@@ -828,13 +828,55 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     });
     
     // Find first and last valid snow depth
-    const startDepth = parseFloat(sortedData[0]?.['Total Snow Depth']);
-    const endDepth = parseFloat(sortedData[sortedData.length - 1]?.['Total Snow Depth']);
-    
-    if (isNaN(startDepth) || isNaN(endDepth)) return "0.00 in";
+    const validDepths = sortedData
+      .map(item => parseFloat(item['Total Snow Depth']))
+      .filter(val => !isNaN(val));
+      
+    if (validDepths.length < 2) {
+      // Look for explicitly reported 24h Snow Accumulation
+      for (const hour of sortedData) {
+        const reported = hour['24h Snow Accumulation'];
+        if (reported && reported !== "-" && reported !== "0.00 in") {
+          // If we find a valid non-zero value, use it
+          return reported;
+        }
+      }
+      
+      // If we can't find non-zero values, look for any valid values
+      for (const hour of sortedData) {
+        const reported = hour['24h Snow Accumulation'];
+        if (reported && reported !== "-") {
+          return reported;
+        }
+      }
+      
+      // No valid values found
+      return "0.00 in";
+    }
     
     // Calculate the difference (positive means accumulation)
+    // Get first and last valid depths
+    const startDepth = validDepths[0];
+    const endDepth = validDepths[validDepths.length - 1];
+    
+    // Calculate the difference and only show positive accumulation
     const diff = Math.max(0, endDepth - startDepth);
+    
+    // If we calculated zero, double check against reported values
+    if (diff === 0) {
+      // Look for explicitly reported 24h Snow Accumulation
+      for (const hour of sortedData) {
+        const reported = hour['24h Snow Accumulation'];
+        if (reported && reported !== "-" && reported !== "0.00 in") {
+          // If we find a valid non-zero value, use it instead
+          const reportedValue = parseFloat(reported);
+          if (!isNaN(reportedValue) && reportedValue > 0) {
+            return reported;
+          }
+        }
+      }
+    }
+    
     return `${diff.toFixed(2)} in`;
   }
 
@@ -847,13 +889,42 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     });
     
     // Find first and last valid snow depth
-    const startDepth = parseFloat(sortedData[0]?.['Total Snow Depth']);
-    const endDepth = parseFloat(sortedData[sortedData.length - 1]?.['Total Snow Depth']);
+    const validDepths = sortedData
+      .map(item => parseFloat(item['Total Snow Depth']))
+      .filter(val => !isNaN(val));
+      
+    if (validDepths.length < 2) {
+      // Look for explicitly reported Total Snow Depth Change
+      for (const hour of sortedData) {
+        const reported = hour['Total Snow Depth Change'];
+        if (reported && reported !== "-") {
+          return reported;
+        }
+      }
+      return "0.00 in";
+    }
     
-    if (isNaN(startDepth) || isNaN(endDepth)) return "0.00 in";
+    // Get first and last valid depths
+    const startDepth = validDepths[0];
+    const endDepth = validDepths[validDepths.length - 1];
     
     // Calculate the difference (can be positive or negative)
     const diff = endDepth - startDepth;
+    
+    // If we calculated zero, check reported values
+    if (diff === 0) {
+      // Look for explicitly reported Total Snow Depth Change
+      for (const hour of sortedData) {
+        const reported = hour['Total Snow Depth Change'];
+        if (reported && reported !== "-" && reported !== "0.00 in") {
+          const reportedValue = parseFloat(reported);
+          if (!isNaN(reportedValue) && reportedValue !== 0) {
+            return reported;
+          }
+        }
+      }
+    }
+    
     return `${diff.toFixed(2)} in`;
   }
 
