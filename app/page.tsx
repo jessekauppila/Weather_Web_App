@@ -110,21 +110,26 @@ export default function Home() {
   const { 
     startHour: calculatedStartHour, 
     endHour: calculatedEndHour 
-  } = calculateTimeRange(selectedDate, dayRangeType);
+  } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
 
   const timeRangeData = useMemo(() => {
-    let { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType);
+    // Use calculateTimeRange for one day cases with different day range types
+    if (timeRange === 1) {
+      const { start: start_time_pdt, end: end_time_pdt } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
+      return { start_time_pdt, end_time_pdt };
+    } 
     
-    if (timeRange !== 1) {
-      start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
-      end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
-    }
-
+    // For multi-day ranges, we use the explicit date range:
+    // selectedDate = start date
+    // endDate = end date
+    const start_time_pdt = moment(selectedDate).tz('America/Los_Angeles').startOf('day');
+    const end_time_pdt = moment(endDate).tz('America/Los_Angeles').endOf('day');
+    
     return {
       start_time_pdt,
       end_time_pdt
     };
-  }, [selectedDate, endDate, dayRangeType, timeRange]);
+  }, [selectedDate, endDate, dayRangeType, timeRange, calculateTimeRange]);
 
   // Weather data state
   const {
@@ -159,7 +164,9 @@ export default function Home() {
     setIsOneDay,
     setTimeRange,
     stations,
-    handleRefresh
+    handleRefresh,
+    timeRange,
+    endDate
   );
 
   // Props grouping for components

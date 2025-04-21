@@ -19,53 +19,51 @@ export function useWeatherControls(
   setIsOneDay: (isOne: boolean) => void,
   setTimeRange: (range: number) => void,
   stations: any[],
-  handleRefresh: (isMetric?: boolean) => Promise<void>
+  handleRefresh: (isMetric?: boolean) => Promise<void>,
+  currentTimeRange?: number, // Current time range value
+  currentEndDate?: Date // Current end date from state
 ) {
   const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     console.log('Time range changed:', value);
     
     if (value === 'custom') {
+      // For custom range, we definitely want to show both date pickers
       setUseCustomEndDate(true);
       setIsOneDay(false);
       return;
     }
     
-    setUseCustomEndDate(false);
-    setTimeRange(Number(value));
+    // For any range value:
+    // 1. Set the new time range
+    const newTimeRange = Number(value);
+    setTimeRange(newTimeRange);
     
-    const newEndDate = new Date();
-    let newStartDate: Date;
+    // 2. Update whether we're showing one day or multiple days
+    const isOneDay = value === '1';
+    setIsOneDay(isOneDay);
     
-    switch (value) {
-      case '1':
-        newStartDate = subDays(newEndDate, 1);
-        setIsOneDay(true);
-        break;
-      case '3':
-        newStartDate = subDays(newEndDate, 3);
-        setIsOneDay(false);
-        break;
-      case '7':
-        newStartDate = subDays(newEndDate, 7);
-        setIsOneDay(false);
-        break;
-      case '14':
-        newStartDate = subDays(newEndDate, 14);
-        setIsOneDay(false);
-        break;
-      case '30':
-        newStartDate = subDays(newEndDate, 30);
-        setIsOneDay(false);
-        break;
-      default:
-        newStartDate = subDays(newEndDate, 1);
-        setIsOneDay(true);
+    // 3. Calculate the new start date based on the end date and time range
+    // Use the provided end date or default to today
+    const endDate = currentEndDate || new Date();
+    
+    // For 1-day range, both start and end date are the same
+    if (isOneDay) {
+      setSelectedDate(endDate);
+      setEndDate(endDate);
+      setUseCustomEndDate(false);
+    } else {
+      // For multi-day range, calculate the start date by subtracting days from the end date
+      const daysToSubtract = newTimeRange - 1; // Subtract days (range - 1) to get the start date
+      const newStartDate = subDays(endDate, daysToSubtract);
+      
+      // Set the new dates
+      setSelectedDate(newStartDate);
+      setEndDate(endDate);
+      
+      // 4. Show both date pickers for multi-day ranges
+      setUseCustomEndDate(true);
     }
-
-    setSelectedDate(newStartDate);
-    setEndDate(newEndDate);
-    setUseCustomEndDate(true);
   };
 
   const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
@@ -74,11 +72,23 @@ export function useWeatherControls(
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = moment(event.target.value)
+    const newEndDate = moment(event.target.value)
       .tz('America/Los_Angeles')
       .startOf('day')
       .toDate();
-    setEndDate(newDate);
+    
+    // Update the end date
+    setEndDate(newEndDate);
+    
+    // If we have a time range greater than 1, adjust the start date accordingly
+    if (currentTimeRange && currentTimeRange > 1) {
+      const daysToSubtract = currentTimeRange - 1;
+      const newStartDate = subDays(newEndDate, daysToSubtract);
+      setSelectedDate(newStartDate);
+    } else {
+      // If it's a single day or no time range provided, just set both dates to the same
+      setSelectedDate(newEndDate);
+    }
   };
 
   return {

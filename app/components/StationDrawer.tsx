@@ -263,7 +263,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       );
       
       if (stationDayObservation) {
-        console.log(`Found station ${station.Station} data in observationsDataDay`);
+        //console.log(`Found station ${station.Station} data in observationsDataDay`);
         
         // Create an enhanced station object with properties from both the station
         // and its corresponding observation data

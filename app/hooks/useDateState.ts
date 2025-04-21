@@ -10,6 +10,9 @@ export function useDateState() {
   const handlePrevDay = () => {
     const newDate = subDays(selectedDate, 1);
     setSelectedDate(newDate);
+    
+    // When using the prev/next buttons, we want to keep the end date in sync
+    // with the selected date for single day view
     setEndDate(newDate);
   };
 
@@ -17,6 +20,9 @@ export function useDateState() {
     const newDate = addDays(selectedDate, 1);
     if (newDate <= new Date()) {
       setSelectedDate(newDate);
+      
+      // When using the prev/next buttons, we want to keep the end date in sync
+      // with the selected date for single day view
       setEndDate(newDate);
     }
   };
@@ -27,7 +33,13 @@ export function useDateState() {
       .startOf('day')
       .toDate();
     
+    // Update the selected date
     setSelectedDate(newDate);
+    
+    // Also update the end date to match the selected date
+    // This ensures that for single day view, we're looking at the selected date
+    // For multi-day views, the timeRangeData calculation will handle going 
+    // back the correct number of days from this end date
     setEndDate(newDate);
   };
 
