@@ -24,7 +24,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
   const [expanded, setExpanded] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  console.log('Day averages data in dayWxSnowGraph:', dayAverages);
+  //console.log('Day averages data in dayWxSnowGraph:', dayAverages);
 
   const spacing = {
     dateAxisOffset: 15,
