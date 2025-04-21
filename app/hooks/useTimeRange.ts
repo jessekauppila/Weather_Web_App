@@ -47,10 +47,30 @@ export function useTimeRange() {
   }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = useCallback((date: Date, type: DayRangeType, rangeValue: number = timeRange) => {
-    const endMoment = moment(date).tz('America/Los_Angeles');
-    const currentMoment = moment().tz('America/Los_Angeles');
+    // Always use the current date/time for the end point when using CURRENT type
+    // This ensures we're always looking at data up to now
+    let endMoment;
+    let currentMoment = moment().tz('America/Los_Angeles');
+    
+    if (type === DayRangeType.CURRENT) {
+      // For CURRENT type, always use the actual current moment as the end point
+      endMoment = currentMoment.clone();
+    } else {
+      // For other types, use the selected date 
+      endMoment = moment(date).tz('America/Los_Angeles');
+    }
+    
     const currentHour = currentMoment.hour();
     const currentMinute = currentMoment.minute();
+
+    // Log date info for debugging
+    console.log('⏰ Time Parameters:', {
+      startHour: type === DayRangeType.MIDNIGHT ? 0 : (rangeValue > 1 ? 15 : currentHour),
+      endHour: type === DayRangeType.MIDNIGHT ? 24 : currentHour,
+      dayRangeType: type,
+      timeRangeStart: endMoment.clone().subtract(rangeValue, 'days').format('YYYY-MM-DD HH:mm:ss'),
+      timeRangeEnd: endMoment.format('YYYY-MM-DD HH:mm:ss')
+    });
 
     switch (type) {
       case DayRangeType.MIDNIGHT:
@@ -66,30 +86,24 @@ export function useTimeRange() {
         if (rangeValue > 1) {
           console.log(`Multi-day range (${rangeValue} days) detected - using fixed 3 PM cutoff`);
           const multiDayResult = {
+            // For multi-day ranges, go back the full rangeValue days for the start
+            // This ensures we include enough days with 3 PM cutoff points
             start: endMoment.clone()
               .subtract(rangeValue, 'days')
-              .hour(15)
+              .hour(15) // Always 3 PM
               .minute(0)
               .second(0),
-            end: endMoment.clone()
-              .hour(currentHour)
-              .minute(currentMinute)
-              .second(0),
+            end: endMoment.clone(), // End is current time
             startHour: 15,
             endHour: currentHour
           };
           return multiDayResult;
         } else {
+          // For single day range, go back exactly 24 hours from now
           const currentResult = {
             start: endMoment.clone()
-              .subtract(rangeValue, 'days')
-              .hour(currentHour)
-              .minute(currentMinute)
-              .second(0),
-            end: endMoment.clone()
-              .hour(currentHour)
-              .minute(currentMinute)
-              .second(0),
+              .subtract(1, 'days'), // Go back 24 hours from current time
+            end: endMoment.clone(),
             startHour: currentHour,
             endHour: currentHour
           };
@@ -115,7 +129,7 @@ export function useTimeRange() {
         } else {
           return {
             start: endMoment.clone()
-              .subtract(rangeValue, 'days')
+              .subtract(1, 'days')
               .hour(hours)
               .minute(minutes)
               .second(0),
