@@ -54,8 +54,6 @@ const measurementDescriptions: Record<string, string> = {
 
 // Define the header structure for known categories
 const getKnownCategories = (mode: 'summary' | 'daily') => {
-  //console.log('Current mode in table code:', mode);
-
   const commonCategories = [
     {
       category: 'Temperatures',
@@ -81,7 +79,6 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
     { category: '', columns: ['Relative Humidity', 'Solar Radiation Avg', 'Api Fetch Time'] },  ];
 
   if (mode === 'summary') {
-    //console.log('Returning summary categories');
     return [
       {
         category: 'Station',
@@ -93,7 +90,6 @@ const getKnownCategories = (mode: 'summary' | 'daily') => {
       ...commonCategories,
     ];
   } else {
-   // console.log('Returning daily categories');
     return [
       {
         category: '',
@@ -147,9 +143,7 @@ const StationButton = memo(({ stationName, stid, onClick }: {
 StationButton.displayName = 'StationButton';
 
 function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTableProps) {
-  //console.log('Table mode in table code:', mode);
   const ref = useRef<HTMLDivElement>(null);
-  // Add timestamp to force table refreshes
   const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   // Memoize the header structure
@@ -185,16 +179,7 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
   // Use an effect to track data changes and force refreshes
   useEffect(() => {
     if (dayAverages?.data?.length) {
-      console.log("DayAveragesTable received new data, forcing refresh");
       setRefreshTimestamp(Date.now());
-      
-      // Don't clear the entire container - just update the data
-      // This is more seamless visually
-      // if (ref.current) {
-      //   const tableContainer = ref.current;
-      //   // Remove any existing tables
-      //   tableContainer.innerHTML = '';
-      // }
     }
   }, [dayAverages]);
 

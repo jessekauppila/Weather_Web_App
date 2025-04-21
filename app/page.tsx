@@ -113,17 +113,19 @@ export default function Home() {
   } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
 
   const timeRangeData = useMemo(() => {
+    // Debug flag - set to false to disable logging
+    
     // Always use calculateTimeRange for consistency
     // This ensures we respect the 3 PM start time for multi-day ranges
     const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
     
-    // Log what's happening for debugging
-    console.log('⏰ Calculated time range:', {
-      start: start.format('YYYY-MM-DD HH:mm:ss'),
-      end: end.format('YYYY-MM-DD HH:mm:ss'),
-      type: dayRangeType,
-      range: timeRange
-    });
+    // Log what's happening for debugging only when DEBUG is true
+      console.log('⏰ Calculated time range:', {
+        start: start.format('YYYY-MM-DD HH:mm:ss'),
+        end: end.format('YYYY-MM-DD HH:mm:ss'),
+        type: dayRangeType,
+        range: timeRange
+      });
     
     return {
       start_time_pdt: start,

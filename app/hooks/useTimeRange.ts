@@ -38,6 +38,7 @@ export function useTimeRange() {
   const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.CURRENT);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [customTime, setCustomTime] = useState<string>('');
+  // Add a debug flag, set to false by default
 
   const calculateCurrentTimeRange = useCallback(() => {
     if (useCustomEndDate && ![1, 3, 7, 14, 30].includes(timeRange)) {
@@ -63,14 +64,7 @@ export function useTimeRange() {
     const currentHour = currentMoment.hour();
     const currentMinute = currentMoment.minute();
 
-    // Log date info for debugging
-    console.log('⏰ Time Parameters:', {
-      startHour: type === DayRangeType.MIDNIGHT ? 0 : (rangeValue > 1 ? 15 : currentHour),
-      endHour: type === DayRangeType.MIDNIGHT ? 24 : currentHour,
-      dayRangeType: type,
-      timeRangeStart: endMoment.clone().subtract(rangeValue, 'days').format('YYYY-MM-DD HH:mm:ss'),
-      timeRangeEnd: endMoment.format('YYYY-MM-DD HH:mm:ss')
-    });
+
 
     switch (type) {
       case DayRangeType.MIDNIGHT:
@@ -84,7 +78,6 @@ export function useTimeRange() {
         
       case DayRangeType.CURRENT:
         if (rangeValue > 1) {
-          console.log(`Multi-day range (${rangeValue} days) detected - using fixed 3 PM cutoff`);
           const multiDayResult = {
             // For multi-day ranges, go back the full rangeValue days for the start
             // This ensures we include enough days with 3 PM cutoff points

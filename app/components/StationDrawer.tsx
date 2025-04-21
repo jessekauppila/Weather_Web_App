@@ -167,9 +167,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [filteredObservationsDataHour, station]);
 
-  // console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
-  // console.log('stationDataHourFiltered in StationDrawer:', stationDataHourFiltered);
-
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
       return {
@@ -265,8 +262,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       );
       
       if (stationDayObservation) {
-        //console.log(`Found station ${station.Station} data in observationsDataDay`);
-        
         // Create an enhanced station object with properties from both the station
         // and its corresponding observation data
         const enhancedStation = {
@@ -305,9 +300,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [station, observationsDataDay]);
 
-  console.log('stationDataHourFiltered', stationDataHourFiltered);
-
-  console.log('stationDayData', stationDayData);
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
     if (!station || !stationDataHourFiltered?.data?.length) {
@@ -320,36 +312,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     // Get timeRange from the URL or context - assuming it's available
     // If not, we can modify this to accept it as a parameter
     const currentTimeRange = Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
-    
-    console.log("Current time range:", currentTimeRange);
-
-    // ADDED: Debug the time parameters from the raw data
-    const timeRangeStr = calculateCurrentTimeRange();
-    console.log("Current time range string:", timeRangeStr);
-    console.log("First hour data:", stationDataHourFiltered.data[0]);
-    
-    // ADDED: Check for multi-day view date range issue
-    // NOTE: This issue has been fixed in the useTimeRange hook, but we'll keep this check
-    // to verify that the fix is working properly
-    if (currentTimeRange > 1 && dayRangeType === 'CURRENT' && stationDataHourFiltered.data.length > 0) {
-      const firstDataPoint = stationDataHourFiltered.data[0];
-      const firstDay = firstDataPoint.Day;
-      const firstHour = firstDataPoint.Hour;
-      
-      console.log(`First data point is on ${firstDay} at ${firstHour}`);
-      
-      // If first hour is midnight (12:00 AM), we still have the issue
-      if (firstHour === '12:00 AM') {
-        // Calculate what should be the real start day (one day earlier)
-        const expectedStartDay = moment(firstDay, 'MMM DD').subtract(1, 'day');
-        const formattedExpectedStartDay = expectedStartDay.format('MMM DD');
-        
-        console.log(`WARNING: Multi-day view starts at midnight on ${firstDay} but should start at 3:00 PM on ${formattedExpectedStartDay}`);
-        console.log(`If you see this warning, the fix in useTimeRange.ts may not be applied yet. Try refreshing the page.`);
-      } else if (firstHour === '3:00 PM') {
-        console.log(`SUCCESS: Multi-day view correctly starts at 3:00 PM on the day before the first full day`);
-      }
-    }
 
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
@@ -637,8 +599,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     const today = moment().format('MMM DD');
     const hasToday = dailySummaries.some(summary => summary.Date === today);
     if (!hasToday && Number(calculateCurrentTimeRange()) > 1) {
-      console.log(`Today (${today}) is missing from daily summaries, checking if it should be included`);
-      
       // Check if today is within our expected range
       const oldestDay = days[0];
       const expectedDays = Number(calculateCurrentTimeRange());
@@ -647,21 +607,15 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       const dayDiff = todayMoment.diff(startMoment, 'days');
       
       if (dayDiff < expectedDays) {
-        console.log(`Today (${today}) should be in range but is missing. Days diff: ${dayDiff}, Expected range: ${expectedDays}`);
-        
         // If we have hourly data for today, create a summary
         if (hoursByDay[today]?.length) {
           const todayHours = hoursByDay[today];
-          console.log(`Found ${todayHours.length} hours of data for today`);
           
           // Create a summary with the same approach as the main loop
           const daySummary = createDaySummary(today, todayHours, station, dayRangeType, customTime);
           if (daySummary) {
-            console.log(`Added missing summary for today (${today})`);
             dailySummaries.push(daySummary);
           }
-        } else {
-          console.log(`No hourly data available for today (${today})`);
         }
       }
     }
@@ -707,7 +661,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [station, stationDataHourFiltered, dayRangeType, customTime, calculateCurrentTimeRange]);
 
-  console.log('processedDailyFromHourly', processedDailyFromHourly);
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
     const values = data
@@ -748,7 +701,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           return timeB.diff(timeA);
         })[0];
         
-        console.log(`Found valid Total Snow Depth: ${latestValid[field]}`);
         return latestValid[field];
       }
       
@@ -773,8 +725,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       // Before giving up, check if the station has this field
       if (data[0]?.Station) {
         for (const item of data) {
-          // Log all keys to debug what's available
-          console.log(`Keys for item from ${item.Day} ${item.Hour}:`, Object.keys(item));
           // Try alternative field names
           const alternativeFields = ['Total_Snow_Depth', 'Snow_Depth', 'snow_depth', 'Snow Depth'];
           for (const altField of alternativeFields) {
@@ -787,7 +737,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       
       // If we have stationDayData global data, try to get it from there 
       if (stationDayData?.data?.[0]?.[field] && stationDayData.data[0][field] !== "-") {
-        console.log(`Using Total Snow Depth from stationDayData: ${stationDayData.data[0][field]}`);
         return stationDayData.data[0][field];
       }
       
