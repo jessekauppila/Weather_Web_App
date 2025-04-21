@@ -11,6 +11,10 @@ import { DayRangeType } from '../types';
  * - Custom date range toggles
  * - Updates start/end dates based on selections
  * Requires setters for dates, custom end date flag, and time range
+ * 
+ * Note: While we set dates to the start of day here for UI consistency, 
+ * the actual time of day for multi-day ranges (3 PM cutoff) is handled 
+ * by calculateTimeRange in useTimeRange.ts
  */
 export function useWeatherControls(
   setSelectedDate: (date: Date) => void,
@@ -72,6 +76,9 @@ export function useWeatherControls(
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // This sets the date to start of day for UI consistency
+    // Note: The actual time used for multi-day ranges (starting at 3 PM)
+    // is applied in calculateTimeRange within useTimeRange.ts
     const newEndDate = moment(event.target.value)
       .tz('America/Los_Angeles')
       .startOf('day')

@@ -36,13 +36,13 @@ export async function fetchWeatherData({
   isMetric,
 }: FetchWeatherDataProps) {
   // Uncomment logs for time parameters
-  // console.log('⏰ Time Parameters:', { 
-  //   startHour, 
-  //   endHour, 
-  //   dayRangeType,
-  //   timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-  //   timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-  // });
+  console.log('⏰ Time Parameters:', { 
+    startHour, 
+    endHour, 
+    dayRangeType,
+    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+  });
 
   //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
 
