@@ -742,6 +742,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             />
           </div>
 
+                    {/* Station Summary Table */}
+                    <div className="mb-6">
+            <DayAveragesTable 
+              dayAverages={processedDailyFromHourly}
+              onStationClick={() => {}}
+              mode={tableMode}
+              key={`summary-${station.Station}`}
+            />
+          </div>
+
 {/* //////////////////////////////////////////////////////////////// */}
 
           

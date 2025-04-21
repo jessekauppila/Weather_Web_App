@@ -35,18 +35,16 @@ export async function fetchWeatherData({
   setIsLoading,
   isMetric,
 }: FetchWeatherDataProps) {
-  // Comment out all console logs
-  // console.log('⏰ Time Parameters:', { 
-  //   startHour, 
-  //   endHour, 
-  //   dayRangeType,
-  //   timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-  //   timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-  // });
+  // Uncomment logs for time parameters
+  console.log('⏰ Time Parameters:', { 
+    startHour, 
+    endHour, 
+    dayRangeType,
+    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+  });
 
   //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
-
-  
 
   
   try {
@@ -64,7 +62,7 @@ export async function fetchWeatherData({
     //////////////////////////////////////////////////////////
 
     const { start_time_pdt, end_time_pdt } = timeRangeData;
-    
+   
     const response = await fetch('/api/getObservationsFromDB', {
       method: 'POST',
       headers: {
@@ -80,9 +78,9 @@ export async function fetchWeatherData({
       }),
     });
   
-    if (!response.ok) {
+   if (!response.ok) {
       throw new Error('API error');
-    }
+   }
   
     const result = await response.json();
 
@@ -97,7 +95,8 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
-    // console.log('filteredData:', filteredData);
+    // Uncomment log for filtered data
+    //console.log('filteredData:', filteredData);
 
 
   //////////////////////////////////////////////////////////
@@ -112,8 +111,9 @@ export async function fetchWeatherData({
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
- 
-    // console.log('dayData', dayData);
+  
+    // Uncomment log for day data
+    console.log('dayData', dayData);
 
     setObservationsDataDay(dayData);
 
@@ -128,7 +128,8 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
     
-    // console.log('dayDataSplit', dayDataSplit);
+    // Uncomment log for day data split
+    console.log('dayDataSplit', dayDataSplit);
 
     //////////////////////////////////////////////////////////
 
@@ -146,7 +147,7 @@ export async function fetchWeatherData({
   
   } catch (error) {
     setIsLoading(false);
-    // console.error('Error fetching weather data:', error);
+    console.error('Error fetching weather data:', error);
   }
 }
 
