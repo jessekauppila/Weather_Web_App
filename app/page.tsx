@@ -129,7 +129,7 @@ export default function Home() {
       start_time_pdt: start,
       end_time_pdt: end
     };
-  }, [selectedDate, endDate, dayRangeType, timeRange, calculateTimeRange]);
+  }, [selectedDate, dayRangeType, timeRange, calculateTimeRange]);
 
   // Weather data state
   const {
