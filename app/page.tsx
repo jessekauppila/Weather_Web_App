@@ -241,6 +241,9 @@ export default function Home() {
           tableMode={tableMode}
           layerVisibility={layerVisibility}
           onToggleLayer={handleToggleLayer}
+          dayRangeType={dayRangeType}
+          customTime={customTime}
+          calculateCurrentTimeRange={calculateCurrentTimeRange}
         />
       </div>
       

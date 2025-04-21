@@ -36,6 +36,7 @@ interface StationDrawerProps {
   tableMode: 'summary' | 'daily';
   dayRangeType: DayRangeType;
   customTime: string;
+  calculateCurrentTimeRange: () => string;
 }
 
 const StationDrawer: React.FC<StationDrawerProps> = ({
@@ -48,7 +49,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   isMetric,
   tableMode,
   dayRangeType,
-  customTime
+  customTime,
+  calculateCurrentTimeRange
 }) => {
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
@@ -315,6 +317,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       };
     }
 
+    // Get timeRange from the URL or context - assuming it's available
+    // If not, we can modify this to accept it as a parameter
+    const currentTimeRange = Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
+    
+    console.log("Current time range:", currentTimeRange);
+
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
     
@@ -332,6 +340,105 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       return moment(a, 'MMM DD').diff(moment(b, 'MMM DD'));
     });
 
+    // If we have no days, return empty
+    if (days.length === 0) {
+      return {
+        data: [],
+        title: station ? `Daily Data from Hourly - ${station.Station}` : ''
+      };
+    }
+
+    // Special case for 1-day time range with non-midnight cutoff
+    // In this case, we want to show a single 24-hour period instead of calendar days
+    if (currentTimeRange === 1 && dayRangeType !== DayRangeType.MIDNIGHT) {
+      // Get cutoff time based on dayRangeType
+      let cutoffTimeStr;
+      if (dayRangeType === DayRangeType.CURRENT) {
+        cutoffTimeStr = moment().format('h:mm A');
+      } else { // CUSTOM
+        if (!customTime) {
+          cutoffTimeStr = moment().format('h:mm A');
+        } else {
+          const [hours, minutes] = customTime.split(':').map(Number);
+          cutoffTimeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+        }
+      }
+
+      // Get the latest day in the data
+      const latestDay = days[days.length - 1];
+      
+      // Define the cutoff time on the latest day
+      const cutoffTime = moment(`${latestDay} ${cutoffTimeStr}`, 'MMM DD h:mm A');
+      
+      // Calculate 24 hours before the cutoff time
+      const startTime = cutoffTime.clone().subtract(24, 'hours');
+      
+      // Format the start/end days and times for display
+      const startDayStr = startTime.format('MMM DD');
+      const endDayStr = cutoffTime.format('MMM DD');
+      const startTimeStr = startTime.format('h:mm A');
+      const endTimeStr = cutoffTime.format('h:mm A');
+      
+      console.log(`Creating 24-hour period from ${startDayStr} ${startTimeStr} to ${endDayStr} ${endTimeStr}`);
+
+      // Get all hours in this 24-hour window
+      const hoursInRange: any[] = [];
+      
+      // Iterate through all days and include hours that fall within our 24-hour window
+      days.forEach(day => {
+        hoursByDay[day].forEach(hourData => {
+          const hourTime = moment(`${hourData.Day} ${hourData.Hour}`, 'MMM DD h:mm A');
+          if (hourTime.isSameOrAfter(startTime) && hourTime.isSameOrBefore(cutoffTime)) {
+            hoursInRange.push(hourData);
+          }
+        });
+      });
+
+      if (hoursInRange.length === 0) {
+        console.log("No hours found in the 24-hour range");
+        return {
+          data: [],
+          title: `${station.Station} - ${station.Elevation}\n${startDayStr} ${startTimeStr} to ${endDayStr} ${endTimeStr}`
+        };
+      }
+      
+      // Create a single summary for the entire 24-hour period
+      const periodSummary: any = {
+        Station: station.Station,
+        Elevation: station.Elevation,
+        Date: `${startDayStr} - ${endDayStr}`,
+        'Date Time': `${startTimeStr} - ${endTimeStr}, ${startDayStr} to ${endDayStr}, 2025`,
+        'Start Date Time': `${startDayStr}, 2025, ${startTimeStr}`,
+        'End Date Time': `${endDayStr}, 2025, ${endTimeStr}`,
+        Latitude: station.Latitude || 'NaN',
+        Longitude: station.Longitude || 'NaN',
+        Stid: `${startDayStr} ${startTimeStr} - ${endDayStr} ${endTimeStr}`,
+        'Total Snow Depth': findLatestValue(hoursInRange, 'Total Snow Depth'),
+        'Air Temp Min': findMinValue(hoursInRange, 'Air Temp'),
+        'Air Temp Max': findMaxValue(hoursInRange, 'Air Temp'),
+        'Cur Air Temp': findLatestValue(hoursInRange, 'Air Temp'),
+        'Wind Speed Avg': calculateAverage(hoursInRange, 'Wind Speed'),
+        'Max Wind Gust': findMaxValue(hoursInRange, 'Wind Gust'),
+        'Wind Direction': findMostCommon(hoursInRange, 'Wind Direction'),
+        'Relative Humidity': findLatestValue(hoursInRange, 'Relative Humidity'),
+        'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
+        'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
+        '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
+        'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
+        'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
+        'Api Fetch Time': `${endDayStr}, ${endTimeStr}`,
+        'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
+        'precipitation': [''],
+        'intermittent_snow': ['']
+      };
+
+      return {
+        data: [periodSummary],
+        title: `${station.Station} - ${station.Elevation}\n${startDayStr} ${startTimeStr} to ${endDayStr} ${endTimeStr}`
+      };
+    }
+    
+    // Standard processing for multiple days or midnight cutoff
     // Process into daily summaries based on cutoff type
     const dailySummaries: any[] = [];
     
@@ -598,7 +705,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         dailySummaries.push(lastDaySummary);
       }
     }
-
+  
     // Create a title with appropriate time range
     let timeRangeInfo = '';
     if (dailySummaries.length > 0) {
@@ -630,7 +737,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: dailySummaries,
       title: `${station.Station} - ${station.Elevation}\n${timeRangeInfo}`
     };
-  }, [station, stationDataHourFiltered, dayRangeType, customTime]);
+  }, [station, stationDataHourFiltered, dayRangeType, customTime, calculateCurrentTimeRange]);
 
   console.log('processedDailyFromHourly', processedDailyFromHourly);
   // Helper functions for data processing
