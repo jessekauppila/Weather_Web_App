@@ -8,6 +8,7 @@ import AccordionWrapper from './utils/AccordionWrapper';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 import './StationDrawer.css';
+import { Tabs, Tab, Box } from '@mui/material';
 
 interface StationDrawerProps {
   isOpen: boolean;
@@ -37,6 +38,38 @@ interface StationDrawerProps {
   dayRangeType: DayRangeType;
   customTime: string;
   calculateCurrentTimeRange: () => string;
+}
+
+// TabPanel component for better organization and transitions
+interface TabPanelProps {
+  children: React.ReactNode;
+  value: number;
+  index: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`station-tabpanel-${index}`}
+      aria-labelledby={`station-tab-${index}`}
+      {...other}
+      style={{
+        display: value === index ? 'block' : 'none',
+        opacity: value === index ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out'
+      }}
+    >
+      {value === index && (
+        <Box>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
 }
 
 const StationDrawer: React.FC<StationDrawerProps> = ({
@@ -85,11 +118,19 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const [lastMouseY, setLastMouseY] = useState(0);
   const drawerRef = useRef<HTMLDivElement>(null);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
+  
+  // Handle tab change
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
   
   // Reset drawer to initial position when opened
   useEffect(() => {
     if (isOpen) {
       setDrawerTop(initialTopPosition);
+      setActiveTab(0); // Reset to first tab when drawer opens
     }
   }, [isOpen, initialTopPosition]);
   
@@ -166,6 +207,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title: `Filtered Hourly Data - ${station.Station}`
     };
   }, [filteredObservationsDataHour, station]);
+
+
 
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
@@ -1103,115 +1146,167 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           }}
         >
 
-{/* //////////////////////////////////////////////////////////////// */}
- 
-          {/* Station Summary Table */}
-          <div className="mb-6">
-            <DayAveragesTable 
-              dayAverages={stationDayData}
-              onStationClick={() => {}}
-              mode={tableMode}
-              key={`summary-${station.Station}`}
-            />
-          </div>
 
-                    {/* Station Summary Table */}
-                    <div className="mb-6">
-            <DayAveragesTable 
-              dayAverages={processedDailyFromHourly}
-              onStationClick={() => {}}
-              mode={tableMode}
-              key={`summary-${station.Station}`}
-            />
-          </div>
+          <div className="mt-4 mb-2 border-t border-gray-700"></div>
 
-{/* //////////////////////////////////////////////////////////////// */}
+          {/* Tab Interface */}
+          <Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.2)', mb: 3 }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange} 
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{ 
+                minHeight: '42px',
+                '& .MuiTab-root': { 
+                  color: 'var(--app-text-secondary)',
+                  minHeight: '42px',
+                  padding: '6px 16px',
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  '&.Mui-selected': { 
+                    color: 'var(--app-text-primary)',
+                    fontWeight: 600 
+                  } 
+                },
+                '& .MuiTabs-indicator': { 
+                  backgroundColor: 'var(--app-text-primary)',
+                  height: 2
+                },
+                '& .MuiTabs-scrollButtons': {
+                  color: 'var(--app-text-secondary)',
+                  '&.Mui-disabled': { opacity: 0.3 }
+                }
+              }}
+            >
+              <Tab 
+                label="Summary" 
+                id={`station-tab-0`}
+                aria-controls={`station-tabpanel-0`}
+              />
+              <Tab 
+                label="Hourly Graph" 
+                id={`station-tab-1`}
+                aria-controls={`station-tabpanel-1`}
+              />
+              <Tab 
+                label="Daily Graph" 
+                id={`station-tab-2`}
+                aria-controls={`station-tabpanel-2`}
+              />
+              <Tab 
+                label="Filtered Data" 
+                id={`station-tab-3`}
+                aria-controls={`station-tabpanel-3`}
+              />
+              <Tab 
+                label="Raw Data" 
+                id={`station-tab-4`}
+                aria-controls={`station-tabpanel-4`}
+              />
+            </Tabs>
+          </Box>
 
+          {/* Tab Panels */}
           
-          {/* Hourly Snow and Temperature Graph */}
-          {stationDataHourFiltered.data.length > 0 && (
-            <div className="mb-6 app-section-solid">
-              <AccordionWrapper
-                title="Hourly Snow and Temperature Graph"
-                subtitle={station.Station}
-                defaultExpanded={false}
-              >
+          {/* Tab 1: Daily Summary from Hourly */}
+          <TabPanel value={activeTab} index={0}>
+
+
+            {/* Station Summary Table - Always visible at the top */}
+            <div className="mb-6 pb-2">
+              <DayAveragesTable 
+                dayAverages={stationDayData}
+                onStationClick={() => {}}
+                mode={tableMode}
+                key={`summary-${station.Station}`}
+              />
+            </div>
+
+            {processedDailyFromHourly.data.length > 0 ? (
+              <div className="mb-6">
+                <DayAveragesTable 
+                  dayAverages={processedDailyFromHourly}
+                  onStationClick={() => {}}
+                  mode={tableMode}
+                  key={`daily-summary-${station.Station}`}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No daily summary data available</p>
+              </div>
+            )}
+          </TabPanel>
+
+          {/* Tab 2: Hourly Snow and Temperature Graph */}
+          <TabPanel value={activeTab} index={1}>
+            {stationDataHourFiltered.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
                 <WxSnowGraph 
                   dayAverages={stationDataHourFiltered}
                   isHourly={true}
                   isMetric={isMetric}
                 />
-              </AccordionWrapper>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No hourly graph data available</p>
+              </div>
+            )}
+          </TabPanel>
 
-          {/* Daily Snow and Temperature Graph using processed hourly data */}
-          {processedDailyFromHourly.data.length > 0 && (
-            <div className="mb-6 app-section-solid">
-              <AccordionWrapper
-                title="Daily Snow and Temperature Graph (from Hourly)"
-                subtitle={processedDailyFromHourly.title}
-                defaultExpanded={false}
-              >
+          {/* Tab 3: Daily Snow and Temperature Graph */}
+          <TabPanel value={activeTab} index={2}>
+            {processedDailyFromHourly.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
                 <DayWxSnowGraph 
                   dayAverages={processedDailyFromHourly}
                   isMetric={isMetric}
                 />
-              </AccordionWrapper>
-            </div>
-          )}
-
-          {/* Original Daily Snow and Temperature Graph */}
-          {stationObservationsDataDay.data.length > 0 && (
-            <div className="mb-6 app-section-solid">
-              <AccordionWrapper
-                title="Daily Snow and Temperature Graph (Original)"
-                subtitle={stationObservationsDataDay.title}
-                defaultExpanded={false}
-              >
-                <DayWxSnowGraph 
-                  dayAverages={stationObservationsDataDay}
-                  isMetric={isMetric}
-                />
-              </AccordionWrapper>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No daily graph data available</p>
+              </div>
+            )}
+          </TabPanel>
 
 
-{/* //////////////////////////////////////////////////////////////// */}
 
-
-          {/* Filtered Hourly Data Table */}
-          {stationDayData.data.length > 0 && (
-            <div className="mb-6 app-section-solid">
-              <AccordionWrapper
-                title={`Filtered Hourly Data`}
-                subtitle={station.Station}
-                defaultExpanded={false}
-              >
+          {/* Tab 4: Filtered Hourly Data Table */}
+          <TabPanel value={activeTab} index={3}>
+            {stationDataHourFiltered.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
                 <HourWxTable 
                   hourAverages={stationDataHourFiltered}
                   key={`filtered-${station.Station}`}
                 />
-              </AccordionWrapper>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No filtered hourly data available</p>
+              </div>
+            )}
+          </TabPanel>
 
-          {/* Raw Hourly Data Table */}
-          {stationDataHourUnFiltered.data.length > 0 && (
-            <div className="mb-6 app-section-solid">
-              <AccordionWrapper
-                title={`Raw Hourly Data`}
-                subtitle={station.Station}
-                defaultExpanded={false}
-              >
+          {/* Tab 5: Raw Hourly Data Table */}
+          <TabPanel value={activeTab} index={4}>
+            {stationDataHourUnFiltered.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
                 <HourWxTable 
                   hourAverages={stationDataHourUnFiltered}
                   key={`raw-${station.Station}`}
                 />
-              </AccordionWrapper>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No raw hourly data available</p>
+              </div>
+            )}
+          </TabPanel>
         </div>
       </div>
     </motion.div>
