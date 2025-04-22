@@ -50,24 +50,75 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
     // Process data first
     const data = dayAverages.data
       .map((d) => {
+        // Enhanced logging to debug date formats
+        console.log('Processing date format:', {
+          date: d.Date,
+          startDateTime: d['Start Date Time'],
+          endDateTime: d['End Date Time']
+        });
+        
         // Handle date parsing for both date ranges and single dates
         let date;
-        if (typeof d.Date === 'string') {
+        
+        // First try parsing from Start Date Time or End Date Time which are more reliable
+        if (d['End Date Time'] && typeof d['End Date Time'] === 'string') {
+          // Use the end date as that's the more recent one
+          const dateStr = d['End Date Time'].split(',')[0]; // Get just the date part
+          date = moment(dateStr, 'MMM DD YYYY').toDate();
+          console.log('Parsed from End Date Time:', date);
+        } else if (d['Start Date Time'] && typeof d['Start Date Time'] === 'string') {
+          const dateStr = d['Start Date Time'].split(',')[0]; // Get just the date part
+          date = moment(dateStr, 'MMM DD YYYY').toDate();
+          console.log('Parsed from Start Date Time:', date);
+        } else if (typeof d.Date === 'string') {
+          // More reliable parsing for various date formats
           if (d.Date.includes(' - ')) {
             // For date ranges like "Mar 30 - Mar 31", use the end date
             const endDateStr = d.Date.split(' - ')[1];
-            date = moment(endDateStr, 'MMM DD').toDate();
+            
+            // Try with YYYY appended if not present
+            const currentYear = new Date().getFullYear();
+            const dateWithYear = endDateStr.includes(currentYear.toString()) ? 
+              endDateStr : `${endDateStr} ${currentYear}`;
+            
+            date = moment(dateWithYear, 'MMM DD YYYY').toDate();
+            console.log('Parsed from date range:', date);
           } else {
             // For single dates
-            date = moment(d.Date, 'MMM DD').toDate();
+            // Try with YYYY appended if not present
+            const currentYear = new Date().getFullYear(); 
+            const dateWithYear = d.Date.includes(currentYear.toString()) ? 
+              d.Date : `${d.Date} ${currentYear}`;
+            
+            date = moment(dateWithYear, 'MMM DD YYYY').toDate();
+            console.log('Parsed from single date:', date);
           }
         } else if (d.Date && typeof d.Date === 'object' && 'getTime' in (d.Date as any)) {
           // Check if it's a Date object by checking for getTime method
           date = d.Date as Date;
+          console.log('Using date object:', date);
         } else {
-          // Fallback to current date if no valid date format
-          console.log('Invalid date format:', d.Date);
-          date = new Date();
+          // If all else fails, try to extract date from DateTime field
+          if (d['Date Time'] && typeof d['Date Time'] === 'string') {
+            const datePart = d['Date Time'].split(',')[1]?.trim(); // Get the date part after comma
+            if (datePart) {
+              // Try to find MMM DD format in the string
+              const dateMatch = datePart.match(/([A-Za-z]{3})\s+(\d{1,2})/);
+              if (dateMatch) {
+                const month = dateMatch[1];
+                const day = dateMatch[2];
+                const currentYear = new Date().getFullYear();
+                date = moment(`${month} ${day} ${currentYear}`, 'MMM D YYYY').toDate();
+                console.log('Parsed from Date Time:', date);
+              }
+            }
+          }
+          
+          // If still not parsed, log and use current date
+          if (!date) {
+            console.log('Could not parse date format:', d.Date, 'using current date');
+            date = new Date();
+          }
         }
         
         // Helper function to parse numeric values from strings with units
