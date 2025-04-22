@@ -24,7 +24,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
   const [expanded, setExpanded] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  //console.log('Day averages data in dayWxSnowGraph:', dayAverages);
+  console.log('DayWxSnowGraph received data:', dayAverages);
 
   const spacing = {
     dateAxisOffset: 15,
@@ -42,22 +42,42 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       d3.select(svgRef.current).selectAll('*').remove();
     }
 
-    if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) return;
-
-    // At the start of data processing
-    // console.log('Raw data:', dayAverages.data);
+    if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) {
+      console.log('Missing required data or refs for graph rendering.');
+      return;
+    }
 
     // Process data first
     const data = dayAverages.data
       .map((d) => {
-        const date = new Date(d.Date);
+        // Handle date parsing for both date ranges and single dates
+        let date;
+        if (typeof d.Date === 'string') {
+          if (d.Date.includes(' - ')) {
+            // For date ranges like "Mar 30 - Mar 31", use the end date
+            const endDateStr = d.Date.split(' - ')[1];
+            date = moment(endDateStr, 'MMM DD').toDate();
+          } else {
+            // For single dates
+            date = moment(d.Date, 'MMM DD').toDate();
+          }
+        } else if (d.Date && typeof d.Date === 'object' && 'getTime' in (d.Date as any)) {
+          // Check if it's a Date object by checking for getTime method
+          date = d.Date as Date;
+        } else {
+          // Fallback to current date if no valid date format
+          console.log('Invalid date format:', d.Date);
+          date = new Date();
+        }
         
         // Helper function to parse numeric values from strings with units
         const parseValue = (value: string | number) => {
           if (typeof value === 'string') {
-            return Number(value.split(' ')[0]);
+            // Extract number from string like "147.20 in" -> 147.20
+            const match = value.match(/^(-?\d+(\.\d+)?)/);
+            return match ? Number(match[0]) : 0;
           }
-          return Number(value);
+          return Number(value) || 0;
         };
 
         return {
@@ -71,12 +91,13 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
 
-    // console.log('Final processed data:', data);
+    console.log('Processed data for graph:', data);
 
-    // Add safety check before accessing first data point
-    if (!data.length) return;  // Add this check
-
-    //const firstDataPoint = data[0];
+    // Safety check for empty data after processing
+    if (!data.length) {
+      console.log('No valid data points after processing.');
+      return;
+    }
 
     // Get container dimensions and set margins
     const containerRect = containerRef.current.getBoundingClientRect();
@@ -137,11 +158,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .nice();
 
     // Create scales with separate domains for line and bars
-    //const maxSnowDepth = d3.max(data, d => d.totalSnowDepth) || 0;
     const yScaleBars = d3.scaleLinear()
       .domain([0, d3.max(data, d => Math.max(d.snowDepth24h, d.precipHour)) || 0])
       .range([height, 0]);
-
 
     // Add grid lines
     svg.append('g')
@@ -152,16 +171,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       )
       .style('stroke-dasharray', '2,2')
       .style('stroke', '#ccc');
-
-    // Add axes with black text
-    // svg.append('g')
-    //   .attr('transform', `translate(0,${height})`)
-    //   .call(d3.axisBottom(xScale)
-    //     .tickValues(data.map(d => d.date))
-    //     .tickFormat((d) => moment(d as Date).format(isHourly ? 'HH:mm' : 'MM/DD')))
-    //   .selectAll('text')
-    //   .style('text-anchor', 'middle')
-    //   .style('fill', 'black');
 
     // Add y-axis for total snow depth (left)
     svg.append('g')
@@ -207,7 +216,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
     const individualBarWidth = totalBarWidth * 0.45; // Increase from 0.4 to 0.45
     const pairGap = totalBarWidth * 0.1; // Decrease from 0.2 to 0.1 for less gap between pairs
     const barGap = totalBarWidth * 0.025; // Decrease from 0.05 to 0.025 for less gap between bars in a pair
-
 
     // Define bar area margins
     const barMargin = { left: 50, right: 50 };  // This will shrink the bar area by 50px on each side
@@ -278,9 +286,10 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .attr('fill', 'none');
     });
 
-    // Use xScaleBars for the bars
+    // Create snow bars
+    const snowData = data.filter(d => d.snowDepth24h > 0);
     svg.selectAll('.snow-bars')
-      .data(data.filter(d => d.snowDepth24h > 0))
+      .data(snowData)
       .enter()
       .append('rect')
       .attr('class', 'snow-bars')
@@ -291,8 +300,10 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .attr('fill', '#4169E1')
       .attr('opacity', 0.7);
 
+    // Create precipitation bars
+    const precipData = data.filter(d => d.precipHour > 0);
     svg.selectAll('.precip-bars')
-      .data(data.filter(d => d.precipHour > 0))
+      .data(precipData)
       .enter()
       .append('rect')
       .attr('class', 'precip-bars')
@@ -433,7 +444,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
 
     // Add labels above the snow bars
     svg.selectAll('.snow-bar-label')
-      .data(data.filter(d => d.snowDepth24h > 0))
+      .data(snowData)
       .enter()
       .append('text')
       .attr('class', 'snow-bar-label')
@@ -444,9 +455,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       .style('font-size', '10px')
       .text(d => formatValueWithUnit(d.snowDepth24h, UnitType.PRECIPITATION, isMetric));
       
-    // Add labels above the snow bars
+    // Add labels above the precip bars
     svg.selectAll('.liquid-bar-label')
-      .data(data.filter(d => d.precipHour > 0))
+      .data(precipData)
       .enter()
       .append('text')
       .attr('class', 'liquid-bar-label')
@@ -527,7 +538,7 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
     // Set loaded state after graph is created
     setIsLoaded(true);
 
-  }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset, isMetric]); // AddisMetric here
+  }, [dayAverages, isHourly, expanded, spacing.dateAxisOffset, isMetric]); // Add isMetric here
 
   return (
     <div 
