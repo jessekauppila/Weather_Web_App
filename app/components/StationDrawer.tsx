@@ -122,6 +122,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
   
+  // Memoize the current time range value to avoid recalculation in other hooks
+  const memoizedTimeRange = useMemo(() => {
+    return Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
+  }, [calculateCurrentTimeRange]);
+  
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -207,7 +212,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       ),
       title: `Filtered Hourly Data - ${station.Station}`
     };
-  }, [filteredObservationsDataHour, station]);
+  }, [
+    station?.Station, // Only depend on the station name, not the entire station object
+    filteredObservationsDataHour?.data 
+  ]);
 
 
 
@@ -246,7 +254,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: filteredData,
       title: `Raw Hourly Data - ${station.Station}`
     };
-  }, [observationsDataHour, station, station?.Stid]);
+  }, [
+    station?.Station, 
+    station?.Stid, 
+    station?.Elevation, 
+    observationsDataHour?.data
+  ]);
 
   const stationObservationsDataDay = useMemo(() => {
     if (!station || !observationsDataDay?.data) {
@@ -291,7 +304,13 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: formattedData,
       title
     };
-  }, [observationsDataDay, station, station?.['Cur Air Temp'], station?.['Total Snow Depth']]);
+  }, [
+    station?.Station, 
+    station?.Elevation, 
+    station?.Latitude, 
+    station?.Longitude, 
+    observationsDataDay?.data
+  ]);
 
 
   // Update stationDayData to incorporate date-specific data
@@ -355,7 +374,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
     // Get timeRange from the URL or context - assuming it's available
     // If not, we can modify this to accept it as a parameter
-    const currentTimeRange = Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
+    const currentTimeRange = memoizedTimeRange;
 
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
@@ -642,10 +661,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     // Check if today's date is missing from the daily summaries
     const today = moment().format('MMM DD');
     const hasToday = dailySummaries.some(summary => summary.Date === today);
-    if (!hasToday && Number(calculateCurrentTimeRange()) > 1) {
+    if (!hasToday && memoizedTimeRange > 1) {
       // Check if today is within our expected range
       const oldestDay = days[0];
-      const expectedDays = Number(calculateCurrentTimeRange());
+      const expectedDays = memoizedTimeRange;
       const startMoment = moment(oldestDay, 'MMM DD');
       const todayMoment = moment(today, 'MMM DD');
       const dayDiff = todayMoment.diff(startMoment, 'days');
@@ -674,7 +693,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       
       // Make sure we're showing the current date correctly if it should be included
       const now = moment().format('MMM DD');
-      const timeRangeValue = Number(calculateCurrentTimeRange());
+      const timeRangeValue = memoizedTimeRange;
       const shouldShowCurrentDate = timeRangeValue > 1 && endDay !== now && moment(now, 'MMM DD').isAfter(moment(endDay, 'MMM DD'));
       
       // If today should be included but isn't in our days array, add it for display
@@ -703,7 +722,15 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: dailySummaries,
       title: `${station.Station} - ${station.Elevation}\n${timeRangeInfo}`
     };
-  }, [station, stationDataHourFiltered, dayRangeType, customTime, calculateCurrentTimeRange]);
+  }, [
+    station, 
+    stationDataHourFiltered, 
+    dayRangeType, 
+    customTime, 
+    // Remove calculateCurrentTimeRange from dependency array as it's causing the loop
+    // Instead, memoize its result
+    // calculateCurrentTimeRange
+  ]);
 
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {

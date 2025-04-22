@@ -121,36 +121,32 @@ export const MapApp = ({
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Effect to manage drawer state
-  useEffect(() => {
-    // If drawer is open, add a class to prevent scrolling on the body
-    if (isDrawerOpen) {
-      document.body.classList.add('drawer-open');
-      
-      // Close drawer when escape key is pressed
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          setIsDrawerOpen(false);
-          setSelectedStation(null);
-        }
-      };
-      
-      window.addEventListener('keydown', handleEscape);
-      
-      return () => {
-        window.removeEventListener('keydown', handleEscape);
-      };
-    } else {
-      document.body.classList.remove('drawer-open');
-    }
-  }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
-
+  // Create a ref to track the current observation data
+  const observationDataRef = useRef({
+    day: null as any,
+    hour: null as any,
+    filtered: null as any
+  });
+  
   // Effect to react to observation data changes
   useEffect(() => {
-    // When observationsData changes (due to date changes, etc.),
-    // we may need to update any open station drawer to reflect the new data
-    if (isDrawerOpen && selectedStation) {
+    // First, check if the observation data has actually changed 
+    // to avoid unnecessary updates
+    const dataChanged = 
+      observationDataRef.current.day !== observationsDataDay ||
+      observationDataRef.current.hour !== observationsDataHour ||
+      observationDataRef.current.filtered !== filteredObservationsDataHour;
+    
+    // Only update if data has changed and drawer is open
+    if (dataChanged && isDrawerOpen && selectedStation) {
       console.log('Observation data changed, updating station drawer');
+      
+      // Update our reference to current data
+      observationDataRef.current = {
+        day: observationsDataDay,
+        hour: observationsDataHour,
+        filtered: filteredObservationsDataHour
+      };
       
       // If the drawer is open, we should refresh the selected station data
       // to reflect the new time range
@@ -186,6 +182,30 @@ export const MapApp = ({
       }
     }
   }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData]);
+
+  // Effect to manage drawer state
+  useEffect(() => {
+    // If drawer is open, add a class to prevent scrolling on the body
+    if (isDrawerOpen) {
+      document.body.classList.add('drawer-open');
+      
+      // Close drawer when escape key is pressed
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsDrawerOpen(false);
+          setSelectedStation(null);
+        }
+      };
+      
+      window.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        window.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.classList.remove('drawer-open');
+    }
+  }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
 
   // Handle station click
   const handleStationClick = (info: PickingInfo) => {
