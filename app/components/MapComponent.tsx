@@ -18,6 +18,7 @@ import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
+import { DayRangeType } from '../types';
 
 interface MapData {
   stationData: {
@@ -242,6 +243,9 @@ export const MapApp = ({
           filteredObservationsDataHour={filteredObservationsDataHour}
           isMetric={isMetric}
           tableMode={tableMode}
+          dayRangeType={DayRangeType.CURRENT}
+          customTime="12:00"
+          timeRange={1}
         />
       </ClientPortal>
     </div>

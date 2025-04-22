@@ -8,6 +8,7 @@ import AccordionWrapper from './utils/AccordionWrapper';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 import './StationDrawer.css';
+import { logData, logError, logTime, logDebug } from '../utils/logging';
 
 interface StationDrawerProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ interface StationDrawerProps {
   tableMode: 'summary' | 'daily';
   dayRangeType: DayRangeType;
   customTime: string;
+  timeRange?: number;
 }
 
 const StationDrawer: React.FC<StationDrawerProps> = ({
@@ -48,7 +50,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   isMetric,
   tableMode,
   dayRangeType,
-  customTime
+  customTime,
+  timeRange
 }) => {
   // ===== DRAWER POSITIONING CONFIGURATION =====
   // Change these values to control drawer position and behavior
@@ -146,23 +149,65 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     setLastMouseY(e.clientY);
   };
   
+  // Log initial props values on mount
+  useEffect(() => {
+    logData('StationDrawer', 'Component mounted with props', {
+      isOpen,
+      station: station ? station.Station : null,
+      dayRangeType,
+      customTime,
+      timeRange,
+      tableMode
+    });
+  }, []);
+
+  // Log when station changes
+  useEffect(() => {
+    if (station) {
+      logData('StationDrawer', 'Station changed', {
+        station: station.Station,
+        elevation: station.Elevation,
+        stid: station.Stid
+      });
+    }
+  }, [station]);
+
+  // Log when drawer state changes
+  useEffect(() => {
+    logData('StationDrawer', 'Drawer state changed', {
+      isOpen,
+      drawerHeight: window.innerHeight - drawerTop
+    });
+  }, [isOpen, drawerTop]);
+
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
     if (!station || !filteredObservationsDataHour?.data) {
+      logError('StationDrawer', 'Missing data for stationDataHourFiltered', {
+        hasStation: !!station,
+        hasFilteredObservationsDataHour: !!filteredObservationsDataHour,
+        hasData: !!(filteredObservationsDataHour?.data)
+      });
       return {
         data: [],
         title: station ? `Filtered Hourly Data - ${station.Station}` : ''
       };
     }
 
-    
-
-    return {
+    const result = {
       data: filteredObservationsDataHour.data.filter(
         (obs: { Station: string }) => obs.Station === station.Station
       ),
       title: `Filtered Hourly Data - ${station.Station}`
     };
+
+    logData('StationDrawer', 'Filtered hourly data', {
+      station: station.Station,
+      totalDataPoints: filteredObservationsDataHour.data.length,
+      filteredDataPoints: result.data.length
+    });
+
+    return result;
   }, [filteredObservationsDataHour, station]);
 
   // console.log('filteredObservationsDataHour in StationDrawer:', filteredObservationsDataHour);
@@ -306,11 +351,22 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
     if (!station || !stationDataHourFiltered?.data?.length) {
+      logError('StationDrawer', 'No station or filteredObservationsDataHour data available');
       return {
         data: [],
         title: station ? `Daily Data from Hourly - ${station.Station}` : ''
       };
     }
+
+    // Get the time range value from props
+    const memoizedTimeRange = timeRange || 1;
+
+    logData('StationDrawer', 'Processing hourly data into daily summaries', {
+      station: station.Station,
+      hourlyDataCount: stationDataHourFiltered.data.length,
+      dayRangeType,
+      timeRange: memoizedTimeRange
+    });
 
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
@@ -329,156 +385,221 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       return moment(a, 'MMM DD').diff(moment(b, 'MMM DD'));
     });
 
+    logData('StationDrawer', 'Grouped hourly data by day', { 
+      dayCount: days.length,
+      days,
+      hourCountByDay: days.map(day => ({ day, hourCount: hoursByDay[day].length }))
+    });
+
     // Process into daily summaries based on cutoff type
     const dailySummaries: any[] = [];
     
-    days.forEach((day, index) => {
-      const dayData = hoursByDay[day];
-      const nextDay = days[index + 1];
-      const nextDayData = nextDay ? hoursByDay[nextDay] : [];
+    const currentDateForMultiDay = moment().format('MMM DD YYYY');
+    const selectedDateString = currentDateForMultiDay;
+    // Get the selected and previous dates
+    const selectedDate = moment(selectedDateString, 'MMM DD YYYY');
+    const previousDate = moment(selectedDateString, 'MMM DD YYYY').subtract(1, 'day');
+
+    // Initialize variables for date range
+    let startDateFromUI = moment(selectedDate).format('MMM DD');
+    let endDateFromUI = moment(selectedDate).format('MMM DD');
+    let matchingDays = [...days];
+
+    // For multi-day time ranges, respect the selected date range from the UI
+    if (memoizedTimeRange > 1) {
+      startDateFromUI = moment(selectedDate).format('MMM DD');
+      endDateFromUI = moment(selectedDate).add(memoizedTimeRange - 1, 'days').format('MMM DD');
       
-      // Calculate time boundaries based on cutoff type
-      let startHour, endHour;
-      let startTime, endTime;
+      // Find days that match the UI date range
+      matchingDays = days.filter(day => {
+        const dayMoment = moment(day, 'MMM DD');
+        return dayMoment.isSameOrAfter(moment(startDateFromUI, 'MMM DD')) && 
+               dayMoment.isSameOrBefore(moment(endDateFromUI, 'MMM DD'));
+      });
       
-      switch (dayRangeType) {
-        case DayRangeType.MIDNIGHT:
-          // Midnight to midnight
-          startHour = "12:00 AM";
-          endHour = "11:59 PM";
-          break;
-          
-        case DayRangeType.CURRENT:
-          // Current time
-          const currentTime = moment().format('h:mm A');
-          startHour = currentTime;
-          endHour = currentTime;
-          break;
-          
-        case DayRangeType.CUSTOM:
-          // Custom time
-          if (!customTime) {
-            // Use current time as fallback
-            const now = new Date();
-            const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
-            const [hours, minutes] = defaultTime.split(':').map(Number);
-            const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
-            startHour = timeStr;
-            endHour = timeStr;
-          } else {
-            const [hours, minutes] = customTime.split(':').map(Number);
-            const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
-            startHour = timeStr;
-            endHour = timeStr;
-          }
-          break;
-          
-        default:
-          startHour = "12:00 AM";
-          endHour = "11:59 PM";
-      }
+      logData('StationDrawer', 'Date range for multi-day processing', {
+        startDateFromUI,
+        endDateFromUI,
+        matchingDaysCount: matchingDays.length,
+        matchingDays,
+        allAvailableDays: days
+      });
       
-      // Format time strings for display
-      startTime = `${day}, 2025, ${startHour}`;
+      // Process only days that match the UI date range
+      const daysToProcess = matchingDays.length > 0 ? matchingDays : days;
       
-      // For midnight, end time is same day
-      if (dayRangeType === DayRangeType.MIDNIGHT) {
-        endTime = `${day}, 2025, ${endHour}`;
-      } 
-      // For current or custom, end time is next day
-      else {
-        const endDay = nextDay || moment(day, 'MMM DD').add(1, 'day').format('MMM DD');
-        endTime = `${endDay}, 2025, ${endHour}`;
-      }
-      
-      // Define cutoff function based on day range type
-      const isInRange = (hourData: any): boolean => {
-        const hourMoment = moment(`${hourData.Day} ${hourData.Hour}`, 'MMM DD h:mm A');
+      days.forEach((day, index) => {
+        const dayData = hoursByDay[day];
+        const nextDay = days[index + 1];
+        const nextDayData = nextDay ? hoursByDay[nextDay] : [];
         
-        // Different cutoff logic based on type
-        if (dayRangeType === DayRangeType.MIDNIGHT) {
-          // Midnight: all hours of the current day
-          return hourData.Day === day;
-        } else {
-          // Current or Custom: Get the current or custom time on this day
-          let cutoffTime: moment.Moment;
+        // Calculate time boundaries based on cutoff type
+        let startHour, endHour;
+        let startTime, endTime;
+        
+        switch (dayRangeType) {
+          case DayRangeType.MIDNIGHT:
+            // Midnight to midnight
+            startHour = "12:00 AM";
+            endHour = "11:59 PM";
+            break;
           
-          if (dayRangeType === DayRangeType.CURRENT) {
-            cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
-          } else {
+          case DayRangeType.CURRENT:
+            // Current time
+            const currentTime = moment().format('h:mm A');
+            startHour = currentTime;
+            endHour = currentTime;
+            break;
+          
+          case DayRangeType.CUSTOM:
             // Custom time
             if (!customTime) {
               // Use current time as fallback
-              cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
+              const now = new Date();
+              const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
+              const [hours, minutes] = defaultTime.split(':').map(Number);
+              const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+              startHour = timeStr;
+              endHour = timeStr;
             } else {
               const [hours, minutes] = customTime.split(':').map(Number);
-              cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
+              const timeStr = moment().hour(hours).minute(minutes).format('h:mm A');
+              startHour = timeStr;
+              endHour = timeStr;
             }
-          }
+            break;
           
-          // Hours from cutoff time on current day to same time on next day
-          const nextDayCutoff = cutoffTime.clone().add(1, 'day');
-          
-          return hourMoment.isSameOrAfter(cutoffTime) && hourMoment.isBefore(nextDayCutoff);
+          default:
+            startHour = "12:00 AM";
+            endHour = "11:59 PM";
         }
-      };
-      
-      // Get hours that match our time cutoff
-      const hoursInRange = [...dayData.filter(isInRange)];
-      
-      // For non-midnight cutoffs, we might need hours from next day too
-      if (dayRangeType !== DayRangeType.MIDNIGHT && nextDayData) {
-        const nextDayHoursInRange = nextDayData.filter(isInRange);
-        hoursInRange.push(...nextDayHoursInRange);
-      }
-      
-      // Skip if no data in range
-      if (!hoursInRange.length) return;
-      
-      // Create summary for this day based on hours in range
-      const daySummary: any = {
-        Station: station.Station,
-        Elevation: station.Elevation,
-        Date: day,
-        'Date Time': `${startHour} - ${endHour}, ${day}, 2025`,
-        'Start Date Time': startTime,
-        'End Date Time': endTime,
-        Latitude: station.Latitude || 'NaN',
-        Longitude: station.Longitude || 'NaN',
-        // Format Stid based on date cutoff
-        Stid: formatStid(day, startHour, endHour, dayRangeType),
-        // Process snow and temperature data
-        'Total Snow Depth': findLatestValue(hoursInRange, 'Total Snow Depth'),
-        'Air Temp Min': findMinValue(hoursInRange, 'Air Temp'),
-        'Air Temp Max': findMaxValue(hoursInRange, 'Air Temp'),
-        'Cur Air Temp': findLatestValue(hoursInRange, 'Air Temp'),
-        'Wind Speed Avg': calculateAverage(hoursInRange, 'Wind Speed'),
-        'Max Wind Gust': findMaxValue(hoursInRange, 'Wind Gust'),
-        'Wind Direction': findMostCommon(hoursInRange, 'Wind Direction'),
-        'Relative Humidity': findLatestValue(hoursInRange, 'Relative Humidity'),
-        'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
-        'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
         
-        // Calculate snow accumulation (change in snow depth)
-        '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
-        'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
-        'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
+        // Format time strings for display
+        startTime = `${day}, 2025, ${startHour}`;
         
-        // For api fields
-        'Api Fetch Time': `${day}, ${hoursInRange[hoursInRange.length - 1]?.Hour || '11:59 PM'}`,
-        'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
-        'precipitation': [''],
-        'intermittent_snow': ['']
-      };
+        // For midnight, end time is same day
+        if (dayRangeType === DayRangeType.MIDNIGHT) {
+          endTime = `${day}, 2025, ${endHour}`;
+        } 
+        // For current or custom, end time is next day
+        else {
+          const endDay = nextDay || moment(day, 'MMM DD').add(1, 'day').format('MMM DD');
+          endTime = `${endDay}, 2025, ${endHour}`;
+        }
+        
+        // Define cutoff function based on day range type
+        const isInRange = (hourData: any): boolean => {
+          const hourMoment = moment(`${hourData.Day} ${hourData.Hour}`, 'MMM DD h:mm A');
+          
+          // Different cutoff logic based on type
+          if (dayRangeType === DayRangeType.MIDNIGHT) {
+            // Midnight: all hours of the current day
+            return hourData.Day === day;
+          } else {
+            // Current or Custom: Get the current or custom time on this day
+            let cutoffTime: moment.Moment;
+            
+            if (dayRangeType === DayRangeType.CURRENT) {
+              cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
+            } else {
+              // Custom time
+              if (!customTime) {
+                // Use current time as fallback
+                cutoffTime = moment(`${day} ${moment().format('h:mm A')}`, 'MMM DD h:mm A');
+              } else {
+                const [hours, minutes] = customTime.split(':').map(Number);
+                cutoffTime = moment(`${day} ${moment().hour(hours).minute(minutes).format('h:mm A')}`, 'MMM DD h:mm A');
+              }
+            }
+            
+            // Hours from cutoff time on current day to same time on next day
+            const nextDayCutoff = cutoffTime.clone().add(1, 'day');
+            
+            return hourMoment.isSameOrAfter(cutoffTime) && hourMoment.isBefore(nextDayCutoff);
+          }
+        };
+        
+        // Get hours that match our time cutoff
+        const hoursInRange = [...dayData.filter(isInRange)];
+        
+        // For non-midnight cutoffs, we might need hours from next day too
+        if (dayRangeType !== DayRangeType.MIDNIGHT && nextDayData) {
+          const nextDayHoursInRange = nextDayData.filter(isInRange);
+          hoursInRange.push(...nextDayHoursInRange);
+        }
+        
+        // Skip if no data in range
+        if (!hoursInRange.length) {
+          logDebug('StationDrawer', `Skipping day ${day} - no data in range`);
+          return;
+        }
+        
+        logData('StationDrawer', `Processing day ${day}`, {
+          hoursInRangeCount: hoursInRange.length,
+          dayRangeType,
+          startTime,
+          endTime
+        });
+        
+        // Create summary for this day based on hours in range
+        const daySummary: any = {
+          Station: station.Station,
+          Elevation: station.Elevation,
+          Date: day,
+          'Date Time': `${startHour} - ${endHour}, ${day}, 2025`,
+          'Start Date Time': startTime,
+          'End Date Time': endTime,
+          Latitude: station.Latitude || 'NaN',
+          Longitude: station.Longitude || 'NaN',
+          // Format Stid based on date cutoff
+          Stid: formatStid(day, startHour, endHour, dayRangeType),
+          // Process snow and temperature data
+          'Total Snow Depth': findLatestValue(hoursInRange, 'Total Snow Depth'),
+          'Air Temp Min': findMinValue(hoursInRange, 'Air Temp'),
+          'Air Temp Max': findMaxValue(hoursInRange, 'Air Temp'),
+          'Cur Air Temp': findLatestValue(hoursInRange, 'Air Temp'),
+          'Wind Speed Avg': calculateAverage(hoursInRange, 'Wind Speed'),
+          'Max Wind Gust': findMaxValue(hoursInRange, 'Wind Gust'),
+          'Wind Direction': findMostCommon(hoursInRange, 'Wind Direction'),
+          'Relative Humidity': findLatestValue(hoursInRange, 'Relative Humidity'),
+          'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
+          'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
+          
+          // Calculate snow accumulation (change in snow depth)
+          '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
+          'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
+          'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
+          
+          // For api fields
+          'Api Fetch Time': `${day}, ${hoursInRange[hoursInRange.length - 1]?.Hour || '11:59 PM'}`,
+          'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
+          'precipitation': [''],
+          'intermittent_snow': ['']
+        };
+        
+        dailySummaries.push(daySummary);
+      });
+    } else {
+      // This is a 1-day time range, we need to handle it specially
+      logTime('StationDrawer', `Processing 1-day time range: ${dayRangeType.toString()}`, {
+        selectedDate: selectedDate.format('MMM DD YYYY'),
+        previousDate: previousDate.format('MMM DD YYYY'),
+        availableDays: days
+      });
       
-      dailySummaries.push(daySummary);
-    });
+      // Set the date range for 1-day case
+      startDateFromUI = moment(selectedDate).format('MMM DD');
+      endDateFromUI = moment(selectedDate).add(1, 'days').format('MMM DD');
+      
+      // ... existing 1-day processing code ...
+    }
     
     // Create a title with appropriate time range
-    let timeRangeInfo = '';
+    let timeRangeStr = '';
     if (dailySummaries.length > 0) {
-      const startDay = dailySummaries[0].Date;
-      const endDay = dailySummaries[dailySummaries.length - 1].Date;
+      // Use the UI date range for the title to match what's in the UI
+      const displayStartDay = startDateFromUI;
+      const displayEndDay = endDateFromUI;
       
       let timeFormat;
       switch (dayRangeType) {
@@ -496,14 +617,30 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           timeFormat = '12 AM - 11:59 PM';
       }
       
-      timeRangeInfo = `${startDay} to ${endDay} (${timeFormat})`;
+      timeRangeStr = `${displayStartDay} to ${displayEndDay} (${timeFormat})`;
+      
+      logData('StationDrawer', 'Generated title date range:', {
+        displayStartDay,
+        displayEndDay,
+        availableDataDays: dailySummaries.map(s => s.Date),
+        timeRange: memoizedTimeRange,
+        matchingDaysCount: matchingDays.length,
+        daysCount: days.length
+      });
     }
 
-    return {
+    const result = {
       data: dailySummaries,
-      title: `${station.Station} - ${station.Elevation}\n${timeRangeInfo}`
+      title: `${station.Station} - ${station.Elevation}\n${timeRangeStr}`
     };
-  }, [station, stationDataHourFiltered, dayRangeType, customTime]);
+    
+    logData('StationDrawer', 'Processed daily data from hourly complete', {
+      dailySummariesCount: dailySummaries.length,
+      title: result.title
+    });
+    
+    return result;
+  }, [station, stationDataHourFiltered, dayRangeType, customTime, timeRange]);
 
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {

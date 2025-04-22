@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
+import { logTime, logDebug } from '../utils/logging';
 
 /**
  * Custom hook for managing time range and date selections
@@ -31,6 +32,8 @@ export function useTimeRange() {
   const [customTime, setCustomTime] = useState<string>('');
 
   const calculateCurrentTimeRange = useCallback(() => {
+    logDebug('useTimeRange', 'calculateCurrentTimeRange called', { useCustomEndDate, timeRange });
+    
     if (useCustomEndDate && ![1, 3, 7, 14, 30].includes(timeRange)) {
       return 'custom';
     }
@@ -38,23 +41,40 @@ export function useTimeRange() {
   }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = (date: Date, type: DayRangeType) => {
+    logTime('useTimeRange', 'calculateTimeRange called with:', {
+      date: date.toISOString(),
+      type,
+      rangeValue: timeRange
+    });
+
     const endMoment = moment(date).tz('America/Los_Angeles');
     const currentMoment = moment().tz('America/Los_Angeles');
     const currentHour = currentMoment.hour();
     const currentMinute = currentMoment.minute();
 
+    let result;
+
     switch (type) {
       case DayRangeType.MIDNIGHT:
-        const midnightResult = {
+        logTime('useTimeRange', 'Using midnight-to-midnight range');
+        
+        result = {
           start: endMoment.clone().startOf('day'),
           end: endMoment.clone().startOf('day').add(24 * timeRange, 'hours'),
           startHour: 0,
           endHour: 24
         };
-        return midnightResult;
+        break;
         
       case DayRangeType.CURRENT:
-        const currentResult = {
+        const endTimeStr = endMoment.clone()
+          .hour(currentHour)
+          .minute(currentMinute)
+          .format('YYYY-MM-DD HH:mm:00');
+        
+        logTime('useTimeRange', `Using selected date with current time as end point: ${endTimeStr}`);
+        
+        result = {
           start: endMoment.clone()
             .subtract(timeRange, 'days')
             .hour(currentHour)
@@ -67,11 +87,15 @@ export function useTimeRange() {
           startHour: currentHour,
           endHour: currentHour
         };
-        return currentResult;
+        break;
 
       case DayRangeType.CUSTOM:
         const [hours, minutes] = customTime.split(':').map(Number);
-        return {
+        const customTimeStr = `${hours}:${minutes}`;
+        
+        logTime('useTimeRange', `Using custom time cutoff: ${customTimeStr}`);
+        
+        result = {
           start: endMoment.clone()
             .subtract(timeRange, 'days')
             .hour(hours)
@@ -84,9 +108,12 @@ export function useTimeRange() {
           startHour: hours,
           endHour: hours
         };
+        break;
     
       default:
-        return {
+        logTime('useTimeRange', 'Using default time range (current time)');
+        
+        result = {
           start: endMoment.clone()
             .subtract(timeRange, 'days')
             .hour(currentHour)
@@ -100,6 +127,17 @@ export function useTimeRange() {
           endHour: currentHour
         };
     }
+
+    const formattedResult = {
+      start: result.start.format('YYYY-MM-DD HH:mm:00'),
+      end: result.end.format('YYYY-MM-DD HH:mm:00'),
+      startHour: result.startHour,
+      endHour: result.endHour
+    };
+
+    logTime('useTimeRange', 'calculateTimeRange result:', formattedResult);
+
+    return result;
   };
 
   return {
