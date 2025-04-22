@@ -24,8 +24,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
   const [expanded, setExpanded] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  console.log('DayWxSnowGraph received data:', dayAverages);
-
   const spacing = {
     dateAxisOffset: 15,
     legendOffset: 30
@@ -43,20 +41,12 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
     }
 
     if (!dayAverages?.data?.length || !svgRef.current || !containerRef.current) {
-      console.log('Missing required data or refs for graph rendering.');
       return;
     }
 
     // Process data first
     const data = dayAverages.data
       .map((d) => {
-        // Enhanced logging to debug date formats
-        console.log('Processing date format:', {
-          date: d.Date,
-          startDateTime: d['Start Date Time'],
-          endDateTime: d['End Date Time']
-        });
-        
         // Handle date parsing for both date ranges and single dates
         let date;
         
@@ -65,11 +55,9 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
           // Use the end date as that's the more recent one
           const dateStr = d['End Date Time'].split(',')[0]; // Get just the date part
           date = moment(dateStr, 'MMM DD YYYY').toDate();
-          console.log('Parsed from End Date Time:', date);
         } else if (d['Start Date Time'] && typeof d['Start Date Time'] === 'string') {
           const dateStr = d['Start Date Time'].split(',')[0]; // Get just the date part
           date = moment(dateStr, 'MMM DD YYYY').toDate();
-          console.log('Parsed from Start Date Time:', date);
         } else if (typeof d.Date === 'string') {
           // More reliable parsing for various date formats
           if (d.Date.includes(' - ')) {
@@ -82,7 +70,6 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
               endDateStr : `${endDateStr} ${currentYear}`;
             
             date = moment(dateWithYear, 'MMM DD YYYY').toDate();
-            console.log('Parsed from date range:', date);
           } else {
             // For single dates
             // Try with YYYY appended if not present
@@ -91,12 +78,10 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
               d.Date : `${d.Date} ${currentYear}`;
             
             date = moment(dateWithYear, 'MMM DD YYYY').toDate();
-            console.log('Parsed from single date:', date);
           }
         } else if (d.Date && typeof d.Date === 'object' && 'getTime' in (d.Date as any)) {
           // Check if it's a Date object by checking for getTime method
           date = d.Date as Date;
-          console.log('Using date object:', date);
         } else {
           // If all else fails, try to extract date from DateTime field
           if (d['Date Time'] && typeof d['Date Time'] === 'string') {
@@ -109,14 +94,12 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
                 const day = dateMatch[2];
                 const currentYear = new Date().getFullYear();
                 date = moment(`${month} ${day} ${currentYear}`, 'MMM D YYYY').toDate();
-                console.log('Parsed from Date Time:', date);
               }
             }
           }
           
-          // If still not parsed, log and use current date
+          // If still not parsed, use current date
           if (!date) {
-            console.log('Could not parse date format:', d.Date, 'using current date');
             date = new Date();
           }
         }
@@ -142,11 +125,8 @@ function DayWxSnowGraph({ dayAverages, isHourly = false, isMetric}: DayAveragesP
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
 
-    console.log('Processed data for graph:', data);
-
     // Safety check for empty data after processing
     if (!data.length) {
-      console.log('No valid data points after processing.');
       return;
     }
 

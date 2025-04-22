@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import moment from 'moment-timezone';
 import { addDays, subDays } from 'date-fns';
 
@@ -8,96 +8,60 @@ import { addDays, subDays } from 'date-fns';
  * the actual time of day for multi-day ranges (3 PM cutoff)
  * is handled by calculateTimeRange in useTimeRange.ts
  */
-export function useDateState(onDateChange?: (date: Date) => void) {
+export function useDateState(onDateChange?: (newDate: Date) => void) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
 
-  // Create enhanced setters that log changes
-  const setSelectedDateWithLog = (date: Date) => {
-    console.log('📅 setSelectedDate called with:', date.toISOString());
-    setSelectedDate(date);
-  };
-
-  const setEndDateWithLog = (date: Date) => {
-    console.log('📅 setEndDate called with:', date.toISOString());
-    setEndDate(date);
-  };
-
-  const handlePrevDay = () => {
-    console.log('⬅️ handlePrevDay called from:', selectedDate.toISOString());
-    const newDate = subDays(selectedDate, 1);
-    console.log('⬅️ New date will be:', newDate.toISOString());
-    
-    setSelectedDateWithLog(newDate);
-    
-    // When using the prev/next buttons, we want to keep the end date in sync
-    // with the selected date for single day view
-    setEndDateWithLog(newDate);
-    
-    // Call the callback if provided
+  // Wrapper for setSelectedDate that adds logging
+  const loggedSetSelectedDate = useCallback((newDate: Date) => {
+    console.log('📅 DATE STATE: Selected date changed to', moment(newDate).format('YYYY-MM-DD'));
+    setSelectedDate(newDate);
     if (onDateChange) {
-      console.log('⬅️ Calling onDateChange callback with:', newDate.toISOString());
       onDateChange(newDate);
     }
-  };
+  }, [setSelectedDate, onDateChange]);
 
-  const handleNextDay = () => {
-    console.log('➡️ handleNextDay called from:', selectedDate.toISOString());
+  // Wrapper for setEndDate that adds logging
+  const loggedSetEndDate = useCallback((newDate: Date) => {
+    console.log('📅 DATE STATE: End date changed to', moment(newDate).format('YYYY-MM-DD'));
+    setEndDate(newDate);
+  }, [setEndDate]);
+
+  const handlePrevDay = useCallback(() => {
+    const newDate = subDays(selectedDate, 1);
+    console.log('📅 DATE STATE: Moving to previous day', moment(newDate).format('YYYY-MM-DD'));
+    loggedSetSelectedDate(newDate);
+    loggedSetEndDate(newDate);
+  }, [selectedDate, loggedSetSelectedDate, loggedSetEndDate]);
+
+  const handleNextDay = useCallback(() => {
     const newDate = addDays(selectedDate, 1);
-    console.log('➡️ New date would be:', newDate.toISOString());
-    
     if (newDate <= new Date()) {
-      setSelectedDateWithLog(newDate);
-      
-      // When using the prev/next buttons, we want to keep the end date in sync
-      // with the selected date for single day view
-      setEndDateWithLog(newDate);
-      
-      // Call the callback if provided
-      if (onDateChange) {
-        console.log('➡️ Calling onDateChange callback with:', newDate.toISOString());
-        onDateChange(newDate);
-      }
+      console.log('📅 DATE STATE: Moving to next day', moment(newDate).format('YYYY-MM-DD'));
+      loggedSetSelectedDate(newDate);
+      loggedSetEndDate(newDate);
     } else {
-      console.log('➡️ Not updating date - would be in future');
+      console.log('📅 DATE STATE: Cannot move beyond current date');
     }
-  };
+  }, [selectedDate, loggedSetSelectedDate, loggedSetEndDate]);
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📆 handleDateChange called with value:', event.target.value);
-    
-    // This sets the date to start of day for UI consistency
-    // Note: The actual time used for multi-day ranges (starting at 3 PM)
-    // is applied in calculateTimeRange within useTimeRange.ts
+  const handleDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = moment(event.target.value)
       .tz('America/Los_Angeles')
       .startOf('day')
       .toDate();
     
-    console.log('📆 Converted to:', newDate.toISOString());
-    
-    // Update the selected date
-    setSelectedDateWithLog(newDate);
-    
-    // Also update the end date to match the selected date
-    // This ensures that for single day view, we're looking at the selected date
-    // For multi-day views, the timeRangeData calculation will handle going 
-    // back the correct number of days from this end date
-    setEndDateWithLog(newDate);
-    
-    // Call the callback if provided
-    if (onDateChange) {
-      console.log('📆 Calling onDateChange callback with:', newDate.toISOString());
-      onDateChange(newDate);
-    }
-  };
+    console.log('📅 DATE STATE: Date input changed to', moment(newDate).format('YYYY-MM-DD'));
+    loggedSetSelectedDate(newDate);
+    loggedSetEndDate(newDate);
+  }, [loggedSetSelectedDate, loggedSetEndDate]);
 
   return {
     selectedDate,
-    setSelectedDate: setSelectedDateWithLog,
+    setSelectedDate: loggedSetSelectedDate,
     endDate,
-    setEndDate: setEndDateWithLog,
+    setEndDate: loggedSetEndDate,
     useCustomEndDate,
     setUseCustomEndDate,
     handlePrevDay,

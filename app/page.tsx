@@ -66,6 +66,15 @@ export type LayerId =
   | 'terrain'
   | 'currentTemp';
 
+// Add a utility function for logging
+const logAppEvent = (category: string, message: string, data?: any) => {
+  if (data) {
+    console.log(`🔄 ${category}: ${message}`, data);
+  } else {
+    console.log(`🔄 ${category}: ${message}`);
+  }
+};
+
 export default function Home() {
   // View state (UI-related)
   const { tableMode, setTableMode, isComponentVisible, isTransitioning, setIsTransitioning } = useViewState();
@@ -96,8 +105,10 @@ export default function Home() {
     handleDateChange
   } = useDateState((newDate) => {
     // When date changes, we need to manually trigger data refresh
-    // This ensures StationDrawer and Map get updated data
-    console.log('Date changed to:', newDate);
+    logAppEvent('DATE CHANGE', 'Date changed, triggering data refresh', {
+      date: moment(newDate).format('YYYY-MM-DD')
+    });
+    
     // Allow a small delay for state updates to propagate
     setTimeout(() => {
       handleRefresh();
@@ -121,19 +132,16 @@ export default function Home() {
   } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
 
   const timeRangeData = useMemo(() => {
-    // Debug flag - set to false to disable logging
-    
     // Always use calculateTimeRange for consistency
-    // This ensures we respect the 3 PM start time for multi-day ranges
     const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
     
-    // Log what's happening for debugging only when DEBUG is true
-      console.log('⏰ Calculated time range:', {
-        start: start.format('YYYY-MM-DD HH:mm:ss'),
-        end: end.format('YYYY-MM-DD HH:mm:ss'),
-        type: dayRangeType,
-        range: timeRange
-      });
+    // Track time range calculations for debugging
+    logAppEvent('TIME RANGE', 'Calculated time range data', {
+      start: start.format('YYYY-MM-DD HH:mm:ss'),
+      end: end.format('YYYY-MM-DD HH:mm:ss'),
+      type: dayRangeType,
+      range: timeRange
+    });
     
     return {
       start_time_pdt: start,
@@ -165,14 +173,13 @@ export default function Home() {
 
   // Add console log to track when handleRefresh is called
   const trackedHandleRefresh = async (newIsMetric?: boolean) => {
-    console.log('🔄 handleRefresh called with:', {
-      selectedDate: selectedDate.toISOString(),
-      timeRangeData: {
-        start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-        end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-      },
-      dayRangeType
+    logAppEvent('DATA REFRESH', 'Manual refresh requested', {
+      selectedDate: moment(selectedDate).format('YYYY-MM-DD'),
+      timeRange: timeRange,
+      dayRangeType: dayRangeType,
+      stations: stationIds.length
     });
+    
     await handleRefresh(newIsMetric);
   };
 

@@ -29,7 +29,7 @@ export function useWeatherControls(
 ) {
   const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
-    console.log('Time range changed:', value);
+    console.log('⏱️ TIME RANGE CHANGE: User selected', value, 'days');
     
     if (value === 'custom') {
       // For custom range, we definitely want to show both date pickers
@@ -72,6 +72,7 @@ export function useWeatherControls(
 
   const handleDayRangeTypeChange = (event: SelectChangeEvent<DayRangeType>) => {
     const newType = event.target.value as DayRangeType;
+    console.log('⏱️ DAY RANGE TYPE: Changed to', newType);
     return newType;
   };
 
@@ -83,6 +84,7 @@ export function useWeatherControls(
       .tz('America/Los_Angeles')
       .startOf('day')
       .toDate();
+    console.log('📅 END DATE CHANGE: Changed to', moment(newEndDate).format('YYYY-MM-DD'));
     
     // Update the end date
     setEndDate(newEndDate);

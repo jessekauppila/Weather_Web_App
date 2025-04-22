@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchWeatherData } from '../utils/fetchWeatherData';
 import { DayRangeType } from '../types';
+import moment from 'moment-timezone';
 
 /**
  * Custom hook for managing weather observation data
@@ -41,6 +42,16 @@ export function useWeatherData(
   }, [isMetric]);
 
   const handleRefresh = async (newIsMetric?: boolean) => {
+    console.log('📊 WEATHER DATA: Refreshing data', {
+      start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      stations: stationIds.length,
+      tableMode,
+      isMetric: newIsMetric ?? isMetric
+    });
+    
+    setIsLoading(true);
+    
     await fetchWeatherData({
       timeRangeData,
       stationIds,
@@ -54,11 +65,21 @@ export function useWeatherData(
       setIsLoading,
       isMetric: newIsMetric ?? isMetric
     });
+    
+    console.log('📊 WEATHER DATA: Data refresh complete');
   };
 
+  // Track dependencies for data refreshes
   useEffect(() => {
+    console.log('📊 WEATHER DATA: Dependencies changed, refreshing data', {
+      timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      stationIds: stationIds.length, 
+      dayRangeType
+    });
+    
     handleRefresh();
-  }, [timeRangeData, stationIds, dayRangeType, startHour, endHour]);
+  }, [timeRangeData, stationIds]);
 
   return {
     observationsDataDay,

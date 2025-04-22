@@ -139,7 +139,7 @@ export const MapApp = ({
     
     // Only update if data has changed and drawer is open
     if (dataChanged && isDrawerOpen && selectedStation) {
-      console.log('Observation data changed, updating station drawer');
+      //console.log('Observation data changed, updating station drawer');
       
       // Update our reference to current data
       observationDataRef.current = {
