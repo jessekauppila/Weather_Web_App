@@ -35,52 +35,18 @@ export async function fetchWeatherData({
   setIsLoading,
   isMetric,
 }: FetchWeatherDataProps) {
-  // More detailed logs for time parameters and request data
-  console.log('⏰ Time Parameters FULL DETAILS:', { 
-    startHour, 
-    endHour, 
+  // Clear logging - only log date ranges and essential fetch information
+  console.log('📅 FETCH DATA RANGE:', { 
+    start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
     dayRangeType,
-    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    timeRangeStartObj: timeRangeData.start_time_pdt.toDate(),
-    timeRangeEndObj: timeRangeData.end_time_pdt.toDate()
+    startHour, 
+    endHour
   });
 
-  // Existing log
-  console.log('⏰ Time Parameters:', { 
-    startHour, 
-    endHour, 
-    dayRangeType,
-    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-  });
-
-  //console.log('📡 fetchWeatherData: Sending request with isMetric:', isMetric);
-
-  
   try {
-    // First, fetch stations data
-    // console.log('🏔️ Fetching stations data...');
-    // const stationsResponse = await fetch('/api/getStations');
-    
-    // if (!stationsResponse.ok) {
-    //   throw new Error('Failed to fetch stations');
-    // }
-    
-    // const stations = await stationsResponse.json();
-    // console.log('📍 Stations data:', stations);
-    
-    //////////////////////////////////////////////////////////
-
     const { start_time_pdt, end_time_pdt } = timeRangeData;
     
-    console.log('🔍 About to fetch with dates:', {
-      start: start_time_pdt.toISOString(),
-      end: end_time_pdt.toISOString(),
-      stationIds,
-      isMetric
-    });
-   
     const response = await fetch('/api/getObservationsFromDB', {
       method: 'POST',
       headers: {
@@ -96,15 +62,11 @@ export async function fetchWeatherData({
       }),
     });
   
-   if (!response.ok) {
+    if (!response.ok) {
       throw new Error('API error');
-   }
+    }
   
     const result = await response.json();
-    console.log('✅ API returned successfully with result keys:', Object.keys(result));
-    console.log('📊 Observations count:', Object.keys(result.observations || {}).length);
-
-    //////////////////////////////////////////////////////////
     
     const filteredData = filteredObservationData(result.observations, {
       mode: tableMode,
@@ -115,20 +77,9 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
-    console.log('🔎 Filtered data - days included:', 
-      Object.values(filteredData || {})
-        .flat()
-        .map((item: any) => item.Day)
-        .filter((v: any, i: number, a: any[]) => a.indexOf(v) === i)
-    );
+    // Log filtered data days 
+    console.log('📅 FILTERED DATA DAYS:', filteredData);
 
-    // Uncomment log for filtered data
-    //console.log('filteredData:', filteredData);
-
-    //////////////////////////////////////////////////////////
-
-  
-    // Since wxTableDataDayFromDB is now async, we need to await it
     const dayData = await wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,
       startHour,
@@ -137,27 +88,17 @@ export async function fetchWeatherData({
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
-  
-    // Uncomment log for day data
-    //console.log('dayData', dayData);
 
     setObservationsDataDay(dayData);
 
-    //////////////////////////////////////////////////////////
-
-    const dayDataSplit = await wxTableDataDaySplit(filteredData, result.units, {
-      mode: tableMode,
-      startHour,
-      endHour,
-      dayRangeType,
-      start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    }, isMetric);
-    
-    // Uncomment log for day data split
-    //console.log('dayDataSplit', dayDataSplit);
-
-    //////////////////////////////////////////////////////////
+    // const dayDataSplit = await wxTableDataDaySplit(filteredData, result.units, {
+    //   mode: tableMode,
+    //   startHour,
+    //   endHour,
+    //   dayRangeType,
+    //   start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    //   end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    // }, isMetric);
 
     setObservationsDataHour(hourWxTableDataFromDB(
       Object.values(result.observations) as any[][] as any[],

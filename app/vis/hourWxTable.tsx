@@ -81,7 +81,7 @@ function HourWxTable({ hourAverages }: DayAveragesTableProps) {
   // Use an effect to track data changes and force refreshes
   useEffect(() => {
     if (hourAverages?.data?.length) {
-      console.log("HourWxTable received new data, forcing refresh");
+      //console.log("HourWxTable received new data, forcing refresh");
       setRefreshTimestamp(Date.now());
       
       // Don't clear existing table - let D3 update it smoothly
