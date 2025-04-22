@@ -158,13 +158,13 @@ export default function TimeToolbar({
           />
         </div>
 
-        <div className="w-full max-w-[800px] mx-auto">
+        {/* <div className="w-full max-w-[800px] mx-auto">
           <StationSelector
             selectedStation={selectedStation}
             stations={stations}
             handleStationChange={handleStationChange}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
