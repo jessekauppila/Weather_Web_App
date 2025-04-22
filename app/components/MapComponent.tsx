@@ -145,6 +145,48 @@ export const MapApp = ({
     }
   }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
 
+  // Effect to react to observation data changes
+  useEffect(() => {
+    // When observationsData changes (due to date changes, etc.),
+    // we may need to update any open station drawer to reflect the new data
+    if (isDrawerOpen && selectedStation) {
+      console.log('Observation data changed, updating station drawer');
+      
+      // If the drawer is open, we should refresh the selected station data
+      // to reflect the new time range
+      const stationName = selectedStation.Station;
+      
+      // Find the station in the mapData
+      const updatedStationData = (mapData as MapData)?.stationData?.features?.find(
+        f => f.properties.stationName === stationName
+      );
+      
+      // Update the selected station with fresh data if found
+      if (updatedStationData) {
+        const properties = updatedStationData.properties;
+        
+        // Helper function to format values with units
+        const formatValue = (value: number | string | null | undefined, unit: string) => {
+          if (value === null || value === undefined || value === '-') return '-';
+          return `${value} ${unit}`;
+        };
+        
+        const updatedStation: WeatherStation = {
+          ...selectedStation,
+          'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
+          '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
+          'Air Temp Min': formatValue(properties.airTempMin, '°F'),
+          'Air Temp Max': formatValue(properties.airTempMax, '°F'),
+          'Total Snow Depth Change': formatValue(properties.totalSnowDepthChange, 'in'),
+          'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
+          'Api Fetch Time': properties.fetchTime || new Date().toISOString()
+        };
+        
+        setSelectedStation(updatedStation);
+      }
+    }
+  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData]);
+
   // Handle station click
   const handleStationClick = (info: PickingInfo) => {
     if (info.object && 'properties' in info.object) {

@@ -35,7 +35,18 @@ export async function fetchWeatherData({
   setIsLoading,
   isMetric,
 }: FetchWeatherDataProps) {
-  // Uncomment logs for time parameters
+  // More detailed logs for time parameters and request data
+  console.log('⏰ Time Parameters FULL DETAILS:', { 
+    startHour, 
+    endHour, 
+    dayRangeType,
+    timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+    timeRangeStartObj: timeRangeData.start_time_pdt.toDate(),
+    timeRangeEndObj: timeRangeData.end_time_pdt.toDate()
+  });
+
+  // Existing log
   console.log('⏰ Time Parameters:', { 
     startHour, 
     endHour, 
@@ -62,6 +73,13 @@ export async function fetchWeatherData({
     //////////////////////////////////////////////////////////
 
     const { start_time_pdt, end_time_pdt } = timeRangeData;
+    
+    console.log('🔍 About to fetch with dates:', {
+      start: start_time_pdt.toISOString(),
+      end: end_time_pdt.toISOString(),
+      stationIds,
+      isMetric
+    });
    
     const response = await fetch('/api/getObservationsFromDB', {
       method: 'POST',
@@ -83,6 +101,8 @@ export async function fetchWeatherData({
    }
   
     const result = await response.json();
+    console.log('✅ API returned successfully with result keys:', Object.keys(result));
+    console.log('📊 Observations count:', Object.keys(result.observations || {}).length);
 
     //////////////////////////////////////////////////////////
     
@@ -95,11 +115,17 @@ export async function fetchWeatherData({
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
 
+    console.log('🔎 Filtered data - days included:', 
+      Object.values(filteredData || {})
+        .flat()
+        .map((item: any) => item.Day)
+        .filter((v: any, i: number, a: any[]) => a.indexOf(v) === i)
+    );
+
     // Uncomment log for filtered data
     //console.log('filteredData:', filteredData);
 
-
-  //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
 
   
     // Since wxTableDataDayFromDB is now async, we need to await it
