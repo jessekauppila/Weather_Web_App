@@ -108,6 +108,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const CLOSED_Y_POSITION = "100%";
   // ===============================================
   
+  // Get current year for consistent date formatting
+  const currentYear = moment().year();
+  
   // Calculate the initial top position based on desired height
   const initialTopPosition = window.innerHeight - INITIAL_OPEN_HEIGHT;
   
@@ -471,9 +474,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         Station: station.Station,
         Elevation: station.Elevation,
         Date: `${startDayStr} - ${endDayStr}`,
-        'Date Time': `${startTimeStr} - ${endTimeStr}, ${startDayStr} to ${endDayStr}, 2025`,
-        'Start Date Time': `${startDayStr}, 2025, ${startTimeStr}`,
-        'End Date Time': `${endDayStr}, 2025, ${endTimeStr}`,
+        'Date Time': `${startTimeStr} - ${endTimeStr}, ${startDayStr} to ${endDayStr}, ${currentYear}`,
+        'Start Date Time': `${startDayStr}, ${currentYear}, ${startTimeStr}`,
+        'End Date Time': `${endDayStr}, ${currentYear}, ${endTimeStr}`,
         Latitude: station.Latitude || 'NaN',
         Longitude: station.Longitude || 'NaN',
         Stid: `${startDayStr} ${startTimeStr} - ${endDayStr} ${endTimeStr}`,
@@ -553,16 +556,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       }
       
       // Format time strings for display
-      startTime = `${day}, 2025, ${startHour}`;
+      startTime = `${day}, ${currentYear}, ${startHour}`;
       
       // For midnight, end time is same day
       if (dayRangeType === DayRangeType.MIDNIGHT) {
-        endTime = `${day}, 2025, ${endHour}`;
+        endTime = `${day}, ${currentYear}, ${endHour}`;
       } 
       // For current or custom, end time is next day
       else {
         const endDay = nextDay || moment(day, 'MMM DD').add(1, 'day').format('MMM DD');
-        endTime = `${endDay}, 2025, ${endHour}`;
+        endTime = `${endDay}, ${currentYear}, ${endHour}`;
       }
       
       // Define cutoff function based on day range type
@@ -620,7 +623,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         Station: station.Station,
         Elevation: station.Elevation,
         Date: day,
-        'Date Time': `${startHour} - ${endHour}, ${day}, 2025`,
+        'Date Time': `${startHour} - ${endHour}, ${day}, ${currentYear}`,
         'Start Date Time': startTime,
         'End Date Time': endTime,
         Latitude: station.Latitude || 'NaN',
@@ -731,6 +734,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     // Instead, memoize its result
     // calculateCurrentTimeRange
   ]);
+
+  console.log('processedDailyFromHourly', processedDailyFromHourly);
 
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
@@ -1015,8 +1020,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         // Midnight to midnight - use all hours
         startHour = "12:00 AM";
         endHour = "11:59 PM";
-        startTime = `${day}, 2025, ${startHour}`;
-        endTime = `${day}, 2025, ${endHour}`;
+        startTime = `${day}, ${currentYear}, ${startHour}`;
+        endTime = `${day}, ${currentYear}, ${endHour}`;
         break;
         
       case DayRangeType.CURRENT:
@@ -1026,8 +1031,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         endHour = currentTime;
         
         // Format times for display
-        startTime = `${day}, 2025, 12:00 AM`;
-        endTime = `${day}, 2025, ${endHour}`;
+        startTime = `${day}, ${currentYear}, 12:00 AM`;
+        endTime = `${day}, ${currentYear}, ${endHour}`;
         break;
         
       case DayRangeType.CUSTOM:
@@ -1045,16 +1050,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         endHour = startHour;
         
         // Format times for display
-        startTime = `${day}, 2025, 12:00 AM`;
-        endTime = `${day}, 2025, ${endHour}`;
+        startTime = `${day}, ${currentYear}, 12:00 AM`;
+        endTime = `${day}, ${currentYear}, ${endHour}`;
         break;
         
       default:
         // Default: midnight to midnight
         startHour = "12:00 AM";
         endHour = "11:59 PM";
-        startTime = `${day}, 2025, ${startHour}`;
-        endTime = `${day}, 2025, ${endHour}`;
+        startTime = `${day}, ${currentYear}, ${startHour}`;
+        endTime = `${day}, ${currentYear}, ${endHour}`;
     }
 
     // Create summary with properly filtered hours
@@ -1062,7 +1067,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       Station: station.Station,
       Elevation: station.Elevation,
       Date: day,
-      'Date Time': `12:00 AM - ${endHour}, ${day}, 2025`,
+      'Date Time': `12:00 AM - ${endHour}, ${day}, ${currentYear}`,
       'Start Date Time': startTime,
       'End Date Time': endTime,
       Latitude: station.Latitude || 'NaN',
@@ -1307,7 +1312,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               </div>
             ) : (
               <div className="text-center py-8 text-gray-400">
-                <p>No daily graph data available</p>
+                <p>Only one day of data, no daily graph available</p>
               </div>
             )}
           </TabPanel>
