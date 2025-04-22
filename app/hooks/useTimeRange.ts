@@ -48,37 +48,47 @@ export function useTimeRange() {
   }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = useCallback((date: Date, type: DayRangeType, rangeValue: number = timeRange) => {
-    // Always use the current date/time for the end point when using CURRENT type
-    // This ensures we're always looking at data up to now
+    console.log('⏱️ calculateTimeRange called with:', {
+      date: date.toISOString(),
+      type,
+      rangeValue
+    });
+    
+    // Always use the selected date as the basis, applying the current time only for CURRENT type
+    const selectedMoment = moment(date).tz('America/Los_Angeles');
     let endMoment;
     let currentMoment = moment().tz('America/Los_Angeles');
     
     if (type === DayRangeType.CURRENT) {
-      // For CURRENT type, always use the actual current moment as the end point
-      endMoment = currentMoment.clone();
+      // For CURRENT type, use the selected date but with the current time
+      endMoment = selectedMoment.clone()
+        .hour(currentMoment.hour())
+        .minute(currentMoment.minute())
+        .second(0);
+      console.log('⏱️ Using selected date with current time as end point:', endMoment.format('YYYY-MM-DD HH:mm:ss'));
     } else {
       // For other types, use the selected date 
-      endMoment = moment(date).tz('America/Los_Angeles');
+      endMoment = selectedMoment.clone();
+      console.log('⏱️ Using selected date as end point:', endMoment.format('YYYY-MM-DD HH:mm:ss'));
     }
     
     const currentHour = currentMoment.hour();
     const currentMinute = currentMoment.minute();
 
-
-
+    let result;
     switch (type) {
       case DayRangeType.MIDNIGHT:
-        const midnightResult = {
+        result = {
           start: endMoment.clone().startOf('day'),
           end: endMoment.clone().startOf('day').add(24 * rangeValue, 'hours'),
           startHour: 0,
           endHour: 24
         };
-        return midnightResult;
+        break;
         
       case DayRangeType.CURRENT:
         if (rangeValue > 1) {
-          const multiDayResult = {
+          result = {
             // For multi-day ranges, go back the full rangeValue days for the start
             // This ensures we include enough days with 3 PM cutoff points
             start: endMoment.clone()
@@ -86,27 +96,26 @@ export function useTimeRange() {
               .hour(15) // Always 3 PM
               .minute(0)
               .second(0),
-            end: endMoment.clone(), // End is current time
+            end: endMoment.clone(), // End is current time but on selected date
             startHour: 15,
             endHour: currentHour
           };
-          return multiDayResult;
         } else {
-          // For single day range, go back exactly 24 hours from now
-          const currentResult = {
+          // For single day range, go back exactly 24 hours from the end time
+          result = {
             start: endMoment.clone()
-              .subtract(1, 'days'), // Go back 24 hours from current time
+              .subtract(1, 'days'), // Go back 24 hours from end time
             end: endMoment.clone(),
             startHour: currentHour,
             endHour: currentHour
           };
-          return currentResult;
         }
+        break;
 
       case DayRangeType.CUSTOM:
         const [hours, minutes] = customTime.split(':').map(Number);
         if (rangeValue > 1) {
-          return {
+          result = {
             start: endMoment.clone()
               .subtract(rangeValue, 'days')
               .hour(15)
@@ -120,7 +129,7 @@ export function useTimeRange() {
             endHour: hours
           };
         } else {
-          return {
+          result = {
             start: endMoment.clone()
               .subtract(1, 'days')
               .hour(hours)
@@ -134,9 +143,10 @@ export function useTimeRange() {
             endHour: hours
           };
         }
+        break;
     
       default:
-        return {
+        result = {
           start: endMoment.clone()
             .subtract(rangeValue, 'days')
             .hour(currentHour)
@@ -150,6 +160,15 @@ export function useTimeRange() {
           endHour: currentHour
         };
     }
+    
+    console.log('⏱️ calculateTimeRange result:', {
+      start: result.start.format('YYYY-MM-DD HH:mm:ss'),
+      end: result.end.format('YYYY-MM-DD HH:mm:ss'),
+      startHour: result.startHour,
+      endHour: result.endHour
+    });
+    
+    return result;
   }, [customTime]);
 
   return {

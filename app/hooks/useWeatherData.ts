@@ -14,7 +14,7 @@ import { DayRangeType } from '../types';
 export function useWeatherData(
   timeRangeData: any,
   stationIds: string[],
-  tableMode: string,
+  tableMode: 'summary' | 'daily',
   startHour: number,
   endHour: number,
   dayRangeType: DayRangeType
@@ -58,7 +58,7 @@ export function useWeatherData(
 
   useEffect(() => {
     handleRefresh();
-  }, [timeRangeData, stationIds]);
+  }, [timeRangeData, stationIds, dayRangeType, startHour, endHour]);
 
   return {
     observationsDataDay,

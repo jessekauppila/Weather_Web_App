@@ -94,7 +94,15 @@ export default function Home() {
     handlePrevDay,
     handleNextDay,
     handleDateChange
-  } = useDateState();
+  } = useDateState((newDate) => {
+    // When date changes, we need to manually trigger data refresh
+    // This ensures StationDrawer and Map get updated data
+    console.log('Date changed to:', newDate);
+    // Allow a small delay for state updates to propagate
+    setTimeout(() => {
+      handleRefresh();
+    }, 100);
+  });
 
   const {
     timeRange,
@@ -155,6 +163,19 @@ export default function Home() {
     dayRangeType
   );
 
+  // Add console log to track when handleRefresh is called
+  const trackedHandleRefresh = async (newIsMetric?: boolean) => {
+    console.log('🔄 handleRefresh called with:', {
+      selectedDate: selectedDate.toISOString(),
+      timeRangeData: {
+        start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+        end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+      },
+      dayRangeType
+    });
+    await handleRefresh(newIsMetric);
+  };
+
   const {
     handleTimeRangeChange,
     handleDayRangeTypeChange,
@@ -166,7 +187,7 @@ export default function Home() {
     setIsOneDay,
     setTimeRange,
     stations,
-    handleRefresh,
+    trackedHandleRefresh, // use the tracked version
     timeRange,
     endDate
   );
