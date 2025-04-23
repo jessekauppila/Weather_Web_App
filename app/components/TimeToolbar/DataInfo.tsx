@@ -46,8 +46,14 @@ export function DataInfo({
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        classes={{
-          paper: 'app-popover-paper'
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--app-toolbar-bg)',
+            color: 'var(--app-text-primary)',
+            borderRadius: 'var(--app-border-radius)',
+            boxShadow: 'var(--app-box-shadow)',
+            border: '1px solid var(--app-border-color)'
+          }
         }}
       >
         <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px]">

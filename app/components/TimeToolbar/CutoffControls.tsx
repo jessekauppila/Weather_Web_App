@@ -50,13 +50,19 @@ export function CutoffControls({
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        classes={{
-          paper: 'app-popover-paper'
+        PaperProps={{
+          sx: {
+            backgroundColor: 'var(--app-toolbar-bg)',
+            color: 'var(--app-text-primary)',
+            borderRadius: 'var(--app-border-radius)',
+            boxShadow: 'var(--app-box-shadow)',
+            border: '1px solid var(--app-border-color)'
+          }
         }}
       >
         <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 w-[250px] sm:w-[300px]">
           <FormControl variant="outlined" size="small" className="w-full">
-            <InputLabel>Range</InputLabel>
+            <InputLabel sx={{ color: 'var(--app-text-secondary)' }}>Range</InputLabel>
             <Select
               value={dayRangeType}
               onChange={handleDayRangeTypeChange}
@@ -83,8 +89,17 @@ export function CutoffControls({
                 }
               }}
               MenuProps={{
-                classes: {
-                  paper: 'app-menu-paper'
+                PaperProps: {
+                  sx: {
+                    backgroundColor: 'var(--app-toolbar-bg)',
+                    color: 'var(--app-text-primary)',
+                    '& .MuiMenuItem-root': {
+                      color: 'var(--app-text-primary)'
+                    },
+                    '& .MuiMenuItem-root:hover': {
+                      backgroundColor: 'var(--app-hover-bg)'
+                    }
+                  }
                 }
               }}
             >

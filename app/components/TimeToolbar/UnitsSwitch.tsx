@@ -86,11 +86,13 @@ export function UnitsSwitch({
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        classes={{
-          paper: 'app-popover-paper'
-        }}
         PaperProps={{
           sx: {
+            backgroundColor: 'var(--app-toolbar-bg)',
+            color: 'var(--app-text-primary)',
+            borderRadius: 'var(--app-border-radius)',
+            boxShadow: 'var(--app-box-shadow)',
+            border: '1px solid var(--app-border-color)',
             width: 'auto',
             minWidth: 'auto',
             maxWidth: 'none',
@@ -102,7 +104,7 @@ export function UnitsSwitch({
       >
         <div className="p-2 sm:p-4 space-y-2 sm:space-y-4">
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Typography>
+            <Typography sx={{ color: 'var(--app-text-primary)' }}>
               Imperial
             </Typography>
             <AntSwitch 
@@ -114,7 +116,7 @@ export function UnitsSwitch({
               }}
               inputProps={{ 'aria-label': 'unit switch' }}
             />
-            <Typography>
+            <Typography sx={{ color: 'var(--app-text-primary)' }}>
               Metric
             </Typography>
           </Stack>
