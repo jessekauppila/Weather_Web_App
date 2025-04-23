@@ -42,6 +42,9 @@ export function DateControls({
         onChange={handleDateChange}
         className="w-[140px] app-textfield"
         sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'var(--app-toolbar-bg)',
+          },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: 'var(--app-border-color)'
           },
@@ -73,6 +76,9 @@ export function DateControls({
           onChange={handleEndDateChange}
           className="w-[130px] app-textfield"
           sx={{
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'var(--app-toolbar-bg)',
+            },
             '& .MuiOutlinedInput-notchedOutline': {
               borderColor: 'var(--app-border-color)'
             },
