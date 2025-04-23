@@ -27,6 +27,10 @@ export function DateControls({
         variant="text"
         size="small"
         className="min-w-0 p-1 app-button"
+        sx={{
+          color: 'var(--app-border-color)',
+          minWidth: '30px'
+        }}
       >
         <ArrowBack sx={{ fontSize: 20 }} />
       </Button>
@@ -37,6 +41,28 @@ export function DateControls({
         value={selectedDate.toISOString().split('T')[0]}
         onChange={handleDateChange}
         className="w-[140px] app-textfield"
+        sx={{
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--app-border-color)'
+          },
+          '&:hover': {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--app-border-hover)'
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'var(--app-hover-bg)'
+            }
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--app-border-hover)'
+          },
+          '& .MuiInputBase-input': {
+            color: 'var(--app-text-primary)'
+          },
+          '& input::-webkit-calendar-picker-indicator': {
+            filter: 'invert(0.8)'
+          }
+        }}
       />
 
       {useCustomEndDate && (
@@ -46,6 +72,28 @@ export function DateControls({
           value={endDate.toISOString().split('T')[0]}
           onChange={handleEndDateChange}
           className="w-[130px] app-textfield"
+          sx={{
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--app-border-color)'
+            },
+            '&:hover': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--app-border-hover)'
+              },
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'var(--app-hover-bg)'
+              }
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--app-border-hover)'
+            },
+            '& .MuiInputBase-input': {
+              color: 'var(--app-text-primary)'
+            },
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(0.8)'
+            }
+          }}
         />
       )}
 
@@ -54,6 +102,10 @@ export function DateControls({
         variant="text"
         size="small"
         className="min-w-0 p-1 app-button"
+        sx={{
+          color: 'var(--app-border-color)',
+          minWidth: '30px'
+        }}
       >
         <ArrowForward sx={{ fontSize: 20 }} />
       </Button>
