@@ -26,6 +26,14 @@ export function DataInfo({
         size="small" 
         onClick={handleDataPopupButtonClick}
         className="app-button"
+        sx={{
+          borderColor: 'var(--app-border-color)',
+          color: 'var(--app-text-primary)',
+          '&:hover': {
+            borderColor: 'var(--app-border-hover)',
+            backgroundColor: 'var(--app-hover-bg)'
+          }
+        }}
       >
         Data Info
       </Button>
@@ -61,6 +69,14 @@ export function DataInfo({
               size="small" 
               onClick={handleRefreshButtonClick}
               className="app-button"
+              sx={{
+                borderColor: 'var(--app-border-color)',
+                color: 'var(--app-text-primary)',
+                '&:hover': {
+                  borderColor: 'var(--app-border-hover)',
+                  backgroundColor: 'var(--app-hover-bg)'
+                }
+              }}
             >
               Refresh Data
             </Button>

@@ -30,6 +30,14 @@ export function CutoffControls({
         size="small" 
         onClick={handleCutOffPopupButtonClick}
         className="app-button"
+        sx={{
+          borderColor: 'var(--app-border-color)',
+          color: 'var(--app-text-primary)',
+          '&:hover': {
+            borderColor: 'var(--app-border-hover)',
+            backgroundColor: 'var(--app-hover-bg)'
+          }
+        }}
       >
         Cut Offs
       </Button>
@@ -54,6 +62,26 @@ export function CutoffControls({
               onChange={handleDayRangeTypeChange}
               label="Range"
               className="app-select"
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--app-border-color)'
+                },
+                '&:hover': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--app-border-hover)'
+                  },
+                  backgroundColor: 'var(--app-hover-bg)'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--app-border-hover)'
+                },
+                '& .MuiSvgIcon-root': {
+                  color: 'var(--app-text-primary)'
+                },
+                '& .MuiSelect-select': {
+                  color: 'var(--app-text-primary)'
+                }
+              }}
               MenuProps={{
                 classes: {
                   paper: 'app-menu-paper'
@@ -75,6 +103,28 @@ export function CutoffControls({
                 variant="outlined"
                 size="small"
                 className="w-full app-textfield"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--app-border-color)'
+                  },
+                  '&:hover': {
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'var(--app-border-hover)'
+                    },
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'var(--app-hover-bg)'
+                    }
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'var(--app-border-hover)'
+                  },
+                  '& .MuiInputBase-input': {
+                    color: 'var(--app-text-primary)'
+                  },
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(0.8)'
+                  }
+                }}
               />
               
               <Button 
@@ -83,10 +133,16 @@ export function CutoffControls({
                 onClick={handleCustomTimeButtonClick}
                 className="app-button"
                 sx={{
+                  borderColor: 'var(--app-border-color)',
+                  color: 'var(--app-text-primary)',
                   minWidth: '120px',
                   textAlign: 'left',
                   padding: '4px 8px',
-                  marginTop: '8px'
+                  marginTop: '8px',
+                  '&:hover': {
+                    borderColor: 'var(--app-border-hover)',
+                    backgroundColor: 'var(--app-hover-bg)'
+                  }
                 }}
               >
                 Apply Custom Range

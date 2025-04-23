@@ -18,6 +18,26 @@ export function TimeRangeSelector({
         onChange={handleTimeRangeChange}
         label="Range"
         className="app-select"
+        sx={{
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--app-border-color)'
+          },
+          '&:hover': {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--app-border-hover)'
+            },
+            backgroundColor: 'var(--app-hover-bg)'
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--app-border-hover)'
+          },
+          '& .MuiSvgIcon-root': {
+            color: 'var(--app-text-primary)'
+          },
+          '& .MuiSelect-select': {
+            color: 'var(--app-text-primary)'
+          }
+        }}
         MenuProps={{
           classes: {
             paper: 'app-menu-paper'

@@ -66,6 +66,14 @@ export function UnitsSwitch({
         size="small" 
         onClick={handleUnitsPopupButtonClick}
         className="app-button"
+        sx={{
+          borderColor: 'var(--app-border-color)',
+          color: 'var(--app-text-primary)',
+          '&:hover': {
+            borderColor: 'var(--app-border-hover)',
+            backgroundColor: 'var(--app-hover-bg)'
+          }
+        }}
       >
         Units
       </Button>
