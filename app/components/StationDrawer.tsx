@@ -374,35 +374,23 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   // Create a fallback timeRangeData if not provided
   const safeTimeRangeData = useMemo(() => {
-    if (timeRangeData) {
-      console.log('Using provided timeRangeData:', timeRangeData);
-      return timeRangeData;
-    }
-    
-    console.log('Creating fallback timeRangeData');
-    // Create a fallback based on the current time and memoizedTimeRange
-    const endDate = moment();
-    const startDate = moment().subtract(memoizedTimeRange - 1, 'days');
-    
-    if (dayRangeType === DayRangeType.MIDNIGHT) {
+    if (!timeRangeData) {
+      console.error('🚨 StationDrawer missing timeRangeData prop!');
+      // Minimal fallback only for extreme cases
+      const now = moment().tz('America/Los_Angeles');
       return {
-        start_time_pdt: startDate.clone().startOf('day'),
-        end_time_pdt: endDate.clone().endOf('day')
-      };
-    } else if (dayRangeType === DayRangeType.CUSTOM && customTime) {
-      const [hours, minutes] = customTime.split(':').map(Number);
-      return {
-        start_time_pdt: startDate.clone().hour(hours).minute(minutes).second(0),
-        end_time_pdt: endDate.clone().hour(hours).minute(minutes).second(0)
-      };
-    } else {
-      // CURRENT type
-      return {
-        start_time_pdt: startDate,
-        end_time_pdt: endDate
+        start_time_pdt: now.clone().subtract(1, 'day'),
+        end_time_pdt: now.clone()
       };
     }
-  }, [timeRangeData, memoizedTimeRange, dayRangeType, customTime]);
+    
+    console.log('📅 StationDrawer using provided timeRangeData:', {
+      start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
+      end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    });
+    
+    return timeRangeData;
+  }, [timeRangeData]);
   
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
@@ -416,15 +404,28 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     // Use the safe version that's always available
     const startDate = safeTimeRangeData.start_time_pdt;
     const endDate = safeTimeRangeData.end_time_pdt;
-    const currentTimeRange = memoizedTimeRange;
-
-    console.log('Processing daily from hourly data:', {
+    
+    // Create a validatedEndDate that we can modify if needed
+    let validatedEndDate = endDate;
+    
+    // Add extra validation to ensure end date is not before start date
+    // This prevents errors when the app passes inconsistent time ranges
+    if (endDate.isBefore(startDate)) {
+      console.error('Invalid time range: end date is before start date', {
+        start: startDate.format('YYYY-MM-DD HH:mm:ss'),
+        end: endDate.format('YYYY-MM-DD HH:mm:ss')
+      });
+      
+      // Fix the range by setting validated end date to at least start date + time range
+      validatedEndDate = startDate.clone().add(memoizedTimeRange, 'days');
+    }
+    
+    console.log('Processing daily from hourly data with validated range:', {
       station: station.Station,
-      timeRange: currentTimeRange,
+      timeRange: memoizedTimeRange,
       startDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
-      endDate: endDate.format('YYYY-MM-DD HH:mm:ss'),
-      dayRangeType,
-      usingProvidedTimeRange: !!timeRangeData
+      endDate: validatedEndDate.format('YYYY-MM-DD HH:mm:ss'), 
+      dayRangeType
     });
 
     // Group hourly data by day
@@ -463,14 +464,27 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     // Try to find days in our data that match the app's date range
     const matchingDays = days.filter(day => {
-      const dayMoment = moment(day, 'MMM DD');
-      return dayMoment.isSameOrAfter(startDate, 'day') && 
-             dayMoment.isSameOrBefore(endDate, 'day');
+      // Parse the day from the data, making sure to use the current year
+      const dayDate = moment(`${day} ${moment().year()}`, 'MMM DD YYYY');
+
+      // Get start and end dates without times for day-level comparison
+      const startDay = moment(startDate.format('YYYY-MM-DD'));
+      const endDay = moment(endDate.format('YYYY-MM-DD'));
+
+      // For day comparison, we're only concerned with the date portion
+      return dayDate.isSameOrAfter(startDay, 'day') && 
+             dayDate.isSameOrBefore(endDay, 'day');
+    });
+
+    console.log('Matching days with start/end:', {
+      startDate: startDate.format('YYYY-MM-DD'),
+      endDate: endDate.format('YYYY-MM-DD'),
+      available: days,
+      matching: matchingDays
     });
     
-    console.log('Matching days in range:', matchingDays);
-    
     // If we have matching days, use only those days
+    // Otherwise, just use all days - don't filter out data we have
     const daysToProcess = matchingDays.length > 0 ? matchingDays : days;
     
     daysToProcess.forEach((day, index) => {

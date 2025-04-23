@@ -48,6 +48,7 @@ interface MapComponentProps {
   dayRangeType?: DayRangeType;
   customTime?: string;
   calculateCurrentTimeRange?: () => string;
+  timeRangeData: any;
 }
 
 // Client-side portal component for Next.js
@@ -100,7 +101,8 @@ export const MapApp = ({
   onToggleLayer,
   dayRangeType,
   customTime,
-  calculateCurrentTimeRange
+  calculateCurrentTimeRange,
+  timeRangeData
 }: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
@@ -270,6 +272,23 @@ export const MapApp = ({
     }
   };
 
+  useEffect(() => {
+    // When timeRangeData changes and drawer is open
+    if (isDrawerOpen && timeRangeData && selectedStation) {
+      // Store the current selected station
+      const currentStation = selectedStation;
+      
+      // Briefly close the drawer
+      setIsDrawerOpen(false);
+      
+      // Re-open it with a slight delay to ensure data refresh
+      setTimeout(() => {
+        setSelectedStation(currentStation);
+        setIsDrawerOpen(true);
+      }, 100);
+    }
+  }, [timeRangeData]);
+
   return (
     <div className="w-full h-full relative">
       {isLoading && (
@@ -314,6 +333,7 @@ export const MapApp = ({
           dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
           customTime={customTime || ''}
           calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
+          timeRangeData={timeRangeData}
         />
       </ClientPortal>
     </div>
