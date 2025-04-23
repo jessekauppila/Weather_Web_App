@@ -43,9 +43,8 @@ export function useTimeRange() {
   }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = useCallback((date: Date, type: DayRangeType, rangeValue: number = timeRange) => {
-    // Always use the selected date as the basis, applying the current time only for CURRENT type
-    const selectedMoment = moment(date).tz('America/Los_Angeles');
-    let endMoment;
+    // IMPORTANT CHANGE: Always use the selected date as the END DATE, not as a midpoint
+    const endMoment = moment(date).tz('America/Los_Angeles');
     let currentMoment = moment().tz('America/Los_Angeles');
     
     // Log the initial inputs to the time range calculation
@@ -55,75 +54,47 @@ export function useTimeRange() {
       rangeValue
     });
     
+    // Determine the actual time to use based on the day range type
     if (type === DayRangeType.CURRENT) {
-      // For CURRENT type, use the selected date but with the current time
-      endMoment = selectedMoment.clone()
-        .hour(currentMoment.hour())
+      // For CURRENT type, use the current time of day on the selected date
+      endMoment.hour(currentMoment.hour())
         .minute(currentMoment.minute())
         .second(0);
-    } else {
-      // For other types, use the selected date 
-      endMoment = selectedMoment.clone();
+    } else if (type === DayRangeType.MIDNIGHT) {
+      // For MIDNIGHT type, set to end of day
+      endMoment.hour(23).minute(59).second(59);
+    } else if (type === DayRangeType.CUSTOM && customTime) {
+      // For CUSTOM type, use the specified time on the selected date
+      const [hours, minutes] = customTime.split(':').map(Number);
+      endMoment.hour(hours).minute(minutes).second(0);
     }
     
-    const currentHour = currentMoment.hour();
-    const currentMinute = currentMoment.minute();
-
-    let result;
-    switch (type) {
-      case DayRangeType.MIDNIGHT:
-        result = {
-          start: endMoment.clone().startOf('day'),
-          end: endMoment.clone().startOf('day').add(24 * rangeValue, 'hours'),
-          startHour: 0,
-          endHour: 24
-        };
-        break;
-        
-      case DayRangeType.CURRENT:
-        // Use same current time for both start and end dates
-        result = {
-          start: endMoment.clone()
-            .subtract(rangeValue, 'days'), // Go back the full range
-          end: endMoment.clone(),
-          startHour: currentHour,
-          endHour: currentHour
-        };
-        break;
-
-      case DayRangeType.CUSTOM:
-        const [hours, minutes] = customTime.split(':').map(Number);
-        // Use same custom time for both start and end dates
-        result = {
-          start: endMoment.clone()
-            .subtract(rangeValue, 'days')
-            .hour(hours)
-            .minute(minutes)
-            .second(0),
-          end: endMoment.clone()
-            .hour(hours)
-            .minute(minutes)
-            .second(0),
-          startHour: hours,
-          endHour: hours
-        };
-        break;
+    // Calculate the start date by subtracting the full range value
+    // FIX: Always subtract full range (not range-1) to ensure proper days difference
+    const startMoment = endMoment.clone().subtract(rangeValue, 'days');
     
-      default:
-        result = {
-          start: endMoment.clone()
-            .subtract(rangeValue, 'days')
-            .hour(currentHour)
-            .minute(currentMinute)
-            .second(0),
-          end: endMoment.clone()
-            .hour(currentHour)
-            .minute(currentMinute)
-            .second(0),
-          startHour: currentHour,
-          endHour: currentHour
-        };
+    // Now adjust the time based on type
+    if (type === DayRangeType.MIDNIGHT) {
+      // For MIDNIGHT, start at beginning of day and end at end of day
+      startMoment.hour(0).minute(0).second(0);
+    } else if (type === DayRangeType.CURRENT) {
+      // For CURRENT, use same time for both start and end
+      startMoment.hour(endMoment.hour()).minute(endMoment.minute()).second(0);
+    } else if (type === DayRangeType.CUSTOM && customTime) {
+      // For CUSTOM, use same custom time for both start and end
+      const [hours, minutes] = customTime.split(':').map(Number);
+      startMoment.hour(hours).minute(minutes).second(0);
     }
+    
+    const currentHour = endMoment.hour();
+    const currentMinute = endMoment.minute();
+    
+    const result = {
+      start: startMoment,
+      end: endMoment,
+      startHour: type === DayRangeType.MIDNIGHT ? 0 : currentHour,
+      endHour: type === DayRangeType.MIDNIGHT ? 24 : currentHour
+    };
     
     // Log the final calculated time range
     console.log('⏱️ TIME RANGE RESULT:', {

@@ -318,23 +318,25 @@ export const MapApp = ({
 
       {/* Render StationDrawer using our custom portal */}
       <ClientPortal>
-        <StationDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            setSelectedStation(null);
-          }}
-          station={selectedStation}
-          observationsDataDay={observationsDataDay}
-          observationsDataHour={observationsDataHour}
-          filteredObservationsDataHour={filteredObservationsDataHour}
-          isMetric={isMetric}
-          tableMode={tableMode}
-          dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
-          customTime={customTime || ''}
-          calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
-          timeRangeData={timeRangeData}
-        />
+        {timeRangeData && (
+          <StationDrawer
+            isOpen={isDrawerOpen}
+            onClose={() => {
+              setIsDrawerOpen(false);
+              setSelectedStation(null);
+            }}
+            station={selectedStation}
+            observationsDataDay={observationsDataDay}
+            observationsDataHour={observationsDataHour}
+            filteredObservationsDataHour={filteredObservationsDataHour}
+            isMetric={isMetric}
+            tableMode={tableMode}
+            dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
+            customTime={customTime || ''}
+            calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
+            timeRangeData={timeRangeData}
+          />
+        )}
       </ClientPortal>
     </div>
   );
