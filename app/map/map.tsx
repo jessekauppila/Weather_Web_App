@@ -425,20 +425,6 @@ export function Map({
     <>
       {/* Your existing map rendering code here */}
       {hoverInfo && <div dangerouslySetInnerHTML={{ __html: getMapTooltip(hoverInfo)?.html || '' }} />}
-      
-      <StationDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => {
-          setIsDrawerOpen(false);
-          setSelectedStation(null);
-        }}
-        station={selectedStation}
-        observationsDataDay={localObservationsDataDay}
-        observationsDataHour={localObservationsDataHour}
-        filteredObservationsDataHour={localFilteredObservationsDataHour}
-        isMetric={isMetric}
-        tableMode={tableMode}
-      />
     </>
   );
 }
