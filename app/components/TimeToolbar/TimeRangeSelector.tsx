@@ -12,7 +12,7 @@ export function TimeRangeSelector({
 }: TimeRangeSelectorProps) {
   return (
     <FormControl variant="outlined" size="small" className="w-[100px] sm:w-auto">
-      <InputLabel>Range</InputLabel>
+      <InputLabel sx={{ color: 'var(--app-text-secondary)' }}>Range</InputLabel>
       <Select
         value={calculateCurrentTimeRange()}
         onChange={handleTimeRangeChange}
@@ -39,8 +39,20 @@ export function TimeRangeSelector({
           }
         }}
         MenuProps={{
-          classes: {
-            paper: 'app-menu-paper'
+          PaperProps: {
+            sx: {
+              backgroundColor: 'var(--app-toolbar-bg)',
+              color: 'var(--app-text-primary)',
+              borderRadius: 'var(--app-border-radius)',
+              boxShadow: 'var(--app-box-shadow)',
+              border: '1px solid var(--app-border-color)',
+              '& .MuiMenuItem-root': {
+                color: 'var(--app-text-primary)'
+              },
+              '& .MuiMenuItem-root:hover': {
+                backgroundColor: 'var(--app-hover-bg)'
+              }
+            }
           }
         }}
       >
