@@ -35,6 +35,12 @@ const switchStyle = {
 };
 
 const formControlStyle = (isChecked: boolean) => ({
+  margin: '2px 0',
+  width: '100%',
+  justifyContent: 'space-between',
+  '& .MuiFormControlLabel-label': {
+    marginRight: '8px',
+  },
   '& .MuiTypography-root': {
     color: isChecked ? 'var(--app-text-primary)' : 'var(--app-text-secondary)',
     fontSize: '0.75rem',
@@ -43,14 +49,8 @@ const formControlStyle = (isChecked: boolean) => ({
 
 const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer }) => {
   return (
-    <div className="app-toolbar">
-      <Typography
-        variant="h6"
-        sx={{ fontSize: '1rem', mb: 1, color: 'inherit' }}
-      >
-        {/* Map Layers */}
-      </Typography>
-      <FormGroup>
+    <div className="app-toolbar" style={{ padding: '8px 12px' }}>
+      <FormGroup sx={{ width: '100%' }}>
         <FormControlLabel
           sx={formControlStyle(layersState.forecastZones)}
           control={
@@ -62,6 +62,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Forecast Zones"
+          labelPlacement="start"
         />
         <FormControlLabel
           sx={formControlStyle(layersState.windArrows)}
@@ -74,6 +75,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Wind Arrows"
+          labelPlacement="start"
         />
         <FormControlLabel
           sx={formControlStyle(layersState.currentTemp)}
@@ -86,6 +88,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Current Temp."
+          labelPlacement="start"
         />
         <FormControlLabel
           sx={formControlStyle(layersState.snowDepthChange)}
@@ -98,6 +101,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Snow Depth Change"
+          labelPlacement="start"
         />
         <FormControlLabel
           sx={formControlStyle(layersState.terrain)}
@@ -110,6 +114,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Terrain"
+          labelPlacement="start"
         />
       </FormGroup>
     </div>
