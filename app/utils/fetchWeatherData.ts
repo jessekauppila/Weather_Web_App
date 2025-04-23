@@ -20,6 +20,7 @@ interface FetchWeatherDataProps {
   setFilteredObservationsDataHour: (data: any) => void;
   setIsLoading: (loading: boolean) => void;
   isMetric: boolean;
+  onDataLoaded?: () => void;
 }
 
 export async function fetchWeatherData({
@@ -34,6 +35,7 @@ export async function fetchWeatherData({
   setFilteredObservationsDataHour,
   setIsLoading,
   isMetric,
+  onDataLoaded,
 }: FetchWeatherDataProps) {
   // Clear logging - only log date ranges and essential fetch information
   console.log('📅 FETCH DATA RANGE:', { 
@@ -46,6 +48,11 @@ export async function fetchWeatherData({
 
   try {
     const { start_time_pdt, end_time_pdt } = timeRangeData;
+    
+    console.log('🔴 FETCH: Final time range before API call', {
+      startTime: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'), 
+      endTime: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
+    });
     
     const response = await fetch('/api/getObservationsFromDB', {
       method: 'POST',
@@ -111,7 +118,11 @@ export async function fetchWeatherData({
       isMetric
     ));
     setIsLoading(false);
-  
+    
+    // Finally, call the onDataLoaded callback if provided
+    if (onDataLoaded) {
+      onDataLoaded();
+    }
   } catch (error) {
     setIsLoading(false);
     console.error('Error fetching weather data:', error);

@@ -104,15 +104,11 @@ export default function Home() {
     handleNextDay,
     handleDateChange
   } = useDateState((newDate) => {
-    // When date changes, we need to manually trigger data refresh
-    logAppEvent('DATE CHANGE', 'Date changed, triggering data refresh', {
+    // When date changes, ONLY log - don't call refresh directly
+    logAppEvent('DATE CHANGE', 'Date changed', {
       date: moment(newDate).format('YYYY-MM-DD')
     });
-    
-    // Allow a small delay for state updates to propagate
-    setTimeout(() => {
-      handleRefresh();
-    }, 100);
+    // Let useEffect handle the refresh based on dependency changes
   });
 
   const {
@@ -136,11 +132,12 @@ export default function Home() {
     const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
     
     // Track time range calculations for debugging
-    logAppEvent('TIME RANGE', 'Calculated time range data', {
+    console.log('🔴 PAGE MEMO: Final timeRangeData before passing to components', {
       start: start.format('YYYY-MM-DD HH:mm:ss'),
       end: end.format('YYYY-MM-DD HH:mm:ss'),
-      type: dayRangeType,
-      range: timeRange
+      selectedDate: moment(selectedDate).format('YYYY-MM-DD'),
+      dayRangeType,
+      timeRange
     });
     
     return {
@@ -161,7 +158,8 @@ export default function Home() {
     setObservationsDataDay,
     setObservationsDataHour,
     setFilteredObservationsDataHour,
-    setIsLoading
+    setIsLoading,
+    dataReady: weatherDataReady,
   } = useWeatherData(
     timeRangeData,
     stationIds,
@@ -259,70 +257,94 @@ export default function Home() {
     }));
   };
 
+  // Add a new loading state
+  const [dataReady, setDataReady] = useState(false);
+
+  // Update the useEffect in your page component
+  useEffect(() => {
+    // Only set dataReady when we have actual data
+    if (weatherDataReady && observationsDataDay && observationsDataHour) {
+      setDataReady(true);
+    }
+  }, [weatherDataReady, observationsDataDay, observationsDataHour]);
+
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
-      {/* Map component as fullscreen background */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <MapComponent 
-          observationsDataDay={observationsDataDay}
-          observationsDataHour={observationsDataHour}
-          filteredObservationsDataHour={filteredObservationsDataHour}
-          isMetric={isMetric}
-          tableMode={tableMode}
-          layerVisibility={layerVisibility}
-          onToggleLayer={handleToggleLayer}
-          dayRangeType={dayRangeType}
-          customTime={customTime}
-          calculateCurrentTimeRange={calculateCurrentTimeRange}
-        />
-      </div>
-      
-      {/* Container for both controls positioned at the top */}
-      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col-reverse md:flex-row gap-4 justify-between items-start" 
-        style={{ 
-          pointerEvents: 'auto',
-          maxHeight: 'calc(100vh - 2rem)',
-          overflowY: 'auto'
-        }}
-      >
-        {/* Layer controls - left on desktop, below on mobile */}
-        <div className="w-full md:w-auto md:sticky md:top-0" 
-          style={{ 
-            minWidth: '200px', 
-            maxWidth: '250px',
-            alignSelf: 'flex-start'
-          }}
-        >
-          <LayerControls 
-            layersState={layerVisibility}
-            toggleLayer={handleToggleLayer}
-          />
+      {/* Show loading indicator if data isn't ready */}
+      {!dataReady && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-xl">Loading weather data...</div>
         </div>
-         
-        {/* Time toolbar - right on desktop, top on mobile */}
-        <div className="w-full md:flex-grow">
-          <TimeToolbar
-            {...timeProps}
-            {...stationProps}
-            {...dataProps}
-          />
-        </div>
-      </div>
+      )}
       
-      {/* Additional components are commented out for now */}
-      {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
-        <RegionsContainer
-          observationsData={observationsDataDay}
-          handleStationClick={handleStationClick}
-          activeDropdown={activeDropdown}
-          setActiveDropdown={setActiveDropdown}
-          observationsDataDay={observationsDataDay}
-          observationsDataHour={observationsDataHour}
-          filteredObservationsDataHour={filteredObservationsDataHour}
-          isMetric={isMetric}
-          tableMode={tableMode}
-        />
-      </div> */}
+      {/* Only render actual content when data is ready */}
+      {dataReady && (
+        <>
+          {/* Map component as fullscreen background */}
+          <div className="absolute inset-0 w-full h-full z-0">
+            <MapComponent 
+              observationsDataDay={observationsDataDay}
+              observationsDataHour={observationsDataHour}
+              filteredObservationsDataHour={filteredObservationsDataHour}
+              isMetric={isMetric}
+              tableMode={tableMode}
+              layerVisibility={layerVisibility}
+              onToggleLayer={handleToggleLayer}
+              dayRangeType={dayRangeType}
+              customTime={customTime}
+              calculateCurrentTimeRange={calculateCurrentTimeRange}
+              timeRangeData={timeRangeData}
+            />
+          </div>
+          
+          {/* Container for both controls positioned at the top */}
+          <div className="fixed top-4 left-4 right-4 z-10 flex flex-col-reverse md:flex-row gap-4 justify-between items-start" 
+            style={{ 
+              pointerEvents: 'auto',
+              maxHeight: 'calc(100vh - 2rem)',
+              overflowY: 'auto'
+            }}
+          >
+            {/* Layer controls - left on desktop, below on mobile */}
+            <div className="w-full md:w-auto md:sticky md:top-0" 
+              style={{ 
+                minWidth: '200px', 
+                maxWidth: '250px',
+                alignSelf: 'flex-start'
+              }}
+            >
+              <LayerControls 
+                layersState={layerVisibility}
+                toggleLayer={handleToggleLayer}
+              />
+            </div>
+             
+            {/* Time toolbar - right on desktop, top on mobile */}
+            <div className="w-full md:flex-grow">
+              <TimeToolbar
+                {...timeProps}
+                {...stationProps}
+                {...dataProps}
+              />
+            </div>
+          </div>
+          
+          {/* Additional components are commented out for now */}
+          {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
+            <RegionsContainer
+              observationsData={observationsDataDay}
+              handleStationClick={handleStationClick}
+              activeDropdown={activeDropdown}
+              setActiveDropdown={setActiveDropdown}
+              observationsDataDay={observationsDataDay}
+              observationsDataHour={observationsDataHour}
+              filteredObservationsDataHour={filteredObservationsDataHour}
+              isMetric={isMetric}
+              tableMode={tableMode}
+            />
+          </div> */}
+        </>
+      )}
     </main>
   );
 }

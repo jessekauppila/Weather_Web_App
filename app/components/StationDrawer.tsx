@@ -372,62 +372,39 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [station, observationsDataDay]);
 
-  // Create a fallback timeRangeData if not provided
-  const safeTimeRangeData = useMemo(() => {
-    if (!timeRangeData) {
-      console.error('🚨 StationDrawer missing timeRangeData prop!');
-      // Minimal fallback only for extreme cases
-      const now = moment().tz('America/Los_Angeles');
-      return {
-        start_time_pdt: now.clone().subtract(1, 'day'),
-        end_time_pdt: now.clone()
-      };
+  // Replace the safeTimeRangeData useMemo with this
+  const timeRangeInfo = useMemo(() => {
+    if (!timeRangeData || !timeRangeData.start_time_pdt || !timeRangeData.end_time_pdt) {
+      console.error('StationDrawer: Missing or invalid timeRangeData!');
+      return null;
     }
     
-    console.log('📅 StationDrawer using provided timeRangeData:', {
+    console.log('📅 StationDrawer using timeRangeData:', {
       start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     });
     
-    return timeRangeData;
+    return {
+      startDate: timeRangeData.start_time_pdt,
+      endDate: timeRangeData.end_time_pdt
+    };
   }, [timeRangeData]);
   
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
-    if (!station || !stationDataHourFiltered?.data?.length) {
+    if (!station || !stationDataHourFiltered?.data?.length || !timeRangeData) {
       return {
         data: [],
         title: station ? `Daily Data from Hourly - ${station.Station}` : ''
       };
     }
 
-    // Use the safe version that's always available
-    const startDate = safeTimeRangeData.start_time_pdt;
-    const endDate = safeTimeRangeData.end_time_pdt;
+    // Use the timeRangeData directly
+    const startDate = timeRangeData.start_time_pdt;
+    const endDate = timeRangeData.end_time_pdt;
     
-    // Create a validatedEndDate that we can modify if needed
-    let validatedEndDate = endDate;
+    // No need for validatedEndDate anymore - use endDate directly
     
-    // Add extra validation to ensure end date is not before start date
-    // This prevents errors when the app passes inconsistent time ranges
-    if (endDate.isBefore(startDate)) {
-      console.error('Invalid time range: end date is before start date', {
-        start: startDate.format('YYYY-MM-DD HH:mm:ss'),
-        end: endDate.format('YYYY-MM-DD HH:mm:ss')
-      });
-      
-      // Fix the range by setting validated end date to at least start date + time range
-      validatedEndDate = startDate.clone().add(memoizedTimeRange, 'days');
-    }
-    
-    console.log('Processing daily from hourly data with validated range:', {
-      station: station.Station,
-      timeRange: memoizedTimeRange,
-      startDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
-      endDate: validatedEndDate.format('YYYY-MM-DD HH:mm:ss'), 
-      dayRangeType
-    });
-
     // Group hourly data by day
     const hoursByDay: { [key: string]: any[] } = {};
     
@@ -445,7 +422,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       return moment(a, 'MMM DD').diff(moment(b, 'MMM DD'));
     });
     
-    console.log('Days available in data:', days);
     
     // If we have no days, return empty
     if (days.length === 0) {
@@ -476,12 +452,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
              dayDate.isSameOrBefore(endDay, 'day');
     });
 
-    console.log('Matching days with start/end:', {
-      startDate: startDate.format('YYYY-MM-DD'),
-      endDate: endDate.format('YYYY-MM-DD'),
-      available: days,
-      matching: matchingDays
-    });
     
     // If we have matching days, use only those days
     // Otherwise, just use all days - don't filter out data we have
@@ -612,7 +582,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     stationDataHourFiltered, 
     dayRangeType, 
     customTime,
-    safeTimeRangeData,
+    timeRangeData,
     memoizedTimeRange
   ]);
 
