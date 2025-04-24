@@ -40,31 +40,8 @@ export function useWeatherData(
   const [isMetric, setIsMetric] = useState(false);
   const [dataReady, setDataReady] = useState(false);
 
-  console.log('🔴 WEATHER DATA: Received timeRangeData', {
-    start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-  });
-
-  useEffect(() => {
-    console.log('🔴 WEATHER DATA: Effect triggered with timeRangeData', {
-      start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    });
-  }, [timeRangeData]);
-
-  useEffect(() => {
-  }, [isMetric]);
-
   const debouncedFetchData = useMemo(() => 
     debounce((fetchProps) => {
-      console.log('📊 WEATHER DATA: Refreshing data (debounced)', {
-        start: fetchProps.timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-        end: fetchProps.timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-        stations: fetchProps.stationIds.length,
-        tableMode: fetchProps.tableMode,
-        isMetric: fetchProps.isMetric
-      });
-      
       fetchWeatherData(fetchProps);
     }, 300), // 300ms debounce time
     []
@@ -73,18 +50,9 @@ export function useWeatherData(
   const handleDataLoaded = useCallback(() => {
     setIsLoading(false);
     setDataReady(true);
-    console.log('📊 WEATHER DATA: Data refresh complete and ready');
   }, []);
 
   const handleRefresh = async (newIsMetric?: boolean) => {
-    console.log('📊 WEATHER DATA: Refreshing data', {
-      start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      stations: stationIds.length,
-      tableMode,
-      isMetric: newIsMetric ?? isMetric
-    });
-    
     setIsLoading(true);
     
     await fetchWeatherData({
@@ -101,8 +69,6 @@ export function useWeatherData(
       isMetric: newIsMetric ?? isMetric,
       onDataLoaded: handleDataLoaded
     });
-    
-    console.log('📊 WEATHER DATA: Data refresh complete');
   };
 
   // Track dependencies for data refreshes
@@ -111,13 +77,6 @@ export function useWeatherData(
     if (!stationIds.length) {
       return;
     }
-
-    console.log('📊 WEATHER DATA: Dependencies changed, refreshing data', {
-      timeRangeStart: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      timeRangeEnd: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      stationIds: stationIds.length,
-      dayRangeType
-    });
 
     // Reset data ready state when fetching new data
     setDataReady(false);

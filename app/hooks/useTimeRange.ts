@@ -47,13 +47,6 @@ export function useTimeRange() {
     const endMoment = moment(date).tz('America/Los_Angeles');
     let currentMoment = moment().tz('America/Los_Angeles');
     
-    // Log the initial inputs to the time range calculation
-    console.log('⏱️ TIME RANGE INPUTS:', {
-      date: date.toISOString(),
-      type: type.toString(),
-      rangeValue
-    });
-    
     // Determine the actual time to use based on the day range type
     if (type === DayRangeType.CURRENT) {
       // For CURRENT type, use the current time of day on the selected date
@@ -95,15 +88,6 @@ export function useTimeRange() {
       startHour: type === DayRangeType.MIDNIGHT ? 0 : currentHour,
       endHour: type === DayRangeType.MIDNIGHT ? 24 : currentHour
     };
-    
-    // Log the final calculated time range
-    console.log('⏱️ TIME RANGE RESULT:', {
-      start: result.start.format('YYYY-MM-DD HH:mm:ss'),
-      end: result.end.format('YYYY-MM-DD HH:mm:ss'),
-      startHour: result.startHour,
-      endHour: result.endHour,
-      days: result.end.diff(result.start, 'days')
-    });
     
     return result;
   }, [customTime]);
