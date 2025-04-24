@@ -386,10 +386,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   }, [timeRangeData]);
   
 
-  useEffect(() => {
-    console.log('stationDataHourFiltered', stationDataHourFiltered);
-  }, [stationDataHourFiltered]);
-
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
     if (!station || !stationDataHourFiltered?.data?.length || !timeRangeData) {
@@ -529,19 +525,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     memoizedTimeRange
   ]);
 
-  useEffect(() => {
-    console.log('processedDailyFromHourly', processedDailyFromHourly);
-  }, [processedDailyFromHourly]);
-
-
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
-    console.log(`Finding min for ${field}, values:`, data.map(item => item[field]));
     const values = data
       .map(item => parseFloat(item[field]))
       .filter(val => !isNaN(val));
     
-    console.log(`Parsed values: ${values.length ? values.join(', ') : 'none'}`);
     if (!values.length) return "-";
     return `${Math.min(...values)} °F`;
   }
