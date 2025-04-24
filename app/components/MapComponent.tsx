@@ -260,17 +260,17 @@ export const MapApp = ({
     [layerVisibility, mapData]
   );
 
-  // Toggle layer visibility - use external handler if provided, or internal state if not
-  const toggleLayer = (layerId: LayerId) => {
-    if (onToggleLayer) {
-      onToggleLayer(layerId);
-    } else {
-      setInternalLayerVisibility((prev) => ({
-        ...prev,
-        [layerId]: !prev[layerId],
-      }));
-    }
-  };
+  // // Toggle layer visibility - use external handler if provided, or internal state if not
+  // const toggleLayer = (layerId: LayerId) => {
+  //   if (onToggleLayer) {
+  //     onToggleLayer(layerId);
+  //   } else {
+  //     setInternalLayerVisibility((prev) => ({
+  //       ...prev,
+  //       [layerId]: !prev[layerId],
+  //     }));
+  //   }
+  // };
 
   useEffect(() => {
     // When timeRangeData changes and drawer is open
