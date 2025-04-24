@@ -385,6 +385,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     };
   }, [timeRangeData]);
   
+
+  useEffect(() => {
+    console.log('stationDataHourFiltered', stationDataHourFiltered);
+  }, [stationDataHourFiltered]);
+
   // This is a NEW function to process hourly data into daily summaries
   const processedDailyFromHourly = useMemo(() => {
     if (!station || !stationDataHourFiltered?.data?.length || !timeRangeData) {
@@ -400,128 +405,73 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     // No need for validatedEndDate anymore - use endDate directly
     
-    // Group hourly data by day
-    const hoursByDay: { [key: string]: any[] } = {};
-    
-    // Process each hourly data point
-    stationDataHourFiltered.data.forEach((hourData: any) => {
-      const day = hourData.Day;
-      if (!hoursByDay[day]) {
-        hoursByDay[day] = [];
-      }
-      hoursByDay[day].push(hourData);
+    // First, sort all hourly data chronologically
+    const allHoursSorted = [...stationDataHourFiltered.data].sort((a, b) => {
+      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+      return timeA.diff(timeB);
     });
 
-    // Get all days in order
-    const days = Object.keys(hoursByDay).sort((a, b) => {
-      return moment(a, 'MMM DD').diff(moment(b, 'MMM DD'));
-    });
-    
-    
-    // If we have no days, return empty
-    if (days.length === 0) {
-      return {
-        data: [],
-        title: station ? `Daily Data from Hourly - ${station.Station}` : ''
-      };
+    // Determine cutoff time based on dayRangeType
+    let cutoffTimeFormat;
+    if (dayRangeType === DayRangeType.MIDNIGHT) {
+      cutoffTimeFormat = '12:00 AM';
+    } else if (dayRangeType === DayRangeType.CURRENT) {
+      cutoffTimeFormat = endDate.format('h:mm A');
+    } else if (dayRangeType === DayRangeType.CUSTOM && customTime) {
+      const [hours, minutes] = customTime.split(':').map(Number);
+      cutoffTimeFormat = moment().hour(hours).minute(minutes).format('h:mm A');
+    } else {
+      cutoffTimeFormat = '12:00 AM';
     }
 
-    // Convert passed-in date range to display format
-    const displayStartDay = startDate.format('MMM DD');
-    const displayEndDay = endDate.format('MMM DD');
-    
-    // Standard processing for all ranges
-    const dailySummaries: any[] = [];
-    
-    // Try to find days in our data that match the app's date range
-    const matchingDays = days.filter(day => {
-      // Parse the day from the data, making sure to use the current year
-      const dayDate = moment(`${day} ${moment().year()}`, 'MMM DD YYYY');
+    // Group hours into custom periods
+    const periodsByRange = {};
+    const periodLabels = [];
 
-      // Get start and end dates without times for day-level comparison
-      const startDay = moment(startDate.format('YYYY-MM-DD'));
-      const endDay = moment(endDate.format('YYYY-MM-DD'));
+    // Get all unique days in the data
+    const uniqueDays = [...new Set(allHoursSorted.map(hour => hour.Day))];
+    uniqueDays.sort((a, b) => moment(a, 'MMM DD').diff(moment(b, 'MMM DD')));
 
-      // For day comparison, we're only concerned with the date portion
-      return dayDate.isSameOrAfter(startDay, 'day') && 
-             dayDate.isSameOrBefore(endDay, 'day');
-    });
-
-    
-    // If we have matching days, use only those days
-    // Otherwise, just use all days - don't filter out data we have
-    const daysToProcess = matchingDays.length > 0 ? matchingDays : days;
-    
-    daysToProcess.forEach((day, index) => {
-      const dayData = hoursByDay[day];
+    // For each day, create a period from cutoff time to next day's cutoff
+    for (let i = 0; i < uniqueDays.length; i++) {
+      const thisDay = uniqueDays[i];
+      const nextDay = i < uniqueDays.length - 1 ? uniqueDays[i + 1] : null;
       
-      // Get all hours for this day
-      const hoursByTime: { [key: string]: any[] } = {};
+      if (!nextDay) continue; // Skip the last day if there's no next day
       
-      // Group by hour for this day
-      dayData.forEach(hourData => {
-        const hour = hourData.Hour;
-        if (!hoursByTime[hour]) {
-          hoursByTime[hour] = [];
-        }
-        hoursByTime[hour].push(hourData);
+      const periodStart = moment(`${thisDay} ${cutoffTimeFormat}`, 'MMM DD h:mm A');
+      const periodEnd = moment(`${nextDay} ${cutoffTimeFormat}`, 'MMM DD h:mm A');
+      const periodLabel = `${thisDay}/${nextDay}`;
+      
+      // Filter hours that fall within this period
+      const hoursInPeriod = allHoursSorted.filter(hour => {
+        const hourTime = moment(`${hour.Day} ${hour.Hour}`, 'MMM DD h:mm A');
+        return hourTime.isAfter(periodStart) && hourTime.isSameOrBefore(periodEnd);
       });
       
-      // Sort hours chronologically 
-      const sortedHours = Object.keys(hoursByTime).sort((a, b) => {
-        const timeA = moment(a, 'h:mm A');
-        const timeB = moment(b, 'h:mm A');
-        return timeA.diff(timeB);
-      });
-      
-      // Determine cutoff time based on dayRangeType
-      let startHour = '12:00 AM';
-      let endHour: string;
-      let hoursInRange = dayData;
-      
-      if (dayRangeType === DayRangeType.MIDNIGHT) {
-        endHour = '11:59 PM';
-      } else if (dayRangeType === DayRangeType.CURRENT) {
-        // Use actual time from the range endpoint
-        endHour = endDate.format('h:mm A');
-        
-        // Filter hours before the cutoff time
-        hoursInRange = dayData.filter(hourData => {
-          const hourTime = moment(hourData.Hour, 'h:mm A');
-          const cutoffTime = moment(endHour, 'h:mm A');
-          return hourTime.isSameOrBefore(cutoffTime);
-        });
-      } else if (dayRangeType === DayRangeType.CUSTOM && customTime) {
-        const [hours, minutes] = customTime.split(':').map(Number);
-        endHour = moment().hour(hours).minute(minutes).format('h:mm A');
-        
-        // Filter hours before the custom cutoff time
-        hoursInRange = dayData.filter(hourData => {
-          const hourTime = moment(hourData.Hour, 'h:mm A');
-          const cutoffTime = moment(endHour, 'h:mm A');
-          return hourTime.isSameOrBefore(cutoffTime);
-        });
-      } else {
-        endHour = '11:59 PM';
+      if (hoursInPeriod.length > 0) {
+        periodsByRange[periodLabel] = hoursInPeriod;
+        periodLabels.push(periodLabel);
       }
+    }
+
+    // Now create summaries for each period
+    const dailySummaries = periodLabels.map(periodLabel => {
+      const hoursInRange = periodsByRange[periodLabel];
+      const [startDay, endDay] = periodLabel.split('/');
       
-      const currentYear = moment().year().toString();
-      
-      // Create start and end times for data reference
-      const startTime = `${day}, ${currentYear}, ${startHour}`;
-      const endTime = `${day}, ${currentYear}, ${endHour}`;
-      
-      // Create summary for this day based on hours in range
-      const daySummary: any = {
+      // Create a summary for this period
+      return {
         Station: station.Station,
         Elevation: station.Elevation,
-        Date: day,
-        'Date Time': `${startHour} - ${endHour}, ${day}, ${currentYear}`,
-        'Start Date Time': startTime,
-        'End Date Time': endTime,
+        Date: periodLabel, // Use the period label as the date
+        'Date Time': `${cutoffTimeFormat} - ${cutoffTimeFormat}, ${periodLabel}`,
+        'Start Date Time': `${startDay}, ${currentYear}, ${cutoffTimeFormat}`,
+        'End Date Time': `${endDay}, ${currentYear}, ${cutoffTimeFormat}`,
         Latitude: station.Latitude || 'NaN',
         Longitude: station.Longitude || 'NaN',
-        Stid: formatStid(day, startHour, endHour, dayRangeType),
+        Stid: `${moment(startDay, 'MMM DD').format('MM-DD')} ${cutoffTimeFormat} - ${moment(endDay, 'MMM DD').format('MM-DD')} ${cutoffTimeFormat}`,
         'Total Snow Depth': findLatestValue(hoursInRange, 'Total Snow Depth'),
         'Air Temp Min': findMinValue(hoursInRange, 'Air Temp'),
         'Air Temp Max': findMaxValue(hoursInRange, 'Air Temp'),
@@ -535,13 +485,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
         'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
         'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
-        'Api Fetch Time': `${day}, ${hoursInRange[hoursInRange.length - 1]?.Hour || '11:59 PM'}`,
+        'Api Fetch Time': `${endDay}, ${hoursInRange[hoursInRange.length - 1]?.Hour || cutoffTimeFormat}`,
         'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
         'precipitation': [''],
         'intermittent_snow': ['']
       };
-      
-      dailySummaries.push(daySummary);
     });
     
     // Sort summaries by date for correct display
@@ -566,7 +514,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         timeFormat = '12 AM - 11:59 PM';
     }
     
-    const timeRangeStr = `${displayStartDay} to ${displayEndDay} (${timeFormat})`;
+    const timeRangeStr = `${startDate.format('MMM DD')} to ${endDate.format('MMM DD')} (${timeFormat})`;
 
     return {
       data: dailySummaries,
@@ -581,12 +529,19 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     memoizedTimeRange
   ]);
 
+  useEffect(() => {
+    console.log('processedDailyFromHourly', processedDailyFromHourly);
+  }, [processedDailyFromHourly]);
+
+
   // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
+    console.log(`Finding min for ${field}, values:`, data.map(item => item[field]));
     const values = data
       .map(item => parseFloat(item[field]))
       .filter(val => !isNaN(val));
     
+    console.log(`Parsed values: ${values.length ? values.join(', ') : 'none'}`);
     if (!values.length) return "-";
     return `${Math.min(...values)} °F`;
   }
