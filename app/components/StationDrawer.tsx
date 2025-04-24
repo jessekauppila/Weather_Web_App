@@ -379,11 +379,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       return null;
     }
     
-    console.log('📅 StationDrawer using timeRangeData:', {
-      start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-      end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    });
-    
     return {
       startDate: timeRangeData.start_time_pdt,
       endDate: timeRangeData.end_time_pdt

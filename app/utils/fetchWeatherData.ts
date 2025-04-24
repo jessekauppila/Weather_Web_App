@@ -37,22 +37,8 @@ export async function fetchWeatherData({
   isMetric,
   onDataLoaded,
 }: FetchWeatherDataProps) {
-  // Clear logging - only log date ranges and essential fetch information
-  console.log('📅 FETCH DATA RANGE:', { 
-    start: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    end: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
-    dayRangeType,
-    startHour, 
-    endHour
-  });
-
   try {
     const { start_time_pdt, end_time_pdt } = timeRangeData;
-    
-    console.log('🔴 FETCH: Final time range before API call', {
-      startTime: timeRangeData.start_time_pdt.format('YYYY-MM-DD HH:mm:ss'), 
-      endTime: timeRangeData.end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
-    });
     
     const response = await fetch('/api/getObservationsFromDB', {
       method: 'POST',
@@ -83,9 +69,6 @@ export async function fetchWeatherData({
       start: start_time_pdt.format('YYYY-MM-DD HH:mm:ss'),
       end: end_time_pdt.format('YYYY-MM-DD HH:mm:ss')
     }, isMetric);
-
-    // Log filtered data days 
-    console.log('📅 FILTERED DATA DAYS:', filteredData);
 
     const dayData = await wxTableDataDayFromDB(filteredData, result.units, {
       mode: tableMode,

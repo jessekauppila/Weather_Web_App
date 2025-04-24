@@ -131,15 +131,6 @@ export default function Home() {
     // Always use calculateTimeRange for consistency
     const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
     
-    // Track time range calculations for debugging
-    console.log('🔴 PAGE MEMO: Final timeRangeData before passing to components', {
-      start: start.format('YYYY-MM-DD HH:mm:ss'),
-      end: end.format('YYYY-MM-DD HH:mm:ss'),
-      selectedDate: moment(selectedDate).format('YYYY-MM-DD'),
-      dayRangeType,
-      timeRange
-    });
-    
     return {
       start_time_pdt: start,
       end_time_pdt: end
