@@ -43,6 +43,7 @@ interface MapComponentProps {
     snowDepthChange: boolean;
     terrain: boolean;
     currentTemp: boolean;
+    minMaxTemp: boolean;
   };
   onToggleLayer?: (id: LayerId) => void;
   dayRangeType?: DayRangeType;
@@ -114,6 +115,7 @@ export const MapApp = ({
     snowDepthChange: false,
     terrain: false,
     currentTemp: true,
+    minMaxTemp: false,
   });
 
   // Use either external or internal state

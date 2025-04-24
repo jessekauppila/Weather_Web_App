@@ -16,7 +16,8 @@ export {
   createWindArrowLayer,
   createCurrentTempLayer,
   createSnowDepthLayer,
-  createTerrainLayer
+  createTerrainLayer,
+  createCombinedMaxMinLayer
 };
 
 // Define LayerId type
@@ -26,8 +27,7 @@ export type LayerId =
   | 'snowDepthChange'
   | 'terrain'
   | 'currentTemp'
-  | 'airTempMin'
-  | 'airTempMax';
+  | 'minMaxTemp';
 
 type LayerVisibility = {
   [key in LayerId]: boolean;
@@ -75,7 +75,7 @@ export function createMapLayers(
         },
         onStationClick
       ),
-      visibility.airTempMin && visibility.airTempMax &&
+      visibility.minMaxTemp &&
       createCombinedMaxMinLayer(
         data.stationData ?? {
           type: 'FeatureCollection',

@@ -15,6 +15,7 @@ interface LayerControlsProps {
     snowDepthChange: boolean;
     terrain: boolean;
     currentTemp: boolean;
+    minMaxTemp: boolean;
   };
   toggleLayer: (id: LayerId) => void;
 }
@@ -88,6 +89,19 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
             />
           }
           label="Current Temp."
+          labelPlacement="start"
+        />
+        <FormControlLabel
+          sx={formControlStyle(layersState.minMaxTemp)}
+          control={
+            <Switch
+              size="small"
+              checked={layersState.minMaxTemp}
+              onChange={() => toggleLayer('minMaxTemp')}
+              sx={switchStyle}
+            />
+          }
+          label="Min/Max Temp."
           labelPlacement="start"
         />
         <FormControlLabel

@@ -64,7 +64,8 @@ export type LayerId =
   | 'windArrows'
   | 'snowDepthChange'
   | 'terrain'
-  | 'currentTemp';
+  | 'currentTemp'
+  | 'minMaxTemp'; // Single ID for combined layer
 
 // Add a utility function for logging
 const logAppEvent = (category: string, message: string, data?: any) => {
@@ -238,14 +239,20 @@ export default function Home() {
     snowDepthChange: false,
     terrain: false,
     currentTemp: true,
+    minMaxTemp: false,
   });
   
   // Handle layer toggle
   const handleToggleLayer = (layerId: LayerId) => {
+    console.log(`Toggling layer: ${layerId}, current state:`, layerVisibility[layerId]);
     setLayerVisibility((prev) => ({
       ...prev,
       [layerId]: !prev[layerId],
     }));
+    // Log after update
+    setTimeout(() => {
+      console.log(`Layer ${layerId} new state:`, layerVisibility[layerId]);
+    }, 0);
   };
 
   // Add a new loading state
