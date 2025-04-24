@@ -8,6 +8,7 @@ import { createWindArrowLayer } from './windArrowLayer';
 import { createCurrentTempLayer } from './currentTempLayer';
 import { createSnowDepthLayer } from './snowDepthLayer';
 import { createTerrainLayer } from './terrainLayer';
+import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 
 // Re-export the layer creators for direct usage if needed
 export { 
@@ -24,7 +25,9 @@ export type LayerId =
   | 'windArrows'
   | 'snowDepthChange'
   | 'terrain'
-  | 'currentTemp';
+  | 'currentTemp'
+  | 'airTempMin'
+  | 'airTempMax';
 
 type LayerVisibility = {
   [key in LayerId]: boolean;
@@ -66,6 +69,14 @@ export function createMapLayers(
     visibility.terrain && createTerrainLayer(),
     visibility.currentTemp &&
       createCurrentTempLayer(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
+      visibility.airTempMin && visibility.airTempMax &&
+      createCombinedMaxMinLayer(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
