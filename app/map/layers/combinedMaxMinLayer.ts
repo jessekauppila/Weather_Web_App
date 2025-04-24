@@ -13,6 +13,15 @@ export function createCombinedMaxMinLayer(
   },
   onClick?: (info: PickingInfo) => void
 ) {
+
+
+    console.log("Data for min/max temp layer:", data.features);
+    if (data.features.length > 0) {
+      console.log("Sample feature properties:", data.features[0].properties);
+      console.log("Has min temp?", !!data.features[0].properties.airTempMin);
+      console.log("Has max temp?", !!data.features[0].properties.airTempMax);
+    }
+    
   // First layer for minimum temperature
   const minTempLayer = new IconLayer({
     id: 'minTempIcons',
