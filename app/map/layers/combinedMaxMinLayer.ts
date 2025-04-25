@@ -44,10 +44,10 @@ export function createCombinedMaxMinLayer(
       return `min-temp-${icon_num}`;
     },
     getPosition: (f) => [
-      f.properties.longitude - 0.005, // Offset to the left
-      f.properties.latitude,
+        f.properties.longitude,
+        f.properties.latitude,
     ],
-    getSize: 80,
+    getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
     iconAtlas: '/minTempAtlas/minTemp_location_icon_atlas.png',
@@ -80,10 +80,10 @@ export function createCombinedMaxMinLayer(
       return `max-temp-${icon_num}`;
     },
     getPosition: (f) => [
-      f.properties.longitude + 0.005, // Offset to the right
-      f.properties.latitude,
+        f.properties.longitude,
+        f.properties.latitude,
     ],
-    getSize: 80,
+    getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
     iconAtlas: '/maxTempAtlas/maxTemp_location_icon_atlas.png',
