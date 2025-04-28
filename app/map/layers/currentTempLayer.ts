@@ -37,6 +37,9 @@ export function createCurrentTempLayer(
       f.properties.longitude,
       f.properties.latitude,
     ],
+    getElevation: (f) => {
+      return 100 - f.properties.latitude;
+    },
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
