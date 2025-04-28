@@ -15,7 +15,7 @@ export function createWindArrowLayer(
 ) {
   return new IconLayer({
     id: 'windArrows',
-    data: data.features,
+    data: data.features, 
     billboard: false,
     autoHighlight: true,
     getIcon: (f) => {
@@ -34,7 +34,7 @@ export function createWindArrowLayer(
       f.properties.longitude,
       f.properties.latitude,
     ],
-    getSize: 125,
+    getSize: 100,
     getAngle: 0,
     angleAlignment: 'map',
     iconAtlas: '/windAtlas/wind_arrows_location_icon_atlas.png',
