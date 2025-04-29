@@ -186,6 +186,8 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
   useEffect(() => {
     if (!memoizedData.length || !ref.current) return;
 
+    const node = ref.current;
+
     const renderTable = () => {
       // Instead of clearing the container, let D3's update pattern handle transitions
       // if (ref.current) {
@@ -197,7 +199,7 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
       const batchUpdate = () => {
         // Use D3's enter/update/exit pattern for smooth updates
         const table = d3
-          .select(ref.current)
+          .select(node)
           .selectAll<HTMLTableElement, null>('table')
           .data([null]);
           
@@ -360,8 +362,8 @@ function DayAveragesTable({ dayAverages, onStationClick, mode }: DayAveragesTabl
     return () => {
       // Only clean up on unmount, not on every update
       // This helps prevent the visible "blinking"
-      if (ref.current && !memoizedData.length) {
-        d3.select(ref.current).selectAll('*').remove();
+      if (node && !memoizedData.length) {
+        d3.select(node).selectAll('*').remove();
       }
     };
   }, [memoizedData, headerStructure, onStationClick, dayAverages.title, refreshTimestamp]);
