@@ -24,9 +24,17 @@ export function createWindArrowLayer(
       }
 
       const direction = f.properties.windDirection.toLowerCase();
+      if (direction === 'nan' || direction === '') {
+        return 'default-icon';
+      }
+
       const speed = f.properties.windSpeedAvg
         ? parseFloat(f.properties.windSpeedAvg.split(' ')[0])
         : 0;
+      
+      if (isNaN(speed)) {
+        return 'default-icon';
+      }
 
       return getWindStrengthIcon(direction, speed);
     },

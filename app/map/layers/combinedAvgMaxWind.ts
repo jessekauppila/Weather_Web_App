@@ -25,6 +25,10 @@ export function createCombinedAvgMaxWindLayer(
       }
 
       const avgWind = parseInt(f.properties.windSpeedAvg);
+      if (isNaN(avgWind)) {
+        return 'default-icon';
+      }
+
       let icon_num;
       
       if (avgWind <= 59) {
@@ -66,6 +70,10 @@ export function createCombinedAvgMaxWindLayer(
       }
 
       const maxWindGust = parseInt(f.properties.maxWindGust);
+      if (isNaN(maxWindGust)) {
+        return 'default-icon';
+      }
+
       let icon_num;
       
       if (maxWindGust <= 59) {
