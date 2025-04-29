@@ -298,17 +298,26 @@ export default function Home() {
           </div>
           
           {/* Container for both controls positioned at the top */}
-          <div className="fixed top-4 left-4 right-4 z-10 flex flex-col-reverse md:flex-row gap-4 justify-between items-start" 
-            style={{ 
+          <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
+            style={{
               pointerEvents: 'auto',
               maxHeight: 'calc(100vh - 2rem)',
               overflowY: 'auto'
             }}
           >
-            {/* Layer controls - left on desktop, below on mobile */}
-            <div className="w-full md:w-auto md:sticky md:top-0" 
-              style={{ 
-                minWidth: '200px', 
+            {/* Time toolbar - left on desktop, top on mobile */}
+            <div className="w-full md:flex-grow">
+              <TimeToolbar
+                {...timeProps}
+                {...stationProps}
+                {...dataProps}
+              />
+            </div>
+
+            {/* Layer controls - right on desktop, below on mobile */}
+            <div className="w-full md:w-auto md:sticky md:top-0"
+              style={{
+                minWidth: '200px',
                 maxWidth: '250px',
                 alignSelf: 'flex-start'
               }}
@@ -316,15 +325,6 @@ export default function Home() {
               <LayerControls 
                 layersState={layerVisibility}
                 toggleLayer={handleToggleLayer}
-              />
-            </div>
-             
-            {/* Time toolbar - right on desktop, top on mobile */}
-            <div className="w-full md:flex-grow">
-              <TimeToolbar
-                {...timeProps}
-                {...stationProps}
-                {...dataProps}
               />
             </div>
           </div>
