@@ -276,23 +276,6 @@ export const MapApp = ({
   //   }
   // };
 
-  useEffect(() => {
-    // When timeRangeData changes and drawer is open
-    if (isDrawerOpen && timeRangeData && selectedStation) {
-      // Store the current selected station
-      const currentStation = selectedStation;
-      
-      // Briefly close the drawer
-      setIsDrawerOpen(false);
-      
-      // Re-open it with a slight delay to ensure data refresh
-      setTimeout(() => {
-        setSelectedStation(currentStation);
-        setIsDrawerOpen(true);
-      }, 100);
-    }
-  }, [timeRangeData, selectedStation, isDrawerOpen]);
-
   return (
     <div className="w-full h-full relative">
       {isLoading && (
