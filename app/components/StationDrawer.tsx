@@ -10,6 +10,16 @@ import { DayRangeType } from '../types';
 import './StationDrawer.css';
 import { Tabs, Tab, Box } from '@mui/material';
 
+type PeriodData = {
+  [key: string]: any[];
+};
+
+type HourData = {
+  Day: string;
+  Hour: string;
+  [key: string]: any;
+};
+
 interface StationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -422,7 +432,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     }
 
     // Group hours into custom periods
-    const periodsByRange = {};
+    const periodsByRange: { [key: string]: HourData[] } = {};
     const periodLabels = [];
 
     // Get all unique days in the data
