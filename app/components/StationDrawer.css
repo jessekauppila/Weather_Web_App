@@ -50,6 +50,34 @@
   visibility: visible;
 }
 
+/* Drawer handle */
+.drawer-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  background-color: var(--app-dropdown-bg);
+  border-bottom: 1px solid var(--app-border-color);
+  z-index: 1;
+}
+
+.drawer-handle::after {
+  content: '';
+  width: 40px;
+  height: 4px;
+  background-color: var(--app-border-color);
+  border-radius: 2px;
+}
+
+.drawer-handle:active {
+  cursor: grabbing;
+}
+
 /* Add smooth transition for visibility */
 /* .drawer-open,
 .drawer-closed {

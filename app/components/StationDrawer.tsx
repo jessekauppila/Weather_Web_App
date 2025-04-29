@@ -102,10 +102,15 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 }) => {
   // Simple configuration
   const DRAWER_HEIGHT = 700; // Fixed height when open
+  const MIN_DRAWER_HEIGHT = 50; // Minimum height when dragging
   const currentYear = moment().year();
   
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
+  const [drawerHeight, setDrawerHeight] = useState(DRAWER_HEIGHT);
+  const [isDragging, setIsDragging] = useState(false);
+  const startYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(0);
   
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -116,8 +121,42 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   useEffect(() => {
     if (isOpen) {
       setActiveTab(0);
+      setDrawerHeight(DRAWER_HEIGHT);
     }
   }, [isOpen]);
+  
+  // Handle mouse down on the drawer handle
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    startYRef.current = e.clientY;
+    startHeightRef.current = drawerHeight;
+  };
+
+  // Handle mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const deltaY = startYRef.current - e.clientY;
+      const newHeight = Math.max(MIN_DRAWER_HEIGHT, startHeightRef.current + deltaY);
+      setDrawerHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
   
   // Memoize the current time range value
   const memoizedTimeRange = useMemo(() => {
@@ -802,10 +841,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     <div
       className={`drawer ${isOpen ? 'open' : ''}`}
       style={{
-        height: DRAWER_HEIGHT,
+        height: drawerHeight,
         width: "100%"
       }}
     >
+      <div className="drawer-handle" onMouseDown={handleMouseDown} />
       <div className="p-4">
         {/* Header with tabs and close button */}
         <div className="flex items-center justify-between mb-4">
