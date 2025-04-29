@@ -100,119 +100,30 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   customTime,
   calculateCurrentTimeRange
 }) => {
-  // ===== DRAWER POSITIONING CONFIGURATION =====
-  // TO ADJUST DRAWER HEIGHT: Change the INITIAL_OPEN_HEIGHT value below
-  // Change these values to control drawer position and behavior
-  
-  // 1. TOOLBAR_HEIGHT: Height of the TimeToolbar component
-  //    This sets where the drawer starts when fully open
-  const TOOLBAR_HEIGHT = 135; 
-  
-  // 2. INITIAL_OPEN_HEIGHT: Starting height when drawer first opens
-  //    Set to a smaller value for a partially open initial state
-  //    Example: 400 will open to 400px height initially
-  const INITIAL_OPEN_HEIGHT = 700;
-  
-  // 3. MIN_DRAWER_HEIGHT: Minimum allowed height when resizing
-  //    Drawer can't be resized smaller than this
-  const MIN_DRAWER_HEIGHT = 50;
-  
-  // 4. CLOSED_Y_POSITION: Where drawer goes when closed
-  //    Use "100%" to hide it completely off-screen
-  //    Use a pixel value to keep part of it visible when closed
-  const CLOSED_Y_POSITION = "100%";
-  // ===============================================
-  
-  // Get current year for consistent date formatting
+  // Simple configuration
+  const DRAWER_HEIGHT = 700; // Fixed height when open
   const currentYear = moment().year();
   
-  // Calculate the initial top position based on desired height
-  const initialTopPosition = window.innerHeight - INITIAL_OPEN_HEIGHT;
-  
-  // State to track the drawer's current top position
-  const [drawerTop, setDrawerTop] = useState<number>(initialTopPosition);
-  
-  // State for resize functionality
-  const [isResizing, setIsResizing] = useState(false);
-  const [lastMouseY, setLastMouseY] = useState(0);
-  const drawerRef = useRef<HTMLDivElement>(null);
-
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
-  
-  // Memoize the current time range value to avoid recalculation in other hooks
-  const memoizedTimeRange = useMemo(() => {
-    return Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
-  }, [calculateCurrentTimeRange]);
   
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
-  
-  // Reset drawer to initial position when opened
+
+  // Reset tab when drawer opens
   useEffect(() => {
     if (isOpen) {
-      setDrawerTop(initialTopPosition);
-      setActiveTab(0); // Reset to first tab when drawer opens
+      setActiveTab(0);
     }
-  }, [isOpen, initialTopPosition]);
+  }, [isOpen]);
   
-  // Add event listeners for resize functionality
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      
-      // Calculate the drag delta
-      const deltaY = e.clientY - lastMouseY;
-      setLastMouseY(e.clientY);
-      
-      // Update drawer position based on mouse movement
-      // Moving the mouse DOWN increases top position (shorter drawer)
-      // Moving the mouse UP decreases top position (taller drawer)
-      setDrawerTop(prevTop => {
-        let newTop = prevTop + deltaY;
-        
-        // Apply constraints
-        // 1. Can't go higher than toolbar
-        // 2. Can't be smaller than minimum height
-        const maxTop = window.innerHeight - MIN_DRAWER_HEIGHT;
-        
-        if (newTop < TOOLBAR_HEIGHT) {
-          newTop = TOOLBAR_HEIGHT;
-        } else if (newTop > maxTop) {
-          newTop = maxTop;
-        }
-        
-        return newTop;
-      });
-    };
-    
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-    
-    // Add global event listeners when resizing
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    // Clean up event listeners
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, lastMouseY]);
-  
-  // Handle mouse down on the resize handle
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
-    setLastMouseY(e.clientY);
-  };
-  
+  // Memoize the current time range value
+  const memoizedTimeRange = useMemo(() => {
+    return Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
+  }, [calculateCurrentTimeRange]);
+
   // Helper functions for data processing
   const findLatestValue = useCallback((data: any[], field: string): string => {
     // If no data, return placeholder
@@ -887,54 +798,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   
   if (!station) return null;
 
-  // Calculate the drawer height based on top position
-  // This ensures the drawer is always anchored to the bottom of the screen
-  const drawerHeight = window.innerHeight - drawerTop;
-
   return (
-    <motion.div
-      ref={drawerRef}
-      className="fixed left-0 right-0 bottom-0 shadow-lg rounded-t-xl"
+    <div
+      className={`drawer ${isOpen ? 'open' : ''}`}
       style={{
-        top: isOpen ? `${drawerTop}px` : 'auto', // Position based on top when open
-        height: drawerHeight,
-        width: "100%",
-        zIndex: 9999,
-        transformOrigin: "bottom",
-        pointerEvents: isOpen ? 'auto' : 'none',
-        overflow: 'hidden',
-        backgroundColor: 'var(--app-dropdown-bg)', // Use the dropdown bg for drawer as it's darker
+        height: DRAWER_HEIGHT,
+        backgroundColor: 'var(--app-dropdown-bg)',
         color: 'var(--app-text-primary)',
         borderTop: '1px solid var(--app-border-color)',
         boxShadow: 'var(--app-box-shadow)'
       }}
-      // Initial state animation - where drawer starts from before animating
-      initial={{ y: "100%" }}
-      // Animation targets - where drawer animates to when opening/closing 
-      animate={{ 
-        y: isOpen ? 0 : CLOSED_Y_POSITION,
-      }}
-      transition={{ 
-        type: "spring", 
-        stiffness: 400,
-        damping: 40
-      }}
     >
-      
-      {/* Resizable handle at the top */}
-      <div 
-        className="w-full h-6 cursor-ns-resize select-none flex justify-center items-center"
-        onMouseDown={handleMouseDown}
-        style={{
-          touchAction: 'none',
-          userSelect: 'none',
-          backgroundColor: 'var(--app-toolbar-bg)',
-          borderBottom: '1px solid var(--app-border-color)'
-        }}
-      >
-        <div className="w-16 h-1.5 bg-gray-500 rounded-full" />
-      </div>
-
       <div className="p-4">
         {/* Header with tabs and close button */}
         <div className="flex items-center justify-between mb-4">
@@ -1039,7 +913,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           style={{ 
             height: `calc(100% - 50px)`,
             minHeight: '120px',
-            maxHeight: `${drawerHeight - 90}px`,
+            maxHeight: `${DRAWER_HEIGHT - 90}px`,
             overflowY: 'auto',
             position: 'relative'
           }}
@@ -1144,7 +1018,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           </TabPanel>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

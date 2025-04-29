@@ -420,8 +420,8 @@ export function Map({
   //     }
   //   }
   // };
-
-  return (
+              
+              return (
     <>
       {/* Your existing map rendering code here */}
       {hoverInfo && <div dangerouslySetInnerHTML={{ __html: getMapTooltip(hoverInfo)?.html || '' }} />}
