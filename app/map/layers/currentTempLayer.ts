@@ -37,7 +37,7 @@ export function createCurrentTempLayer(
       f.properties.longitude,
       f.properties.latitude,
     ],
-    getElevation: (f) => {
+    getElevation: (f: Feature<Geometry, Map_BlockProperties>) => {
       return 100 - f.properties.latitude;
     },
     getSize: 100,

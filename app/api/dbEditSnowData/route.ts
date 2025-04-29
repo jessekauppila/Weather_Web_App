@@ -9,6 +9,8 @@ import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import { filterSnowDepthOutliers, calculateSnowDepthAccumulation, SNOW_DEPTH_CONFIG, SNOW_DEPTH_24H_CONFIG } from '../../utils/snowDepthUtils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   let client;
 
