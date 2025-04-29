@@ -16,6 +16,7 @@ interface LayerControlsProps {
     terrain: boolean;
     currentTemp: boolean;
     minMaxTemp: boolean;
+    avgMaxWind: boolean;
   };
   toggleLayer: (id: LayerId) => void;
 }
