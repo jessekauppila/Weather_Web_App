@@ -803,10 +803,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       className={`drawer ${isOpen ? 'open' : ''}`}
       style={{
         height: DRAWER_HEIGHT,
-        backgroundColor: 'var(--app-dropdown-bg)',
-        color: 'var(--app-text-primary)',
-        borderTop: '1px solid var(--app-border-color)',
-        boxShadow: 'var(--app-box-shadow)'
+        width: "100%"
       }}
     >
       <div className="p-4">
