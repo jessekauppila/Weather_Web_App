@@ -65,7 +65,8 @@ export type LayerId =
   | 'snowDepthChange'
   | 'terrain'
   | 'currentTemp'
-  | 'minMaxTemp'; // Single ID for combined layer
+  | 'minMaxTemp'
+  | 'avgMaxWind';
 
 // Add a utility function for logging
 const logAppEvent = (category: string, message: string, data?: any) => {
@@ -240,6 +241,7 @@ export default function Home() {
     terrain: false,
     currentTemp: true,
     minMaxTemp: false,
+    avgMaxWind: false,
   });
   
   // Handle layer toggle
