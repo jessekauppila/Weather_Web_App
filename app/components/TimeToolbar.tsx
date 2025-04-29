@@ -129,7 +129,7 @@ export default function TimeToolbar({
             useCustomEndDate={useCustomEndDate}
           />
           
-          <CutoffControls
+          {/* <CutoffControls
             dayRangeType={dayRangeType}
             handleDayRangeTypeChange={handleDayRangeTypeChange}
             customTime={customTime}
@@ -138,24 +138,24 @@ export default function TimeToolbar({
             anchorEl={cutOffAnchorEl}
             handleClose={handleClose}
             handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
-          />
+          /> */}
 
-          <DataInfo
+          {/* <DataInfo
             filteredObservationsDataHour={filteredObservationsDataHour}
             handleRefreshButtonClick={handleRefreshButtonClick}
             anchorEl={dataAnchorEl}
             handleClose={handleClose}
             handleDataPopupButtonClick={handleDataPopupButtonClick}
-          />
+          /> */}
 
-          <UnitsSwitch
+          {/* <UnitsSwitch
             isMetric={isMetric}
             onRefresh={onRefresh}
             setIsMetric={setIsMetric}
             anchorEl={unitsAnchorEl}
             handleClose={handleClose}
             handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
-          />
+          /> */}
         </div>
 
         {/* <div className="w-full max-w-[800px] mx-auto">
