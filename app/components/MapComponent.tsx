@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Map } from 'react-map-gl/mapbox';
 import DeckGL from '@deck.gl/react';
@@ -214,7 +214,7 @@ export const MapApp = ({
   }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
 
   // Handle station click
-  const handleStationClick = (info: PickingInfo) => {
+  const handleStationClick = useCallback((info: PickingInfo) => {
     if (info.object && 'properties' in info.object) {
       const properties = (info.object as { properties: Map_BlockProperties }).properties;
       
@@ -256,7 +256,7 @@ export const MapApp = ({
         setIsDrawerOpen(true);
       }
     }
-  };
+  }, [mapData, setSelectedStation, setIsDrawerOpen]);
 
   // Create layers based on current visibility and data
   const layers = useMemo(

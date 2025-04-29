@@ -233,7 +233,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title: `Filtered Hourly Data - ${station.Station}`
     };
   }, [
-    station, station?.Station, 
+    station, 
     filteredObservationsDataHour?.data 
   ]);
 
@@ -274,9 +274,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title: `Raw Hourly Data - ${station.Station}`
     };
   }, [station, 
-    station?.Station, 
-    station?.Stid, 
-    station?.Elevation, 
     observationsDataHour?.data
   ]);
 
@@ -324,10 +321,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title
     };
   }, [
-   station, station?.Station, 
-    station?.Elevation, 
-    station?.Latitude, 
-    station?.Longitude, 
+   station, 
     observationsDataDay?.data
   ]);
 
@@ -492,9 +486,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
         'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
         'Api Fetch Time': `${endDay}, ${hoursInRange[hoursInRange.length - 1]?.Hour || cutoffTimeFormat}`,
-        'api_fetch_time': hoursInRange.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
-        'precipitation': [''],
-        'intermittent_snow': ['']
+        'api_fetch_time': hoursInRange[hoursInRange.length - 1]?.API_Fetch_Time || '',
+        'precipitation': '',
+        'intermittent_snow': ''
       };
     });
     
@@ -531,8 +525,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     stationDataHourFiltered, 
     dayRangeType, 
     customTime,
-    timeRangeData,
-    memoizedTimeRange
+    timeRangeData
   ]);
 
   // Helper functions for data processing
@@ -889,8 +882,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       'Precip Accum One Hour': calculateTotalPrecipitation(hoursData),
       'Api Fetch Time': `${day}, ${hoursData[hoursData.length - 1]?.Hour || '11:59 PM'}`,
       'api_fetch_time': hoursData.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
-      'precipitation': [''],
-      'intermittent_snow': ['']
+      'precipitation': '',
+      'intermittent_snow': ''
     };
   }
   
