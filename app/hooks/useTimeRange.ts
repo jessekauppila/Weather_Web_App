@@ -90,7 +90,7 @@ export function useTimeRange() {
     };
     
     return result;
-  }, [customTime]);
+  }, [customTime, timeRange]);
 
   return {
     selectedDate,

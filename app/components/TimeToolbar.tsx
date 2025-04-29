@@ -83,7 +83,7 @@ export default function TimeToolbar({
     } as SelectChangeEvent<string>);
   };
 
-  const memoizedHandleCustomTime = useCallback(handleCustomTimeButtonClick, []);
+  const memoizedHandleCustomTime = useCallback(handleCustomTimeButtonClick, [handleDayRangeTypeChange, handleTimeRangeChange, calculateCurrentTimeRange]);
 
   const handleUnitsPopupButtonClick = (event: React.MouseEvent<HTMLElement>) => {
     setUnitsAnchorEl(event.currentTarget);

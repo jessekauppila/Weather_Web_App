@@ -223,7 +223,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title: `Filtered Hourly Data - ${station.Station}`
     };
   }, [
-    station?.Station, 
+    station, station?.Station, 
     filteredObservationsDataHour?.data 
   ]);
 
@@ -263,7 +263,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: filteredData,
       title: `Raw Hourly Data - ${station.Station}`
     };
-  }, [
+  }, [station, 
     station?.Station, 
     station?.Stid, 
     station?.Elevation, 
@@ -314,7 +314,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       title
     };
   }, [
-    station?.Station, 
+   station, station?.Station, 
     station?.Elevation, 
     station?.Latitude, 
     station?.Longitude, 
@@ -516,7 +516,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       data: dailySummaries,
       title: `${station.Station} - ${station.Elevation}\n${timeRangeStr}`
     };
-  }, [
+  }, [currentYear, findLatestValue, 
     station, 
     stationDataHourFiltered, 
     dayRangeType, 

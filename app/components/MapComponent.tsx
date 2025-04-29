@@ -261,7 +261,7 @@ export const MapApp = ({
   // Create layers based on current visibility and data
   const layers = useMemo(
     () => createMapLayers(layerVisibility, mapData as MapData, handleStationClick),
-    [layerVisibility, mapData]
+    [layerVisibility, mapData, handleStationClick]
   );
 
   // // Toggle layer visibility - use external handler if provided, or internal state if not
@@ -291,7 +291,7 @@ export const MapApp = ({
         setIsDrawerOpen(true);
       }, 100);
     }
-  }, [timeRangeData]);
+  }, [timeRangeData, selectedStation, isDrawerOpen]);
 
   return (
     <div className="w-full h-full relative">

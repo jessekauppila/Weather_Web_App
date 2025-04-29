@@ -3,6 +3,7 @@ import { fetchWeatherData } from '../utils/fetchWeatherData';
 import { DayRangeType } from '../types';
 import moment from 'moment-timezone';
 import { debounce } from 'lodash';
+import { stat } from 'fs';
 
 /**
  * Custom hook for managing weather observation data
@@ -71,6 +72,9 @@ export function useWeatherData(
     });
   };
 
+  const startTimeISO = timeRangeData.start_time_pdt.toISOString();
+  const endTimeISO = timeRangeData.end_time_pdt.toISOString();
+
   // Track dependencies for data refreshes
   useEffect(() => {
     // Prevent fetching if stationIds is empty or not yet loaded
@@ -102,13 +106,18 @@ export function useWeatherData(
     };
   }, [
     // Only include direct dependencies that should trigger a data refresh
-    timeRangeData.start_time_pdt.toISOString(), // Convert to string for stable comparisons
-    timeRangeData.end_time_pdt.toISOString(),   // Convert to string for stable comparisons
+    startTimeISO,
+    endTimeISO,
     stationIds.length, // Only care about length changes, not reference changes
     dayRangeType,
     tableMode,
     isMetric,
-    handleDataLoaded
+    handleDataLoaded,
+    debouncedFetchData,
+    endHour,
+    startHour,
+    stationIds,
+    timeRangeData
   ]);
 
   return {
