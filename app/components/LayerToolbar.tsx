@@ -131,6 +131,19 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
           label="Terrain"
           labelPlacement="start"
         />
+        <FormControlLabel
+          sx={formControlStyle(layersState.avgMaxWind)}
+          control={
+            <Switch
+              size="small"
+              checked={layersState.avgMaxWind}
+              onChange={() => toggleLayer('avgMaxWind')}
+              sx={switchStyle}
+            />
+          }
+          label="Avg/Max Wind"
+          labelPlacement="start"
+        />
       </FormGroup>
     </div>
   );
