@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import DayAveragesTable from '../vis/dayWxTable';
 import DayWxSnowGraph from '../vis/dayWxSnowGraph';
@@ -213,7 +213,88 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     setLastMouseY(e.clientY);
   };
   
-
+  // Helper functions for data processing
+  const findLatestValue = useCallback((data: any[], field: string): string => {
+    // If no data, return placeholder
+    if (!data || data.length === 0) return "-";
+    
+    // For Total Snow Depth, check if we have values with units first
+    if (field === 'Total Snow Depth') {
+      // Check for values that include units (more likely to be valid)
+      const validData = data.filter(item => 
+        item[field] && 
+        item[field] !== "-" && 
+        item[field].includes("in")
+      );
+      
+      if (validData.length > 0) {
+        // Sort by time to get the latest valid value
+        const latestValid = [...validData].sort((a, b) => {
+          const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+          const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+          return timeB.diff(timeA);
+        })[0];
+        
+        return latestValid[field];
+      }
+      
+      // If no values with units, try numeric values
+      const numericData = data.filter(item => {
+        const value = parseFloat(item[field]);
+        return !isNaN(value);
+      });
+      
+      if (numericData.length > 0) {
+        // Sort by time to get the latest
+        const latestNumeric = [...numericData].sort((a, b) => {
+          const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+          const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+          return timeB.diff(timeA);
+        })[0];
+        
+        const value = parseFloat(latestNumeric[field]);
+        return `${value.toFixed(2)} in`;
+      }
+      
+      // Before giving up, check if the station has this field
+      if (data[0]?.Station) {
+        for (const item of data) {
+          // Try alternative field names
+          const alternativeFields = ['Total_Snow_Depth', 'Snow_Depth', 'snow_depth', 'Snow Depth'];
+          for (const altField of alternativeFields) {
+            if (item[altField] && item[altField] !== "-") {
+              return item[altField].includes("in") ? item[altField] : `${item[altField]} in`;
+            }
+          }
+        }
+      }
+      
+      // If we have stationDayData global data, try to get it from there 
+      if (stationDayData?.data?.[0]?.[field] && stationDayData.data[0][field] !== "-") {
+        return stationDayData.data[0][field];
+      }
+      
+      return "-";
+    }
+    
+    // Sort by time and get the latest for other fields
+    const latestData = [...data].sort((a, b) => {
+      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
+      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
+      return timeB.diff(timeA);
+    })[0];
+    
+    if (!latestData) return "-";
+    
+    // Add units if needed
+    const value = latestData[field];
+    if (!value) return "-";
+    
+    if (field === 'Air Temp') return `${value}`;
+    if (field === 'Relative Humidity' && value !== "-") return `${value}`;
+    
+    return value;
+  }, []);
 
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
@@ -236,7 +317,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     station, 
     filteredObservationsDataHour?.data 
   ]);
-
 
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
@@ -545,88 +625,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     if (!values.length) return "-";
     return `${Math.max(...values)} °F`;
-  }
-
-  function findLatestValue(data: any[], field: string): string {
-    // If no data, return placeholder
-    if (!data || data.length === 0) return "-";
-    
-    // For Total Snow Depth, check if we have values with units first
-    if (field === 'Total Snow Depth') {
-      // Check for values that include units (more likely to be valid)
-      const validData = data.filter(item => 
-        item[field] && 
-        item[field] !== "-" && 
-        item[field].includes("in")
-      );
-      
-      if (validData.length > 0) {
-        // Sort by time to get the latest valid value
-        const latestValid = [...validData].sort((a, b) => {
-          const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
-          const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
-          return timeB.diff(timeA);
-        })[0];
-        
-        return latestValid[field];
-      }
-      
-      // If no values with units, try numeric values
-      const numericData = data.filter(item => {
-        const value = parseFloat(item[field]);
-        return !isNaN(value);
-      });
-      
-      if (numericData.length > 0) {
-        // Sort by time to get the latest
-        const latestNumeric = [...numericData].sort((a, b) => {
-          const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
-          const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
-          return timeB.diff(timeA);
-        })[0];
-        
-        const value = parseFloat(latestNumeric[field]);
-        return `${value.toFixed(2)} in`;
-      }
-      
-      // Before giving up, check if the station has this field
-      if (data[0]?.Station) {
-        for (const item of data) {
-          // Try alternative field names
-          const alternativeFields = ['Total_Snow_Depth', 'Snow_Depth', 'snow_depth', 'Snow Depth'];
-          for (const altField of alternativeFields) {
-            if (item[altField] && item[altField] !== "-") {
-              return item[altField].includes("in") ? item[altField] : `${item[altField]} in`;
-            }
-          }
-        }
-      }
-      
-      // If we have stationDayData global data, try to get it from there 
-      if (stationDayData?.data?.[0]?.[field] && stationDayData.data[0][field] !== "-") {
-        return stationDayData.data[0][field];
-      }
-      
-      return "-";
-    }
-    
-    // Sort by time and get the latest for other fields
-    const latestData = [...data].sort((a, b) => {
-      const timeA = moment(`${a.Day} ${a.Hour}`, 'MMM DD h:mm A');
-      const timeB = moment(`${b.Day} ${b.Hour}`, 'MMM DD h:mm A');
-      return timeB.diff(timeA);
-    })[0];
-    
-    if (!latestData) return "-";
-    
-    // Add units if needed
-    const value = latestData[field];
-    if (!value) return "-";
-    
-    if (field === 'Air Temp') return `${value}`;
-    if (field === 'Relative Humidity' && value !== "-") return `${value}`;
-    
-    return value;
   }
 
   function calculateAverage(data: any[], field: string): string {
