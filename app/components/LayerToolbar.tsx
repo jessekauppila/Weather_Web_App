@@ -9,16 +9,8 @@ import { styled } from '@mui/material/styles';
 import { LayerId } from '../page';
 
 interface LayerControlsProps {
-  layersState: {
-    forecastZones: boolean;
-    windArrows: boolean;
-    snowDepthChange: boolean;
-    terrain: boolean;
-    currentTemp: boolean;
-    minMaxTemp: boolean;
-    avgMaxWind: boolean;
-  };
-  toggleLayer: (id: LayerId) => void;
+  activeLayer: LayerId | null;
+  setActiveLayer: (id: LayerId) => void;
 }
 
 const switchStyle = {
@@ -49,11 +41,11 @@ const formControlStyle = (isChecked: boolean) => ({
   },
 });
 
-const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer }) => {
+const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLayer }) => {
   return (
     <div className="app-toolbar" style={{ padding: '8px 12px' }}>
       <FormGroup sx={{ width: '100%' }}>
-        <FormControlLabel
+        {/* <FormControlLabel
           sx={formControlStyle(layersState.forecastZones)}
           control={
             <Switch
@@ -65,8 +57,8 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
           }
           label="Forecast Zones"
           labelPlacement="start"
-        />
-        <FormControlLabel
+        /> */}
+        {/* <FormControlLabel
           sx={formControlStyle(layersState.windArrows)}
           control={
             <Switch
@@ -78,14 +70,16 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
           }
           label="Wind Arrows"
           labelPlacement="start"
-        />
+        /> */}
         <FormControlLabel
-          sx={formControlStyle(layersState.currentTemp)}
+          sx={formControlStyle(activeLayer === 'currentTemp')}
           control={
             <Switch
               size="small"
-              checked={layersState.currentTemp}
-              onChange={() => toggleLayer('currentTemp')}
+              checked={activeLayer === 'currentTemp'}
+              onChange={() =>
+                setActiveLayer(activeLayer === 'currentTemp' ? null : 'currentTemp')
+              }
               sx={switchStyle}
             />
           }
@@ -93,57 +87,64 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layersState, toggleLayer 
           labelPlacement="start"
         />
         <FormControlLabel
-          sx={formControlStyle(layersState.minMaxTemp)}
+          sx={formControlStyle(activeLayer === 'minMaxTemp')}
           control={
             <Switch
               size="small"
-              checked={layersState.minMaxTemp}
-              onChange={() => toggleLayer('minMaxTemp')}
+              checked={activeLayer === 'minMaxTemp'}
+              onChange={() => setActiveLayer('minMaxTemp')}
               sx={switchStyle}
             />
           }
           label="Min/Max Temp."
           labelPlacement="start"
         />
+
         <FormControlLabel
-          sx={formControlStyle(layersState.snowDepthChange)}
+          sx={formControlStyle(activeLayer === 'avgMaxWind')}
           control={
             <Switch
               size="small"
-              checked={layersState.snowDepthChange}
-              onChange={() => toggleLayer('snowDepthChange')}
-              sx={switchStyle}
-            />
-          }
-          label="Snow Depth Change"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(layersState.terrain)}
-          control={
-            <Switch
-              size="small"
-              checked={layersState.terrain}
-              onChange={() => toggleLayer('terrain')}
-              sx={switchStyle}
-            />
-          }
-          label="Terrain"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(layersState.avgMaxWind)}
-          control={
-            <Switch
-              size="small"
-              checked={layersState.avgMaxWind}
-              onChange={() => toggleLayer('avgMaxWind')}
+              checked={activeLayer === 'avgMaxWind'}
+              onChange={() => setActiveLayer('avgMaxWind')}
               sx={switchStyle}
             />
           }
           label="Avg/Max Wind"
           labelPlacement="start"
         />
+        
+        <FormControlLabel
+          sx={formControlStyle(activeLayer === 'snowDepthChange')}
+          control={
+            <Switch
+              size="small"
+              checked={activeLayer === 'snowDepthChange'}
+              onChange={() =>
+                setActiveLayer(activeLayer === 'snowDepthChange' ? null : 'snowDepthChange')
+              }
+              sx={switchStyle}
+            />
+          }
+          label="Snow Depth Change (experimental)"
+          labelPlacement="start"
+        />
+        <FormControlLabel
+          sx={formControlStyle(activeLayer === 'terrain')}
+          control={
+            <Switch
+              size="small"
+              checked={activeLayer === 'terrain'}
+              onChange={() =>
+                setActiveLayer(activeLayer === 'terrain' ? null : 'terrain')
+              }
+              sx={switchStyle}
+            />
+          }
+          label="Terrain"
+          labelPlacement="start"
+        />
+
       </FormGroup>
     </div>
   );
