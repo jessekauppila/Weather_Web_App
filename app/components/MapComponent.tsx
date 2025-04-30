@@ -12,13 +12,21 @@ import {
 } from '../map/map';
 import { createMapLayers } from '../map/layers';
 import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
-import { LayerId } from '../page';
 import StationDrawer from './StationDrawer';
 import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
+
+export type LayerId =
+  | 'forecastZones'
+  | 'windArrows'
+  | 'snowDepthChange'
+  | 'terrain'
+  | 'currentTemp'
+  | 'minMaxTemp'
+  | 'avgMaxWind';
 
 interface MapData {
   stationData: {
@@ -37,20 +45,22 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
-  layerVisibility?: {
-    forecastZones: boolean;
-    windArrows: boolean;
-    snowDepthChange: boolean;
-    terrain: boolean;
-    currentTemp: boolean;
-    minMaxTemp: boolean;
-    avgMaxWind: boolean;
-  };
+  // layerVisibility?: {
+  //   forecastZones: boolean;
+  //   windArrows: boolean;
+  //   snowDepthChange: boolean;
+  //   terrain: boolean;
+  //   currentTemp: boolean;
+  //   minMaxTemp: boolean;
+  //   avgMaxWind: boolean;
+  // };
   onToggleLayer?: (id: LayerId) => void;
   dayRangeType?: DayRangeType;
   customTime?: string;
   calculateCurrentTimeRange?: () => string;
   timeRangeData: any;
+  activeLayer: LayerId | null;
+
 }
 
 // Client-side portal component for Next.js
@@ -99,29 +109,18 @@ export const MapApp = ({
   filteredObservationsDataHour,
   isMetric,
   tableMode,
-  layerVisibility: externalLayerVisibility,
-  onToggleLayer,
+  //layerVisibility: externalLayerVisibility,
+  //onToggleLayer,
   dayRangeType,
   customTime,
   calculateCurrentTimeRange,
-  timeRangeData
+  timeRangeData,
+  activeLayer,
 }: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
 
-  // Layer visibility state - use external if provided, or local state if not
-  const [internalLayerVisibility, setInternalLayerVisibility] = useState({
-    forecastZones: true,
-    windArrows: true,
-    snowDepthChange: false,
-    terrain: false,
-    currentTemp: true,
-    minMaxTemp: false,
-    avgMaxWind: false,
-  });
 
-  // Use either external or internal state
-  const layerVisibility = externalLayerVisibility || internalLayerVisibility;
 
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
@@ -259,39 +258,24 @@ export const MapApp = ({
   }, [mapData, setSelectedStation, setIsDrawerOpen]);
 
   // Create layers based on current visibility and data
+  const layerVisibility = {
+    forecastZones: false,
+    windArrows: false,
+    snowDepthChange: activeLayer === 'snowDepthChange',
+    terrain: activeLayer === 'terrain',
+    currentTemp: activeLayer === 'currentTemp',
+    minMaxTemp: activeLayer === 'minMaxTemp',
+    avgMaxWind: activeLayer === 'avgMaxWind',
+  };
+
   const layers = useMemo(
     () => createMapLayers(layerVisibility, mapData as MapData, handleStationClick),
     [layerVisibility, mapData, handleStationClick]
   );
 
-  // // Toggle layer visibility - use external handler if provided, or internal state if not
-  // const toggleLayer = (layerId: LayerId) => {
-  //   if (onToggleLayer) {
-  //     onToggleLayer(layerId);
-  //   } else {
-  //     setInternalLayerVisibility((prev) => ({
-  //       ...prev,
-  //       [layerId]: !prev[layerId],
-  //     }));
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   // When timeRangeData changes and drawer is open
-  //   if (isDrawerOpen && timeRangeData && selectedStation) {
-  //     // Store the current selected station
-  //     const currentStation = selectedStation;
-      
-  //     // Briefly close the drawer
-  //     setIsDrawerOpen(false);
-      
-  //     // Re-open it with a slight delay to ensure data refresh
-  //     setTimeout(() => {
-  //       setSelectedStation(currentStation);
-  //       setIsDrawerOpen(true);
-  //     }, 100);
-  //   }
-  // }, [timeRangeData, selectedStation, isDrawerOpen]);
+  const handleLayerToggle = (layerId: LayerId) => {
+    setActiveLayer(prev => prev === layerId ? null : layerId);
+  };
 
   return (
     <div className="w-full h-full relative">
@@ -348,6 +332,8 @@ export const MapApp = ({
 
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
+  const [activeLayer, setActiveLayer] = useState<LayerId | null>('currentTemp');
+
   return (
     <MapDataProvider observationsDataDay={props.observationsDataDay}>
       <MapApp {...props} />

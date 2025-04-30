@@ -27,7 +27,7 @@ import { useDateState } from '@/app/hooks/useDateState';
 import { useDropdown } from '@/app/hooks/useDropdown';
 import { Analytics } from "@vercel/analytics/react"
 
-import MapComponent from './components/MapComponent';
+import MapComponent, { LayerId } from './components/MapComponent';
 
 
 interface Station {
@@ -58,15 +58,6 @@ interface StationCardProps {
   isActive: boolean;
   onDropdownToggle: (stid: string | null) => void;
 }
-
-export type LayerId =
-  | 'forecastZones'
-  | 'windArrows'
-  | 'snowDepthChange'
-  | 'terrain'
-  | 'currentTemp'
-  | 'minMaxTemp'
-  | 'avgMaxWind';
 
 // Add a utility function for logging
 const logAppEvent = (category: string, message: string, data?: any) => {
@@ -234,28 +225,28 @@ export default function Home() {
   };
 
   // Add layer visibility state
-  const [layerVisibility, setLayerVisibility] = useState({
-    forecastZones: true,
-    windArrows: true,
-    snowDepthChange: false,
-    terrain: false,
-    currentTemp: true,
-    minMaxTemp: false,
-    avgMaxWind: false,
-  });
+  // const [layerVisibility, setLayerVisibility] = useState({
+  //   forecastZones: true,
+  //   windArrows: true,
+  //   snowDepthChange: false,
+  //   terrain: false,
+  //   currentTemp: true,
+  //   minMaxTemp: false,
+  //   avgMaxWind: false,
+  // });
   
   // Handle layer toggle
-  const handleToggleLayer = (layerId: LayerId) => {
-    console.log(`Toggling layer: ${layerId}, current state:`, layerVisibility[layerId]);
-    setLayerVisibility((prev) => ({
-      ...prev,
-      [layerId]: !prev[layerId],
-    }));
-    // Log after update
-    setTimeout(() => {
-      console.log(`Layer ${layerId} new state:`, layerVisibility[layerId]);
-    }, 0);
-  };
+  // const handleToggleLayer = (layerId: LayerId) => {
+  //   console.log(`Toggling layer: ${layerId}, current state:`, layerVisibility[layerId]);
+  //   setLayerVisibility((prev) => ({
+  //     ...prev,
+  //     [layerId]: !prev[layerId],
+  //   }));
+  //   // Log after update
+  //   setTimeout(() => {
+  //     console.log(`Layer ${layerId} new state:`, layerVisibility[layerId]);
+  //   }, 0);
+  // };
 
   // Add a new loading state
   const [dataReady, setDataReady] = useState(false);
@@ -267,6 +258,8 @@ export default function Home() {
       setDataReady(true);
     }
   }, [weatherDataReady, observationsDataDay, observationsDataHour]);
+
+  const [activeLayer, setActiveLayer] = useState<LayerId | null>('currentTemp');
 
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
@@ -288,12 +281,11 @@ export default function Home() {
               filteredObservationsDataHour={filteredObservationsDataHour}
               isMetric={isMetric}
               tableMode={tableMode}
-              layerVisibility={layerVisibility}
-              onToggleLayer={handleToggleLayer}
               dayRangeType={dayRangeType}
               customTime={customTime}
               calculateCurrentTimeRange={calculateCurrentTimeRange}
               timeRangeData={timeRangeData}
+              activeLayer={activeLayer}
             />
           </div>
           
@@ -322,9 +314,9 @@ export default function Home() {
                 alignSelf: 'flex-start'
               }}
             >
-              <LayerControls 
-                layersState={layerVisibility}
-                toggleLayer={handleToggleLayer}
+              <LayerControls
+                activeLayer={activeLayer}
+                setActiveLayer={setActiveLayer}
               />
             </div>
           </div>
