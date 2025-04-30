@@ -8,7 +8,7 @@ import { createWindArrowLayer } from './windArrowLayer';
 import { createCurrentTempLayer } from './currentTempLayer';
 import { createSnowDepthLayer } from './snowDepthLayer';
 import { createTerrainLayer } from './terrainLayer';
-import { createCombinedMaxMinLayer } from './combinedMaxMinLayerTemp';
+import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
 
 // Re-export the layer creators for direct usage if needed
