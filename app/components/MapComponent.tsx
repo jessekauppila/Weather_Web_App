@@ -60,7 +60,7 @@ interface MapComponentProps {
   calculateCurrentTimeRange?: () => string;
   timeRangeData: any;
   activeLayer: LayerId | null;
-
+  setActiveLayer: (id: LayerId | null) => void;
 }
 
 // Client-side portal component for Next.js
@@ -116,6 +116,7 @@ export const MapApp = ({
   calculateCurrentTimeRange,
   timeRangeData,
   activeLayer,
+  setActiveLayer,
 }: MapComponentProps) => {
   // Get data from context
   const { mapData, isLoading } = useMapData();
@@ -274,7 +275,7 @@ export const MapApp = ({
   );
 
   const handleLayerToggle = (layerId: LayerId) => {
-    setActiveLayer(prev => prev === layerId ? null : layerId);
+    setActiveLayer(activeLayer === layerId ? null : layerId);
   };
 
   return (
