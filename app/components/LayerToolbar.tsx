@@ -6,11 +6,11 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { LayerId } from '../page';
+import { LayerId } from './MapComponent';
 
 interface LayerControlsProps {
   activeLayer: LayerId | null;
-  setActiveLayer: (id: LayerId) => void;
+  setActiveLayer: (id: LayerId | null) => void;
 }
 
 const switchStyle = {
@@ -126,7 +126,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
               sx={switchStyle}
             />
           }
-          label="Snow Depth Change (experimental)"
+          label="Snow Depth Change"
           labelPlacement="start"
         />
         <FormControlLabel

@@ -286,6 +286,7 @@ export default function Home() {
               calculateCurrentTimeRange={calculateCurrentTimeRange}
               timeRangeData={timeRangeData}
               activeLayer={activeLayer}
+              setActiveLayer={setActiveLayer}
             />
           </div>
           
