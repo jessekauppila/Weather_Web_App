@@ -40,13 +40,13 @@ export type Map_BlockProperties = {
   fetchTime: string;
 };
 
-export const map_COLOR_SCALE = scaleThreshold<number, Color>()
-  .domain([31, 34])
-  .range([
-    [255, 255, 255], // White (below 31°F)
-    [30, 144, 255], // DodgerBlue (31-34°F)
-    [150, 255, 150], // Pastel green (above 34°F)
-  ] as Color[]);
+// export const map_COLOR_SCALE = scaleThreshold<number, Color>()
+  // .domain([31, 34])
+  // .range([
+  //   [255, 255, 255], // White (below 31°F)
+  //   [30, 144, 255], // DodgerBlue (31-34°F)
+  //   [150, 255, 150], // Pastel green (above 34°F)
+  // ] as Color[]);
 
 export const map_INITIAL_VIEW_STATE: MapViewState = {
   latitude: 48.863017,
