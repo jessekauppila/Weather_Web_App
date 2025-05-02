@@ -10,6 +10,7 @@ import { createSnowDepthLayer } from './snowDepthLayer';
 import { createTerrainLayer } from './terrainLayer';
 import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
+import { createCombinedSnowDepthNumsAndCols } from './combinedSnowDepthNumsAndCols';
 
 // Re-export the layer creators for direct usage if needed
 export { 
@@ -20,6 +21,7 @@ export {
   createTerrainLayer,
   createCombinedMaxMinLayer,
   createCombinedAvgMaxWindLayer,
+  createCombinedSnowDepthNumsAndCols
 };
 
 // Define LayerId type
@@ -30,7 +32,8 @@ export type LayerId =
   | 'terrain'
   | 'currentTemp'
   | 'minMaxTemp'
-  | 'avgMaxWind';
+  | 'avgMaxWind'
+  | 'snowDepthNumsAndCols';
 
 type LayerVisibility = {
   [key in LayerId]: boolean;
@@ -94,6 +97,17 @@ export function createMapLayers(
         },
         onStationClick
       ),
+
+      visibility.snowDepthNumsAndCols &&
+      createCombinedSnowDepthNumsAndCols(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
   ].filter(Boolean);
+
+
 }
 

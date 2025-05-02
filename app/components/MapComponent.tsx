@@ -26,7 +26,8 @@ export type LayerId =
   | 'terrain'
   | 'currentTemp'
   | 'minMaxTemp'
-  | 'avgMaxWind';
+  | 'avgMaxWind'
+  | 'snowDepthNumsAndCols';
 
 interface MapData {
   stationData: {
@@ -267,6 +268,7 @@ export const MapApp = ({
     currentTemp: activeLayer === 'currentTemp',
     minMaxTemp: activeLayer === 'minMaxTemp',
     avgMaxWind: activeLayer === 'avgMaxWind',
+    snowDepthNumsAndCols: activeLayer === 'snowDepthNumsAndCols',
   };
 
   const layers = useMemo(
