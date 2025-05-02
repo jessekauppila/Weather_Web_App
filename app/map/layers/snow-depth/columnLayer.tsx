@@ -22,7 +22,11 @@ export function createSnowDepthColumnLayer(
     filled: true,
     extruded: true,
     wireframe: true,
-    getElevation: (f) => (absValueSnowDepthChange(f) ?? 0) * 2500,
+    getElevation: (f) => {
+      const change = f.properties.totalSnowDepthChange;
+      if (change === 0 || isNaN(change)) return 0;
+      return (absValueSnowDepthChange(f) ?? 0) * 2500;
+    },
     getFillColor: (f: Feature<Geometry, Map_BlockProperties>) => {
       if ((f.properties.totalSnowDepthChange ?? 0) > 0) {
         return [255, 255, 255];
