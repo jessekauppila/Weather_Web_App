@@ -114,7 +114,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
           labelPlacement="start"
         />
         
-        <FormControlLabel
+        {/* <FormControlLabel
           sx={formControlStyle(activeLayer === 'snowDepthChange')}
           control={
             <Switch
@@ -128,7 +128,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
           }
           label="Snow Depth Change"
           labelPlacement="start"
-        />
+        /> */}
 
         <FormControlLabel
           sx={formControlStyle(activeLayer === 'snowDepthNumsAndCols')}
@@ -142,7 +142,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
               sx={switchStyle}
             />
           } 
-          label="Snow Depth Change 2"
+          label="Snow Depth Change"
           labelPlacement="start"
         />
         
