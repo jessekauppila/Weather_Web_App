@@ -43,7 +43,7 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
           parseFloat(station['Longitude']),
           parseFloat(station['Latitude']),
           0.03, // Adjust radius as needed
-          8 // Adjust number of points as needed
+          32 // Adjust number of points as needed
         ),
       },
       properties: {

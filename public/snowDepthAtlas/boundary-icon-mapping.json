@@ -4,20 +4,23 @@
     "y": 0,
     "width": 512,
     "height": 512,
-    "mask": true
+    "anchorX": 256,
+    "anchorY": 0
   },
   "snow-depth-boundary-positive": {
     "x": 0,
     "y": 0,
     "width": 512,
     "height": 512,
-    "mask": true
+    "anchorX": 256,
+    "anchorY": 0
   },
   "snow-depth-boundary-negative": {
     "x": 512,
     "y": 0,
     "width": 512,
     "height": 512,
-    "mask": true
+    "anchorX": 256,
+    "anchorY": 0
   }
 } 
