@@ -1,0 +1,23 @@
+{
+  "default-icon": {
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 512,
+    "mask": true
+  },
+  "snow-depth-boundary-positive": {
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 512,
+    "mask": true
+  },
+  "snow-depth-boundary-negative": {
+    "x": 512,
+    "y": 0,
+    "width": 512,
+    "height": 512,
+    "mask": true
+  }
+} 

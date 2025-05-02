@@ -14,6 +14,8 @@ import { Map_BlockProperties } from '../map';
 /**
  * Creates a GeoJSON layer to display snow depth changes on the map
  */
+const absValueSnowDepthChange = (f: Feature<Geometry, Map_BlockProperties>) => Math.abs(f.properties.totalSnowDepthChange ?? 0);
+
 export function createSnowDepthLayer(
   data: {
     type: 'FeatureCollection';
@@ -30,11 +32,21 @@ export function createSnowDepthLayer(
     extruded: true,
     wireframe: true,
     getElevation: (f) =>
-      (f.properties.totalSnowDepthChange ?? 0) * 2500,
-    getFillColor: (f) =>
-      map_COLOR_SCALE(f.properties.airTempMax ?? 0),
-    getLineColor: (f) =>
-      map_COLOR_SCALE(f.properties.airTempMax ?? 0),
+      (absValueSnowDepthChange(f) ?? 0) * 2500,
+    getFillColor: (f: Feature<Geometry, Map_BlockProperties>) => {
+      if ((f.properties.totalSnowDepthChange ?? 0) > 0) {
+        return [255, 255, 255];
+      } else {
+        return [250, 171, 13];
+      }
+    },
+    getLineColor: (f: Feature<Geometry, Map_BlockProperties>) => {
+      if ((f.properties.totalSnowDepthChange ?? 0) > 0) {
+        return [255, 255, 255];
+      } else {
+        return [250, 171, 13];
+      }
+    },
     pickable: true,
     onClick,
     material: {
@@ -51,11 +63,3 @@ export function createSnowDepthLayer(
     },
   });
 }
-
- const map_COLOR_SCALE = scaleThreshold<number, Color>()
-  .domain([31, 34])
-  .range([
-    [255, 255, 255], // White (below 31°F)
-    [30, 144, 255], // DodgerBlue (31-34°F)
-    [150, 255, 150], // Pastel green (above 34°F)
-  ] as Color[]);
