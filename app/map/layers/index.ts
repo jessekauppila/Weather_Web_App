@@ -53,7 +53,11 @@ export function createMapLayers(
   },
   onStationClick?: (info: PickingInfo) => void
 ) {
-  return [
+  console.log('createMapLayers called with visibility:', visibility);
+  console.log('snowDepthNumsAndCols visibility:', visibility.snowDepthNumsAndCols);
+  console.log('stationData features count:', data.stationData?.features.length ?? 0);
+
+  const layers = [
     visibility.forecastZones &&
       createForecastZoneLayer(data.forecastZones ?? []),
     visibility.windArrows &&
@@ -81,7 +85,7 @@ export function createMapLayers(
         },
         onStationClick
       ),
-      visibility.minMaxTemp &&
+    visibility.minMaxTemp &&
       createCombinedMaxMinLayer(
         data.stationData ?? {
           type: 'FeatureCollection',
@@ -90,24 +94,29 @@ export function createMapLayers(
         onStationClick
       ),
     visibility.avgMaxWind &&
-    createCombinedAvgMaxWindLayer(
+      createCombinedAvgMaxWindLayer(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
         },
         onStationClick
       ),
-
-      visibility.snowDepthNumsAndCols &&
-      createCombinedSnowDepthNumsAndCols(
-        data.stationData ?? {
-          type: 'FeatureCollection',
-          features: [],
-        },
-        onStationClick
-      ),
+    visibility.snowDepthNumsAndCols &&
+      (() => {
+        console.log('Creating snowDepthNumsAndCols layer');
+        const layers = createCombinedSnowDepthNumsAndCols(
+          data.stationData ?? {
+            type: 'FeatureCollection',
+            features: [],
+          },
+          onStationClick
+        );
+        console.log('snowDepthNumsAndCols layers created:', layers);
+        return layers;
+      })(),
   ].filter(Boolean);
 
-
+  console.log('Final layers array:', layers);
+  return layers;
 }
 
