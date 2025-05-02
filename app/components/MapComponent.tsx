@@ -260,20 +260,21 @@ export const MapApp = ({
   }, [mapData, setSelectedStation, setIsDrawerOpen]);
 
   // Create layers based on current visibility and data
-  const layerVisibility = {
-    forecastZones: false,
-    windArrows: false,
-    snowDepthChange: activeLayer === 'snowDepthChange',
-    terrain: activeLayer === 'terrain',
-    currentTemp: activeLayer === 'currentTemp',
-    minMaxTemp: activeLayer === 'minMaxTemp',
-    avgMaxWind: activeLayer === 'avgMaxWind',
-    snowDepthNumsAndCols: activeLayer === 'snowDepthNumsAndCols',
-  };
-
   const layers = useMemo(
-    () => createMapLayers(layerVisibility, mapData as MapData, handleStationClick),
-    [layerVisibility, mapData, handleStationClick]
+    () => {
+      const layerVisibility = {
+        forecastZones: false,
+        windArrows: false,
+        snowDepthChange: activeLayer === 'snowDepthChange',
+        terrain: activeLayer === 'terrain',
+        currentTemp: activeLayer === 'currentTemp',
+        minMaxTemp: activeLayer === 'minMaxTemp',
+        avgMaxWind: activeLayer === 'avgMaxWind',
+        snowDepthNumsAndCols: activeLayer === 'snowDepthNumsAndCols',
+      };
+      return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
+    },
+    [activeLayer, mapData, handleStationClick]
   );
 
   const handleLayerToggle = (layerId: LayerId) => {
