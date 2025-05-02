@@ -1,8 +1,15 @@
+// import {
+  
+//   Position,
+//   PickingInfo,
+//   MapViewState,
+// } from '@deck.gl/core';
+import { scaleThreshold } from 'd3-scale';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
-import { PickingInfo } from '@deck.gl/core';
+import { Color,PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../map';
-import { map_COLOR_SCALE } from '../map';
+//import { map_COLOR_SCALE } from '../map';
 
 /**
  * Creates a GeoJSON layer to display snow depth changes on the map
@@ -44,3 +51,11 @@ export function createSnowDepthLayer(
     },
   });
 }
+
+ const map_COLOR_SCALE = scaleThreshold<number, Color>()
+  .domain([31, 34])
+  .range([
+    [255, 255, 255], // White (below 31°F)
+    [30, 144, 255], // DodgerBlue (31-34°F)
+    [150, 255, 150], // Pastel green (above 34°F)
+  ] as Color[]);
