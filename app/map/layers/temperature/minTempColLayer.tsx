@@ -50,7 +50,7 @@ export function createMinTempColLayer(
   return new GeoJsonLayer({
     id: 'minTempCol',
     data: offsetData,
-    opacity: 1,
+    opacity: .3,
     stroked: false,
     filled: true,
     extruded: true,
