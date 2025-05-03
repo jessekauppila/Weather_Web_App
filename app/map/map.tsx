@@ -5,8 +5,6 @@ import {
   MapViewState,
 } from '@deck.gl/core';
 import React, { useState, useEffect } from 'react';
-import type { Feature, Geometry } from 'geojson';
-import { scaleThreshold } from 'd3-scale';
 import {
   LightingEffect,
   AmbientLight,
@@ -14,9 +12,6 @@ import {
   _SunLight as SunLight,
 } from '@deck.gl/core';
 import { getMapTooltip } from '../components/MapTooltip';
-import StationDrawer from '../components/StationDrawer';
-import { useMapData } from '../data/map/MapDataContext';
-import { map_weatherToGeoJSON } from '../data/map/geoUtils';
 
 ////////////////////////
 

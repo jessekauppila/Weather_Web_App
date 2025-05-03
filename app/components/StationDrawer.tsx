@@ -1,18 +1,12 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import DayAveragesTable from '../vis/dayWxTable';
 import DayWxSnowGraph from '../vis/dayWxSnowGraph';
 import HourWxTable from '../vis/hourWxTable';
 import WxSnowGraph from '../vis/wxSnowGraph';
-import AccordionWrapper from './utils/AccordionWrapper';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 import './StationDrawer.css';
 import { Tabs, Tab, Box } from '@mui/material';
-
-type PeriodData = {
-  [key: string]: any[];
-};
 
 type HourData = {
   Day: string;
