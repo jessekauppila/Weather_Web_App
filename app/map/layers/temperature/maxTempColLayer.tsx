@@ -58,7 +58,7 @@ export function createMaxTempColLayer(
     getElevation: (f) => {
       const temp = f.properties.airTempMax;
       if (temp === null || isNaN(temp)) return 0;
-      return Math.abs(temp) * 100; // Scale factor for visualization
+      return Math.abs(temp) * 1000; // Scale factor for visualization
     },
     getFillColor: (f: Feature<Geometry, Map_BlockProperties>) => {
       return getTemperatureColor(f.properties.airTempMax);
