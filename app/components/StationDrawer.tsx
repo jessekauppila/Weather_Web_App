@@ -157,7 +157,56 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
   }, [calculateCurrentTimeRange]);
 
-  // Helper functions for data processing
+  // Update stationDayData to incorporate date-specific data
+  const stationDayData = useMemo(() => {
+    if (!station) return { data: [], title: '' };
+    
+    // If we have observationsDataDay with data for this station, use it to enhance station data
+    if (observationsDataDay?.data?.length) {
+      // Try to find the station's data in the observations
+      const stationDayObservation = observationsDataDay.data.find(
+        (obs: any) => obs.Station === station.Station
+      );
+      
+      if (stationDayObservation) {
+        // Create an enhanced station object with properties from both the station
+        // and its corresponding observation data
+        const enhancedStation = {
+          ...station, // Keep all existing station properties
+          // Update temperature properties
+          'Cur Air Temp': stationDayObservation['Cur Air Temp'] || station['Cur Air Temp'] || '-',
+          'Air Temp Min': stationDayObservation['Air Temp Min'] || station['Air Temp Min'] || '-',
+          'Air Temp Max': stationDayObservation['Air Temp Max'] || station['Air Temp Max'] || '-',
+          // Update snow properties
+          'Total Snow Depth': stationDayObservation['Total Snow Depth'] || station['Total Snow Depth'] || '-',
+          'Total Snow Depth Change': stationDayObservation['Total Snow Depth Change'] || station['Total Snow Depth Change'] || '-',
+          '24h Snow Accumulation': stationDayObservation['24h Snow Accumulation'] || station['24h Snow Accumulation'] || '-',
+          // Update wind properties
+          'Wind Speed Avg': stationDayObservation['Wind Speed Avg'] || station['Wind Speed Avg'] || '-',
+          'Max Wind Gust': stationDayObservation['Max Wind Gust'] || station['Max Wind Gust'] || '-',
+          'Wind Direction': stationDayObservation['Wind Direction'] || station['Wind Direction'] || '-',
+          // Update precipitation property
+          'Precip Accum One Hour': stationDayObservation['Precip Accum One Hour'] || station['Precip Accum One Hour'] || '-',
+          // Add the observation date to the station (important for tables)
+          'Date': stationDayObservation['Date'] || stationDayObservation['Day'] || new Date().toLocaleDateString(),
+          // Instead of a timestamp, use the actual observation date as an identifier
+          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString()
+        };
+        
+        return {
+          data: [enhancedStation],
+          title: `${enhancedStation.Station} - ${observationsDataDay.title}`
+        };
+      }
+    }
+    
+    // Fallback to just using the station data if no observation data available
+    return {
+      data: [station],
+      title: station.Station || ''
+    };
+  }, [station, observationsDataDay]);
+
   const findLatestValue = useCallback((data: any[], field: string): string => {
     // If no data, return placeholder
     if (!data || data.length === 0) return "-";
@@ -238,7 +287,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     if (field === 'Relative Humidity' && value !== "-") return `${value}`;
     
     return value;
-  }, []);
+  }, [stationDayData.data]);
 
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
@@ -348,57 +397,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
    station, 
     observationsDataDay?.data
   ]);
-
-
-  // Update stationDayData to incorporate date-specific data
-  const stationDayData = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    
-    // If we have observationsDataDay with data for this station, use it to enhance station data
-    if (observationsDataDay?.data?.length) {
-      // Try to find the station's data in the observations
-      const stationDayObservation = observationsDataDay.data.find(
-        (obs: any) => obs.Station === station.Station
-      );
-      
-      if (stationDayObservation) {
-        // Create an enhanced station object with properties from both the station
-        // and its corresponding observation data
-        const enhancedStation = {
-          ...station, // Keep all existing station properties
-          // Update temperature properties
-          'Cur Air Temp': stationDayObservation['Cur Air Temp'] || station['Cur Air Temp'] || '-',
-          'Air Temp Min': stationDayObservation['Air Temp Min'] || station['Air Temp Min'] || '-',
-          'Air Temp Max': stationDayObservation['Air Temp Max'] || station['Air Temp Max'] || '-',
-          // Update snow properties
-          'Total Snow Depth': stationDayObservation['Total Snow Depth'] || station['Total Snow Depth'] || '-',
-          'Total Snow Depth Change': stationDayObservation['Total Snow Depth Change'] || station['Total Snow Depth Change'] || '-',
-          '24h Snow Accumulation': stationDayObservation['24h Snow Accumulation'] || station['24h Snow Accumulation'] || '-',
-          // Update wind properties
-          'Wind Speed Avg': stationDayObservation['Wind Speed Avg'] || station['Wind Speed Avg'] || '-',
-          'Max Wind Gust': stationDayObservation['Max Wind Gust'] || station['Max Wind Gust'] || '-',
-          'Wind Direction': stationDayObservation['Wind Direction'] || station['Wind Direction'] || '-',
-          // Update precipitation property
-          'Precip Accum One Hour': stationDayObservation['Precip Accum One Hour'] || station['Precip Accum One Hour'] || '-',
-          // Add the observation date to the station (important for tables)
-          'Date': stationDayObservation['Date'] || stationDayObservation['Day'] || new Date().toLocaleDateString(),
-          // Instead of a timestamp, use the actual observation date as an identifier
-          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString()
-        };
-        
-        return {
-          data: [enhancedStation],
-          title: `${enhancedStation.Station} - ${observationsDataDay.title}`
-        };
-      }
-    }
-    
-    // Fallback to just using the station data if no observation data available
-    return {
-      data: [station],
-      title: station.Station || ''
-    };
-  }, [station, observationsDataDay]);
 
   // Replace the safeTimeRangeData useMemo with this
   const timeRangeInfo = useMemo(() => {

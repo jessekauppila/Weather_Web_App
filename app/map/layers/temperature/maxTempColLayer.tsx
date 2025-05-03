@@ -50,7 +50,7 @@ export function createMaxTempColLayer(
   return new GeoJsonLayer({
     id: 'maxTempCol',
     data: offsetData,
-    opacity: 1,
+    opacity: .3,
     stroked: false,
     filled: true,
     extruded: true,
