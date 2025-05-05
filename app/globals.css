@@ -1146,3 +1146,37 @@ body.drawer-open {
   pointer-events: none; /* Allow clicks to pass through by default */
 }
 
+/* Side drawer variant */
+.drawer-side {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 200px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: 9998; /* Below StationDrawer */
+  transform-origin: right;
+  overflow: hidden;
+  background-color: var(--app-toolbar-bg);
+  color: var(--app-text-primary);
+  border-left: 1px solid var(--app-border-color);
+  box-shadow: var(--app-box-shadow);
+}
+
+.drawer-side.open {
+  transform: translateX(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Mobile styles for side drawer */
+@media (max-width: 768px) {
+  .drawer-side {
+    width: 50%;
+    max-width: 200px;
+  }
+}
+

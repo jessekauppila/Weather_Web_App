@@ -20,6 +20,7 @@ import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
 import { LayerId, LayerState } from '@/app/types/layers';
+import LayerToolbar from './LayerToolbar';
 
 interface MapData {
   stationData: {
@@ -304,6 +305,9 @@ export const MapApp = ({
           />
         )}
       </ClientPortal>
+
+      {/* Layer Controls */}
+      {/* Removed LayerToolbar as it's now rendered in page.tsx */}
     </div>
   );
 };

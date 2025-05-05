@@ -355,24 +355,10 @@ export default function Home() {
               <LayerControls
                 activeLayerState={activeLayerState}
                 onLayerToggle={handleLayerToggle}
+                isStationDrawerOpen={!!selectedStation}
               />
             </div>
           </div>
-          
-          {/* Additional components are commented out for now */}
-          {/* <div className="relative z-10 w-full max-w-6xl mt-4 px-4">
-            <RegionsContainer
-              observationsData={observationsDataDay}
-              handleStationClick={handleStationClick}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-              observationsDataDay={observationsDataDay}
-              observationsDataHour={observationsDataHour}
-              filteredObservationsDataHour={filteredObservationsDataHour}
-              isMetric={isMetric}
-              tableMode={tableMode}
-            />
-          </div> */}
         </>
       )}
     </main>
