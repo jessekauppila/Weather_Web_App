@@ -8,7 +8,7 @@ import { scaleThreshold } from 'd3-scale';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { Color,PickingInfo } from '@deck.gl/core';
-import { Map_BlockProperties } from '../map';
+import { Map_BlockProperties } from '../../map';
 //import { map_COLOR_SCALE } from '../map';
 
 /**

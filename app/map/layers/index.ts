@@ -6,11 +6,13 @@ import { Map_BlockProperties } from '../map';
 import { createForecastZoneLayer } from './forecastZoneLayer';
 import { createWindArrowLayer } from './windArrowLayer';
 import { createCurrentTempLayer } from './currentTempLayer';
-import { createSnowDepthLayer } from './snowDepthLayer';
+import { createSnowDepthLayer } from './old/snowDepthLayer';
 import { createTerrainLayer } from './terrainLayer';
 import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
 import { createCombinedSnowDepthNumsAndCols } from './combinedSnowDepthNumsAndCols';
+import { createCombinedSnowDepthIcons } from '@/app/map/layers/snowDepthIconsLayer';
+import { createCombinedSnowDepthColumns } from '@/app/map/layers/snowDepthColumnsLayer';
 
 // Re-export the layer creators for direct usage if needed
 export { 
@@ -21,7 +23,9 @@ export {
   createTerrainLayer,
   createCombinedMaxMinLayer,
   createCombinedAvgMaxWindLayer,
-  createCombinedSnowDepthNumsAndCols
+  createCombinedSnowDepthNumsAndCols,
+  createCombinedSnowDepthIcons,
+  createCombinedSnowDepthColumns
 };
 
 // Define LayerId type
@@ -33,7 +37,8 @@ export type LayerId =
   | 'currentTemp'
   | 'minMaxTemp'
   | 'avgMaxWind'
-  | 'snowDepthNumsAndCols';
+  | 'snowDepthIcons'
+  | 'snowDepthColumns';
 
 type LayerVisibility = {
   [key in LayerId]: boolean;
@@ -54,12 +59,12 @@ export function createMapLayers(
   onStationClick?: (info: PickingInfo) => void
 ) {
   console.log('createMapLayers called with visibility:', visibility);
-  console.log('snowDepthNumsAndCols visibility:', visibility.snowDepthNumsAndCols);
   console.log('stationData features count:', data.stationData?.features.length ?? 0);
 
   const layers = [
     visibility.forecastZones &&
       createForecastZoneLayer(data.forecastZones ?? []),
+
     visibility.windArrows &&
       createWindArrowLayer(
         data.stationData ?? {
@@ -68,6 +73,7 @@ export function createMapLayers(
         },
         onStationClick
       ),
+
     visibility.snowDepthChange &&
       createSnowDepthLayer(
         data.stationData ?? {
@@ -101,19 +107,22 @@ export function createMapLayers(
         },
         onStationClick
       ),
-    visibility.snowDepthNumsAndCols &&
-      (() => {
-        console.log('Creating snowDepthNumsAndCols layer');
-        const layers = createCombinedSnowDepthNumsAndCols(
-          data.stationData ?? {
-            type: 'FeatureCollection',
-            features: [],
-          },
-          onStationClick
-        );
-        console.log('snowDepthNumsAndCols layers created:', layers);
-        return layers;
-      })(),
+    visibility.snowDepthIcons &&
+      createCombinedSnowDepthIcons(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
+    visibility.snowDepthColumns &&
+      createCombinedSnowDepthColumns(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
   ].filter(Boolean);
 
   console.log('Final layers array:', layers);
