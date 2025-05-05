@@ -17,7 +17,7 @@
    ***************************************************************/
   
   /* Background colors */
-  --app-toolbar-bg: rgba(0, 0, 0, 0.6);        /* Semi-transparent black for card backgrounds */
+  --app-toolbar-bg: rgba(0, 0, 0, .6);        /* Semi-transparent black for card backgrounds */
   --app-section-bg: rgba(0, 0, 0, 0.8);        /* Lighter background for inner sections */
   --app-dropdown-bg: rgba(0, 0, 0, 0.8);    /* Darker semi-transparent black for dropdowns */
   
@@ -1146,35 +1146,94 @@ body.drawer-open {
   pointer-events: none; /* Allow clicks to pass through by default */
 }
 
-/* Side drawer variant */
-.drawer-side {
+/* Layer Toolbar specific styles */
+.layer-toolbar {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   width: 200px;
-  transform: translateX(100%);
-  transition: transform 0.3s ease-in-out;
-  pointer-events: none;
-  visibility: hidden;
-  z-index: 9998; /* Below StationDrawer */
-  transform-origin: right;
-  overflow: hidden;
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
-  border-left: 1px solid var(--app-border-color);
+  border: none; /* Remove all borders */
   box-shadow: var(--app-box-shadow);
+  z-index: 9998;
+  transition: transform 0.3s ease-in-out;
 }
 
-.drawer-side.open {
+.layer-toolbar.open {
   transform: translateX(0);
-  pointer-events: auto;
-  visibility: visible;
 }
 
-/* Mobile styles for side drawer */
+.layer-toolbar:not(.open) {
+  transform: translateX(100%); /* Move drawer completely off screen */
+}
+
+.layer-toolbar-handle {
+  position: absolute;
+  left: -24px; /* Move handle outside the drawer */
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent; /* Make handle background transparent */
+  border: none; /* Remove borders */
+  z-index: 9999;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.layer-toolbar-handle:hover {
+  opacity: 1;
+}
+
+.layer-toolbar-handle:active {
+  opacity: 0.8;
+}
+
+.layer-toolbar-content {
+  height: 100%;
+  padding: 8px 12px 8px 36px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.layer-toolbar:not(.open) .layer-toolbar-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for layer toolbar */
+.layer-toolbar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.layer-toolbar-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.layer-toolbar-content::-webkit-scrollbar-thumb {
+  background: rgba(97, 97, 97, 0.8);
+  border-radius: 4px;
+}
+
+.layer-toolbar-content::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+
+/* For Firefox */
+.layer-toolbar-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(97, 97, 97, 0.8) rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile styles for layer toolbar */
 @media (max-width: 768px) {
-  .drawer-side {
+  .layer-toolbar {
     width: 50%;
     max-width: 200px;
   }

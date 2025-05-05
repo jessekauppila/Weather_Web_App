@@ -72,12 +72,9 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
-  const startX = useRef<number>(0);
-  const startWidth = useRef<number>(200);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -95,43 +92,6 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
       setIsOpen(false);
     }
   }, [isMobile, isStationDrawerOpen]);
-
-  // Mouse handlers for dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    startX.current = e.clientX;
-    if (drawerRef.current) {
-      startWidth.current = drawerRef.current.offsetWidth;
-    }
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      
-      const deltaX = e.clientX - startX.current;
-      const newWidth = Math.max(150, Math.min(300, startWidth.current + deltaX));
-      
-      if (drawerRef.current) {
-        drawerRef.current.style.width = `${newWidth}px`;
-      }
-    };
-    
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-    
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging]);
 
   // Touch handlers for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -161,51 +121,20 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
   return (
     <div 
       ref={drawerRef}
-      className={`drawer-side ${isOpen ? 'open' : ''}`}
+      className={`layer-toolbar ${isOpen ? 'open' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{
-        background: 'var(--app-toolbar-bg)',
-        width: '200px',
-        maxWidth: isMobile ? '50%' : '300px'
-      }}
     >
       {/* Left handle */}
       <div 
-        className="drawer-handle-left"
-        onMouseDown={handleMouseDown}
-        style={{ 
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '24px',
-          cursor: 'ew-resize',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--app-toolbar-bg)',
-          borderRight: '1px solid var(--app-border-color)',
-          zIndex: 1
-        }}
+        className="layer-toolbar-handle"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <div style={{
-          width: '4px',
-          height: '40px',
-          background: 'var(--app-border-color)',
-          borderRadius: '2px'
-        }} />
+        {isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
       </div>
 
-      <div 
-        className="drawer-scrollbar" 
-        style={{ 
-          height: '100%', 
-          padding: '8px 12px 8px 36px',
-          background: 'var(--app-toolbar-bg)'
-        }}
-      >
+      <div className="layer-toolbar-content">
         <Typography 
           variant="subtitle2" 
           sx={{ 
