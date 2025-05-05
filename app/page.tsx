@@ -267,6 +267,7 @@ export default function Home() {
       const group = LAYER_GROUPS[layerId];
       
       if (group === 'other') {
+        // For 'other' group, toggle the layer independently
         const nextOther = new Set(prev.other);
         if (nextOther.has(layerId)) {
           nextOther.delete(layerId);
@@ -274,13 +275,26 @@ export default function Home() {
           nextOther.add(layerId);
         }
         return { ...prev, other: nextOther };
-      } else {
-        // For mutually exclusive groups, toggle the layer
-        return {
-          ...prev,
-          [group]: prev[group] === layerId ? null : layerId
-        };
       }
+
+      // For the three main groups (temperature, wind, precipitation)
+      const nextState = { ...prev };
+      
+      if (nextState[group].has(layerId)) {
+        // If the layer is already active, just turn it off
+        nextState[group].delete(layerId);
+      } else {
+        // If turning on a layer in a group:
+        // 1. Clear other groups
+        if (group !== 'temperature') nextState.temperature = new Set();
+        if (group !== 'wind') nextState.wind = new Set();
+        if (group !== 'precipitation') nextState.precipitation = new Set();
+        
+        // 2. Add the new layer to its group (keeping existing layers in the same group)
+        nextState[group] = new Set(prev[group]).add(layerId);
+      }
+      
+      return nextState;
     });
   };
 

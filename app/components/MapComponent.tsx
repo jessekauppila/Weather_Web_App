@@ -241,14 +241,14 @@ export const MapApp = ({
     () => {
       const layerVisibility = {
         forecastZones: activeLayerState.other.has('forecastZones'),
-        windArrows: activeLayerState.wind === 'windArrows',
-        snowDepthChange: activeLayerState.precipitation === 'snowDepthChange',
+        windArrows: activeLayerState.wind.has('windArrows'),
+        snowDepthChange: activeLayerState.precipitation.has('snowDepthChange'),
         terrain: activeLayerState.other.has('terrain'),
-        currentTemp: activeLayerState.temperature === 'currentTemp',
-        minMaxTemp: activeLayerState.temperature === 'minMaxTemp',
-        avgMaxWind: activeLayerState.wind === 'avgMaxWind',
-        snowDepthIcons: activeLayerState.precipitation === 'snowDepthIcons',
-        snowDepthColumns: activeLayerState.precipitation === 'snowDepthColumns',
+        currentTemp: activeLayerState.temperature.has('currentTemp'),
+        minMaxTemp: activeLayerState.temperature.has('minMaxTemp'),
+        avgMaxWind: activeLayerState.wind.has('avgMaxWind'),
+        snowDepthIcons: activeLayerState.precipitation.has('snowDepthIcons'),
+        snowDepthColumns: activeLayerState.precipitation.has('snowDepthColumns'),
       };
       return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
     },
