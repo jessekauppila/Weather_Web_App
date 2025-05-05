@@ -7,14 +7,31 @@ import {
   Box,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { LayerId } from './MapComponent';
+import { LayerId, LayerState, LAYER_GROUPS } from '@/app/types/layers';
 
-interface LayerControlsProps {
-  activeLayer: LayerId | null;
-  setActiveLayer: (id: LayerId | null) => void;
-  activeLayers?: Set<LayerId>;
-  toggleLayer?: (id: LayerId) => void;
+interface LayerToolbarProps {
+  activeLayerState: LayerState;
+  onLayerToggle: (layerId: LayerId) => void;
 }
+
+const LAYER_LABELS: Record<LayerId, string> = {
+  forecastZones: 'Forecast Zones',
+  windArrows: 'Wind Arrows',
+  snowDepthChange: 'Snow Depth Change',
+  terrain: 'Terrain',
+  currentTemp: 'Current Temp.',
+  minMaxTemp: 'Min/Max Temp.',
+  avgMaxWind: 'Avg/Max Wind',
+  snowDepthIcons: 'Snow Depth Icons',
+  snowDepthColumns: 'Snow Depth Columns',
+};
+
+const GROUP_LABELS: Record<string, string> = {
+  temperature: 'Temperature',
+  wind: 'Wind',
+  precipitation: 'Snow Depth',
+  other: 'Other',
+};
 
 const switchStyle = {
   '& .MuiSwitch-switchBase': {
@@ -44,160 +61,56 @@ const formControlStyle = (isChecked: boolean) => ({
   },
 });
 
-const LayerControls: React.FC<LayerControlsProps> = ({ 
-  activeLayer, 
-  setActiveLayer,
-  activeLayers = new Set(),
-  toggleLayer = () => {}
-}) => {
+export default function LayerToolbar({ activeLayerState, onLayerToggle }: LayerToolbarProps) {
+  // Group layers by their category
+  const groupedLayers = Object.entries(LAYER_GROUPS).reduce((acc, [layerId, group]) => {
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(layerId as LayerId);
+    return acc;
+  }, {} as Record<string, LayerId[]>);
+
   return (
     <div className="app-toolbar" style={{ padding: '8px 12px' }}>
       <FormGroup sx={{ width: '100%' }}>
-        {/* Temperature Group */}
-        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1 }}>
-          Temperature
-        </Typography>
-        <FormControlLabel
-          sx={formControlStyle(activeLayer === 'currentTemp')}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayer === 'currentTemp'}
-              onChange={() =>
-                setActiveLayer(activeLayer === 'currentTemp' ? null : 'currentTemp')
-              }
-              sx={switchStyle}
-            />
-          }
-          label="Current Temp."
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(activeLayer === 'minMaxTemp')}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayer === 'minMaxTemp'}
-              onChange={() => setActiveLayer('minMaxTemp')}
-              sx={switchStyle}
-            />
-          }
-          label="Min/Max Temp."
-          labelPlacement="start"
-        />
+        {Object.entries(groupedLayers).map(([group, layers]) => (
+          <Box key={group}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                color: 'var(--app-text-secondary)', 
+                mb: 1,
+                mt: group !== 'temperature' ? 2 : 0 
+              }}
+            >
+              {GROUP_LABELS[group]}
+            </Typography>
+            {layers.map((layerId) => {
+              const isChecked = group === 'other' 
+                ? activeLayerState.other.has(layerId)
+                : activeLayerState[group as keyof Omit<LayerState, 'other'>] === layerId;
 
-        {/* Snow Depth Group */}
-        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
-          Snow Depth
-        </Typography>
-        <FormControlLabel
-          sx={formControlStyle(activeLayers.has('snowDepthIcons'))}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayers.has('snowDepthIcons')}
-              onChange={() => toggleLayer('snowDepthIcons')}
-              sx={switchStyle}
-            />
-          }
-          label="Snow Depth Icons"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(activeLayers.has('snowDepthColumns'))}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayers.has('snowDepthColumns')}
-              onChange={() => toggleLayer('snowDepthColumns')}
-              sx={switchStyle}
-            />
-          }
-          label="Snow Depth Columns"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(activeLayer === 'snowDepthChange')}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayer === 'snowDepthChange'}
-              onChange={() =>
-                setActiveLayer(activeLayer === 'snowDepthChange' ? null : 'snowDepthChange')
-              }
-              sx={switchStyle}
-            />
-          }
-          label="Snow Depth Change"
-          labelPlacement="start"
-        />
-
-        {/* Wind Group */}
-        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
-          Wind
-        </Typography>
-        <FormControlLabel
-          sx={formControlStyle(activeLayers.has('windArrows'))}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayers.has('windArrows')}
-              onChange={() => toggleLayer('windArrows')}
-              sx={switchStyle}
-            />
-          }
-          label="Wind Arrows"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(activeLayer === 'avgMaxWind')}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayer === 'avgMaxWind'}
-              onChange={() => setActiveLayer('avgMaxWind')}
-              sx={switchStyle}
-            />
-          }
-          label="Avg/Max Wind"
-          labelPlacement="start"
-        />
-
-        {/* Other Layers */}
-        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
-          Other
-        </Typography>
-        <FormControlLabel
-          sx={formControlStyle(activeLayer === 'terrain')}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayer === 'terrain'}
-              onChange={() =>
-                setActiveLayer(activeLayer === 'terrain' ? null : 'terrain')
-              }
-              sx={switchStyle}
-            />
-          }
-          label="Terrain"
-          labelPlacement="start"
-        />
-        <FormControlLabel
-          sx={formControlStyle(activeLayers.has('forecastZones'))}
-          control={
-            <Switch
-              size="small"
-              checked={activeLayers.has('forecastZones')}
-              onChange={() => toggleLayer('forecastZones')}
-              sx={switchStyle}
-            />
-          }
-          label="Forecast Zones"
-          labelPlacement="start"
-        />
+              return (
+                <FormControlLabel
+                  key={layerId}
+                  sx={formControlStyle(isChecked)}
+                  control={
+                    <Switch
+                      size="small"
+                      checked={isChecked}
+                      onChange={() => onLayerToggle(layerId)}
+                      sx={switchStyle}
+                    />
+                  }
+                  label={LAYER_LABELS[layerId]}
+                  labelPlacement="start"
+                />
+              );
+            })}
+          </Box>
+        ))}
       </FormGroup>
     </div>
   );
-};
-
-export default LayerControls; 
+} 

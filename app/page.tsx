@@ -27,7 +27,8 @@ import { useDateState } from '@/app/hooks/useDateState';
 import { useDropdown } from '@/app/hooks/useDropdown';
 import { Analytics } from "@vercel/analytics/react"
 
-import MapComponent, { LayerId } from './components/MapComponent';
+import MapComponent from './components/MapComponent';
+import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
 
 
 interface Station {
@@ -259,21 +260,29 @@ export default function Home() {
     }
   }, [weatherDataReady, observationsDataDay, observationsDataHour]);
 
-  const [activeLayer, setActiveLayer] = useState<LayerId | null>('currentTemp');
+  const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
 
-  const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(new Set(['forecastZones']));
-
-  const toggleLayer = useCallback((layerId: LayerId) => {
-    setActiveLayers(prev => {
-      const next = new Set(prev);
-      if (next.has(layerId)) {
-        next.delete(layerId);
+  const handleLayerToggle = (layerId: LayerId) => {
+    setActiveLayerState(prev => {
+      const group = LAYER_GROUPS[layerId];
+      
+      if (group === 'other') {
+        const nextOther = new Set(prev.other);
+        if (nextOther.has(layerId)) {
+          nextOther.delete(layerId);
+        } else {
+          nextOther.add(layerId);
+        }
+        return { ...prev, other: nextOther };
       } else {
-        next.add(layerId);
+        // For mutually exclusive groups, toggle the layer
+        return {
+          ...prev,
+          [group]: prev[group] === layerId ? null : layerId
+        };
       }
-      return next;
     });
-  }, []);
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
@@ -299,10 +308,8 @@ export default function Home() {
               customTime={customTime}
               calculateCurrentTimeRange={calculateCurrentTimeRange}
               timeRangeData={timeRangeData}
-              activeLayer={activeLayer}
-              setActiveLayer={setActiveLayer}
-              activeLayers={activeLayers}
-              toggleLayer={toggleLayer}
+              activeLayerState={activeLayerState}
+              onLayerToggle={handleLayerToggle}
             />
           </div>
           
@@ -332,10 +339,8 @@ export default function Home() {
               }}
             >
               <LayerControls
-                activeLayer={activeLayer}
-                setActiveLayer={setActiveLayer}
-                activeLayers={activeLayers}
-                toggleLayer={toggleLayer}
+                activeLayerState={activeLayerState}
+                onLayerToggle={handleLayerToggle}
               />
             </div>
           </div>

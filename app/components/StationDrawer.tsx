@@ -136,16 +136,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       const newHeight = Math.max(MIN_DRAWER_HEIGHT, startHeightRef.current + deltaY);
       setDrawerHeight(newHeight);
     };
-
+    
     const handleMouseUp = () => {
       setIsDragging(false);
     };
-
+    
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
-
+    
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -288,7 +288,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     return value;
   }, [stationDayData.data]);
-
+  
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
     if (!station || !filteredObservationsDataHour?.data) {
@@ -297,11 +297,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         title: station ? `Filtered Hourly Data - ${station.Station}` : ''
       };
     }
-    
+
     const stationData = filteredObservationsDataHour.data.filter(
       (obs: { Station: string }) => obs.Station === station.Station
     );
-    
+
     return {
       data: stationData,
       title: `Filtered Hourly Data - ${station.Station}`
@@ -537,8 +537,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     }
     
     const timeRangeStr = `${startDate.format('MMM DD')} to ${endDate.format('MMM DD')} (${timeFormat})`;
-
-    return {
+        
+        return {
       data: dailySummaries,
       title: `${station.Station} - ${station.Elevation}\n${timeRangeStr}`
     };
@@ -857,7 +857,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   minWidth: '80px',
                   padding: '6px 10px',
                   textTransform: 'none',
-                  fontSize: '0.75rem',
+                fontSize: '0.75rem',
                   fontWeight: 500,
                   '&.Mui-selected': { 
                     color: 'var(--app-text-primary)',
@@ -933,7 +933,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             }}
           >
             ×
-          </button>
+            </button>
         </div>
         
         {/* Scrollable content with dark theme scrollbar */}
@@ -948,21 +948,21 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           }}
         >
           {/* Tab Panels */}
-          
+
           {/* Tab 1: Daily Summary from Hourly */}
           <TabPanel value={activeTab} index={0}>
 
 
             {/* Station Summary Table - Always visible at the top */}
             <div className="mb-6 pb-2">
-              <DayAveragesTable 
-                dayAverages={stationDayData}
-                onStationClick={() => {}}
-                mode={tableMode}
-                key={`summary-${station.Station}`}
-              />
-            </div>
-
+            <DayAveragesTable 
+              dayAverages={stationDayData}
+              onStationClick={() => {}}
+              mode={tableMode}
+              key={`summary-${station.Station}`}
+            />
+          </div>
+          
             {processedDailyFromHourly.data.length > 0 ? (
               <div className="mb-6">
                 <DayAveragesTable 
@@ -992,8 +992,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <p>No hourly graph data available</p>
-              </div>
-            )}
+            </div>
+          )}
           </TabPanel>
 
           {/* Tab 3: Daily Snow and Temperature Graph */}
@@ -1008,8 +1008,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <p>Only one day of data, not good for daily graph comparison</p>
-              </div>
-            )}
+            </div>
+          )}
           </TabPanel>
 
 
@@ -1026,8 +1026,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <p>No filtered hourly data available</p>
-              </div>
-            )}
+            </div>
+          )}
           </TabPanel>
 
           {/* Tab 5: Raw Hourly Data Table */}
@@ -1042,8 +1042,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <p>No raw hourly data available</p>
-              </div>
-            )}
+            </div>
+          )}
           </TabPanel>
         </div>
       </div>
