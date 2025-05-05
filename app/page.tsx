@@ -261,6 +261,20 @@ export default function Home() {
 
   const [activeLayer, setActiveLayer] = useState<LayerId | null>('currentTemp');
 
+  const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(new Set(['forecastZones']));
+
+  const toggleLayer = useCallback((layerId: LayerId) => {
+    setActiveLayers(prev => {
+      const next = new Set(prev);
+      if (next.has(layerId)) {
+        next.delete(layerId);
+      } else {
+        next.add(layerId);
+      }
+      return next;
+    });
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Show loading indicator if data isn't ready */}
@@ -287,6 +301,8 @@ export default function Home() {
               timeRangeData={timeRangeData}
               activeLayer={activeLayer}
               setActiveLayer={setActiveLayer}
+              activeLayers={activeLayers}
+              toggleLayer={toggleLayer}
             />
           </div>
           
@@ -318,6 +334,8 @@ export default function Home() {
               <LayerControls
                 activeLayer={activeLayer}
                 setActiveLayer={setActiveLayer}
+                activeLayers={activeLayers}
+                toggleLayer={toggleLayer}
               />
             </div>
           </div>
