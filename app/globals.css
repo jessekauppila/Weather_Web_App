@@ -17,7 +17,7 @@
    ***************************************************************/
   
   /* Background colors */
-  --app-toolbar-bg: rgba(0, 0, 0, .6);        /* Semi-transparent black for card backgrounds */
+  --app-toolbar-bg: rgba(0, 0, 0, .7);        /* Semi-transparent black for card backgrounds */
   --app-section-bg: rgba(0, 0, 0, 0.8);        /* Lighter background for inner sections */
   --app-dropdown-bg: rgba(0, 0, 0, 0.8);    /* Darker semi-transparent black for dropdowns */
   
@@ -1196,7 +1196,7 @@ body.drawer-open {
 
 .layer-toolbar-content {
   height: 100%;
-  padding: 8px 12px 8px 36px;
+  padding: 10px 10px 10px 10px; /* Reduced left padding */
   overflow-y: auto;
   transition: opacity 0.3s ease-in-out;
 }
@@ -1237,5 +1237,13 @@ body.drawer-open {
     width: 50%;
     max-width: 200px;
   }
+}
+
+.layer-toolbar-divider {
+  height: 1px;
+  background: var(--app-text-secondary);
+  margin: 8px 0;
+  opacity: 0.5;
+  border: none;
 }
 

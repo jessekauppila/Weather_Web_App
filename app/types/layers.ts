@@ -1,13 +1,11 @@
 export type LayerId =
-  | 'forecastZones'
-  | 'windArrows'
-  | 'snowDepthChange'
-  | 'terrain'
+  | 'snowDepthIcons'
+  | 'snowDepthColumns'
   | 'currentTemp'
   | 'minMaxTemp'
   | 'avgMaxWind'
-  | 'snowDepthIcons'
-  | 'snowDepthColumns';
+  | 'forecastZones'
+  | 'terrain';
 
 export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
 
@@ -15,10 +13,8 @@ export const LAYER_GROUPS: Record<LayerId, LayerGroup> = {
   currentTemp: 'temperature',
   minMaxTemp: 'temperature',
   avgMaxWind: 'wind',
-  windArrows: 'wind',
   snowDepthIcons: 'precipitation',
   snowDepthColumns: 'precipitation',
-  snowDepthChange: 'precipitation',
   forecastZones: 'other',
   terrain: 'other',
 } as const;
