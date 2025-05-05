@@ -5,7 +5,6 @@ import HourWxTable from '../vis/hourWxTable';
 import WxSnowGraph from '../vis/wxSnowGraph';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
-import './StationDrawer.css';
 import { Tabs, Tab, Box } from '@mui/material';
 
 type HourData = {
@@ -857,7 +856,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   minWidth: '80px',
                   padding: '6px 10px',
                   textTransform: 'none',
-                fontSize: '0.75rem',
+                  fontSize: '0.75rem',
                   fontWeight: 500,
                   '&.Mui-selected': { 
                     color: 'var(--app-text-primary)',
@@ -933,12 +932,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             }}
           >
             ×
-            </button>
+          </button>
         </div>
         
         {/* Scrollable content with dark theme scrollbar */}
         <div 
-          className="custom-scrollbar overflow-y-auto pr-2" 
+          className="drawer-scrollbar overflow-y-auto pr-2" 
           style={{ 
             height: `calc(100% - 50px)`,
             minHeight: '120px',
