@@ -89,7 +89,7 @@ export default function LayerToolbar({ activeLayerState, onLayerToggle }: LayerT
             {layers.map((layerId) => {
               const isChecked = group === 'other' 
                 ? activeLayerState.other.has(layerId)
-                : activeLayerState[group as keyof Omit<LayerState, 'other'>] === layerId;
+                : activeLayerState[group as keyof Omit<LayerState, 'other'>].has(layerId);
 
               return (
                 <FormControlLabel

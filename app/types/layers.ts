@@ -24,15 +24,15 @@ export const LAYER_GROUPS: Record<LayerId, LayerGroup> = {
 } as const;
 
 export interface LayerState {
-  temperature: LayerId | null;
-  wind: LayerId | null;
-  precipitation: LayerId | null;
+  temperature: Set<LayerId>;
+  wind: Set<LayerId>;
+  precipitation: Set<LayerId>;
   other: Set<LayerId>;
 }
 
 export const DEFAULT_LAYER_STATE: LayerState = {
-  temperature: 'currentTemp',
-  wind: null,
-  precipitation: null,
+  temperature: new Set(['currentTemp']),
+  wind: new Set(),
+  precipitation: new Set(),
   other: new Set(['forecastZones']),
 }; 
