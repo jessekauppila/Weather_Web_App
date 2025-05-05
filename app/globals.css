@@ -1196,7 +1196,7 @@ body.drawer-open {
 
 .layer-toolbar-content {
   height: 100%;
-  padding: 10px 10px 10px 10px; /* Reduced left padding */
+  padding: 8px 8px 8px 8px; /* Reduced from 10px to 8px */
   overflow-y: auto;
   transition: opacity 0.3s ease-in-out;
 }
@@ -1242,7 +1242,7 @@ body.drawer-open {
 .layer-toolbar-divider {
   height: 1px;
   background: var(--app-text-secondary);
-  margin: 8px 0;
+  margin: 4px 0;  /* Reduced from 8px to 4px */
   opacity: 0.5;
   border: none;
 }

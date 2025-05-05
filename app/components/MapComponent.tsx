@@ -19,7 +19,7 @@ import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
-import { LayerId, LayerState } from '@/app/types/layers';
+import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import LayerToolbar from './LayerToolbar';
 
 interface MapData {
@@ -240,17 +240,7 @@ export const MapApp = ({
   // Create layers based on current visibility and data
   const layers = useMemo(
     () => {
-      const layerVisibility = {
-        forecastZones: activeLayerState.other.has('forecastZones'),
-        windArrows: activeLayerState.wind.has('windArrows'),
-        snowDepthChange: activeLayerState.precipitation.has('snowDepthChange'),
-        terrain: activeLayerState.other.has('terrain'),
-        currentTemp: activeLayerState.temperature.has('currentTemp'),
-        minMaxTemp: activeLayerState.temperature.has('minMaxTemp'),
-        avgMaxWind: activeLayerState.wind.has('avgMaxWind'),
-        snowDepthIcons: activeLayerState.precipitation.has('snowDepthIcons'),
-        snowDepthColumns: activeLayerState.precipitation.has('snowDepthColumns'),
-      };
+      const layerVisibility = getLayerVisibility(activeLayerState);
       return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
     },
     [activeLayerState, mapData, handleStationClick]
