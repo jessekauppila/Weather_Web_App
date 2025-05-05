@@ -1,44 +1,27 @@
 import { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../map';
+import { LayerId } from '@/app/types/layers';
 
 // Import individual layer creators
 import { createForecastZoneLayer } from './forecastZoneLayer';
-import { createWindArrowLayer } from './windArrowLayer';
 import { createCurrentTempLayer } from './currentTempLayer';
-import { createSnowDepthLayer } from './old/snowDepthLayer';
 import { createTerrainLayer } from './terrainLayer';
 import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
-import { createCombinedSnowDepthNumsAndCols } from './combinedSnowDepthNumsAndCols';
 import { createCombinedSnowDepthIcons } from '@/app/map/layers/snowDepthIconsLayer';
 import { createCombinedSnowDepthColumns } from '@/app/map/layers/snowDepthColumnsLayer';
 
 // Re-export the layer creators for direct usage if needed
 export { 
   createForecastZoneLayer,
-  createWindArrowLayer,
   createCurrentTempLayer,
-  createSnowDepthLayer,
   createTerrainLayer,
   createCombinedMaxMinLayer,
   createCombinedAvgMaxWindLayer,
-  createCombinedSnowDepthNumsAndCols,
   createCombinedSnowDepthIcons,
   createCombinedSnowDepthColumns
 };
-
-// Define LayerId type
-export type LayerId =
-  | 'forecastZones'
-  | 'windArrows'
-  | 'snowDepthChange'
-  | 'terrain'
-  | 'currentTemp'
-  | 'minMaxTemp'
-  | 'avgMaxWind'
-  | 'snowDepthIcons'
-  | 'snowDepthColumns';
 
 type LayerVisibility = {
   [key in LayerId]: boolean;
@@ -65,24 +48,8 @@ export function createMapLayers(
     visibility.forecastZones &&
       createForecastZoneLayer(data.forecastZones ?? []),
 
-    visibility.windArrows &&
-      createWindArrowLayer(
-        data.stationData ?? {
-          type: 'FeatureCollection',
-          features: [],
-        },
-        onStationClick
-      ),
-
-    visibility.snowDepthChange &&
-      createSnowDepthLayer(
-        data.stationData ?? {
-          type: 'FeatureCollection',
-          features: [],
-        },
-        onStationClick
-      ),
     visibility.terrain && createTerrainLayer(),
+    
     visibility.currentTemp &&
       createCurrentTempLayer(
         data.stationData ?? {
@@ -125,7 +92,6 @@ export function createMapLayers(
       ),
   ].filter(Boolean);
 
-  console.log('Final layers array:', layers);
   return layers;
 }
 

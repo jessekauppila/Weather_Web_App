@@ -20,8 +20,6 @@ interface LayerToolbarProps {
 
 const LAYER_LABELS: Record<LayerId, string> = {
   forecastZones: 'Forecast Zones',
-  windArrows: 'Wind Arrows',
-  snowDepthChange: 'Snow Depth Change',
   terrain: 'Terrain',
   currentTemp: 'Current Temp.',
   minMaxTemp: 'Min/Max Temp.',
@@ -33,9 +31,12 @@ const LAYER_LABELS: Record<LayerId, string> = {
 const GROUP_LABELS: Record<string, string> = {
   temperature: 'Temperature',
   wind: 'Wind',
-  precipitation: 'Snow Depth',
+  precipitation: 'Precipitation',
   other: 'Other',
 };
+
+// Add ordered array to control group display order
+const GROUP_ORDER = ['temperature', 'wind', 'precipitation', 'other'] as const;
 
 const switchStyle = {
   '& .MuiSwitch-switchBase': {
@@ -53,7 +54,7 @@ const switchStyle = {
 };
 
 const formControlStyle = (isChecked: boolean) => ({
-  margin: '2px 0',
+  margin: '1px 0',
   width: '100%',
   justifyContent: 'space-between',
   '& .MuiFormControlLabel-label': {
@@ -118,6 +119,14 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
     return acc;
   }, {} as Record<string, LayerId[]>);
 
+  // Add function to check if a group has any active layers
+  const isGroupActive = (group: string) => {
+    if (group === 'other') {
+      return activeLayerState.other.size > 0;
+    }
+    return activeLayerState[group as keyof Omit<LayerState, 'other'>].size > 0;
+  };
+
   return (
     <div 
       ref={drawerRef}
@@ -139,55 +148,59 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
           variant="subtitle2" 
           sx={{ 
             color: 'var(--app-text-primary)',
-            mb: 2,
+            mb: 1,
             textAlign: 'center'
           }}
         >
-          {/* Layer Controls */}
+          Layer Controls
         </Typography>
 
         <FormGroup sx={{ width: '100%' }}>
-          {Object.entries(groupedLayers).map(([group, layers], idx, arr) => (
-            <React.Fragment key={group}>
-              <Box>
-                <Typography 
-                  variant="subtitle2" 
-                  sx={{ 
-                    color: 'var(--app-text-secondary)', 
-                    mb: 1,
-                    mt: group !== 'temperature' ? 2 : 0 
-                  }}
-                >
-                  {GROUP_LABELS[group]}
-                </Typography>
-                {layers.map((layerId) => {
-                  const isChecked = group === 'other' 
-                    ? activeLayerState.other.has(layerId)
-                    : activeLayerState[group as keyof Omit<LayerState, 'other'>].has(layerId);
+          {GROUP_ORDER.map((group, idx, arr) => {
+            const layers = groupedLayers[group] || [];
+            return (
+              <React.Fragment key={group}>
+                <Box>
+                  <Typography 
+                    variant="subtitle2" 
+                    sx={{ 
+                      color: isGroupActive(group) ? 'var(--app-text-primary)' : 'var(--app-text-secondary)', 
+                      mb: 0.5,
+                      mt: group !== 'temperature' ? 1 : 0,
+                      transition: 'color 0.2s ease-in-out'
+                    }}
+                  >
+                    {GROUP_LABELS[group]}
+                  </Typography>
+                  {layers.map((layerId) => {
+                    const isChecked = group === 'other' 
+                      ? activeLayerState.other.has(layerId)
+                      : activeLayerState[group as keyof Omit<LayerState, 'other'>].has(layerId);
 
-                  return (
-                    <FormControlLabel
-                      key={layerId}
-                      sx={formControlStyle(isChecked)}
-                      control={
-                        <Switch
-                          size="small"
-                          checked={isChecked}
-                          onChange={() => onLayerToggle(layerId)}
-                          sx={switchStyle}
-                        />
-                      }
-                      label={LAYER_LABELS[layerId]}
-                      labelPlacement="start"
-                    />
-                  );
-                })}
-              </Box>
-              {idx < arr.length - 1 && (
-                <div className="layer-toolbar-divider" />
-              )}
-            </React.Fragment>
-          ))}
+                    return (
+                      <FormControlLabel
+                        key={layerId}
+                        sx={formControlStyle(isChecked)}
+                        control={
+                          <Switch
+                            size="small"
+                            checked={isChecked}
+                            onChange={() => onLayerToggle(layerId)}
+                            sx={switchStyle}
+                          />
+                        }
+                        label={LAYER_LABELS[layerId]}
+                        labelPlacement="start"
+                      />
+                    );
+                  })}
+                </Box>
+                {idx < arr.length - 1 && (
+                  <div className="layer-toolbar-divider" />
+                )}
+              </React.Fragment>
+            );
+          })}
         </FormGroup>
       </div>
     </div>
