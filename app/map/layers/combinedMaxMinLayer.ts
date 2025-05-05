@@ -1,10 +1,11 @@
+import { GeoJsonLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../map';
-import { createMinTempLayer } from './temperature/minTempLayer';
-import { createMaxTempLayer } from './temperature/maxTempLayer';
-import { createMinTempColLayer } from './temperature/minTempColLayer';
-import { createMaxTempColLayer } from './temperature/maxTempColLayer';
+import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
+import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
+import { createMinTempLayer } from './temperatureWithColumns/minTempLayer';
+import { createMaxTempLayer } from './temperatureWithColumns/maxTempLayer';
 
 /**
  * Creates a composite layer with both min and max temperature icons

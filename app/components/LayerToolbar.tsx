@@ -4,6 +4,7 @@ import {
   FormGroup,
   FormControlLabel,
   Typography,
+  Box,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { LayerId } from './MapComponent';
@@ -11,6 +12,8 @@ import { LayerId } from './MapComponent';
 interface LayerControlsProps {
   activeLayer: LayerId | null;
   setActiveLayer: (id: LayerId | null) => void;
+  activeLayers?: Set<LayerId>;
+  toggleLayer?: (id: LayerId) => void;
 }
 
 const switchStyle = {
@@ -41,36 +44,19 @@ const formControlStyle = (isChecked: boolean) => ({
   },
 });
 
-const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLayer }) => {
+const LayerControls: React.FC<LayerControlsProps> = ({ 
+  activeLayer, 
+  setActiveLayer,
+  activeLayers = new Set(),
+  toggleLayer = () => {}
+}) => {
   return (
     <div className="app-toolbar" style={{ padding: '8px 12px' }}>
       <FormGroup sx={{ width: '100%' }}>
-        {/* <FormControlLabel
-          sx={formControlStyle(layersState.forecastZones)}
-          control={
-            <Switch
-              size="small"
-              checked={layersState.forecastZones}
-              onChange={() => toggleLayer('forecastZones')}
-              sx={switchStyle}
-            />
-          }
-          label="Forecast Zones"
-          labelPlacement="start"
-        /> */}
-        {/* <FormControlLabel
-          sx={formControlStyle(layersState.windArrows)}
-          control={
-            <Switch
-              size="small"
-              checked={layersState.windArrows}
-              onChange={() => toggleLayer('windArrows')}
-              sx={switchStyle}
-            />
-          }
-          label="Wind Arrows"
-          labelPlacement="start"
-        /> */}
+        {/* Temperature Group */}
+        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1 }}>
+          Temperature
+        </Typography>
         <FormControlLabel
           sx={formControlStyle(activeLayer === 'currentTemp')}
           control={
@@ -100,21 +86,37 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
           labelPlacement="start"
         />
 
+        {/* Snow Depth Group */}
+        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
+          Snow Depth
+        </Typography>
         <FormControlLabel
-          sx={formControlStyle(activeLayer === 'avgMaxWind')}
+          sx={formControlStyle(activeLayers.has('snowDepthIcons'))}
           control={
             <Switch
               size="small"
-              checked={activeLayer === 'avgMaxWind'}
-              onChange={() => setActiveLayer('avgMaxWind')}
+              checked={activeLayers.has('snowDepthIcons')}
+              onChange={() => toggleLayer('snowDepthIcons')}
               sx={switchStyle}
             />
           }
-          label="Avg/Max Wind"
+          label="Snow Depth Icons"
           labelPlacement="start"
         />
-        
-        {/* <FormControlLabel
+        <FormControlLabel
+          sx={formControlStyle(activeLayers.has('snowDepthColumns'))}
+          control={
+            <Switch
+              size="small"
+              checked={activeLayers.has('snowDepthColumns')}
+              onChange={() => toggleLayer('snowDepthColumns')}
+              sx={switchStyle}
+            />
+          }
+          label="Snow Depth Columns"
+          labelPlacement="start"
+        />
+        <FormControlLabel
           sx={formControlStyle(activeLayer === 'snowDepthChange')}
           control={
             <Switch
@@ -128,26 +130,43 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
           }
           label="Snow Depth Change"
           labelPlacement="start"
-        /> */}
+        />
 
+        {/* Wind Group */}
+        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
+          Wind
+        </Typography>
         <FormControlLabel
-          sx={formControlStyle(activeLayer === 'snowDepthNumsAndCols')}
+          sx={formControlStyle(activeLayers.has('windArrows'))}
           control={
             <Switch
               size="small"
-              checked={activeLayer === 'snowDepthNumsAndCols'}
-              onChange={() =>
-                setActiveLayer(activeLayer === 'snowDepthNumsAndCols' ? null : 'snowDepthNumsAndCols')
-              }
+              checked={activeLayers.has('windArrows')}
+              onChange={() => toggleLayer('windArrows')}
               sx={switchStyle}
             />
-          } 
-          label="Snow Depth Change"
+          }
+          label="Wind Arrows"
           labelPlacement="start"
         />
-        
+        <FormControlLabel
+          sx={formControlStyle(activeLayer === 'avgMaxWind')}
+          control={
+            <Switch
+              size="small"
+              checked={activeLayer === 'avgMaxWind'}
+              onChange={() => setActiveLayer('avgMaxWind')}
+              sx={switchStyle}
+            />
+          }
+          label="Avg/Max Wind"
+          labelPlacement="start"
+        />
 
-
+        {/* Other Layers */}
+        <Typography variant="subtitle2" sx={{ color: 'var(--app-text-secondary)', mb: 1, mt: 2 }}>
+          Other
+        </Typography>
         <FormControlLabel
           sx={formControlStyle(activeLayer === 'terrain')}
           control={
@@ -163,7 +182,19 @@ const LayerControls: React.FC<LayerControlsProps> = ({ activeLayer, setActiveLay
           label="Terrain"
           labelPlacement="start"
         />
-
+        <FormControlLabel
+          sx={formControlStyle(activeLayers.has('forecastZones'))}
+          control={
+            <Switch
+              size="small"
+              checked={activeLayers.has('forecastZones')}
+              onChange={() => toggleLayer('forecastZones')}
+              sx={switchStyle}
+            />
+          }
+          label="Forecast Zones"
+          labelPlacement="start"
+        />
       </FormGroup>
     </div>
   );

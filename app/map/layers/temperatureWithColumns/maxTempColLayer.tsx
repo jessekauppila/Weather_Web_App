@@ -22,7 +22,7 @@ const createCircle = (
   return [coordinates];
 };
 
-export function createMinTempColLayer(
+export function createMaxTempColLayer(
   data: {
     type: 'FeatureCollection';
     features: Feature<Geometry, Map_BlockProperties>[];
@@ -37,9 +37,9 @@ export function createMinTempColLayer(
       geometry: {
         type: 'Polygon' as const,
         coordinates: createCircle(
-          feature.properties.longitude - .03, // Offset right
+          feature.properties.longitude, // Offset left
           feature.properties.latitude ,
-          0.03,
+          0.029,
           32
         )
       },
@@ -48,23 +48,23 @@ export function createMinTempColLayer(
   };
 
   return new GeoJsonLayer({
-    id: 'minTempCol',
+    id: 'maxTempCol',
     data: offsetData,
-    opacity: .3,
+    opacity: 1,
     stroked: false,
     filled: true,
     extruded: true,
     wireframe: true,
     getElevation: (f) => {
-      const temp = f.properties.airTempMin;
+      const temp = f.properties.airTempMax;
       if (temp === null || isNaN(temp)) return 0;
       return Math.abs(temp) * 1000; // Scale factor for visualization
     },
     getFillColor: (f: Feature<Geometry, Map_BlockProperties>) => {
-      return getTemperatureColor(f.properties.airTempMin);
+      return getTemperatureColor(f.properties.airTempMax);
     },
     getLineColor: (f: Feature<Geometry, Map_BlockProperties>) => {
-      return getTemperatureColor(f.properties.airTempMin);
+      return getTemperatureColor(f.properties.airTempMax);
     },
     pickable: true,
     onClick,

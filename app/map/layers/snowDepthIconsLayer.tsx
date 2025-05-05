@@ -3,27 +3,25 @@ import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../map';
 import { createSnowDepthBoundaryLayer } from './snow-depth/boundaryLayer';
 import { createSnowDepthNumericLayer } from './snow-depth/numericLayer';
-import { createSnowDepthColumnLayer } from './snow-depth/columnLayer';
 
 /**
- * Creates a composite layer combining snow depth visualization with boundary and numeric icons
+ * Creates a composite layer combining snow depth boundary and numeric icons
  */
-export function createCombinedSnowDepthNumsAndCols(
+export function createCombinedSnowDepthIcons(
   data: {
     type: 'FeatureCollection';
     features: Feature<Geometry, Map_BlockProperties>[];
   },
   onClick?: (info: PickingInfo) => void
 ) {
-  console.log('Creating combined snow depth layers with data:', {
+  console.log('Creating combined snow depth icons with data:', {
     featureCount: data.features.length,
     firstFeature: data.features[0]?.properties
   });
 
-  // Create all three layers
+  // Create both layers
   const snowDepthBoundaryLayer = createSnowDepthBoundaryLayer(data);
   const snowDepthNumLayer = createSnowDepthNumericLayer(data, onClick);
-  const snowDepthColLayer = createSnowDepthColumnLayer(data, onClick);
 
   // Add detailed layer debugging
   console.log('Layer configurations:', {
@@ -43,36 +41,6 @@ export function createCombinedSnowDepthNumsAndCols(
     }
   });
 
-  // Return layers in correct order: boundary first, then color, then numeric
-  return [snowDepthBoundaryLayer, snowDepthNumLayer, snowDepthColLayer];
-}
-
-/**
- * Creates a layer combining snow depth boundary and numeric icons
- */
-export function createSnowDepthIcons(
-  data: {
-    type: 'FeatureCollection';
-    features: Feature<Geometry, Map_BlockProperties>[];
-  },
-  onClick?: (info: PickingInfo) => void
-) {
-  const snowDepthBoundaryLayer = createSnowDepthBoundaryLayer(data);
-  const snowDepthNumLayer = createSnowDepthNumericLayer(data, onClick);
-
+  // Return layers in correct order: boundary first, then numeric
   return [snowDepthBoundaryLayer, snowDepthNumLayer];
-}
-
-/**
- * Creates a layer for snow depth columns
- */
-export function createSnowDepthColumns(
-  data: {
-    type: 'FeatureCollection';
-    features: Feature<Geometry, Map_BlockProperties>[];
-  },
-  onClick?: (info: PickingInfo) => void
-) {
-  const snowDepthColLayer = createSnowDepthColumnLayer(data, onClick);
-  return [snowDepthColLayer];
-}
+} 

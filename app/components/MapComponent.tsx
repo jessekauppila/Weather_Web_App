@@ -27,7 +27,9 @@ export type LayerId =
   | 'currentTemp'
   | 'minMaxTemp'
   | 'avgMaxWind'
-  | 'snowDepthNumsAndCols';
+  | 'snowDepthNumsAndCols'
+  | 'snowDepthIcons'
+  | 'snowDepthColumns';
 
 interface MapData {
   stationData: {
@@ -119,10 +121,20 @@ export const MapApp = ({
   activeLayer,
   setActiveLayer,
 }: MapComponentProps) => {
-  // Get data from context
   const { mapData, isLoading } = useMapData();
+  const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(new Set(['forecastZones']));
 
-
+  const toggleLayer = useCallback((layerId: LayerId) => {
+    setActiveLayers(prev => {
+      const next = new Set(prev);
+      if (next.has(layerId)) {
+        next.delete(layerId);
+      } else {
+        next.add(layerId);
+      }
+      return next;
+    });
+  }, []);
 
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
@@ -263,23 +275,20 @@ export const MapApp = ({
   const layers = useMemo(
     () => {
       const layerVisibility = {
-        forecastZones: false,
-        windArrows: false,
+        forecastZones: activeLayers.has('forecastZones'),
+        windArrows: activeLayers.has('windArrows'),
         snowDepthChange: activeLayer === 'snowDepthChange',
         terrain: activeLayer === 'terrain',
         currentTemp: activeLayer === 'currentTemp',
         minMaxTemp: activeLayer === 'minMaxTemp',
         avgMaxWind: activeLayer === 'avgMaxWind',
-        snowDepthNumsAndCols: activeLayer === 'snowDepthNumsAndCols',
+        snowDepthIcons: activeLayers.has('snowDepthIcons'),
+        snowDepthColumns: activeLayers.has('snowDepthColumns'),
       };
       return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
     },
-    [activeLayer, mapData, handleStationClick]
+    [activeLayer, activeLayers, mapData, handleStationClick]
   );
-
-  const handleLayerToggle = (layerId: LayerId) => {
-    setActiveLayer(activeLayer === layerId ? null : layerId);
-  };
 
   return (
     <div className="w-full h-full relative">
