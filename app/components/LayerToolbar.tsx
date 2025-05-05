@@ -24,8 +24,8 @@ const LAYER_LABELS: Record<LayerId, string> = {
   currentTemp: 'Current Temp.',
   minMaxTemp: 'Min/Max Temp.',
   avgMaxWind: 'Avg/Max Wind',
-  snowDepthIcons: 'Snow Depth Icons',
-  snowDepthColumns: 'Snow Depth Columns',
+  snowDepthIcons: 'Snow Depth Change Icons',
+  snowDepthColumns: 'Snow Depth Change Columns',
 };
 
 const GROUP_LABELS: Record<string, string> = {
