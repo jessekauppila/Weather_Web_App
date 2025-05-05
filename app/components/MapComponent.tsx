@@ -18,6 +18,7 @@ import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
+import { Switch } from '@mui/material';
 
 export type LayerId =
   | 'forecastZones'
@@ -64,6 +65,8 @@ interface MapComponentProps {
   timeRangeData: any;
   activeLayer: LayerId | null;
   setActiveLayer: (id: LayerId | null) => void;
+  activeLayers: Set<LayerId>;
+  toggleLayer: (id: LayerId) => void;
 }
 
 // Client-side portal component for Next.js
@@ -120,21 +123,10 @@ export const MapApp = ({
   timeRangeData,
   activeLayer,
   setActiveLayer,
+  activeLayers,
+  toggleLayer,
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
-  const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(new Set(['forecastZones']));
-
-  const toggleLayer = useCallback((layerId: LayerId) => {
-    setActiveLayers(prev => {
-      const next = new Set(prev);
-      if (next.has(layerId)) {
-        next.delete(layerId);
-      } else {
-        next.add(layerId);
-      }
-      return next;
-    });
-  }, []);
 
   // Drawer state
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
