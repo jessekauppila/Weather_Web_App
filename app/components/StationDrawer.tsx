@@ -856,7 +856,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   minWidth: '80px',
                   padding: '6px 10px',
                   textTransform: 'none',
-                  fontSize: '0.75rem',
+                fontSize: '0.75rem',
                   fontWeight: 500,
                   '&.Mui-selected': { 
                     color: 'var(--app-text-primary)',
@@ -932,7 +932,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             }}
           >
             ×
-          </button>
+            </button>
         </div>
         
         {/* Scrollable content with dark theme scrollbar */}

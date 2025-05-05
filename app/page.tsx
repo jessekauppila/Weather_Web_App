@@ -14,7 +14,7 @@ import TimeToolbar from './components/TimeToolbar';
 // import { LoadingWrapper } from '@/app/components/LoadingWrapper';
 // import RegionTables from '@/app/components/RegionTables';
 // import { RegionsContainer } from '@/app/components/RegionsContainer';
-import LayerControls from './components/LayerToolbar';
+import LayerToolbar from './components/LayerToolbar';
 
 import moment from 'moment-timezone';
 
@@ -352,7 +352,7 @@ export default function Home() {
                 alignSelf: 'flex-start'
               }}
             >
-              <LayerControls
+              <LayerToolbar
                 activeLayerState={activeLayerState}
                 onLayerToggle={handleLayerToggle}
                 isStationDrawerOpen={!!selectedStation}
