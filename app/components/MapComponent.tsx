@@ -19,18 +19,7 @@ import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
-
-export type LayerId =
-  | 'forecastZones'
-  | 'windArrows'
-  | 'snowDepthChange'
-  | 'terrain'
-  | 'currentTemp'
-  | 'minMaxTemp'
-  | 'avgMaxWind'
-  | 'snowDepthNumsAndCols'
-  | 'snowDepthIcons'
-  | 'snowDepthColumns';
+import { LayerId, LayerState } from '@/app/types/layers';
 
 interface MapData {
   stationData: {
@@ -49,24 +38,12 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
-  // layerVisibility?: {
-  //   forecastZones: boolean;
-  //   windArrows: boolean;
-  //   snowDepthChange: boolean;
-  //   terrain: boolean;
-  //   currentTemp: boolean;
-  //   minMaxTemp: boolean;
-  //   avgMaxWind: boolean;
-  // };
-  onToggleLayer?: (id: LayerId) => void;
   dayRangeType?: DayRangeType;
   customTime?: string;
   calculateCurrentTimeRange?: () => string;
   timeRangeData: any;
-  activeLayer: LayerId | null;
-  setActiveLayer: (id: LayerId | null) => void;
-  activeLayers: Set<LayerId>;
-  toggleLayer: (id: LayerId) => void;
+  activeLayerState: LayerState;
+  onLayerToggle: (layerId: LayerId) => void;
 }
 
 // Client-side portal component for Next.js
@@ -115,16 +92,12 @@ export const MapApp = ({
   filteredObservationsDataHour,
   isMetric,
   tableMode,
-  //layerVisibility: externalLayerVisibility,
-  //onToggleLayer,
   dayRangeType,
   customTime,
   calculateCurrentTimeRange,
   timeRangeData,
-  activeLayer,
-  setActiveLayer,
-  activeLayers,
-  toggleLayer,
+  activeLayerState,
+  onLayerToggle,
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
 
@@ -267,19 +240,19 @@ export const MapApp = ({
   const layers = useMemo(
     () => {
       const layerVisibility = {
-        forecastZones: activeLayers.has('forecastZones'),
-        windArrows: activeLayers.has('windArrows'),
-        snowDepthChange: activeLayer === 'snowDepthChange',
-        terrain: activeLayer === 'terrain',
-        currentTemp: activeLayer === 'currentTemp',
-        minMaxTemp: activeLayer === 'minMaxTemp',
-        avgMaxWind: activeLayer === 'avgMaxWind',
-        snowDepthIcons: activeLayers.has('snowDepthIcons'),
-        snowDepthColumns: activeLayers.has('snowDepthColumns'),
+        forecastZones: activeLayerState.other.has('forecastZones'),
+        windArrows: activeLayerState.wind === 'windArrows',
+        snowDepthChange: activeLayerState.precipitation === 'snowDepthChange',
+        terrain: activeLayerState.other.has('terrain'),
+        currentTemp: activeLayerState.temperature === 'currentTemp',
+        minMaxTemp: activeLayerState.temperature === 'minMaxTemp',
+        avgMaxWind: activeLayerState.wind === 'avgMaxWind',
+        snowDepthIcons: activeLayerState.precipitation === 'snowDepthIcons',
+        snowDepthColumns: activeLayerState.precipitation === 'snowDepthColumns',
       };
       return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
     },
-    [activeLayer, activeLayers, mapData, handleStationClick]
+    [activeLayerState, mapData, handleStationClick]
   );
 
   return (
@@ -337,8 +310,6 @@ export const MapApp = ({
 
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
-  const [activeLayer, setActiveLayer] = useState<LayerId | null>('currentTemp');
-
   return (
     <MapDataProvider observationsDataDay={props.observationsDataDay}>
       <MapApp {...props} />
