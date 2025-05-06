@@ -8,7 +8,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { LayerId, LayerState, LAYER_GROUPS } from '@/app/types/layers';
+import { LayerId, LayerState, LAYER_GROUPS, LAYER_LABELS } from '@/app/types/layers';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
@@ -17,16 +17,6 @@ interface LayerToolbarProps {
   onLayerToggle: (layerId: LayerId) => void;
   isStationDrawerOpen?: boolean;
 }
-
-const LAYER_LABELS: Record<LayerId, string> = {
-  forecastZones: 'Forecast Zones',
-  terrain: 'Terrain',
-  currentTemp: 'Current Temp.',
-  minMaxTemp: 'Min/Max Temp.',
-  avgMaxWind: 'Avg/Max Wind',
-  snowDepthIcons: 'Snow Depth Change Icons',
-  snowDepthColumns: 'Snow Depth Change Columns',
-};
 
 const GROUP_LABELS: Record<string, string> = {
   temperature: 'Temperature',
