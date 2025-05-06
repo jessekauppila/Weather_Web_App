@@ -38,6 +38,7 @@
   --app-box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   --app-border-radius: 5px;                /* Consistent rounded corners */
   --app-margin: 8px;
+  --app-padding: 11px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,7 +82,7 @@ html, #__next, main {
   background: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border-radius: var(--app-border-radius);
-  padding: 8px;
+  /* padding: 22px; */
   pointer-events: auto;
 }
 
@@ -1202,7 +1203,7 @@ body.drawer-open {
 
 .layer-toolbar-content {
   height: 100%;
-  padding: 8px 8px 8px 8px;
+  padding: var(--app-padding);
   overflow-y: auto;
   transition: opacity 0.3s ease-in-out;
   border-radius: var(--app-border-radius); /* Add rounded corners to content */
@@ -1230,22 +1231,28 @@ body.drawer-open {
 /* Time Toolbar specific styles */
 .time-toolbar {
   position: fixed;
-  top: 0;
+  top: var(--app-margin);
   left: 50%;
   transform: translate(-50%, 0);
-  transition: transform 0.3s ease-in-out;
   width: 400px;
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border: none;
   border-radius: var(--app-border-radius);
   z-index: 9998;
-  margin: var(--app-margin);
-  padding-bottom: 0px;
+  margin: 0;
+  /* padding: var(--app-padding); */
+  pointer-events: none;
+  transition: transform 0.3s ease-in-out;
+}
+
+.time-toolbar-content {
+  padding: var(--app-padding); /* var(--app-padding) */
 }
 
 .time-toolbar.open {
   transform: translate(-50%, 0);
+  pointer-events: auto;
 }
 
 .time-toolbar:not(.open) {
@@ -1255,9 +1262,9 @@ body.drawer-open {
 .time-toolbar-handle {
   position: absolute;
   left: 50%;
-  bottom: -36px;
+  bottom: -36px; /* or whatever offset you want below the toolbar */
   transform: translateX(-50%);
-  width: 500px;
+  width: 48px;   /* or your preferred width */
   height: 48px;
   display: flex;
   align-items: center;
@@ -1269,34 +1276,7 @@ body.drawer-open {
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
-  /* box-shadow: var(--app-box-shadow); */
-}
-
-.time-toolbar-handle:hover {
-  opacity: 1;
-}
-
-.time-toolbar-handle:active {
-  opacity: 0.8;
-}
-
-.time-toolbar-content {
-  height: 100%;
-  padding: 8px;
-  overflow-y: auto;
-  transition: opacity 0.3s ease-in-out;
-  border-radius: var(--app-border-radius);
-}
-
-/* Mobile styles for toolbars */
-@media (max-width: 768px) {
-  .time-toolbar {
-    width: calc(100% - 16px);
-  }
-  
-  .time-toolbar.open {
-    top: 40px; /* Adjust for mobile */
-  }
+  pointer-events: auto;
 }
 
 /* Reusable floating drawer styles */
