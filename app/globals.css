@@ -1234,7 +1234,7 @@ body.drawer-open {
   top: var(--app-margin);
   left: 50%;
   transform: translate(-50%, 0);
-  width: 400px;
+  width: 350px;
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border: none;

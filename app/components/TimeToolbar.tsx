@@ -154,8 +154,9 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleNextDay={handleNextDay}
             useCustomEndDate={useCustomEndDate}
           />
+                  </div>
           
-          {/* <CutoffControls
+                             {/* <CutoffControls
             dayRangeType={dayRangeType}
             handleDayRangeTypeChange={handleDayRangeTypeChange}
             customTime={customTime}
@@ -182,7 +183,9 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleClose={handleClose}
             handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
           /> */}
-        </div>
+ 
+
+        {/* <div style={{ height: 'var(--app-padding)' }} />
 
         <div className="w-full max-w-[800px] mx-auto">
           <StationSelector
@@ -190,7 +193,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             stations={stations}
             handleStationChange={handleStationChange}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
