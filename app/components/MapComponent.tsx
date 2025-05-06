@@ -20,7 +20,7 @@ import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
-import LayerToolbar from './LayerToolbar';
+//import LayerToolbar from './LayerToolbar';
 
 interface MapData {
   stationData: {
