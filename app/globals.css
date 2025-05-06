@@ -37,6 +37,7 @@
   /* Effects */
   --app-box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   --app-border-radius: 5px;                /* Consistent rounded corners */
+  --app-margin: 8px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1239,7 +1240,7 @@ body.drawer-open {
   border: none;
   border-radius: var(--app-border-radius);
   z-index: 9998;
-  margin: 8px;
+  margin: var(--app-margin);
   padding-bottom: 0px;
 }
 
@@ -1248,7 +1249,7 @@ body.drawer-open {
 }
 
 .time-toolbar:not(.open) {
-  transform: translate(-50%, calc(-100% - 8px));
+  transform: translate(-50%, calc(-100% - var(--app-margin)));
 }
 
 .time-toolbar-handle {
@@ -1268,7 +1269,7 @@ body.drawer-open {
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
-  box-shadow: var(--app-box-shadow);
+  /* box-shadow: var(--app-box-shadow); */
 }
 
 .time-toolbar-handle:hover {
@@ -1308,7 +1309,7 @@ body.drawer-open {
   box-shadow: var(--app-box-shadow);
   z-index: 9998;
   transition: transform 0.3s ease-in-out;
-  margin: 8px;
+  margin: var(--app-margin);
 }
 
 .floating-drawer-content {
@@ -1346,11 +1347,11 @@ body.drawer-open {
 }
 
 /* Layer Toolbar specific styles */
-.layer-toolbar {
+.layer-toolbar {  
   composes: floating-drawer;
-  top: 8px;
-  right: 8px;
-  bottom: 8px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
   width: 200px;
 }
 
