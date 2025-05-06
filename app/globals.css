@@ -1229,27 +1229,26 @@ body.drawer-open {
 /* Time Toolbar specific styles */
 .time-toolbar {
   position: fixed;
-  top: -400px; /* Start hidden above the screen */
+  top: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 0);
+  transition: transform 0.3s ease-in-out;
   width: 400px;
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border: none;
   border-radius: var(--app-border-radius);
-  box-shadow: var(--app-box-shadow);
   z-index: 9998;
-  transition: top 0.3s ease-in-out;
   margin: 8px;
   padding-bottom: 0px;
 }
 
 .time-toolbar.open {
-  top: 80px; /* Slide down to visible position */
+  transform: translate(-50%, 0);
 }
 
 .time-toolbar:not(.open) {
-  top: -400px; /* Slide up to hidden position */
+  transform: translate(-50%, -100%);
 }
 
 .time-toolbar-handle {
@@ -1257,7 +1256,7 @@ body.drawer-open {
   left: 50%;
   bottom: -36px;
   transform: translateX(-50%);
-  width: 24px;
+  width: 500px;
   height: 48px;
   display: flex;
   align-items: center;
@@ -1270,15 +1269,28 @@ body.drawer-open {
   opacity: 0.6;
   transition: opacity 0.2s;
   box-shadow: var(--app-box-shadow);
-  margin-top: 8px;
+}
+
+.time-toolbar-handle:hover {
+  opacity: 1;
+}
+
+.time-toolbar-handle:active {
+  opacity: 0.8;
+}
+
+.time-toolbar-content {
+  height: 100%;
+  padding: 8px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease-in-out;
+  border-radius: var(--app-border-radius);
 }
 
 /* Mobile styles for toolbars */
 @media (max-width: 768px) {
   .time-toolbar {
     width: calc(100% - 16px);
-    left: 50%;
-    transform: translateX(-50%);
   }
   
   .time-toolbar.open {
@@ -1360,32 +1372,7 @@ body.drawer-open {
   composes: floating-drawer-content;
 }
 
-/* Time Toolbar specific styles */
-.time-toolbar {
-  composes: floating-drawer;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 400px;
-}
 
-.time-toolbar.open {
-  transform: translateX(-50%);
-}
-
-.time-toolbar:not(.open) {
-  transform: translateX(calc(-50% - 100% - 16px));
-}
-
-.time-toolbar-handle {
-  composes: floating-drawer-handle;
-  right: -24px;
-  border-radius: 0 var(--app-border-radius) var(--app-border-radius) 0;
-}
-
-.time-toolbar-content {
-  composes: floating-drawer-content;
-}
 
 /* Mobile styles for toolbars */
 @media (max-width: 768px) {
