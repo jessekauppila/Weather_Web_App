@@ -26,22 +26,22 @@ export const LAYER_CONFIG = {
   currentTemp: {
     id: 'currentTemp' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Current Temp.',
+    label: 'Current Icons',
   },
   minMaxTemp: {
     id: 'minMaxTemp' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Min/Max Temp.',
+    label: 'Min/Max Icons',
   },
   maxTempCol: {
     id: 'maxTempCol' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Max Temp Columns',
+    label: 'Max Columns',
   },
   minTempCol: {
     id: 'minTempCol' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Min Temp Columns',
+    label: 'Min Columns',
   },
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
