@@ -154,6 +154,43 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleNextDay={handleNextDay}
             useCustomEndDate={useCustomEndDate}
           />
+
+     {/* <CutoffControls
+            dayRangeType={dayRangeType}
+            handleDayRangeTypeChange={handleDayRangeTypeChange}
+            customTime={customTime}
+            setCustomTime={setCustomTime}
+            handleCustomTimeButtonClick={memoizedHandleCustomTime}
+            anchorEl={cutOffAnchorEl}
+            handleClose={handleClose}
+            handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
+          />
+
+          <DataInfo
+            filteredObservationsDataHour={filteredObservationsDataHour}
+            handleRefreshButtonClick={handleRefreshButtonClick}
+            anchorEl={dataAnchorEl}
+            handleClose={handleClose}
+            handleDataPopupButtonClick={handleDataPopupButtonClick}
+          />
+
+          <UnitsSwitch
+            isMetric={isMetric}
+            onRefresh={onRefresh}
+            setIsMetric={setIsMetric}
+            anchorEl={unitsAnchorEl}
+            handleClose={handleClose}
+            handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
+          /> */}
+          
+        </div>
+
+        <div className="w-full mt-4">
+          <StationSelector
+            selectedStation={selectedStation}
+            stations={stations}
+            handleStationChange={handleStationChange}
+          />
         </div>
       </div>
     </div>
