@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
+import { Typography } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
 import { DateControls } from './TimeToolbar/DateControls';
@@ -45,7 +48,7 @@ interface TimeToolbarProps {
   useCustomEndDate: boolean;
 }
 
-export default function TimeToolbar({
+const TimeToolbar: React.FC<TimeToolbarProps> = ({
   calculateCurrentTimeRange,
   handleTimeRangeChange,
   isOneDay,
@@ -68,10 +71,26 @@ export default function TimeToolbar({
   isMetric,
   setIsMetric,
   useCustomEndDate
-}: TimeToolbarProps) {
+}) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobileView = window.innerWidth <= 768;
+      setIsMobile(isMobileView);
+      if (isMobileView) {
+        setIsOpen(false);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleCustomTimeButtonClick = async () => {
     await handleDayRangeTypeChange({ 
@@ -111,8 +130,15 @@ export default function TimeToolbar({
   };
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="app-toolbar flex flex-col space-y-2 p-2 sm:p-4 w-full max-w-[1200px]">
+    <div className={`time-toolbar ${isOpen ? 'open' : ''}`}>
+      <div 
+        className="time-toolbar-handle"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+      </div>
+
+      <div className="time-toolbar-content">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 w-full">
           <TimeRangeSelector
             calculateCurrentTimeRange={calculateCurrentTimeRange}
@@ -138,17 +164,17 @@ export default function TimeToolbar({
             anchorEl={cutOffAnchorEl}
             handleClose={handleClose}
             handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
-          /> */}
+          />
 
-          {/* <DataInfo
+          <DataInfo
             filteredObservationsDataHour={filteredObservationsDataHour}
             handleRefreshButtonClick={handleRefreshButtonClick}
             anchorEl={dataAnchorEl}
             handleClose={handleClose}
             handleDataPopupButtonClick={handleDataPopupButtonClick}
-          /> */}
+          />
 
-          {/* <UnitsSwitch
+          <UnitsSwitch
             isMetric={isMetric}
             onRefresh={onRefresh}
             setIsMetric={setIsMetric}
@@ -158,14 +184,16 @@ export default function TimeToolbar({
           /> */}
         </div>
 
-        {/* <div className="w-full max-w-[800px] mx-auto">
+        <div className="w-full max-w-[800px] mx-auto">
           <StationSelector
             selectedStation={selectedStation}
             stations={stations}
             handleStationChange={handleStationChange}
           />
-        </div> */}
+        </div>
       </div>
     </div>
   );
-} 
+};
+
+export default TimeToolbar; 
