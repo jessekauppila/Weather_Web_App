@@ -1226,3 +1226,198 @@ body.drawer-open {
   border: none;
 }
 
+/* Time Toolbar specific styles */
+.time-toolbar {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  background-color: var(--app-toolbar-bg);
+  color: var(--app-text-primary);
+  border: none;
+  border-radius: var(--app-border-radius);
+  box-shadow: var(--app-box-shadow);
+  z-index: 9998;
+  transition: transform 0.3s ease-in-out;
+  margin: 8px;
+  padding-bottom: 0px; /* Add padding to prevent overlap */
+}
+
+.time-toolbar.open {
+  transform: translateX(-50%);
+}
+
+.time-toolbar:not(.open) {
+  transform: translateX(-50%) translateY(-100%);
+}
+
+.time-toolbar-handle {
+  position: absolute;
+  left: 50%;
+  bottom: -36px;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 0 0 var(--app-border-radius) var(--app-border-radius);
+  z-index: 9999;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  box-shadow: var(--app-box-shadow);
+  margin-top: 8px; /* Add margin to create space */
+}
+
+.time-toolbar-handle:hover {
+  opacity: 1;
+}
+
+.time-toolbar-handle:active {
+  opacity: 0.8;
+}
+
+.time-toolbar-content {
+  height: 100%;
+  padding: 8px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease-in-out;
+  border-radius: var(--app-border-radius);
+}
+
+/* Mobile styles for toolbars */
+@media (max-width: 768px) {
+  .time-toolbar {
+    width: calc(100% - 16px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .time-toolbar:not(.open) {
+    transform: translateX(-50%) translateY(-100%);
+  }
+}
+
+/* Reusable floating drawer styles */
+.floating-drawer {
+  position: fixed;
+  background-color: var(--app-toolbar-bg);
+  color: var(--app-text-primary);
+  border: none;
+  border-radius: var(--app-border-radius);
+  box-shadow: var(--app-box-shadow);
+  z-index: 9998;
+  transition: transform 0.3s ease-in-out;
+  margin: 8px;
+}
+
+.floating-drawer-content {
+  height: 100%;
+  padding: 8px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease-in-out;
+  border-radius: var(--app-border-radius);
+}
+
+.floating-drawer-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  z-index: 9999;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  box-shadow: var(--app-box-shadow);
+}
+
+.floating-drawer-handle:hover {
+  opacity: 1;
+}
+
+.floating-drawer-handle:active {
+  opacity: 0.8;
+}
+
+/* Layer Toolbar specific styles */
+.layer-toolbar {
+  composes: floating-drawer;
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: 200px;
+}
+
+.layer-toolbar.open {
+  transform: translateX(0);
+}
+
+.layer-toolbar:not(.open) {
+  transform: translateX(calc(100% + 16px));
+}
+
+.layer-toolbar-handle {
+  composes: floating-drawer-handle;
+  left: -24px;
+  border-radius: var(--app-border-radius) 0 0 var(--app-border-radius);
+}
+
+.layer-toolbar-content {
+  composes: floating-drawer-content;
+}
+
+/* Time Toolbar specific styles */
+.time-toolbar {
+  composes: floating-drawer;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+}
+
+.time-toolbar.open {
+  transform: translateX(-50%);
+}
+
+.time-toolbar:not(.open) {
+  transform: translateX(calc(-50% - 100% - 16px));
+}
+
+.time-toolbar-handle {
+  composes: floating-drawer-handle;
+  right: -24px;
+  border-radius: 0 var(--app-border-radius) var(--app-border-radius) 0;
+}
+
+.time-toolbar-content {
+  composes: floating-drawer-content;
+}
+
+/* Mobile styles for toolbars */
+@media (max-width: 768px) {
+  .layer-toolbar,
+  .time-toolbar {
+    width: 50%;
+    max-width: 200px;
+  }
+  
+  .time-toolbar {
+    left: 8px;
+    transform: none;
+  }
+  
+  .time-toolbar:not(.open) {
+    transform: translateX(calc(-100% - 16px));
+  }
+}
+
