@@ -15,7 +15,9 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 interface LayerToolbarProps {
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
-  isStationDrawerOpen?: boolean;
+  isStationDrawerOpen: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
 const GROUP_LABELS: Record<string, string> = {
@@ -59,9 +61,10 @@ const formControlStyle = (isChecked: boolean) => ({
 const LayerToolbar: React.FC<LayerToolbarProps> = ({ 
   activeLayerState, 
   onLayerToggle,
-  isStationDrawerOpen = false 
+  isStationDrawerOpen = false,
+  isOpen,
+  onToggle
 }) => {
-  const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
@@ -72,9 +75,6 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
     const checkMobile = () => {
       const isMobileView = window.innerWidth <= 768;
       setIsMobile(isMobileView);
-      if (isMobileView) {
-        setIsOpen(false);
-      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -83,10 +83,10 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
 
   // Handle mobile drawer behavior when StationDrawer opens
   useEffect(() => {
-    if (isMobile && isStationDrawerOpen) {
-      setIsOpen(false);
+    if (isMobile && isStationDrawerOpen && isOpen) {
+      onToggle();
     }
-  }, [isMobile, isStationDrawerOpen]);
+  }, [isMobile, isStationDrawerOpen, isOpen, onToggle]);
 
   // Touch handlers for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -100,7 +100,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
   const handleTouchEnd = () => {
     const swipeDistance = touchEndX.current - touchStartX.current;
     if (swipeDistance > 50) { // Swipe right threshold
-      setIsOpen(false);
+      onToggle();
     }
   };
 
@@ -132,7 +132,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
       {/* Left handle */}
       <div 
         className="layer-toolbar-handle"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
       >
         {isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
       </div>
