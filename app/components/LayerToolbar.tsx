@@ -146,8 +146,12 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
             textAlign: 'center'
           }}
         >
-          {/* Layer Controls */}
+          Layers
         </Typography>
+
+        {/* {idx < arr.length - 1 && ( */}
+                  <div className="layer-toolbar-divider" />
+                {/* )} */}
 
         <FormGroup sx={{ width: '100%' }}>
           {GROUP_ORDER.map((group, idx, arr) => {
@@ -161,7 +165,9 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
                       color: isGroupActive(group) ? 'var(--app-text-primary)' : 'var(--app-text-secondary)', 
                       mb: 0.5,
                       mt: group !== 'temperature' ? 1 : 0,
-                      transition: 'color 0.2s ease-in-out'
+                      transition: 'color 0.2s ease-in-out',
+                                  textAlign: 'center'
+
                     }}
                   >
                     {GROUP_LABELS[group]}
