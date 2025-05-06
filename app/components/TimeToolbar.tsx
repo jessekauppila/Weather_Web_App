@@ -46,6 +46,8 @@ interface TimeToolbarProps {
   isMetric: boolean;
   setIsMetric: (isMetric: boolean) => void;
   useCustomEndDate: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -70,12 +72,13 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   onRefresh,
   isMetric,
   setIsMetric,
-  useCustomEndDate
+  useCustomEndDate,
+  isOpen,
+  onToggle
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
-  const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(false);
   
   // Check if we're on mobile
@@ -83,9 +86,6 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
     const checkMobile = () => {
       const isMobileView = window.innerWidth <= 768;
       setIsMobile(isMobileView);
-      if (isMobileView) {
-        setIsOpen(false);
-      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -133,7 +133,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
     <div className={`time-toolbar ${isOpen ? 'open' : ''}`}>
       <div 
         className="time-toolbar-handle"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
       >
         {isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
       </div>
@@ -154,46 +154,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleNextDay={handleNextDay}
             useCustomEndDate={useCustomEndDate}
           />
-                  </div>
-          
-                             {/* <CutoffControls
-            dayRangeType={dayRangeType}
-            handleDayRangeTypeChange={handleDayRangeTypeChange}
-            customTime={customTime}
-            setCustomTime={setCustomTime}
-            handleCustomTimeButtonClick={memoizedHandleCustomTime}
-            anchorEl={cutOffAnchorEl}
-            handleClose={handleClose}
-            handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
-          />
-
-          <DataInfo
-            filteredObservationsDataHour={filteredObservationsDataHour}
-            handleRefreshButtonClick={handleRefreshButtonClick}
-            anchorEl={dataAnchorEl}
-            handleClose={handleClose}
-            handleDataPopupButtonClick={handleDataPopupButtonClick}
-          />
-
-          <UnitsSwitch
-            isMetric={isMetric}
-            onRefresh={onRefresh}
-            setIsMetric={setIsMetric}
-            anchorEl={unitsAnchorEl}
-            handleClose={handleClose}
-            handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
-          /> */}
- 
-
-        {/* <div style={{ height: 'var(--app-padding)' }} />
-
-        <div className="w-full max-w-[800px] mx-auto">
-          <StationSelector
-            selectedStation={selectedStation}
-            stations={stations}
-            handleStationChange={handleStationChange}
-          />
-        </div> */}
+        </div>
       </div>
     </div>
   );

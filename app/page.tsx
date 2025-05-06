@@ -298,6 +298,46 @@ export default function Home() {
     });
   };
 
+  const [openMobileToolbar, setOpenMobileToolbar] = useState<'layer' | 'time' | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Desktop open state
+  const [isLayerToolbarOpenDesktop, setIsLayerToolbarOpenDesktop] = useState(true);
+  const [isTimeToolbarOpenDesktop, setIsTimeToolbarOpenDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const isLayerToolbarOpen = isMobile
+    ? openMobileToolbar === 'layer'
+    : isLayerToolbarOpenDesktop;
+
+  const isTimeToolbarOpen = isMobile
+    ? openMobileToolbar === 'time'
+    : isTimeToolbarOpenDesktop;
+
+  // For LayerToolbar
+  const handleLayerToolbarToggle = () => {
+    if (isMobile) {
+      setOpenMobileToolbar(openMobileToolbar === 'layer' ? null : 'layer');
+    } else {
+      setIsLayerToolbarOpenDesktop((open) => !open);
+    }
+  };
+
+  // For TimeToolbar
+  const handleTimeToolbarToggle = () => {
+    if (isMobile) {
+      setOpenMobileToolbar(openMobileToolbar === 'time' ? null : 'time');
+    } else {
+      setIsTimeToolbarOpenDesktop((open) => !open);
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Show loading indicator if data isn't ready */}
@@ -341,6 +381,8 @@ export default function Home() {
                 {...timeProps}
                 {...stationProps}
                 {...dataProps}
+                isOpen={isTimeToolbarOpen}
+                onToggle={handleTimeToolbarToggle}
               />
             </div>
 
@@ -356,6 +398,8 @@ export default function Home() {
                 activeLayerState={activeLayerState}
                 onLayerToggle={handleLayerToggle}
                 isStationDrawerOpen={!!selectedStation}
+                isOpen={isLayerToolbarOpen}
+                onToggle={handleLayerToolbarToggle}
               />
             </div>
           </div>
