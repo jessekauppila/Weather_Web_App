@@ -61,7 +61,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
   onLayerToggle,
   isStationDrawerOpen = false 
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
@@ -70,7 +70,11 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
   // Check if we're on mobile
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+      const isMobileView = window.innerWidth <= 768;
+      setIsMobile(isMobileView);
+      if (isMobileView) {
+        setIsOpen(false);
+      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
