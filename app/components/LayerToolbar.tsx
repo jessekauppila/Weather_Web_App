@@ -142,7 +142,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
             textAlign: 'center'
           }}
         >
-          Layer Controls
+          {/* Layer Controls */}
         </Typography>
 
         <FormGroup sx={{ width: '100%' }}>
