@@ -37,8 +37,8 @@ export function createMinTempColLayer(
       geometry: {
         type: 'Polygon' as const,
         coordinates: createCircle(
-          feature.properties.longitude, // Offset right
-          feature.properties.latitude ,
+          feature.properties.longitude,
+          feature.properties.latitude,
           0.03,
           32
         )

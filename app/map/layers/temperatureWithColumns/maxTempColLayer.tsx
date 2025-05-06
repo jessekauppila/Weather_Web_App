@@ -37,8 +37,8 @@ export function createMaxTempColLayer(
       geometry: {
         type: 'Polygon' as const,
         coordinates: createCircle(
-          feature.properties.longitude, // Offset left
-          feature.properties.latitude ,
+          feature.properties.longitude,
+          feature.properties.latitude,
           0.029,
           32
         )

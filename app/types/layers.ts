@@ -1,11 +1,13 @@
 export type LayerId =
-  | 'snowDepthIcons'
-  | 'snowDepthColumns'
+  | 'forecastZones'
+  | 'terrain'
   | 'currentTemp'
   | 'minMaxTemp'
   | 'avgMaxWind'
-  | 'forecastZones'
-  | 'terrain';
+  | 'snowDepthIcons'
+  | 'snowDepthColumns'
+  | 'maxTempCol'
+  | 'minTempCol';
 
 export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
 
@@ -31,6 +33,16 @@ export const LAYER_CONFIG = {
     group: 'temperature' as LayerGroup,
     label: 'Min/Max Temp.',
   },
+  maxTempCol: {
+    id: 'maxTempCol' as LayerId,
+    group: 'temperature' as LayerGroup,
+    label: 'Max Temp Columns',
+  },
+  minTempCol: {
+    id: 'minTempCol' as LayerId,
+    group: 'temperature' as LayerGroup,
+    label: 'Min Temp Columns',
+  },
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
     group: 'wind' as LayerGroup,
@@ -39,12 +51,12 @@ export const LAYER_CONFIG = {
   snowDepthIcons: {
     id: 'snowDepthIcons' as LayerId,
     group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Icons',
+    label: 'Snow Depth Change Icons',
   },
   snowDepthColumns: {
     id: 'snowDepthColumns' as LayerId,
     group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Columns',
+    label: 'Snow Depth Change Columns',
   },
 } as const;
 
