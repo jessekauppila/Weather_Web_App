@@ -7,7 +7,8 @@ export type LayerId =
   | 'snowDepthIcons'
   | 'snowDepthColumns'
   | 'maxTempCol'
-  | 'minTempCol';
+  | 'minTempCol'
+  | 'currentTempCol';
 
 export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
 
@@ -26,22 +27,27 @@ export const LAYER_CONFIG = {
   currentTemp: {
     id: 'currentTemp' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Current Icons',
+    label: 'Current Temp Icons',
+  },
+  currentTempCol: {
+    id: 'currentTempCol' as LayerId,
+    group: 'temperature' as LayerGroup,
+    label: 'Current Temp Columns',
   },
   minMaxTemp: {
     id: 'minMaxTemp' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Min/Max Icons',
+    label: 'Min/Max Temp',
   },
   maxTempCol: {
     id: 'maxTempCol' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Max Columns',
+    label: 'Max Temp Columns',
   },
   minTempCol: {
     id: 'minTempCol' as LayerId,
     group: 'temperature' as LayerGroup,
-    label: 'Min Columns',
+    label: 'Min Temp Columns',
   },
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
