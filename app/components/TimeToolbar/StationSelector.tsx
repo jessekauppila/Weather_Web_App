@@ -1,20 +1,29 @@
 import { FormControl, InputLabel, Select, MenuItem, ListSubheader } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import { regions } from '../../config/regions';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import debounce from 'lodash/debounce';
+import { useStationDrawer } from '@/app/hooks/useStationDrawer';
 
 interface StationSelectorProps {
-  selectedStation: string;
   stations: Array<{ id: string; name: string }>;
-  handleStationChange: (event: SelectChangeEvent<string>) => void;
+  handleStationSelect: (station: any) => void;
+  selectedStation: any;
 }
 
 export function StationSelector({
-  selectedStation,
   stations,
-  handleStationChange
+  handleStationSelect,
+  selectedStation
 }: StationSelectorProps) {
+  const handleChange = useCallback((event: SelectChangeEvent<string>) => {
+    const stationId = event.target.value;
+    const station = stations.find(s => s.id === stationId);
+    if (station) {
+      handleStationSelect(station);
+    }
+  }, [stations, handleStationSelect]);
+
   const memoizedStationOptions = useMemo(() => (
     regions.map((region) => [
       <ListSubheader key={`header-${region.id}`} className="!text-[var(--app-text-primary)]">
@@ -32,16 +41,16 @@ export function StationSelector({
 
   const debouncedHandleStationChange = useMemo(
     () => debounce((event: SelectChangeEvent<string>) => {
-      handleStationChange(event);
+      handleChange(event);
     }, 150),
-    [handleStationChange]
+    [handleChange]
   );
 
   return (
     <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
-        value={selectedStation}
+        value={selectedStation?.id || ''}
         onChange={debouncedHandleStationChange}
         label="Station"
         className="w-full app-select text-[var(--app-text-primary)]"

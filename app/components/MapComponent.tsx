@@ -20,6 +20,7 @@ import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
+import useStationDrawer from '@/app/hooks/useStationDrawer';
 //import LayerToolbar from './LayerToolbar';
 
 interface MapData {
@@ -101,10 +102,13 @@ export const MapApp = ({
   onLayerToggle,
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
-
-  // Drawer state
-  const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { 
+    selectedStation, 
+    isDrawerOpen, 
+    handleStationClick,
+    handleStationSelect,
+    closeDrawer 
+  } = useStationDrawer({ mapData });
 
   // Create a ref to track the current observation data
   const observationDataRef = useRef({
@@ -163,10 +167,11 @@ export const MapApp = ({
           'Api Fetch Time': properties.fetchTime || new Date().toISOString()
         };
         
-        setSelectedStation(updatedStation);
+        // Set the selected station with fresh data if found
+        handleStationSelect(updatedStation);
       }
     }
-  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData]);
+  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData, handleStationSelect]);
 
   // Effect to manage drawer state
   useEffect(() => {
@@ -177,8 +182,7 @@ export const MapApp = ({
       // Close drawer when escape key is pressed
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          setIsDrawerOpen(false);
-          setSelectedStation(null);
+          closeDrawer();
         }
       };
       
@@ -190,52 +194,7 @@ export const MapApp = ({
     } else {
       document.body.classList.remove('drawer-open');
     }
-  }, [isDrawerOpen, setIsDrawerOpen, setSelectedStation]);
-
-  // Handle station click
-  const handleStationClick = useCallback((info: PickingInfo) => {
-    if (info.object && 'properties' in info.object) {
-      const properties = (info.object as { properties: Map_BlockProperties }).properties;
-      
-      // Find the full station data from the mapData context
-      const fullStationData = (mapData as MapData).stationData.features.find(
-        f => f.properties.stationName === properties.stationName
-      );
-
-      if (fullStationData) {
-        // Helper function to format values with units
-        const formatValue = (value: number | string | null | undefined, unit: string) => {
-          if (value === null || value === undefined || value === '-') return '-';
-          return `${value} ${unit}`;
-        };
-
-        const station: WeatherStation = {
-          Station: properties.stationName,
-          'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
-          '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
-          'Cur Wind Speed': properties.curWindSpeed || '-',
-          'Elevation': formatValue(properties.elevation, 'ft'),
-          'Stid': fullStationData.properties.stationName,
-          'Air Temp Min': formatValue(properties.airTempMin, '°F'),
-          'Air Temp Max': formatValue(properties.airTempMax, '°F'),
-          'Wind Speed Avg': properties.windSpeedAvg || '-',
-          'Max Wind Gust': properties.maxWindGust || '-',
-          'Wind Direction': properties.windDirection || '-',
-          'Total Snow Depth Change': formatValue(properties.totalSnowDepthChange, 'in'),
-          'Precip Accum One Hour': properties.precipAccumOneHour || '-',
-          'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
-          'Latitude': properties.latitude.toString(),
-          'Longitude': properties.longitude.toString(),
-          'Relative Humidity': formatValue(properties.relativeHumidity, '%'),
-          'Api Fetch Time': properties.fetchTime || new Date().toISOString()
-        };
-
-        // Set the selected station and open the drawer
-        setSelectedStation(station);
-        setIsDrawerOpen(true);
-      }
-    }
-  }, [mapData, setSelectedStation, setIsDrawerOpen]);
+  }, [isDrawerOpen, closeDrawer]);
 
   // Create layers based on current visibility and data
   const layers = useMemo(
@@ -278,10 +237,7 @@ export const MapApp = ({
         {timeRangeData && (
           <StationDrawer
             isOpen={isDrawerOpen}
-            onClose={() => {
-              setIsDrawerOpen(false);
-              setSelectedStation(null);
-            }}
+            onClose={closeDrawer}
             station={selectedStation}
             observationsDataDay={observationsDataDay}
             observationsDataHour={observationsDataHour}

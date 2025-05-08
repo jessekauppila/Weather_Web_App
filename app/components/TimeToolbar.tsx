@@ -5,6 +5,7 @@ import { DayRangeType } from '../types';
 import { Typography } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { Map_BlockProperties } from '../map/map';
 
 import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
 import { DateControls } from './TimeToolbar/DateControls';
@@ -12,6 +13,7 @@ import { CutoffControls } from './TimeToolbar/CutoffControls';
 import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
+import useStationDrawer from '@/app/hooks/useStationDrawer';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -48,6 +50,13 @@ interface TimeToolbarProps {
   useCustomEndDate: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  mapData?: {
+    stationData: {
+      features: Array<{
+        properties: Map_BlockProperties;
+      }>;
+    };
+  };
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -74,12 +83,16 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   setIsMetric,
   useCustomEndDate,
   isOpen,
-  onToggle
+  onToggle,
+  mapData
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const stationDrawer = useStationDrawer({ mapData });
+
   
   // Check if we're on mobile
   useEffect(() => {
@@ -185,13 +198,13 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
           
         </div>
 
-        {/* <div className="w-full mt-4">
+        <div className="w-full mt-4">
           <StationSelector
-            selectedStation={selectedStation}
-            stations={stations}
-            handleStationChange={handleStationChange}
+        stations={stations}
+        handleStationSelect={stationDrawer.handleStationSelect}
+        selectedStation={stationDrawer.selectedStation}
           />
-        </div> */}
+        </div>
       </div>
     </div>
   );
