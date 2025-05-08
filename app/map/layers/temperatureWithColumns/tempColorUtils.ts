@@ -21,6 +21,7 @@ export function getTemperatureColor(temp: number | null): [number, number, numbe
   const yellow: [number, number, number] = [228, 255, 0]; // E4FF00
   const orange: [number, number, number] = [255, 229, 0]; // FFE500
   const darkOrange: [number, number, number] = [255, 195, 0]; // FFC300
+  const red: [number, number, number] = [255, 0, 0]; // FF0000
 
   // Temperature ranges and their corresponding colors
   if (temp < -9) return purple;
@@ -57,5 +58,9 @@ export function getTemperatureColor(temp: number | null): [number, number, numbe
     const factor = (temp - 50) / (60 - 50);
     return interpolateColor(orange, darkOrange, factor);
   }
-  return darkOrange;
+  if (temp <= 120) {
+    const factor = (temp - 120) / (120 - 60);
+    return interpolateColor(darkOrange, red, factor);
+  }
+  return red;
 } 

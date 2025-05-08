@@ -2,8 +2,8 @@ import { GeoJsonLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../map';
-import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
-import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
+// import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
+// import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
 import { createMinTempLayer } from './temperatureWithColumns/minTempLayer';
 import { createMaxTempLayer } from './temperatureWithColumns/maxTempLayer';
 
@@ -34,9 +34,9 @@ export function createCombinedMaxMinLayer(
   // Create all layers
   const minTempLayer = createMinTempLayer(data, onClick);
   const maxTempLayer = createMaxTempLayer(data, onClick);
-  const minTempColLayer = createMinTempColLayer(data, onClick);
-  const maxTempColLayer = createMaxTempColLayer(data, onClick);
+  // const minTempColLayer = createMinTempColLayer(data, onClick);
+  // const maxTempColLayer = createMaxTempColLayer(data, onClick);
 
   // Return all layers in the correct order
-  return [minTempColLayer, maxTempColLayer, minTempLayer, maxTempLayer];
+  return [ maxTempLayer, minTempLayer ];
 }
