@@ -47,8 +47,8 @@ export function createMapLayers(
   },
   onStationClick?: (info: PickingInfo) => void
 ) {
-  console.log('createMapLayers called with visibility:', visibility);
-  console.log('stationData features count:', data.stationData?.features.length ?? 0);
+  // console.log('createMapLayers called with visibility:', visibility);
+  // console.log('stationData features count:', data.stationData?.features.length ?? 0);
 
   const layers = [
     visibility.forecastZones &&

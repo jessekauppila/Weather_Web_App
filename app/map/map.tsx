@@ -78,7 +78,7 @@ export const map_lightingEffect = new LightingEffect({
 });
 
 // Set shadow color
-map_lightingEffect.shadowColor = [0, 0, 0, 0.3];
+map_lightingEffect.shadowColor = [0, 0, 0, 0.9];
 
 // set plane for shadow
 export const map_landCover: Position[][] = [

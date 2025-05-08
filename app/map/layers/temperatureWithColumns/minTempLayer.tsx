@@ -20,7 +20,19 @@ export function createMinTempLayer(
         return 'default-icon';
       }
 
-      const minTemp = parseInt(f.properties.airTempMin);
+      // Parse temperature value, handling both string with units and number
+      let minTemp: number;
+      if (typeof f.properties.airTempMin === 'string') {
+        // Extract number from string like "32 °F" -> 32
+        const match = f.properties.airTempMin.match(/^(-?\d+(\.\d+)?)/);
+        minTemp = match ? Number(match[0]) : 0;
+      } else {
+        minTemp = Number(f.properties.airTempMin);
+      }
+
+      if (isNaN(minTemp)) {
+        return 'default-icon';
+      }
 
       let icon_num = 'minus-9';
       if (minTemp <= -9) icon_num = 'minus-9';
