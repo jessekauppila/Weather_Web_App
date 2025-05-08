@@ -185,13 +185,13 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
           
         </div>
 
-        <div className="w-full mt-4">
+        {/* <div className="w-full mt-4">
           <StationSelector
             selectedStation={selectedStation}
             stations={stations}
             handleStationChange={handleStationChange}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
