@@ -25,8 +25,8 @@ export function createMinTempLayer(
       let icon_num = 'minus-9';
       if (minTemp <= -9) icon_num = 'minus-9';
       else if (minTemp <= -1) icon_num = `minus${minTemp}`;
-      else if (minTemp <= 59) icon_num = `${minTemp}`;
-      else icon_num = '60';
+      else if (minTemp <= 119) icon_num = `${minTemp}`;
+      else icon_num = '120';
 
       return `min-temp-${icon_num}`;
     },

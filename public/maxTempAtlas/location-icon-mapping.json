@@ -559,6 +559,486 @@
     "anchorX": 256,
     "anchorY": 0
   },
+  "max-temp-61": {
+    "x": 0,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-62": {
+    "x": 512,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-63": {
+    "x": 1024,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-64": {
+    "x": 1536,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-65": {
+    "x": 2048,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-66": {
+    "x": 2560,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-67": {
+    "x": 3072,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-68": {
+    "x": 3584,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-69": {
+    "x": 4096,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-70": {
+    "x": 4608,
+    "y": 3584,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-71": {
+    "x": 0,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-72": {
+    "x": 512,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-73": {
+    "x": 1024,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-74": {
+    "x": 1536,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-75": {
+    "x": 2048,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-76": {
+    "x": 2560,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-77": {
+    "x": 3072,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-78": {
+    "x": 3584,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-79": {
+    "x": 4096,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-80": {
+    "x": 4608,
+    "y": 4096,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-81": {
+    "x": 0,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-82": {
+    "x": 512,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-83": {
+    "x": 1024,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-84": {
+    "x": 1536,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-85": {
+    "x": 2048,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-86": {
+    "x": 2560,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-87": {
+    "x": 3072,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-88": {
+    "x": 3584,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-89": {
+    "x": 4096,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-90": {
+    "x": 4608,
+    "y": 4608,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-91": {
+    "x": 0,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-92": {
+    "x": 512,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-93": {
+    "x": 1024,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-94": {
+    "x": 1536,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-95": {
+    "x": 2048,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-96": {
+    "x": 2560,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-97": {
+    "x": 3072,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-98": {
+    "x": 3584,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-99": {
+    "x": 4096,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-100": {
+    "x": 4608,
+    "y": 5120,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-101": {
+    "x": 0,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-102": {
+    "x": 512,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-103": {
+    "x": 1024,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-104": {
+    "x": 1536,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-105": {
+    "x": 2048,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-106": {
+    "x": 2560,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-107": {
+    "x": 3072,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-108": {
+    "x": 3584,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-109": {
+    "x": 4096,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-110": {
+    "x": 4608,
+    "y": 5632,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-111": {
+    "x": 0,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-112": {
+    "x": 512,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-113": {
+    "x": 1024,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-114": {
+    "x": 1536,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-115": {
+    "x": 2048,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-116": {
+    "x": 2560,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-117": {
+    "x": 3072,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-118": {
+    "x": 3584,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-119": {
+    "x": 4096,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
+  "max-temp-120": {
+    "x": 4608,
+    "y": 6144,
+    "width": 512,
+    "height": 512,
+    "anchorX": 256,
+    "anchorY": 0
+  },
   "default-icon": {
     "x": 0,
     "y": 0,

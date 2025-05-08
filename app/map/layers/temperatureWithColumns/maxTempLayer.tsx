@@ -25,8 +25,8 @@ export function createMaxTempLayer(
       let icon_num = 'minus-9';
       if (maxTemp <= -9) icon_num = 'minus-9';
       else if (maxTemp <= -1) icon_num = `minus${maxTemp}`;
-      else if (maxTemp <= 59) icon_num = `${maxTemp}`;
-      else icon_num = '60';
+      else if (maxTemp <= 119) icon_num = `${maxTemp}`;
+      else icon_num = '120';
 
       return `max-temp-${icon_num}`;
     },
