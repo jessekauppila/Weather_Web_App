@@ -59,7 +59,7 @@ export function getTemperatureColor(temp: number | null): [number, number, numbe
     return interpolateColor(orange, darkOrange, factor);
   }
   if (temp <= 120) {
-    const factor = (temp - 120) / (120 - 60);
+    const factor = (temp - 60) / (120 - 60);
     return interpolateColor(darkOrange, red, factor);
   }
   return red;
