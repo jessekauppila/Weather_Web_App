@@ -29,48 +29,39 @@ export function StationSelector({
   }, [mapData]);
 
   console.log('stationList:', stationList);
-  console.log('regions:', regions);
-  regions.forEach(region => {
-    console.log(`Region ${region.title} stationIds:`, region.stationIds);
-    const regionStations = stationList.filter(station => region.stationIds.includes(station.stid));
-    console.log(`Stations for region ${region.title}:`, regionStations);
-  });
 
-  const stationsByRegion = useMemo(() => {
-    // Create a map from region id to region object for quick lookup
-    const regionMap = regions.reduce((acc, region) => {
-      acc[region.id] = { ...region, stations: [] };
-      return acc;
-    }, {} as Record<string, typeof regions[0] & { stations: typeof stationList }>);
+  // console.log('stationList:', stationList);
+  // console.log('regions:', regions);
+  // regions.forEach(region => {
+  //   console.log(`Region ${region.title} stationIds:`, region.stationIds);
+  //   const regionStations = stationList.filter(station => region.stationIds.includes(station.stid));
+  //   console.log(`Stations for region ${region.title}:`, regionStations);
+  // });
 
-    // Assign each station to its region(s)
-    stationList.forEach(station => {
-      regions.forEach(region => {
-        if (region.stationIds.includes(station.stid)) {
-          regionMap[region.id].stations.push(station);
-        }
-      });
-    });
+  // const stationsByRegion = useMemo(() => {
+  //   return regions.map(region => ({
+  //     ...region,
+  //     stations: stationList.filter(station => region.stationIds.includes(station.stid))
+  //   }));
+  // }, [stationList]);
 
-    // Return as an array
-    return Object.values(regionMap);
-  }, [stationList]);
+  // console.log('Stations by region:', stationsByRegion);
 
-  console.log('Stations by region:', stationsByRegion);
-
-  // Create dropdown options grouped by region
-  const memoizedStationOptions = useMemo(() => {
-    return stationsByRegion.flatMap(region => [
-      <ListSubheader key={`header-${region.id}`}>{region.title}</ListSubheader>,
-      <MenuItem key={`station-1-${region.id}`} value={`station-1-${region.id}`}>Station 1</MenuItem>,
-      <MenuItem key={`station-2-${region.id}`} value={`station-2-${region.id}`}>Station 2</MenuItem>,
-      <MenuItem key={`station-3-${region.id}`} value={`station-3-${region.id}`}>Station 3</MenuItem>
-    ]);
-  }, [stationsByRegion]);
+  // // Create dropdown options grouped by region
+  // const memoizedStationOptions = useMemo(() => {
+  //   return stationsByRegion.flatMap(region => [
+  //     <ListSubheader key={`header-${region.id}`}>{region.title}</ListSubheader>,
+  //     ...region.stations.map(station => (
+  //       <MenuItem key={station.stid} value={station.stid}>
+  //         {station.name}
+  //       </MenuItem>
+  //     ))
+  //   ]);
+  // }, [stationsByRegion]);
 
   
 
-  console.log('Memoized station options:', memoizedStationOptions);
+  // console.log('Memoized station options:', memoizedStationOptions);
 
   const memoizedStationOptionsDummy = [
     <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
@@ -84,7 +75,15 @@ export function StationSelector({
     </MenuItem>
   ];
 
-  console.log('Memoized station options dummy:', memoizedStationOptionsDummy);
+  // console.log('Memoized station options dummy:', memoizedStationOptionsDummy);
+
+  const allStationOptions = useMemo(() => (
+    stationList.map(station => (
+      <MenuItem key={station.stid} value={station.stid}>
+        {station.name}
+      </MenuItem>
+    ))
+  ), [stationList]);
 
   // Handle station selection
   const handleChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -127,7 +126,9 @@ export function StationSelector({
     }
   }, [handleStationSelect, mapData]);
 
-  console.log('Rendering Select with options:', memoizedStationOptions.length);
+  console.log('stationList at render:', stationList);
+
+  // console.log('Rendering Select with options:', memoizedStationOptions.length);
   return (
     <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
@@ -151,7 +152,20 @@ export function StationSelector({
         }}
       >
         <MenuItem value="">All Stations</MenuItem>
-        {memoizedStationOptions}
+        <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
+          Region 1
+        </ListSubheader>
+        <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
+          Station 1
+        </MenuItem>
+        {stationList.length > 0 && (
+          <MenuItem key={stationList[5]?.stid} value={stationList[5]?.stid}>
+            {stationList[5]?.name}
+          </MenuItem>
+        )}
+        <MenuItem key="debug" value="debug">
+          {JSON.stringify(stationList)}
+        </MenuItem>
       </Select>
     </FormControl>
   );
