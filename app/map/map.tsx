@@ -16,6 +16,7 @@ import { getMapTooltip } from '../components/MapTooltip';
 ////////////////////////
 
 export type Map_BlockProperties = {
+  Stid: string;
   stationName: string;
   latitude: number;
   longitude: number;

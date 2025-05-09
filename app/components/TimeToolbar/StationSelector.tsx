@@ -3,60 +3,137 @@ import { SelectChangeEvent } from '@mui/material';
 import { regions } from '../../config/regions';
 import { useMemo, useCallback } from 'react';
 import debounce from 'lodash/debounce';
-import { useStationDrawer } from '@/app/hooks/useStationDrawer';
+import type { WeatherStation } from '../../map/map';
+import { useMapData } from '../../data/map/MapDataContext';
+//import { useStationDrawer } from '@/app/hooks/useStationDrawer';
 
 interface StationSelectorProps {
-  stations: Array<{ id: string; name: string }>;
-  handleStationSelect: (station: any) => void;
-  selectedStation: any;
+  handleStationSelect: (station: WeatherStation) => void;
+  selectedStation: WeatherStation | null;
 }
 
 export function StationSelector({
-  stations,
   handleStationSelect,
   selectedStation
 }: StationSelectorProps) {
-  const handleChange = useCallback((event: SelectChangeEvent<string>) => {
-    const stationId = event.target.value;
-    const station = stations.find(s => s.id === stationId);
-    if (station) {
-      handleStationSelect(station);
-    }
-  }, [stations, handleStationSelect]);
+  const { mapData } = useMapData();
 
+  // Create station list with clearer naming
+  const stationList = useMemo(() => {
+    const list = mapData?.stationData.features.map(f => ({
+      stid: f.properties.Stid,
+      name: f.properties.stationName
+    })) || [];
+    console.log('Station list created:', list);
+    return list;
+  }, [mapData]);
+
+  console.log('stationList:', stationList);
+  console.log('regions:', regions);
+  regions.forEach(region => {
+    console.log(`Region ${region.title} stationIds:`, region.stationIds);
+    const regionStations = stationList.filter(station => region.stationIds.includes(station.stid));
+    console.log(`Stations for region ${region.title}:`, regionStations);
+  });
+
+  // Create dropdown options grouped by region
   const memoizedStationOptions = useMemo(() => (
-    regions.map((region) => [
-      <ListSubheader key={`header-${region.id}`} className="!text-[var(--app-text-primary)]">
-        {region.title}
-      </ListSubheader>,
-      stations
-        .filter(station => region.stationIds.includes(station.id))
-        .map((station) => (
-          <MenuItem key={station.id} value={station.id} className="!text-[var(--app-text-primary)]">
+    regions.flatMap(region => {
+      const regionStations = stationList.filter(station => 
+        region.stationIds.includes(String(station.stid))
+      );
+      return [
+        <ListSubheader key={`header-${region.id}`} className="!text-[var(--app-text-primary)]">
+          {region.title}
+        </ListSubheader>,
+        ...regionStations.map(station => (
+          <MenuItem key={station.stid} value={station.stid} className="!text-[var(--app-text-primary)]">
             {station.name}
           </MenuItem>
         ))
-    ])
-  ), [stations]);
+      ];
+    })
+  ), [stationList]);
 
-  const debouncedHandleStationChange = useMemo(
-    () => debounce((event: SelectChangeEvent<string>) => {
-      handleChange(event);
-    }, 150),
-    [handleChange]
-  );
+  
 
+  console.log('Memoized station options:', memoizedStationOptions);
+
+  const memoizedStationOptionsDummy = [
+    <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
+      Region 1
+    </ListSubheader>,
+    <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
+      Station 1
+    </MenuItem>,
+    <MenuItem key="station-2" value="station-2" className="!text-[var(--app-text-primary)]">
+      Station 2
+    </MenuItem>
+  ];
+
+  console.log('Memoized station options dummy:', memoizedStationOptionsDummy);
+
+  // Handle station selection
+  const handleChange = useCallback((event: SelectChangeEvent<string>) => {
+    const selectedStid = event.target.value;
+    console.log('Selected station ID:', selectedStid);
+    
+    // Find the full station data
+    const fullStationData = mapData?.stationData.features.find(
+      f => f.properties.Stid === selectedStid
+    );
+    
+    if (fullStationData) {
+      const properties = fullStationData.properties;
+      const formatValue = (value: number | string | null | undefined, unit: string) => {
+        if (value === null || value === undefined || value === '-') return '-';
+        return `${value} ${unit}`;
+      };
+
+      const weatherStation: WeatherStation = {
+        Station: properties.stationName,
+        'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
+        '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
+        'Cur Wind Speed': properties.curWindSpeed || '-',
+        'Elevation': formatValue(properties.elevation, 'ft'),
+        'Stid': properties.Stid,
+        'Air Temp Min': formatValue(properties.airTempMin, '°F'),
+        'Air Temp Max': formatValue(properties.airTempMax, '°F'),
+        'Wind Speed Avg': properties.windSpeedAvg || '-',
+        'Max Wind Gust': properties.maxWindGust || '-',
+        'Wind Direction': properties.windDirection || '-',
+        'Total Snow Depth Change': formatValue(properties.totalSnowDepthChange, 'in'),
+        'Precip Accum One Hour': properties.precipAccumOneHour || '-',
+        'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
+        'Latitude': properties.latitude.toString(),
+        'Longitude': properties.longitude.toString(),
+        'Relative Humidity': formatValue(properties.relativeHumidity, '%'),
+        'Api Fetch Time': properties.fetchTime || new Date().toISOString()
+      };
+      handleStationSelect(weatherStation);
+    }
+  }, [handleStationSelect, mapData]);
+
+  console.log('Rendering Select with options:', memoizedStationOptions.length);
   return (
     <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
-        value={selectedStation?.id || ''}
-        onChange={debouncedHandleStationChange}
+        value={selectedStation?.Stid || ''}
+        onChange={handleChange}
         label="Station"
         className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
           classes: {
             paper: 'app-menu-paper'
+          },
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left'
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left'
           }
         }}
       >

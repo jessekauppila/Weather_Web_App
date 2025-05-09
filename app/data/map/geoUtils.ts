@@ -47,6 +47,7 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
         ),
       },
       properties: {
+        Stid: station['Stid'],
         stationName: station['Station'],
         latitude: parseFloat(station['Latitude']),
         longitude: parseFloat(station['Longitude']),

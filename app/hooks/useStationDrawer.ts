@@ -68,6 +68,7 @@ export default function useStationDrawer({ mapData }: UseStationDrawerProps): Us
   }, [mapData]);
 
   const handleStationSelect = useCallback((station: WeatherStation) => {
+    console.log('Station received in hook:', station); // Add this
     setSelectedStation(station);
     setIsDrawerOpen(true);
   }, []);

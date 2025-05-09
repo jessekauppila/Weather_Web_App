@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
@@ -14,6 +14,7 @@ import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { useMapData } from '@/app/data/map/MapDataContext';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -50,13 +51,6 @@ interface TimeToolbarProps {
   useCustomEndDate: boolean;
   isOpen: boolean;
   onToggle: () => void;
-  mapData?: {
-    stationData: {
-      features: Array<{
-        properties: Map_BlockProperties;
-      }>;
-    };
-  };
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -74,7 +68,6 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   customTime,
   setCustomTime,
   selectedStation,
-  stations,
   handleStationChange,
   stationIds,
   filteredObservationsDataHour,
@@ -83,17 +76,23 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   setIsMetric,
   useCustomEndDate,
   isOpen,
-  onToggle,
-  mapData
+  onToggle
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  const { mapData } = useMapData();
   const stationDrawer = useStationDrawer({ mapData });
 
-  
+  const stations = useMemo(() => {
+    return mapData?.stationData.features.map(f => ({
+      id: f.properties.stationName,
+      name: f.properties.stationName
+    })) || [];
+  }, [mapData]);
+
   // Check if we're on mobile
   useEffect(() => {
     const checkMobile = () => {

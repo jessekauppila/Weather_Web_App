@@ -21,6 +21,7 @@ import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { StationSelector } from './TimeToolbar/StationSelector';
 //import LayerToolbar from './LayerToolbar';
 
 interface MapData {
@@ -102,13 +103,7 @@ export const MapApp = ({
   onLayerToggle,
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
-  const { 
-    selectedStation, 
-    isDrawerOpen, 
-    handleStationClick,
-    handleStationSelect,
-    closeDrawer 
-  } = useStationDrawer({ mapData });
+  const stationDrawer = useStationDrawer({ mapData });
 
   // Create a ref to track the current observation data
   const observationDataRef = useRef({
@@ -127,7 +122,7 @@ export const MapApp = ({
       observationDataRef.current.filtered !== filteredObservationsDataHour;
     
     // Only update if data has changed and drawer is open
-    if (dataChanged && isDrawerOpen && selectedStation) {
+    if (dataChanged && stationDrawer.isDrawerOpen && stationDrawer.selectedStation) {
       //console.log('Observation data changed, updating station drawer');
       
       // Update our reference to current data
@@ -139,7 +134,7 @@ export const MapApp = ({
       
       // If the drawer is open, we should refresh the selected station data
       // to reflect the new time range
-      const stationName = selectedStation.Station;
+      const stationName = stationDrawer.selectedStation.Station;
       
       // Find the station in the mapData
       const updatedStationData = (mapData as MapData)?.stationData?.features?.find(
@@ -157,7 +152,7 @@ export const MapApp = ({
         };
         
         const updatedStation: WeatherStation = {
-          ...selectedStation,
+          ...stationDrawer.selectedStation,
           'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
           '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
           'Air Temp Min': formatValue(properties.airTempMin, '°F'),
@@ -168,21 +163,21 @@ export const MapApp = ({
         };
         
         // Set the selected station with fresh data if found
-        handleStationSelect(updatedStation);
+        stationDrawer.handleStationSelect(updatedStation);
       }
     }
-  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData, handleStationSelect]);
+  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, stationDrawer.isDrawerOpen, stationDrawer.selectedStation, mapData, stationDrawer.handleStationSelect]);
 
   // Effect to manage drawer state
   useEffect(() => {
     // If drawer is open, add a class to prevent scrolling on the body
-    if (isDrawerOpen) {
+    if (stationDrawer.isDrawerOpen) {
       document.body.classList.add('drawer-open');
       
       // Close drawer when escape key is pressed
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          closeDrawer();
+          stationDrawer.closeDrawer();
         }
       };
       
@@ -194,15 +189,15 @@ export const MapApp = ({
     } else {
       document.body.classList.remove('drawer-open');
     }
-  }, [isDrawerOpen, closeDrawer]);
+  }, [stationDrawer.isDrawerOpen, stationDrawer.closeDrawer]);
 
   // Create layers based on current visibility and data
   const layers = useMemo(
     () => {
       const layerVisibility = getLayerVisibility(activeLayerState);
-      return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
+      return createMapLayers(layerVisibility, mapData as MapData, stationDrawer.handleStationClick);
     },
-    [activeLayerState, mapData, handleStationClick]
+    [activeLayerState, mapData, stationDrawer.handleStationClick]
   );
 
   return (
@@ -236,9 +231,9 @@ export const MapApp = ({
       <ClientPortal>
         {timeRangeData && (
           <StationDrawer
-            isOpen={isDrawerOpen}
-            onClose={closeDrawer}
-            station={selectedStation}
+            isOpen={stationDrawer.isDrawerOpen}
+            onClose={stationDrawer.closeDrawer}
+            station={stationDrawer.selectedStation}
             observationsDataDay={observationsDataDay}
             observationsDataHour={observationsDataHour}
             filteredObservationsDataHour={filteredObservationsDataHour}
@@ -254,6 +249,11 @@ export const MapApp = ({
 
       {/* Layer Controls */}
       {/* Removed LayerToolbar as it's now rendered in page.tsx */}
+
+      <StationSelector
+        handleStationSelect={stationDrawer.handleStationSelect}
+        selectedStation={stationDrawer.selectedStation}
+      />
     </div>
   );
 };
