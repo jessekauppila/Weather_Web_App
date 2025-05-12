@@ -238,6 +238,59 @@ html, #__next, main {
   color: var(--app-text-secondary) !important;
 }
 
+/* Material-UI Select styles */
+.app-select {
+  background-color: var(--app-background) !important;
+}
+
+.app-select .MuiSelect-select {
+  color: var(--app-text-primary) !important;
+}
+
+.app-menu-paper {
+  background-color: var(--app-background) !important;
+  color: var(--app-text-primary) !important;
+  border: 1px solid var(--app-border) !important;
+}
+
+.app-menu-paper .MuiMenuItem-root {
+  color: var(--app-text-primary) !important;
+}
+
+.app-menu-paper .MuiMenuItem-root:hover {
+  background-color: var(--app-hover) !important;
+}
+
+.app-menu-paper .MuiMenuItem-root.Mui-selected {
+  background-color: var(--app-selected) !important;
+}
+
+/* Ensure the select input is visible */
+.MuiOutlinedInput-root {
+  color: var(--app-text-primary) !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-border) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-hover) !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-primary) !important;
+}
+
+/* Ensure the label is visible */
+.MuiInputLabel-root {
+  color: var(--app-text-primary) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: var(--app-primary) !important;
+}
+
 /***************************************************************
  * LEGACY STYLES
  * Original application styles - kept for backward compatibility

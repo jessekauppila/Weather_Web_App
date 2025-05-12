@@ -5,7 +5,7 @@ import { DayRangeType } from '../types';
 import { Typography } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Map_BlockProperties } from '../map/map';
+import { Map_BlockProperties, WeatherStation } from '../map/map';
 
 import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
 import { DateControls } from './TimeToolbar/DateControls';
@@ -30,10 +30,8 @@ interface TimeToolbarProps {
   handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => void;
   customTime: string;
   setCustomTime: (value: string) => void;
-  selectedStation: string;
-  stations: Array<{ id: string; name: string }>;
+  selectedStation: WeatherStation | null;
   handleStationChange: (event: SelectChangeEvent<string>) => void;
-  stationIds: string[];
   filteredObservationsDataHour?: {
     data: any[];
     title: string;
@@ -69,7 +67,6 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   setCustomTime,
   selectedStation,
   handleStationChange,
-  stationIds,
   filteredObservationsDataHour,
   onRefresh,
   isMetric,
@@ -83,15 +80,15 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { mapData } = useMapData();
-  const stationDrawer = useStationDrawer({ mapData });
+     const { mapData, isLoading } = useMapData();
+     console.log('TimeToolbar - mapData from useMapData:', {
+       hasMapData: !!mapData,
+       hasStationData: !!mapData?.stationData,
+       featuresLength: mapData?.stationData?.features?.length,
+       features: mapData?.stationData?.features
+     });
 
-  const stations = useMemo(() => {
-    return mapData?.stationData.features.map(f => ({
-      id: f.properties.stationName,
-      name: f.properties.stationName
-    })) || [];
-  }, [mapData]);
+  const stationDrawer = useStationDrawer({ mapData });
 
   // Check if we're on mobile
   useEffect(() => {
@@ -103,6 +100,16 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Add effect to track mapData changes
+  useEffect(() => {
+    console.log('TimeToolbar - mapData changed:', {
+      hasMapData: !!mapData,
+      hasStationData: !!mapData?.stationData,
+      featuresLength: mapData?.stationData?.features?.length,
+      features: mapData?.stationData?.features
+    });
+  }, [mapData]);
 
   const handleCustomTimeButtonClick = async () => {
     await handleDayRangeTypeChange({ 
@@ -166,16 +173,34 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleNextDay={handleNextDay}
             useCustomEndDate={useCustomEndDate}
           />
+        </div>
 
-     {/* <CutoffControls
-            dayRangeType={dayRangeType}
-            handleDayRangeTypeChange={handleDayRangeTypeChange}
-            customTime={customTime}
-            setCustomTime={setCustomTime}
-            handleCustomTimeButtonClick={memoizedHandleCustomTime}
-            anchorEl={cutOffAnchorEl}
+        <div className="w-full mt-4">
+          <StationSelector
+            selectedStation={selectedStation}
+            handleStationSelect={(station) => {
+              console.log('TimeToolbar - Station selected:', {
+                station,
+                hasMapData: !!mapData,
+                hasStationData: !!mapData?.stationData
+              });
+              if (station) {
+                stationDrawer.handleStationSelect(station);
+              } else {
+                stationDrawer.closeDrawer();
+              }
+            }}
+            mapData={mapData}
+            isLoading={isLoading}
+          />
+
+          {/* <UnitsSwitch
+            isMetric={isMetric}
+            setIsMetric={setIsMetric}
+            onRefresh={onRefresh}
+            anchorEl={unitsAnchorEl}
             handleClose={handleClose}
-            handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
+            handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
           />
 
           <DataInfo
@@ -186,23 +211,16 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleDataPopupButtonClick={handleDataPopupButtonClick}
           />
 
-          <UnitsSwitch
-            isMetric={isMetric}
-            onRefresh={onRefresh}
-            setIsMetric={setIsMetric}
-            anchorEl={unitsAnchorEl}
+          <CutoffControls
+            dayRangeType={dayRangeType}
+            handleDayRangeTypeChange={handleDayRangeTypeChange}
+            customTime={customTime}
+            setCustomTime={setCustomTime}
+            handleCustomTimeButtonClick={memoizedHandleCustomTime}
+            anchorEl={cutOffAnchorEl}
             handleClose={handleClose}
-            handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
+            handleCutOffPopupButtonClick={handleCutOffPopupButtonClick}
           /> */}
-          
-        </div>
-
-        <div className="w-full mt-4">
-          <StationSelector
-        stations={stations}
-        handleStationSelect={stationDrawer.handleStationSelect}
-        selectedStation={stationDrawer.selectedStation}
-          />
         </div>
       </div>
     </div>

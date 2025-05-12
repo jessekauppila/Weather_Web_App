@@ -167,7 +167,7 @@ export function MapDataProvider({
   children: React.ReactNode;
   observationsDataDay?: any;
 }) {
-  //console.log('observationsDataDay:', observationsDataDay);
+  // console.log('MapDataProvider rendered with observationsDataDay:', observationsDataDay);
 
   // Debugging function to inspect coordinate transformation
   function inspectCoordinateTransformation(data: any) {
@@ -305,32 +305,56 @@ export function MapDataProvider({
   // Process the formatted data once it's available
   useEffect(() => {
     if (!formattedDailyData || formattedDailyData.length === 0) {
+      console.log('No formattedDailyData available');
       return;
     }
     
-    //console.log('Processing formattedDailyData:', formattedDailyData);
+    console.log('Processing formattedDailyData:', {
+      length: formattedDailyData.length,
+      firstItem: formattedDailyData[0],
+      hasLatitude: formattedDailyData[0]?.Latitude !== undefined,
+      hasLongitude: formattedDailyData[0]?.Longitude !== undefined
+    });
     
     // Transform the data for the map
-    const transformedData = formattedDailyData.map((station: StationData) => ({
-      Stid: station.Stid,
-      Station: station.Station,
-      Latitude: typeof station.Latitude === 'number' ? station.Latitude : parseFloat(String(station.Latitude)),
-      Longitude: typeof station.Longitude === 'number' ? station.Longitude : parseFloat(String(station.Longitude)),
-      Elevation: station.Elevation,
-      'Air Temp Max': station['Air Temp Max'],
-      'Air Temp Min': station['Air Temp Min'] || '-',
-      'Cur Air Temp': station['Cur Air Temp'],
-      'Cur Wind Speed': station['Cur Wind Speed'],
-      'Wind Direction': station['Wind Direction'],
-      'Total Snow Depth Change': station['Total Snow Depth Change'],
-      'Total Snow Depth': station['Total Snow Depth'],
-      '24h Snow Accumulation': station['24h Snow Accumulation'],
-      'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
-      'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
-      'Relative Humidity': station['Relative Humidity'] || 'N/A',
-      'Precip Accum One Hour': station['Precip Accum One Hour'] || '-',
-      'Api Fetch Time': station['Api Fetch Time'] || new Date().toISOString()
-    }));
+    const transformedData = formattedDailyData.map((station: StationData) => {
+      const transformed = {
+        Stid: station.Stid,
+        Station: station.Station,
+        Latitude: typeof station.Latitude === 'number' ? station.Latitude : parseFloat(String(station.Latitude)),
+        Longitude: typeof station.Longitude === 'number' ? station.Longitude : parseFloat(String(station.Longitude)),
+        Elevation: station.Elevation,
+        'Air Temp Max': station['Air Temp Max'],
+        'Air Temp Min': station['Air Temp Min'] || '-',
+        'Cur Air Temp': station['Cur Air Temp'],
+        'Cur Wind Speed': station['Cur Wind Speed'],
+        'Wind Direction': station['Wind Direction'],
+        'Total Snow Depth Change': station['Total Snow Depth Change'],
+        'Total Snow Depth': station['Total Snow Depth'],
+        '24h Snow Accumulation': station['24h Snow Accumulation'],
+        'Max Wind Gust': station['Max Wind Gust'] || 'N/A',
+        'Wind Speed Avg': station['Wind Speed Avg'] || 'N/A',
+        'Relative Humidity': station['Relative Humidity'] || 'N/A',
+        'Precip Accum One Hour': station['Precip Accum One Hour'] || '-',
+        'Api Fetch Time': station['Api Fetch Time'] || new Date().toISOString()
+      };
+      
+      console.log('Transformed station:', {
+        stid: transformed.Stid,
+        station: transformed.Station,
+        latitude: transformed.Latitude,
+        longitude: transformed.Longitude,
+        isLatitudeValid: !isNaN(transformed.Latitude),
+        isLongitudeValid: !isNaN(transformed.Longitude)
+      });
+      
+      return transformed;
+    });
+
+    console.log('Transformed data:', {
+      length: transformedData.length,
+      validCoordinates: transformedData.filter(d => !isNaN(d.Latitude) && !isNaN(d.Longitude)).length
+    });
 
     // Format observations data
     const formatObservation = (obs: ObservationData) => ({
@@ -347,7 +371,6 @@ export function MapDataProvider({
     let observationsData: StationData[] = [];
     
     if (formattedDailyData.some((station: StationData) => station.hourlyData?.length || station.filteredHourlyData?.length || station.dailyData?.length)) {
-      // console.log('Using real observations data');
       observationsData = formattedDailyData.map((station: StationData) => ({
         ...station,
         hourlyData: station.hourlyData?.map(formatObservation) || [],
@@ -355,8 +378,6 @@ export function MapDataProvider({
         dailyData: station.dailyData?.map(formatObservation) || []
       }));
     } else {
-      // console.log('No observations data found');
-      // Create minimal empty structure for each station
       observationsData = transformedData.map((station: StationData) => ({
         ...station,
         hourlyData: [],
@@ -365,32 +386,48 @@ export function MapDataProvider({
       }));
     }
     
-    // console.log('Processed observations data:', observationsData);
-    
     // Convert data to match WeatherStation type (all fields as strings)
-    const stationsForMap = transformedData.map(station => ({
-      Stid: String(station.Stid),
-      Station: String(station.Station),
-      Latitude: String(station.Latitude),
-      Longitude: String(station.Longitude),
-      Elevation: String(station.Elevation),
-      'Air Temp Max': String(station['Air Temp Max']),
-      'Air Temp Min': String(station['Air Temp Min']),
-      'Cur Air Temp': String(station['Cur Air Temp']),
-      'Cur Wind Speed': String(station['Cur Wind Speed']),
-      'Wind Direction': String(station['Wind Direction']),
-      'Total Snow Depth Change': String(station['Total Snow Depth Change']),
-      'Total Snow Depth': String(station['Total Snow Depth']),
-      '24h Snow Accumulation': String(station['24h Snow Accumulation']),
-      'Max Wind Gust': String(station['Max Wind Gust']),
-      'Wind Speed Avg': String(station['Wind Speed Avg']),
-      'Relative Humidity': String(station['Relative Humidity']),
-      'Precip Accum One Hour': String(station['Precip Accum One Hour']),
-      'Api Fetch Time': String(station['Api Fetch Time'])
-    }));
+    const stationsForMap = transformedData.map(station => {
+      const stationForMap = {
+        Stid: String(station.Stid),
+        Station: String(station.Station),
+        Latitude: String(station.Latitude),
+        Longitude: String(station.Longitude),
+        Elevation: String(station.Elevation),
+        'Air Temp Max': String(station['Air Temp Max']),
+        'Air Temp Min': String(station['Air Temp Min']),
+        'Cur Air Temp': String(station['Cur Air Temp']),
+        'Cur Wind Speed': String(station['Cur Wind Speed']),
+        'Wind Direction': String(station['Wind Direction']),
+        'Total Snow Depth Change': String(station['Total Snow Depth Change']),
+        'Total Snow Depth': String(station['Total Snow Depth']),
+        '24h Snow Accumulation': String(station['24h Snow Accumulation']),
+        'Max Wind Gust': String(station['Max Wind Gust']),
+        'Wind Speed Avg': String(station['Wind Speed Avg']),
+        'Relative Humidity': String(station['Relative Humidity']),
+        'Precip Accum One Hour': String(station['Precip Accum One Hour']),
+        'Api Fetch Time': String(station['Api Fetch Time'])
+      };
+      
+      console.log('Station for map:', {
+        stid: stationForMap.Stid,
+        station: stationForMap.Station,
+        latitude: stationForMap.Latitude,
+        longitude: stationForMap.Longitude,
+        isLatitudeValid: !isNaN(parseFloat(stationForMap.Latitude)),
+        isLongitudeValid: !isNaN(parseFloat(stationForMap.Longitude))
+      });
+      
+      return stationForMap;
+    });
     
+    console.log('Stations for map:', {
+      length: stationsForMap.length,
+      validCoordinates: stationsForMap.filter(d => !isNaN(parseFloat(d.Latitude)) && !isNaN(parseFloat(d.Longitude))).length
+    });
+
     // Update the map data with all processed data
-    setMapData({
+    const newMapData = {
       stationData: map_weatherToGeoJSON(stationsForMap),
       forecastZones: forecastZonesData.forecastZones,
       observationsDataHour: {
@@ -405,20 +442,43 @@ export function MapDataProvider({
         data: observationsData.flatMap((station: StationData) => station.dailyData || []),
         title: 'Daily Data'
       }
+    };
+
+    console.log('New map data:', {
+      featuresLength: newMapData.stationData.features.length,
+      firstFeature: newMapData.stationData.features[0]
     });
     
-    // console.log('Updated map data with observations');
-    
-    // Also update stations list
-    const stationList = transformedData.map((station: StationData) => ({
-      id: String(station.Stid),
-      name: String(station.Station),
-    }));
-    
-    setStations(stationList);
-    setStationIds(stationList.map((s: {id: string}) => s.id));
+    // Only update if we have features
+    if (newMapData.stationData.features.length > 0) {
+      setMapData(newMapData);
+      
+      // Also update stations list
+      const stationList = transformedData.map((station: StationData) => ({
+        id: String(station.Stid),
+        name: String(station.Station),
+      }));
+      
+      console.log('Station list:', {
+        length: stationList.length,
+        firstStation: stationList[0]
+      });
+      
+      setStations(stationList);
+      setStationIds(stationList.map((s: {id: string}) => s.id));
+    } else {
+      console.log('Skipping map data update - no features available');
+    }
     
   }, [formattedDailyData]);
+
+  // Add effect to track mapData changes
+  useEffect(() => {
+    // console.log('mapData changed:', {
+    //   hasStationData: !!mapData.stationData,
+    //   featuresLength: mapData.stationData.features.length
+    // });
+  }, [mapData]);
 
   // Function to update map data
   const updateMapData = useCallback(async () => {

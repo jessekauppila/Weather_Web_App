@@ -6,27 +6,76 @@ import debounce from 'lodash/debounce';
 import type { WeatherStation } from '../../map/map';
 import { useMapData } from '../../data/map/MapDataContext';
 //import { useStationDrawer } from '@/app/hooks/useStationDrawer';
+import type { Map_BlockProperties } from '../../map/map';
 
 interface StationSelectorProps {
-  handleStationSelect: (station: WeatherStation) => void;
+  handleStationSelect: (station: WeatherStation | null) => void;
   selectedStation: WeatherStation | null;
+  mapData?: {
+    stationData: {
+      features: Array<{
+        properties: Map_BlockProperties;
+      }>;
+    };
+  };
+  isLoading?: boolean;
 }
 
 export function StationSelector({
   handleStationSelect,
-  selectedStation
+  selectedStation,
+  mapData,
+  isLoading = false
 }: StationSelectorProps) {
-  const { mapData, isLoading } = useMapData();
-  console.log('mapData:', mapData);
-  console.log('isLoading:', isLoading);
+  const { mapData: contextMapData } = useMapData();
 
-  // Create station list with clearer naming
+  // Debug log for incoming props
+  console.log('StationSelector - Raw mapData:', mapData);
+  console.log('StationSelector - Raw stationData:', mapData?.stationData);
+  console.log('StationSelector - Raw features:', mapData?.stationData?.features);
+
+  // Create the station list from mapData
   const stationList = useMemo(() => {
-    if (!mapData?.stationData?.features) return [];
-    return mapData.stationData.features.map(f => ({
-      stid: String(f.properties.Stid),
-      name: f.properties.stationName
-    }));
+    // Debug the exact structure we're working with
+    console.log('StationSelector - Data structure check:', {
+      hasMapData: !!mapData,
+      mapDataKeys: mapData ? Object.keys(mapData) : [],
+      hasStationData: !!mapData?.stationData,
+      stationDataKeys: mapData?.stationData ? Object.keys(mapData.stationData) : [],
+      featuresLength: mapData?.stationData?.features?.length,
+      firstFeature: mapData?.stationData?.features?.[0],
+      firstFeatureProperties: mapData?.stationData?.features?.[0]?.properties
+    });
+
+    if (!mapData?.stationData?.features) {
+      console.log('StationSelector - No station data available');
+      return [];
+    }
+
+    // Log each feature as we process it
+    const stations = mapData.stationData.features.map((feature, index) => {
+      console.log(`StationSelector - Processing feature ${index}:`, {
+        feature,
+        properties: feature.properties,
+        stid: feature.properties.Stid,
+        name: feature.properties.stationName
+      });
+
+      return {
+        stid: feature.properties.Stid,
+        name: feature.properties.stationName
+      };
+    });
+
+    // Log the final station list
+    console.log('StationSelector - Final station list:', {
+      count: stations.length,
+      stations: stations,
+      firstStation: stations[0],
+      lastStation: stations[stations.length - 1]
+    });
+
+    return stations;
   }, [mapData]);
 
   console.log('stationList:', stationList);
@@ -63,18 +112,6 @@ export function StationSelector({
   
 
   // console.log('Memoized station options:', memoizedStationOptions);
-
-  const memoizedStationOptionsDummy = [
-    <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
-      Region 1
-    </ListSubheader>,
-    <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
-      Station 1
-    </MenuItem>,
-    <MenuItem key="station-2" value="station-2" className="!text-[var(--app-text-primary)]">
-      Station 2
-    </MenuItem>
-  ];
 
   // console.log('Memoized station options dummy:', memoizedStationOptionsDummy);
 
@@ -168,17 +205,6 @@ export function StationSelector({
           <MenuItem disabled>No stations available</MenuItem>
         ) : (
           allStationOptions
-        )}
-        <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
-          Region 1
-        </ListSubheader>
-        <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
-          Station 1
-        </MenuItem>
-        {stationList.length > 0 && (
-          <MenuItem key={stationList[5]?.stid} value={stationList[5]?.stid}>
-            {stationList[5]?.name}
-          </MenuItem>
         )}
         <MenuItem key="debug" value="debug">
           {JSON.stringify(stationList)}

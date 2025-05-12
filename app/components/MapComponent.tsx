@@ -25,6 +25,8 @@ import { StationSelector } from './TimeToolbar/StationSelector';
 //import LayerToolbar from './LayerToolbar';
 import TimeToolbar from './TimeToolbar';
 import LayerToolbar from './LayerToolbar';
+import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
+import { UnitType } from "@/app/utils/units";
 
 interface MapData {
   stationData: {
@@ -97,9 +99,9 @@ export const MapApp = ({
   filteredObservationsDataHour,
   isMetric: initialIsMetric,
   tableMode,
-  dayRangeType,
+  dayRangeType: initialDayRangeType,
   customTime: initialCustomTime,
-  calculateCurrentTimeRange,
+  calculateCurrentTimeRange: initialCalculateCurrentTimeRange,
   timeRangeData,
   activeLayerState,
   onLayerToggle,
@@ -107,9 +109,15 @@ export const MapApp = ({
   const { mapData, isLoading } = useMapData();
   const stationDrawer = useStationDrawer({ mapData });
 
+  const formatValue = (value: number | null, unit: string) => {
+    if (value === null || isNaN(value)) return "-";
+    return formatValueWithUnit(value, UnitType.PRECIPITATION, isMetric);
+  };
+
   // Add missing state
   const [customTime, setCustomTime] = useState(initialCustomTime || '');
   const [isMetric, setIsMetric] = useState(initialIsMetric || false);
+  const [dayRangeType, setDayRangeType] = useState(initialDayRangeType || DayRangeType.CURRENT);
 
   // State for toolbar visibility
   const [isTimeToolbarOpen, setIsTimeToolbarOpen] = useState(true);
@@ -118,13 +126,24 @@ export const MapApp = ({
   // Time-related state and handlers
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  const [timeRange, setTimeRange] = useState('24h');
+  const [timeRange, setTimeRange] = useState(1);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [isOneDay, setIsOneDay] = useState(true);
 
   // Handlers for time controls
   const handleTimeRangeChange = useCallback((event: SelectChangeEvent<string>) => {
-    setTimeRange(event.target.value);
+    setTimeRange(Number(event.target.value));
+  }, []);
+
+  const calculateCurrentTimeRange = useCallback(() => {
+    if (useCustomEndDate && ![1, 3, 7, 14, 30].includes(timeRange)) {
+      return 'custom';
+    }
+    return timeRange.toString();
+  }, [useCustomEndDate, timeRange]);
+
+  const handleDayRangeTypeChange = useCallback((event: SelectChangeEvent<DayRangeType>) => {
+    setDayRangeType(event.target.value as DayRangeType);
   }, []);
 
   const handleDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,20 +179,63 @@ export const MapApp = ({
 
   // Group props for components
   const timeProps = {
-    selectedDate,
-    endDate,
-    dayRangeType,
-    customTime,
-    timeRange,
-    useCustomEndDate,
+    calculateCurrentTimeRange,
     handleTimeRangeChange,
-    handleDateChange,
-    handleEndDateChange,
+    isOneDay,
     handlePrevDay,
     handleNextDay,
-    calculateCurrentTimeRange,
-    isOneDay,
-    setCustomTime
+    selectedDate,
+    handleDateChange,
+    endDate,
+    handleEndDateChange,
+    dayRangeType,
+    handleDayRangeTypeChange,
+    customTime,
+    setCustomTime,
+    selectedStation: stationDrawer.selectedStation,
+    handleStationChange: (event: SelectChangeEvent<string>) => {
+      const selectedStid = event.target.value;
+      const station = mapData?.stationData.features.find(
+        f => f.properties.Stid === selectedStid
+      );
+      if (station) {
+        const weatherStation: WeatherStation = {
+          Station: station.properties.stationName,
+          'Cur Air Temp': formatValue(station.properties.curAirTemp, '°F'),
+          '24h Snow Accumulation': formatValue(station.properties.snowAccumulation24h, 'in'),
+          'Cur Wind Speed': station.properties.curWindSpeed || '-',
+          'Elevation': formatValue(station.properties.elevation, 'ft'),
+          'Stid': station.properties.Stid,
+          'Air Temp Min': formatValue(station.properties.airTempMin, '°F'),
+          'Air Temp Max': formatValue(station.properties.airTempMax, '°F'),
+          'Wind Speed Avg': station.properties.windSpeedAvg || '-',
+          'Max Wind Gust': station.properties.maxWindGust || '-',
+          'Wind Direction': station.properties.windDirection || '-',
+          'Total Snow Depth Change': formatValue(station.properties.totalSnowDepthChange, 'in'),
+          'Precip Accum One Hour': station.properties.precipAccumOneHour || '-',
+          'Total Snow Depth': formatValue(station.properties.totalSnowDepth, 'in'),
+          'Latitude': station.properties.latitude.toString(),
+          'Longitude': station.properties.longitude.toString(),
+          'Relative Humidity': formatValue(station.properties.relativeHumidity, '%'),
+          'Api Fetch Time': station.properties.fetchTime || new Date().toISOString()
+        };
+        stationDrawer.handleStationSelect(weatherStation);
+      }
+    },
+    filteredObservationsDataHour,
+    onRefresh: handleRefresh,
+    tableMode,
+    startHour: 0,
+    endHour: 24,
+    setObservationsDataDay: () => {},
+    setObservationsDataHour: () => {},
+    setFilteredObservationsDataHour: () => {},
+    setIsLoading: () => {},
+    isMetric,
+    setIsMetric,
+    useCustomEndDate,
+    isOpen: isTimeToolbarOpen,
+    onToggle: handleTimeToolbarToggle
   };
 
   const stationProps = {
