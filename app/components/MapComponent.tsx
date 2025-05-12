@@ -250,10 +250,10 @@ export const MapApp = ({
       {/* Layer Controls */}
       {/* Removed LayerToolbar as it's now rendered in page.tsx */}
 
-      <StationSelector
+      {/* <StationSelector
         handleStationSelect={stationDrawer.handleStationSelect}
         selectedStation={stationDrawer.selectedStation}
-      />
+      /> */}
     </div>
   );
 };

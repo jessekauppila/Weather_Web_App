@@ -16,16 +16,17 @@ export function StationSelector({
   handleStationSelect,
   selectedStation
 }: StationSelectorProps) {
-  const { mapData } = useMapData();
+  const { mapData, isLoading } = useMapData();
+  console.log('mapData:', mapData);
+  console.log('isLoading:', isLoading);
 
   // Create station list with clearer naming
   const stationList = useMemo(() => {
-    const list = mapData?.stationData.features.map(f => ({
+    if (!mapData?.stationData?.features) return [];
+    return mapData.stationData.features.map(f => ({
       stid: String(f.properties.Stid),
       name: f.properties.stationName
-    })) || [];
-    console.log('Station list created:', list);
-    return list;
+    }));
   }, [mapData]);
 
   console.log('stationList:', stationList);
@@ -128,6 +129,17 @@ export function StationSelector({
 
   console.log('stationList at render:', stationList);
 
+  
+  if (isLoading || !mapData || !mapData.stationData) {
+    return (
+      <FormControl variant="outlined" size="small" className="w-full">
+        <InputLabel>Station</InputLabel>
+        <Select value="" label="Station" disabled>
+          <MenuItem value="">Loading stations...</MenuItem>
+        </Select>
+      </FormControl>
+    );
+  }
   // console.log('Rendering Select with options:', memoizedStationOptions.length);
   return (
     <FormControl variant="outlined" size="small" className="w-full">
@@ -152,6 +164,11 @@ export function StationSelector({
         }}
       >
         <MenuItem value="">All Stations</MenuItem>
+        {stationList.length === 0 ? (
+          <MenuItem disabled>No stations available</MenuItem>
+        ) : (
+          allStationOptions
+        )}
         <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
           Region 1
         </ListSubheader>
