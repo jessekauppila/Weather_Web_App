@@ -18,11 +18,13 @@ import type { PickingInfo } from '@deck.gl/core';
 import type { Feature, Geometry } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
-import { Switch } from '@mui/material';
+import { Switch, SelectChangeEvent } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
 import { StationSelector } from './TimeToolbar/StationSelector';
 //import LayerToolbar from './LayerToolbar';
+import TimeToolbar from './TimeToolbar';
+import LayerToolbar from './LayerToolbar';
 
 interface MapData {
   stationData: {
@@ -39,7 +41,7 @@ interface MapComponentProps {
   observationsDataDay: any;
   observationsDataHour: any;
   filteredObservationsDataHour: any;
-  isMetric: boolean;
+  isMetric?: boolean;
   tableMode: 'summary' | 'daily';
   dayRangeType?: DayRangeType;
   customTime?: string;
@@ -93,10 +95,10 @@ export const MapApp = ({
   observationsDataDay,
   observationsDataHour,
   filteredObservationsDataHour,
-  isMetric,
+  isMetric: initialIsMetric,
   tableMode,
   dayRangeType,
-  customTime,
+  customTime: initialCustomTime,
   calculateCurrentTimeRange,
   timeRangeData,
   activeLayerState,
@@ -105,91 +107,91 @@ export const MapApp = ({
   const { mapData, isLoading } = useMapData();
   const stationDrawer = useStationDrawer({ mapData });
 
-  // Create a ref to track the current observation data
-  const observationDataRef = useRef({
-    day: null as any,
-    hour: null as any,
-    filtered: null as any
-  });
-  
-  // Effect to react to observation data changes
-  useEffect(() => {
-    // First, check if the observation data has actually changed 
-    // to avoid unnecessary updates
-    const dataChanged = 
-      observationDataRef.current.day !== observationsDataDay ||
-      observationDataRef.current.hour !== observationsDataHour ||
-      observationDataRef.current.filtered !== filteredObservationsDataHour;
-    
-    // Only update if data has changed and drawer is open
-    if (dataChanged && stationDrawer.isDrawerOpen && stationDrawer.selectedStation) {
-      //console.log('Observation data changed, updating station drawer');
-      
-      // Update our reference to current data
-      observationDataRef.current = {
-        day: observationsDataDay,
-        hour: observationsDataHour,
-        filtered: filteredObservationsDataHour
-      };
-      
-      // If the drawer is open, we should refresh the selected station data
-      // to reflect the new time range
-      const stationName = stationDrawer.selectedStation.Station;
-      
-      // Find the station in the mapData
-      const updatedStationData = (mapData as MapData)?.stationData?.features?.find(
-        f => f.properties.stationName === stationName
-      );
-      
-      // Update the selected station with fresh data if found
-      if (updatedStationData) {
-        const properties = updatedStationData.properties;
-        
-        // Helper function to format values with units
-        const formatValue = (value: number | string | null | undefined, unit: string) => {
-          if (value === null || value === undefined || value === '-') return '-';
-          return `${value} ${unit}`;
-        };
-        
-        const updatedStation: WeatherStation = {
-          ...stationDrawer.selectedStation,
-          'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
-          '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
-          'Air Temp Min': formatValue(properties.airTempMin, '°F'),
-          'Air Temp Max': formatValue(properties.airTempMax, '°F'),
-          'Total Snow Depth Change': formatValue(properties.totalSnowDepthChange, 'in'),
-          'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
-          'Api Fetch Time': properties.fetchTime || new Date().toISOString()
-        };
-        
-        // Set the selected station with fresh data if found
-        stationDrawer.handleStationSelect(updatedStation);
-      }
-    }
-  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, stationDrawer.isDrawerOpen, stationDrawer.selectedStation, mapData, stationDrawer.handleStationSelect]);
+  // Add missing state
+  const [customTime, setCustomTime] = useState(initialCustomTime || '');
+  const [isMetric, setIsMetric] = useState(initialIsMetric || false);
 
-  // Effect to manage drawer state
-  useEffect(() => {
-    // If drawer is open, add a class to prevent scrolling on the body
-    if (stationDrawer.isDrawerOpen) {
-      document.body.classList.add('drawer-open');
-      
-      // Close drawer when escape key is pressed
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          stationDrawer.closeDrawer();
-        }
-      };
-      
-      window.addEventListener('keydown', handleEscape);
-      
-      return () => {
-        window.removeEventListener('keydown', handleEscape);
-      };
-    } else {
-      document.body.classList.remove('drawer-open');
-    }
-  }, [stationDrawer.isDrawerOpen, stationDrawer.closeDrawer]);
+  // State for toolbar visibility
+  const [isTimeToolbarOpen, setIsTimeToolbarOpen] = useState(true);
+  const [isLayerToolbarOpen, setIsLayerToolbarOpen] = useState(true);
+
+  // Time-related state and handlers
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [timeRange, setTimeRange] = useState('24h');
+  const [useCustomEndDate, setUseCustomEndDate] = useState(false);
+  const [isOneDay, setIsOneDay] = useState(true);
+
+  // Handlers for time controls
+  const handleTimeRangeChange = useCallback((event: SelectChangeEvent<string>) => {
+    setTimeRange(event.target.value);
+  }, []);
+
+  const handleDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(new Date(event.target.value));
+  }, []);
+
+  const handleEndDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(new Date(event.target.value));
+  }, []);
+
+  const handlePrevDay = useCallback(() => {
+    setSelectedDate(prev => new Date(prev.setDate(prev.getDate() - 1)));
+  }, []);
+
+  const handleNextDay = useCallback(() => {
+    setSelectedDate(prev => new Date(prev.setDate(prev.getDate() + 1)));
+  }, []);
+
+  // Toolbar toggle handlers
+  const handleTimeToolbarToggle = useCallback(() => {
+    setIsTimeToolbarOpen(prev => !prev);
+  }, []);
+
+  const handleLayerToolbarToggle = useCallback(() => {
+    setIsLayerToolbarOpen(prev => !prev);
+  }, []);
+
+  // Add this with your other handlers
+  const handleRefresh = useCallback(async (newIsMetric?: boolean) => {
+    // Add your refresh logic here
+    console.log('Refreshing data...');
+  }, []);
+
+  // Group props for components
+  const timeProps = {
+    selectedDate,
+    endDate,
+    dayRangeType,
+    customTime,
+    timeRange,
+    useCustomEndDate,
+    handleTimeRangeChange,
+    handleDateChange,
+    handleEndDateChange,
+    handlePrevDay,
+    handleNextDay,
+    calculateCurrentTimeRange,
+    isOneDay,
+    setCustomTime
+  };
+
+  const stationProps = {
+    selectedStation: stationDrawer.selectedStation,
+    handleStationSelect: stationDrawer.handleStationSelect,
+    stationIds: mapData?.stationData?.features.map(f => f.properties.Stid) || []
+  };
+
+  const dataProps = {
+    filteredObservationsDataHour,
+    onRefresh: handleRefresh,
+    tableMode,
+    isMetric,
+    setIsMetric,
+    calculateCurrentTimeRange,
+    isOneDay,
+    setCustomTime
+  };
 
   // Create layers based on current visibility and data
   const layers = useMemo(
@@ -227,7 +229,44 @@ export const MapApp = ({
         />
       </DeckGL>
 
-      {/* Render StationDrawer using our custom portal */}
+      {/* Toolbars container */}
+      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
+        style={{
+          pointerEvents: 'auto',
+          maxHeight: 'calc(100vh - 2rem)',
+          overflowY: 'auto'
+        }}
+      >
+        {/* Time toolbar */}
+        <div className="w-full md:flex-grow">
+          <TimeToolbar
+            {...timeProps}
+            {...stationProps}
+            {...dataProps}
+            isOpen={isTimeToolbarOpen}
+            onToggle={handleTimeToolbarToggle}
+          />
+        </div>
+
+        {/* Layer toolbar */}
+        <div className="w-full md:w-auto md:sticky md:top-0"
+          style={{
+            minWidth: '200px',
+            maxWidth: '250px',
+            alignSelf: 'flex-start'
+          }}
+        >
+          <LayerToolbar
+            activeLayerState={activeLayerState}
+            onLayerToggle={onLayerToggle}
+            isStationDrawerOpen={!!stationDrawer.selectedStation}
+            isOpen={isLayerToolbarOpen}
+            onToggle={handleLayerToolbarToggle}
+          />
+        </div>
+      </div>
+
+      {/* Station drawer */}
       <ClientPortal>
         {timeRangeData && (
           <StationDrawer
@@ -246,14 +285,6 @@ export const MapApp = ({
           />
         )}
       </ClientPortal>
-
-      {/* Layer Controls */}
-      {/* Removed LayerToolbar as it's now rendered in page.tsx */}
-
-      {/* <StationSelector
-        handleStationSelect={stationDrawer.handleStationSelect}
-        selectedStation={stationDrawer.selectedStation}
-      /> */}
     </div>
   );
 };
