@@ -31,8 +31,7 @@ import MapComponent from './components/MapComponent';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
 
 import useStationDrawer from '@/app/hooks/useStationDrawer';
-import { useMapData } from './data/map/MapDataContext';
-import { MapDataProvider } from './data/map/MapDataContext';
+import { useMapData, MapDataProvider } from './data/map/MapDataContext';
 
 
 
@@ -377,8 +376,8 @@ export default function Home() {
               selectedDate={selectedDate}
               timeRange={timeRange}
               selectedStation={selectedStation}
+              mapData={mapData}
               stationDrawer={stationDrawer}
-
             />
           </div>
 
@@ -398,7 +397,7 @@ export default function Home() {
             {...dataProps}
             isOpen={isTimeToolbarOpen}
             onToggle={handleTimeToolbarToggle}
-            onStationSelect={setSelectedStation}
+            // onStationSelect={setSelectedStation}
             stationDrawer={stationDrawer}
 
 
@@ -418,7 +417,7 @@ export default function Home() {
         >
           <LayerToolbar
             activeLayerState={activeLayerState}
-            onLayerToggle={onLayerToggle}
+            onLayerToggle={handleLayerToggle}
             isStationDrawerOpen={!!stationDrawer.selectedStation}
             isOpen={isLayerToolbarOpen}
             onToggle={handleLayerToolbarToggle}

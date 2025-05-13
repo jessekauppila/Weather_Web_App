@@ -11,7 +11,7 @@ import {
   map_getTooltip,
 } from '../map/map';
 import { createMapLayers } from '../map/layers';
-import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
+// import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
 import StationDrawer from './StationDrawer';
 import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
@@ -49,12 +49,15 @@ interface MapComponentProps {
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
+  mapData: MapData;  // This is what useMapData returns
+  isLoading: boolean;
   stationDrawer: {
     selectedStation: WeatherStation | null;
     isDrawerOpen: boolean;
     handleStationClick: (info: PickingInfo) => void;
     handleStationSelect: (station: WeatherStation) => void;
     closeDrawer: () => void;
+  
   };
 }
 
@@ -111,8 +114,9 @@ export const MapApp = ({
   activeLayerState,
   onLayerToggle,
   stationDrawer,
+  mapData,
+  isLoading,
 }: MapComponentProps) => {
-  const { mapData, isLoading } = useMapData();
 
   // Add missing state
   const [customTime, setCustomTime] = useState(initialCustomTime || '');
@@ -264,8 +268,8 @@ export const MapApp = ({
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
   return (
-    <MapDataProvider observationsDataDay={props.observationsDataDay}>
+    // <MapDataProvider observationsDataDay={props.observationsDataDay}>
       <MapApp {...props} />
-    </MapDataProvider>
+    // </MapDataProvider>
   );
 } 

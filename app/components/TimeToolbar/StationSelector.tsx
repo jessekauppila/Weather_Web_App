@@ -17,7 +17,6 @@ interface StationSelectorProps {
 
 export function StationSelector({
   handleStationSelect,
-  onStationSelect
   selectedStation
 }: StationSelectorProps) {
   const { mapData, isLoading } = useMapData();
