@@ -2,12 +2,12 @@ import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 
 interface TimeRangeSelectorProps {
-  calculateCurrentTimeRange: () => string;
+  calculateCurrentTimeRange?: () => string;
   handleTimeRangeChange: (event: SelectChangeEvent<string>) => void;
 }
 
 export function TimeRangeSelector({ 
-  calculateCurrentTimeRange, 
+  calculateCurrentTimeRange = () => '1', 
   handleTimeRangeChange 
 }: TimeRangeSelectorProps) {
   return (

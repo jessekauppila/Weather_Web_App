@@ -16,7 +16,7 @@ import { StationSelector } from './TimeToolbar/StationSelector';
 
 
 interface TimeToolbarProps {
-  calculateCurrentTimeRange: () => string;
+  calculateCurrentTimeRange?: () => string;
   handleTimeRangeChange: (event: SelectChangeEvent<string>) => void;
   isOneDay: boolean;
   handlePrevDay: () => void;
@@ -25,7 +25,7 @@ interface TimeToolbarProps {
   handleDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   endDate: Date;
   handleEndDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  dayRangeType: DayRangeType;
+  dayRangeType?: DayRangeType;
   handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => void;
   customTime: string;
   setCustomTime: (value: string) => void;
@@ -58,7 +58,7 @@ interface TimeToolbarProps {
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
-  calculateCurrentTimeRange,
+  calculateCurrentTimeRange = () => '1',
   handleTimeRangeChange,
   isOneDay,
   handlePrevDay,
@@ -67,7 +67,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   handleDateChange,
   endDate,
   handleEndDateChange,
-  dayRangeType,
+  dayRangeType = DayRangeType.MIDNIGHT,
   handleDayRangeTypeChange,
   customTime,
   setCustomTime,

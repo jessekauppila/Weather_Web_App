@@ -43,9 +43,9 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric?: boolean;
   tableMode: 'summary' | 'daily';
-  dayRangeType: DayRangeType;
+  dayRangeType?: DayRangeType;
   customTime?: string;
-  calculateCurrentTimeRange: () => string;
+  calculateCurrentTimeRange?: () => string;
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
@@ -97,7 +97,7 @@ export const MapApp = ({
   filteredObservationsDataHour,
   isMetric: initialIsMetric,
   tableMode,
-  dayRangeType = DayRangeType.MIDNIGHT,
+  dayRangeType,
   customTime: initialCustomTime,
   calculateCurrentTimeRange,
   timeRangeData,
@@ -171,27 +171,27 @@ export const MapApp = ({
     handleEndDateChange,
     handlePrevDay,
     handleNextDay,
-    calculateCurrentTimeRange,
+    calculateCurrentTimeRange: calculateCurrentTimeRange || (() => '1'),
     isOneDay,
     setCustomTime,
     handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => {
-      // Add your day range type change logic here
+      // Add handler
     },
-    startHour: 0,
-    endHour: 24,
-    setObservationsDataDay: () => {},
-    setObservationsDataHour: () => {},
-    setFilteredObservationsDataHour: () => {},
-    setIsLoading: () => {},
     selectedStation: stationDrawer.selectedStation,
-    stations: mapData?.stationData.features.map(f => ({
+    stations: mapData?.stationData?.features.map(f => ({
       id: f.properties.Stid,
       name: f.properties.stationName
     })) || [],
     handleStationChange: (event: SelectChangeEvent<string>) => {
-      // Add your station change logic here
+      // Add handler
     },
-    stationIds: mapData?.stationData.features.map(f => f.properties.Stid) || []
+    stationIds: mapData?.stationData?.features.map(f => f.properties.Stid) || [],
+    startHour: 0,
+    endHour: 24,
+    setObservationsDataDay: (data: any) => {},
+    setObservationsDataHour: (data: any) => {},
+    setFilteredObservationsDataHour: (data: any) => {},
+    setIsLoading: (loading: boolean) => {}
   };
 
   const stationProps = {
@@ -287,12 +287,6 @@ export const MapApp = ({
 
       {/* Station drawer */}
       <ClientPortal>
-      {console.log('MapComponent - Rendering StationDrawer with:', {
-        hasTimeRangeData: !!timeRangeData,
-        timeRangeData,
-        isDrawerOpen: stationDrawer.isDrawerOpen,
-        hasSelectedStation: !!stationDrawer.selectedStation
-      })}
         {timeRangeData && (
           <StationDrawer
             isOpen={stationDrawer.isDrawerOpen}
@@ -303,7 +297,7 @@ export const MapApp = ({
             filteredObservationsDataHour={filteredObservationsDataHour}
             isMetric={isMetric}
             tableMode={tableMode}
-            dayRangeType={dayRangeType}
+            dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
             customTime={customTime || ''}
             calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
             timeRangeData={timeRangeData}
