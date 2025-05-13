@@ -204,6 +204,8 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
           <StationSelector
             selectedStation={stationDrawer.selectedStation}
             handleStationSelect={stationDrawer.handleStationSelect}
+            onStationSelect={onStationSelect}
+
           />
         </div>
       </div>

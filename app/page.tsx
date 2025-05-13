@@ -30,6 +30,12 @@ import { Analytics } from "@vercel/analytics/react"
 import MapComponent from './components/MapComponent';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
 
+import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { useMapData } from './data/map/MapDataContext';
+import { MapDataProvider } from './data/map/MapDataContext';
+
+
+
 
 interface Station {
   id: string;
@@ -75,6 +81,9 @@ export default function Home() {
   const { activeDropdown, setActiveDropdown } = useDropdown();
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true);
+  const { mapData } = useMapData();  // Add this line
+  const stationDrawer = useStationDrawer({ mapData }); // or whatever data you need
+
 
   // Station state
   const {
@@ -339,6 +348,7 @@ export default function Home() {
   };
 
   return (
+    <MapDataProvider>
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
       {/* Show loading indicator if data isn't ready */}
       {!dataReady && (
@@ -364,10 +374,62 @@ export default function Home() {
               timeRangeData={timeRangeData}
               activeLayerState={activeLayerState}
               onLayerToggle={handleLayerToggle}
+              selectedDate={selectedDate}
+              timeRange={timeRange}
+              selectedStation={selectedStation}
+              stationDrawer={stationDrawer}
+
             />
           </div>
+
+      {/* Toolbars container */}
+      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
+        style={{
+          pointerEvents: 'auto',
+          maxHeight: 'calc(100vh - 2rem)',
+          overflowY: 'auto'
+        }}
+      >
+        {/* Time toolbar */}
+        <div className="w-full md:flex-grow">
+        <TimeToolbar
+            {...timeProps}
+            {...stationProps}
+            {...dataProps}
+            isOpen={isTimeToolbarOpen}
+            onToggle={handleTimeToolbarToggle}
+            onStationSelect={setSelectedStation}
+            stationDrawer={stationDrawer}
+
+
+
+
+            //stationDrawer={stationDrawer} 
+          />
+        </div>
+
+        {/* Layer toolbar */}
+        <div className="w-full md:w-auto md:sticky md:top-0"
+          style={{
+            minWidth: '200px',
+            maxWidth: '250px',
+            alignSelf: 'flex-start'
+          }}
+        >
+          <LayerToolbar
+            activeLayerState={activeLayerState}
+            onLayerToggle={onLayerToggle}
+            isStationDrawerOpen={!!stationDrawer.selectedStation}
+            isOpen={isLayerToolbarOpen}
+            onToggle={handleLayerToolbarToggle}
+          />
+        </div>
+      </div>
+
+
         </>
       )}
     </main>
+        </MapDataProvider>
   );
 }

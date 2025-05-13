@@ -20,11 +20,11 @@ import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch, SelectChangeEvent } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
-import useStationDrawer from '@/app/hooks/useStationDrawer';
-import { StationSelector } from './TimeToolbar/StationSelector';
-//import LayerToolbar from './LayerToolbar';
-import TimeToolbar from './TimeToolbar';
-import LayerToolbar from './LayerToolbar';
+// import useStationDrawer from '@/app/hooks/useStationDrawer';
+// import { StationSelector } from './TimeToolbar/StationSelector';
+// //import LayerToolbar from './LayerToolbar';
+// import TimeToolbar from './TimeToolbar';
+// import LayerToolbar from './LayerToolbar';
 
 interface MapData {
   stationData: {
@@ -49,6 +49,13 @@ interface MapComponentProps {
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
+  stationDrawer: {
+    selectedStation: WeatherStation | null;
+    isDrawerOpen: boolean;
+    handleStationClick: (info: PickingInfo) => void;
+    handleStationSelect: (station: WeatherStation) => void;
+    closeDrawer: () => void;
+  };
 }
 
 // Client-side portal component for Next.js
@@ -103,9 +110,9 @@ export const MapApp = ({
   timeRangeData,
   activeLayerState,
   onLayerToggle,
+  stationDrawer,
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
-  const stationDrawer = useStationDrawer({ mapData });
 
   // Add missing state
   const [customTime, setCustomTime] = useState(initialCustomTime || '');
@@ -229,43 +236,7 @@ export const MapApp = ({
         />
       </DeckGL>
 
-      {/* Toolbars container */}
-      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
-        style={{
-          pointerEvents: 'auto',
-          maxHeight: 'calc(100vh - 2rem)',
-          overflowY: 'auto'
-        }}
-      >
-        {/* Time toolbar */}
-        <div className="w-full md:flex-grow">
-        <TimeToolbar
-            {...timeProps}
-            // {...stationProps}
-            {...dataProps}
-            isOpen={isTimeToolbarOpen}
-            onToggle={handleTimeToolbarToggle}
-            stationDrawer={stationDrawer} 
-          />
-        </div>
 
-        {/* Layer toolbar */}
-        <div className="w-full md:w-auto md:sticky md:top-0"
-          style={{
-            minWidth: '200px',
-            maxWidth: '250px',
-            alignSelf: 'flex-start'
-          }}
-        >
-          <LayerToolbar
-            activeLayerState={activeLayerState}
-            onLayerToggle={onLayerToggle}
-            isStationDrawerOpen={!!stationDrawer.selectedStation}
-            isOpen={isLayerToolbarOpen}
-            onToggle={handleLayerToolbarToggle}
-          />
-        </div>
-      </div>
 
       {/* Station drawer */}
       <ClientPortal>

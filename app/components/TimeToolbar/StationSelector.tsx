@@ -6,6 +6,7 @@ import debounce from 'lodash/debounce';
 import type { WeatherStation } from '../../map/map';
 import { useMapData } from '../../data/map/MapDataContext';
 import { createWeatherStationFromProperties } from '../utils/createWeatherStationFromProperties';
+
 // import { createWeatherStationFromProperties } from '../utils/createWeatherStationFromProperties';
 //import { useStationDrawer } from '@/app/hooks/useStationDrawer';
 
@@ -16,6 +17,7 @@ interface StationSelectorProps {
 
 export function StationSelector({
   handleStationSelect,
+  onStationSelect
   selectedStation
 }: StationSelectorProps) {
   const { mapData, isLoading } = useMapData();
