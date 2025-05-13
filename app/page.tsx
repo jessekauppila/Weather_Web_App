@@ -29,6 +29,8 @@ import { Analytics } from "@vercel/analytics/react"
 
 import MapComponent from './components/MapComponent';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
+import { DayRangeType } from './types/time';
+import { calculateTimeRange } from './utils/timeUtils';
 
 import useStationDrawer from '@/app/hooks/useStationDrawer';
 import { useMapData, MapDataProvider } from './data/map/MapDataContext';
@@ -74,15 +76,150 @@ const logAppEvent = (category: string, message: string, data?: any) => {
   }
 };
 
+// Main wrapper component with provider
 export default function Home() {
+  // Move necessary state and hooks here
+  const [tableMode, setTableMode] = useState<'summary' | 'daily'>('summary');
+  const [dayRangeType, setDayRangeType] = useState<DayRangeType>(DayRangeType.MIDNIGHT);
+  const [customTime, setCustomTime] = useState('');
+  const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
+  const [timeRange, setTimeRange] = useState('24h');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [useCustomEndDate, setUseCustomEndDate] = useState(false);
+  const [isOneDay, setIsOneDay] = useState(true);
+  const [isMetric, setIsMetric] = useState(false);
+
+  // Calculate time range data
+  const timeRangeData = useMemo(() => {
+    const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
+    return {
+      start_time_pdt: new Date(start).toISOString(),
+      end_time_pdt: new Date(end).toISOString()
+    };
+  }, [selectedDate, dayRangeType, timeRange]);
+
+  const { 
+    startHour: calculatedStartHour, 
+    endHour: calculatedEndHour 
+  } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
+
+  // Get station IDs (you'll need to implement this based on your data structure)
+  const stationIds = useMemo(() => [], []); // Replace with actual implementation
+
+  // Weather data state
+  const {
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
+    isLoading,
+    handleRefresh,
+    setObservationsDataDay,
+    setObservationsDataHour,
+    setFilteredObservationsDataHour,
+    setIsLoading,
+    dataReady: weatherDataReady,
+  } = useWeatherData(
+    timeRangeData,
+    stationIds,
+    tableMode,
+    calculatedStartHour,
+    calculatedEndHour,
+    dayRangeType
+  );
+
+  const handleLayerToggle = useCallback((layerId: LayerId) => {
+    setActiveLayerState(prev => {
+      const group = LAYER_GROUPS[layerId];
+      
+      if (group === 'other') {
+        const nextOther = new Set(prev.other);
+        if (nextOther.has(layerId)) {
+          nextOther.delete(layerId);
+        } else {
+          nextOther.add(layerId);
+        }
+        return { ...prev, other: nextOther };
+      }
+
+      const nextState = { ...prev };
+      
+      if (nextState[group].has(layerId)) {
+        nextState[group].delete(layerId);
+      } else {
+        if (group !== 'temperature') nextState.temperature = new Set();
+        if (group !== 'wind') nextState.wind = new Set();
+        if (group !== 'precipitation') nextState.precipitation = new Set();
+        
+        nextState[group] = new Set(prev[group]).add(layerId);
+      }
+      
+      return nextState;
+    });
+  }, []);
+
+  const calculateCurrentTimeRange = useCallback(() => {
+    return timeRange;
+  }, [timeRange]);
+
+  const handleStationChange = useCallback((stid: string) => {
+    // Handle station change
+    console.log('Station changed:', stid);
+  }, []);
+
+  const handleStationClick = useCallback((stid: string) => {
+    // Handle station click
+    console.log('Station clicked:', stid);
+  }, []);
+
+  return (
+    <MapDataProvider
+      observationsDataDay={observationsDataDay}
+      observationsDataHour={observationsDataHour}
+      filteredObservationsDataHour={filteredObservationsDataHour}
+      isMetric={isMetric}
+      tableMode={tableMode}
+      dayRangeType={dayRangeType}
+      customTime={customTime}
+      calculateCurrentTimeRange={calculateCurrentTimeRange}
+      timeRangeData={timeRangeData}
+      activeLayerState={activeLayerState}
+      onLayerToggle={handleLayerToggle}
+      updateMapData={handleRefresh}
+      handleStationChange={handleStationChange}
+      handleStationClick={handleStationClick}
+      handleRefresh={handleRefresh}
+      setIsMetric={setIsMetric}
+    >
+      <HomeContent />
+    </MapDataProvider>
+  );
+}
+
+// Component with all the main logic
+function HomeContent() {
+  // Get mapData from context
+  const {
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
+    isMetric,
+    tableMode,
+    dayRangeType,
+    customTime,
+    calculateCurrentTimeRange,
+    timeRangeData,
+    activeLayerState,
+    onLayerToggle,
+    mapData
+  } = useMapData();
+  
   // View state (UI-related)
-  const { tableMode, setTableMode, isComponentVisible, isTransitioning, setIsTransitioning } = useViewState();
+  const { tableMode: viewTableMode, setTableMode, isComponentVisible, isTransitioning, setIsTransitioning } = useViewState();
   const { activeDropdown, setActiveDropdown } = useDropdown();
   const [isPending, startTransition] = useTransition();
   const [isOneDay, setIsOneDay] = useState(true);
-  const { mapData } = useMapData();  // Add this line
-  const stationDrawer = useStationDrawer({ mapData }); // or whatever data you need
-
+  const stationDrawer = useStationDrawer({ mapData });
 
   // Station state
   const {
@@ -106,22 +243,20 @@ export default function Home() {
     handleNextDay,
     handleDateChange
   } = useDateState((newDate) => {
-    // When date changes, ONLY log - don't call refresh directly
     logAppEvent('DATE CHANGE', 'Date changed', {
       date: moment(newDate).format('YYYY-MM-DD')
     });
-    // Let useEffect handle the refresh based on dependency changes
   });
 
   const {
     timeRange,
-    dayRangeType,
-    customTime,
+    dayRangeType: viewDayRangeType,
+    customTime: viewCustomTime,
     calculateTimeRange,
     setTimeRange,
     setDayRangeType,
     setCustomTime,
-    calculateCurrentTimeRange
+    calculateCurrentTimeRange: viewCalculateCurrentTimeRange
   } = useTimeRange();
 
   const { 
@@ -129,182 +264,15 @@ export default function Home() {
     endHour: calculatedEndHour 
   } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
 
-  const timeRangeData = useMemo(() => {
-    // Always use calculateTimeRange for consistency
-    const { start, end } = calculateTimeRange(selectedDate, dayRangeType, timeRange);
-    
-    return {
-      start_time_pdt: start,
-      end_time_pdt: end
-    };
-  }, [selectedDate, dayRangeType, timeRange, calculateTimeRange]);
-
-  // Weather data state
-  const {
-    observationsDataDay,
-    observationsDataHour,
-    filteredObservationsDataHour,
-    isLoading,
-    isMetric,
-    setIsMetric,
-    handleRefresh,
-    setObservationsDataDay,
-    setObservationsDataHour,
-    setFilteredObservationsDataHour,
-    setIsLoading,
-    dataReady: weatherDataReady,
-  } = useWeatherData(
-    timeRangeData,
-    stationIds,
-    tableMode,
-    calculatedStartHour,
-    calculatedEndHour,
-    dayRangeType
-  );
-
-  // Add console log to track when handleRefresh is called
-  const trackedHandleRefresh = async (newIsMetric?: boolean) => {
-    logAppEvent('DATA REFRESH', 'Manual refresh requested', {
-      selectedDate: moment(selectedDate).format('YYYY-MM-DD'),
-      timeRange: timeRange,
-      dayRangeType: dayRangeType,
-      stations: stationIds.length
-    });
-    
-    await handleRefresh(newIsMetric);
-  };
-
-  const {
-    handleTimeRangeChange,
-    handleDayRangeTypeChange,
-    handleEndDateChange
-  } = useWeatherControls(
-    setSelectedDate,
-    setEndDate,
-    setUseCustomEndDate,
-    setIsOneDay,
-    setTimeRange,
-    stations,
-    trackedHandleRefresh, // use the tracked version
-    timeRange,
-    endDate
-  );
-
-  // Props grouping for components
-  const timeProps = {
-    selectedDate,
-    endDate,
-    dayRangeType,
-    customTime,
-    timeRange,
-    useCustomEndDate,
-    handleTimeRangeChange,
-    handleDateChange,
-    handleEndDateChange,
-    handleDayRangeTypeChange,
-    handlePrevDay,
-    handleNextDay,
-    calculateCurrentTimeRange,
-    isOneDay,
-    setCustomTime
-  };
-
-  const stationProps = {
-    selectedStation,
-    stations,
-    handleStationChange,
-    stationIds,
-  };
-
-  const dataProps = {
-    filteredObservationsDataHour,
-    onRefresh: handleRefresh,
-    tableMode,
-    startHour: calculatedStartHour,
-    endHour: calculatedEndHour,
-    setObservationsDataDay,
-    setObservationsDataHour,
-    setFilteredObservationsDataHour,
-    setIsLoading,
-    isMetric,
-    setIsMetric,
-    calculateCurrentTimeRange,
-    isOneDay,
-    setCustomTime,
-  };
-
-  // Add layer visibility state
-  // const [layerVisibility, setLayerVisibility] = useState({
-  //   forecastZones: true,
-  //   windArrows: true,
-  //   snowDepthChange: false,
-  //   terrain: false,
-  //   currentTemp: true,
-  //   minMaxTemp: false,
-  //   avgMaxWind: false,
-  // });
-  
-  // Handle layer toggle
-  // const handleToggleLayer = (layerId: LayerId) => {
-  //   console.log(`Toggling layer: ${layerId}, current state:`, layerVisibility[layerId]);
-  //   setLayerVisibility((prev) => ({
-  //     ...prev,
-  //     [layerId]: !prev[layerId],
-  //   }));
-  //   // Log after update
-  //   setTimeout(() => {
-  //     console.log(`Layer ${layerId} new state:`, layerVisibility[layerId]);
-  //   }, 0);
-  // };
-
   // Add a new loading state
   const [dataReady, setDataReady] = useState(false);
 
   // Update the useEffect in your page component
   useEffect(() => {
-    // Only set dataReady when we have actual data
-    if (weatherDataReady && observationsDataDay && observationsDataHour) {
+    if (dataReady && observationsDataDay && observationsDataHour) {
       setDataReady(true);
     }
-  }, [weatherDataReady, observationsDataDay, observationsDataHour]);
-
-  const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
-
-  const handleLayerToggle = (layerId: LayerId) => {
-    setActiveLayerState(prev => {
-      const group = LAYER_GROUPS[layerId];
-      
-      if (group === 'other') {
-        // For 'other' group, toggle the layer independently
-        const nextOther = new Set(prev.other);
-        if (nextOther.has(layerId)) {
-          nextOther.delete(layerId);
-        } else {
-          nextOther.add(layerId);
-        }
-        return { ...prev, other: nextOther };
-      }
-
-      // For the three main groups (temperature, wind, precipitation)
-      const nextState = { ...prev };
-      
-      if (nextState[group].has(layerId)) {
-        // If the layer is already active, just turn it off
-        nextState[group].delete(layerId);
-      } else {
-        // If turning on a layer in a group:
-        // 1. Clear other groups
-        if (group !== 'temperature') nextState.temperature = new Set();
-        if (group !== 'wind') nextState.wind = new Set();
-        if (group !== 'precipitation') nextState.precipitation = new Set();
-        
-        // 2. Add the new layer to its group (keeping existing layers in the same group)
-        nextState[group] = new Set(prev[group]).add(layerId);
-      }
-      
-      return nextState;
-    });
-  };
+  }, [dataReady, observationsDataDay, observationsDataHour]);
 
   const [openMobileToolbar, setOpenMobileToolbar] = useState<'layer' | 'time' | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -346,20 +314,51 @@ export default function Home() {
     }
   };
 
+  // Group props for components
+  const timeProps = {
+    selectedDate,
+    endDate,
+    dayRangeType,
+    customTime,
+    timeRange,
+    useCustomEndDate,
+    handleTimeRangeChange,
+    handleDateChange,
+    handleEndDateChange,
+    handlePrevDay,
+    handleNextDay,
+    calculateCurrentTimeRange,
+    isOneDay,
+    setCustomTime
+  };
+
+  const stationProps = {
+    selectedStation: stationDrawer.selectedStation,
+    handleStationSelect: stationDrawer.handleStationSelect,
+    stationIds: mapData?.stationData?.features.map(f => f.properties.Stid) || []
+  };
+
+  const dataProps = {
+    filteredObservationsDataHour,
+    onRefresh: handleRefresh,
+    tableMode,
+    isMetric,
+    setIsMetric,
+    calculateCurrentTimeRange,
+    isOneDay,
+    setCustomTime
+  };
+
   return (
-    <MapDataProvider>
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
-      {/* Show loading indicator if data isn't ready */}
       {!dataReady && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-xl">Loading weather data...</div>
         </div>
       )}
       
-      {/* Only render actual content when data is ready */}
       {dataReady && (
         <>
-          {/* Map component as fullscreen background */}
           <div className="absolute inset-0 w-full h-full z-0">
             <MapComponent 
               observationsDataDay={observationsDataDay}
@@ -372,63 +371,49 @@ export default function Home() {
               calculateCurrentTimeRange={calculateCurrentTimeRange}
               timeRangeData={timeRangeData}
               activeLayerState={activeLayerState}
-              onLayerToggle={handleLayerToggle}
-              selectedDate={selectedDate}
-              timeRange={timeRange}
-              selectedStation={selectedStation}
+              onLayerToggle={onLayerToggle}
               mapData={mapData}
+              isLoading={isLoading}
               stationDrawer={stationDrawer}
             />
           </div>
 
-      {/* Toolbars container */}
-      <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
-        style={{
-          pointerEvents: 'auto',
-          maxHeight: 'calc(100vh - 2rem)',
-          overflowY: 'auto'
-        }}
-      >
-        {/* Time toolbar */}
-        <div className="w-full md:flex-grow">
-        <TimeToolbar
-            {...timeProps}
-            {...stationProps}
-            {...dataProps}
-            isOpen={isTimeToolbarOpen}
-            onToggle={handleTimeToolbarToggle}
-            // onStationSelect={setSelectedStation}
-            stationDrawer={stationDrawer}
+          <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
+            style={{
+              pointerEvents: 'auto',
+              maxHeight: 'calc(100vh - 2rem)',
+              overflowY: 'auto'
+            }}
+          >
+            <div className="w-full md:flex-grow">
+              <TimeToolbar
+                {...timeProps}
+                {...stationProps}
+                {...dataProps}
+                isOpen={isTimeToolbarOpen}
+                onToggle={handleTimeToolbarToggle}
+                stationDrawer={stationDrawer}
+              />
+            </div>
 
-
-
-
-            //stationDrawer={stationDrawer} 
-          />
-        </div>
-
-        {/* Layer toolbar */}
-        <div className="w-full md:w-auto md:sticky md:top-0"
-          style={{
-            minWidth: '200px',
-            maxWidth: '250px',
-            alignSelf: 'flex-start'
-          }}
-        >
-          <LayerToolbar
-            activeLayerState={activeLayerState}
-            onLayerToggle={handleLayerToggle}
-            isStationDrawerOpen={!!stationDrawer.selectedStation}
-            isOpen={isLayerToolbarOpen}
-            onToggle={handleLayerToolbarToggle}
-          />
-        </div>
-      </div>
-
-
+            <div className="w-full md:w-auto md:sticky md:top-0"
+              style={{
+                minWidth: '200px',
+                maxWidth: '250px',
+                alignSelf: 'flex-start'
+              }}
+            >
+              <LayerToolbar
+                activeLayerState={activeLayerState}
+                onLayerToggle={onLayerToggle}
+                isStationDrawerOpen={!!stationDrawer.selectedStation}
+                isOpen={isLayerToolbarOpen}
+                onToggle={handleLayerToolbarToggle}
+              />
+            </div>
+          </div>
         </>
       )}
     </main>
-        </MapDataProvider>
   );
 }
