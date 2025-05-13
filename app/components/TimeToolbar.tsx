@@ -5,7 +5,7 @@ import { DayRangeType } from '../types';
 import { Typography } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Map_BlockProperties } from '../map/map';
+import { Map_BlockProperties, WeatherStation } from '../map/map';
 
 import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
 import { DateControls } from './TimeToolbar/DateControls';
@@ -13,8 +13,7 @@ import { CutoffControls } from './TimeToolbar/CutoffControls';
 import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
-import useStationDrawer from '@/app/hooks/useStationDrawer';
-import { useMapData } from '@/app/data/map/MapDataContext';
+
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -30,7 +29,7 @@ interface TimeToolbarProps {
   handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => void;
   customTime: string;
   setCustomTime: (value: string) => void;
-  selectedStation: string;
+  selectedStation: WeatherStation | null;
   stations: Array<{ id: string; name: string }>;
   handleStationChange: (event: SelectChangeEvent<string>) => void;
   stationIds: string[];
@@ -51,6 +50,11 @@ interface TimeToolbarProps {
   useCustomEndDate: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  stationDrawer: {
+    selectedStation: WeatherStation | null;
+    handleStationSelect: (station: WeatherStation) => void;
+    closeDrawer: () => void;
+  };
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -76,22 +80,21 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   setIsMetric,
   useCustomEndDate,
   isOpen,
-  onToggle
+  onToggle,
+  stationDrawer
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { mapData } = useMapData();
-  const stationDrawer = useStationDrawer({ mapData });
 
-  const stations = useMemo(() => {
-    return mapData?.stationData.features.map(f => ({
-      id: f.properties.stationName,
-      name: f.properties.stationName
-    })) || [];
-  }, [mapData]);
+  // const stations = useMemo(() => {
+  //   return mapData?.stationData.features.map(f => ({
+  //     id: f.properties.stationName,
+  //     name: f.properties.stationName
+  //   })) || [];
+  // }, [mapData]);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -199,9 +202,8 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
         <div className="w-full mt-4">
           <StationSelector
-        stations={stations}
-        handleStationSelect={stationDrawer.handleStationSelect}
-        selectedStation={stationDrawer.selectedStation}
+            selectedStation={stationDrawer.selectedStation}
+            handleStationSelect={stationDrawer.handleStationSelect}
           />
         </div>
       </div>
@@ -209,4 +211,4 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   );
 };
 
-export default TimeToolbar; 
+export default TimeToolbar;
