@@ -6,6 +6,7 @@ import debounce from 'lodash/debounce';
 import type { WeatherStation } from '../../map/map';
 import { useMapData } from '../../data/map/MapDataContext';
 import { createWeatherStationFromProperties } from '../utils/createWeatherStationFromProperties';
+// import { createWeatherStationFromProperties } from '../utils/createWeatherStationFromProperties';
 //import { useStationDrawer } from '@/app/hooks/useStationDrawer';
 
 interface StationSelectorProps {
@@ -32,11 +33,46 @@ export function StationSelector({
 
 
   const allStationOptions = useMemo(() => (
-    stationList.map(station => (
-      <MenuItem key={station.stid} value={station.stid}>
-        {station.name}
-      </MenuItem>
-    ))
+    regions.map((region) => [
+      <ListSubheader 
+        key={`header-${region.id}`} 
+        className="station-selector-header"
+        sx={{
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          backgroundColor: 'var(--app-section-bg) !important',
+          color: 'var(--app-text-primary) !important',
+          padding: '4px 16px',
+          lineHeight: '1.2',
+          margin: 0,
+          minHeight: '32px'
+        }}
+      >
+        {region.title}
+      </ListSubheader>,
+      stationList
+        .filter(station => region.stationIds.includes(station.stid))
+        .map(station => (
+          <MenuItem 
+            key={station.stid} 
+            value={station.stid} 
+            className="station-selector-item"
+            sx={{
+              fontSize: '0.9rem',
+              fontWeight: 'normal',
+              padding: '6px 16px',
+              backgroundColor: 'var(--app-section-bg) !important',
+              color: 'var(--app-text-secondary) !important',
+              minHeight: '32px',
+              '&:hover': {
+                backgroundColor: 'var(--app-hover-bg) !important'
+              }
+            }}
+          >
+            {station.name}
+          </MenuItem>
+        ))
+    ]).flat()
   ), [stationList]);
 
   // Handle station selection
@@ -80,7 +116,10 @@ export function StationSelector({
         className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
           classes: {
-            paper: 'app-menu-paper'
+            paper: 'station-selector-menu-paper'
+          },
+          PaperProps: {
+            className: 'station-selector-menu-paper'
           },
           anchorOrigin: {
             vertical: 'bottom',
@@ -92,7 +131,6 @@ export function StationSelector({
           }
         }}
       >
-        <MenuItem value="">All Stations</MenuItem>
         {stationList.length === 0 ? (
           <MenuItem disabled>No stations available</MenuItem>
         ) : (
