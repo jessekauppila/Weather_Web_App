@@ -365,46 +365,7 @@ export default function Home() {
               activeLayerState={activeLayerState}
               onLayerToggle={handleLayerToggle}
             />
-
-                {/* Container for both controls positioned at the top */}
-                <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
-                  style={{
-                    pointerEvents: 'auto',
-                    maxHeight: 'calc(100vh - 2rem)',
-                    overflowY: 'auto'
-                  }}
-                >
-                {/* Time toolbar - left on desktop, top on mobile */}
-                <div className="w-full md:flex-grow">
-                  <TimeToolbar
-                    {...timeProps}
-                    {...stationProps}
-                    {...dataProps}
-                    isOpen={isTimeToolbarOpen}
-                    onToggle={handleTimeToolbarToggle}
-                  />
-                </div>
-
-                {/* Layer controls - right on desktop, below on mobile */}
-                <div className="w-full md:w-auto md:sticky md:top-0"
-                style={{
-                  minWidth: '200px',
-                  maxWidth: '250px',
-                  alignSelf: 'flex-start'
-                }}
-                >
-                  <LayerToolbar
-                  activeLayerState={activeLayerState}
-                  onLayerToggle={handleLayerToggle}
-                  isStationDrawerOpen={!!selectedStation}
-                  isOpen={isLayerToolbarOpen}
-                  onToggle={handleLayerToolbarToggle}
-                  />
-              </div>
-            </div>
           </div>
-          
-
         </>
       )}
     </main>

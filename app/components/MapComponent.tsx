@@ -43,9 +43,9 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric?: boolean;
   tableMode: 'summary' | 'daily';
-  dayRangeType?: DayRangeType;
+  dayRangeType: DayRangeType;
   customTime?: string;
-  calculateCurrentTimeRange?: () => string;
+  calculateCurrentTimeRange: () => string;
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
@@ -97,7 +97,7 @@ export const MapApp = ({
   filteredObservationsDataHour,
   isMetric: initialIsMetric,
   tableMode,
-  dayRangeType,
+  dayRangeType = DayRangeType.MIDNIGHT,
   customTime: initialCustomTime,
   calculateCurrentTimeRange,
   timeRangeData,
@@ -173,7 +173,25 @@ export const MapApp = ({
     handleNextDay,
     calculateCurrentTimeRange,
     isOneDay,
-    setCustomTime
+    setCustomTime,
+    handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => {
+      // Add your day range type change logic here
+    },
+    startHour: 0,
+    endHour: 24,
+    setObservationsDataDay: () => {},
+    setObservationsDataHour: () => {},
+    setFilteredObservationsDataHour: () => {},
+    setIsLoading: () => {},
+    selectedStation: stationDrawer.selectedStation,
+    stations: mapData?.stationData.features.map(f => ({
+      id: f.properties.Stid,
+      name: f.properties.stationName
+    })) || [],
+    handleStationChange: (event: SelectChangeEvent<string>) => {
+      // Add your station change logic here
+    },
+    stationIds: mapData?.stationData.features.map(f => f.properties.Stid) || []
   };
 
   const stationProps = {
@@ -278,7 +296,7 @@ export const MapApp = ({
             filteredObservationsDataHour={filteredObservationsDataHour}
             isMetric={isMetric}
             tableMode={tableMode}
-            dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
+            dayRangeType={dayRangeType}
             customTime={customTime || ''}
             calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
             timeRangeData={timeRangeData}

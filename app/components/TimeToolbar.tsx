@@ -5,7 +5,7 @@ import { DayRangeType } from '../types';
 import { Typography } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Map_BlockProperties } from '../map/map';
+import { Map_BlockProperties, WeatherStation } from '../map/map';
 
 import { TimeRangeSelector } from './TimeToolbar/TimeRangeSelector';
 import { DateControls } from './TimeToolbar/DateControls';
@@ -30,7 +30,7 @@ interface TimeToolbarProps {
   handleDayRangeTypeChange: (event: SelectChangeEvent<DayRangeType>) => void;
   customTime: string;
   setCustomTime: (value: string) => void;
-  selectedStation: string;
+  selectedStation: WeatherStation | null;
   stations: Array<{ id: string; name: string }>;
   handleStationChange: (event: SelectChangeEvent<string>) => void;
   stationIds: string[];
@@ -199,9 +199,19 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
         <div className="w-full mt-4">
           <StationSelector
-        stations={stations}
-        handleStationSelect={stationDrawer.handleStationSelect}
-        selectedStation={stationDrawer.selectedStation}
+            selectedStation={selectedStation}
+            handleStationSelect={(station) => {
+              console.log('TimeToolbar - Station selected:', {
+                station,
+                hasMapData: !!mapData,
+                hasStationData: !!mapData?.stationData
+              });
+              if (station) {
+                stationDrawer.handleStationSelect(station);
+              } else {
+                stationDrawer.closeDrawer();
+              }
+            }}
           />
         </div>
       </div>
