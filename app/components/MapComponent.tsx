@@ -239,12 +239,13 @@ export const MapApp = ({
       >
         {/* Time toolbar */}
         <div className="w-full md:flex-grow">
-          <TimeToolbar
+        <TimeToolbar
             {...timeProps}
-            {...stationProps}
+            // {...stationProps}
             {...dataProps}
             isOpen={isTimeToolbarOpen}
             onToggle={handleTimeToolbarToggle}
+            stationDrawer={stationDrawer} 
           />
         </div>
 
