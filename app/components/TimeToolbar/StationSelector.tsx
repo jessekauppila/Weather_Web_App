@@ -5,6 +5,7 @@ import { useMemo, useCallback } from 'react';
 import debounce from 'lodash/debounce';
 import type { WeatherStation } from '../../map/map';
 import { useMapData } from '../../data/map/MapDataContext';
+import { createWeatherStationFromProperties } from '../utils/createWeatherStationFromProperties';
 //import { useStationDrawer } from '@/app/hooks/useStationDrawer';
 
 interface StationSelectorProps {
@@ -17,8 +18,8 @@ export function StationSelector({
   selectedStation
 }: StationSelectorProps) {
   const { mapData, isLoading } = useMapData();
-  console.log('mapData:', mapData);
-  console.log('isLoading:', isLoading);
+  //const stationDrawer = useStationDrawer({ mapData });
+
 
   // Create station list with clearer naming
   const stationList = useMemo(() => {
@@ -29,54 +30,6 @@ export function StationSelector({
     }));
   }, [mapData]);
 
-  console.log('stationList:', stationList);
-
-  // console.log('stationList:', stationList);
-  // console.log('regions:', regions);
-  // regions.forEach(region => {
-  //   console.log(`Region ${region.title} stationIds:`, region.stationIds);
-  //   const regionStations = stationList.filter(station => region.stationIds.includes(station.stid));
-  //   console.log(`Stations for region ${region.title}:`, regionStations);
-  // });
-
-  // const stationsByRegion = useMemo(() => {
-  //   return regions.map(region => ({
-  //     ...region,
-  //     stations: stationList.filter(station => region.stationIds.includes(station.stid))
-  //   }));
-  // }, [stationList]);
-
-  // console.log('Stations by region:', stationsByRegion);
-
-  // // Create dropdown options grouped by region
-  // const memoizedStationOptions = useMemo(() => {
-  //   return stationsByRegion.flatMap(region => [
-  //     <ListSubheader key={`header-${region.id}`}>{region.title}</ListSubheader>,
-  //     ...region.stations.map(station => (
-  //       <MenuItem key={station.stid} value={station.stid}>
-  //         {station.name}
-  //       </MenuItem>
-  //     ))
-  //   ]);
-  // }, [stationsByRegion]);
-
-  
-
-  // console.log('Memoized station options:', memoizedStationOptions);
-
-  const memoizedStationOptionsDummy = [
-    <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
-      Region 1
-    </ListSubheader>,
-    <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
-      Station 1
-    </MenuItem>,
-    <MenuItem key="station-2" value="station-2" className="!text-[var(--app-text-primary)]">
-      Station 2
-    </MenuItem>
-  ];
-
-  // console.log('Memoized station options dummy:', memoizedStationOptionsDummy);
 
   const allStationOptions = useMemo(() => (
     stationList.map(station => (
@@ -89,45 +42,21 @@ export function StationSelector({
   // Handle station selection
   const handleChange = useCallback((event: SelectChangeEvent<string>) => {
     const selectedStid = event.target.value;
-    console.log('Selected station ID:', selectedStid);
+    console.log('StationSelector - handleChange called with ID:', selectedStid);
     
-    // Find the full station data
     const fullStationData = mapData?.stationData.features.find(
       f => f.properties.Stid === selectedStid
     );
     
     if (fullStationData) {
-      const properties = fullStationData.properties;
-      const formatValue = (value: number | string | null | undefined, unit: string) => {
-        if (value === null || value === undefined || value === '-') return '-';
-        return `${value} ${unit}`;
-      };
-
-      const weatherStation: WeatherStation = {
-        Station: properties.stationName,
-        'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
-        '24h Snow Accumulation': formatValue(properties.snowAccumulation24h, 'in'),
-        'Cur Wind Speed': properties.curWindSpeed || '-',
-        'Elevation': formatValue(properties.elevation, 'ft'),
-        'Stid': properties.Stid,
-        'Air Temp Min': formatValue(properties.airTempMin, '°F'),
-        'Air Temp Max': formatValue(properties.airTempMax, '°F'),
-        'Wind Speed Avg': properties.windSpeedAvg || '-',
-        'Max Wind Gust': properties.maxWindGust || '-',
-        'Wind Direction': properties.windDirection || '-',
-        'Total Snow Depth Change': formatValue(properties.totalSnowDepthChange, 'in'),
-        'Precip Accum One Hour': properties.precipAccumOneHour || '-',
-        'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
-        'Latitude': properties.latitude.toString(),
-        'Longitude': properties.longitude.toString(),
-        'Relative Humidity': formatValue(properties.relativeHumidity, '%'),
-        'Api Fetch Time': properties.fetchTime || new Date().toISOString()
-      };
+      const weatherStation = createWeatherStationFromProperties(fullStationData.properties);
+      console.log('StationSelector - Created WeatherStation:', weatherStation);
+      // This handleStationSelect comes from MapComponent's stationDrawer
       handleStationSelect(weatherStation);
     }
   }, [handleStationSelect, mapData]);
 
-  console.log('stationList at render:', stationList);
+  // console.log('stationList at render:', stationList);
 
   
   if (isLoading || !mapData || !mapData.stationData) {
@@ -169,20 +98,6 @@ export function StationSelector({
         ) : (
           allStationOptions
         )}
-        <ListSubheader key="header-1" className="!text-[var(--app-text-primary)]">
-          Region 1
-        </ListSubheader>
-        <MenuItem key="station-1" value="station-1" className="!text-[var(--app-text-primary)]">
-          Station 1
-        </MenuItem>
-        {stationList.length > 0 && (
-          <MenuItem key={stationList[5]?.stid} value={stationList[5]?.stid}>
-            {stationList[5]?.name}
-          </MenuItem>
-        )}
-        <MenuItem key="debug" value="debug">
-          {JSON.stringify(stationList)}
-        </MenuItem>
       </Select>
     </FormControl>
   );

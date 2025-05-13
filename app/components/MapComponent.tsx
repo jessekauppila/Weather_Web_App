@@ -259,10 +259,11 @@ export const MapApp = ({
         <div className="w-full md:flex-grow">
           <TimeToolbar
             {...timeProps}
-            {...stationProps}
+            // {...stationProps}
             {...dataProps}
             isOpen={isTimeToolbarOpen}
             onToggle={handleTimeToolbarToggle}
+            stationDrawer={stationDrawer} 
           />
         </div>
 
@@ -286,6 +287,12 @@ export const MapApp = ({
 
       {/* Station drawer */}
       <ClientPortal>
+      {console.log('MapComponent - Rendering StationDrawer with:', {
+        hasTimeRangeData: !!timeRangeData,
+        timeRangeData,
+        isDrawerOpen: stationDrawer.isDrawerOpen,
+        hasSelectedStation: !!stationDrawer.selectedStation
+      })}
         {timeRangeData && (
           <StationDrawer
             isOpen={stationDrawer.isDrawerOpen}

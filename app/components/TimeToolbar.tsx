@@ -13,8 +13,7 @@ import { CutoffControls } from './TimeToolbar/CutoffControls';
 import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
-import useStationDrawer from '@/app/hooks/useStationDrawer';
-import { useMapData } from '@/app/data/map/MapDataContext';
+
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -51,6 +50,11 @@ interface TimeToolbarProps {
   useCustomEndDate: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  stationDrawer: {
+    selectedStation: WeatherStation | null;
+    handleStationSelect: (station: WeatherStation) => void;
+    closeDrawer: () => void;
+  };
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -76,22 +80,21 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   setIsMetric,
   useCustomEndDate,
   isOpen,
-  onToggle
+  onToggle,
+  stationDrawer
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { mapData } = useMapData();
-  const stationDrawer = useStationDrawer({ mapData });
 
-  const stations = useMemo(() => {
-    return mapData?.stationData.features.map(f => ({
-      id: f.properties.stationName,
-      name: f.properties.stationName
-    })) || [];
-  }, [mapData]);
+  // const stations = useMemo(() => {
+  //   return mapData?.stationData.features.map(f => ({
+  //     id: f.properties.stationName,
+  //     name: f.properties.stationName
+  //   })) || [];
+  // }, [mapData]);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -199,19 +202,8 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
         <div className="w-full mt-4">
           <StationSelector
-            selectedStation={selectedStation}
-            handleStationSelect={(station) => {
-              console.log('TimeToolbar - Station selected:', {
-                station,
-                hasMapData: !!mapData,
-                hasStationData: !!mapData?.stationData
-              });
-              if (station) {
-                stationDrawer.handleStationSelect(station);
-              } else {
-                stationDrawer.closeDrawer();
-              }
-            }}
+            selectedStation={stationDrawer.selectedStation}
+            handleStationSelect={stationDrawer.handleStationSelect}
           />
         </div>
       </div>
