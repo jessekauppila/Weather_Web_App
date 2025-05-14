@@ -95,7 +95,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const stationDrawer = useStationDrawer({ mapData });
+  const stationDrawer = useStationDrawer();
 
   
   // Check if we're on mobile
