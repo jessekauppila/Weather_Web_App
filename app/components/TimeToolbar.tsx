@@ -57,6 +57,8 @@ interface TimeToolbarProps {
       }>;
     };
   };
+  selectedStationId: string | null;
+  onStationChange: (id: string) => void;
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -84,7 +86,9 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   useCustomEndDate,
   isOpen,
   onToggle,
-  mapData
+  mapData,
+  selectedStationId,
+  onStationChange,
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
@@ -200,9 +204,11 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
         <div className="w-full mt-4">
           <StationSelector
-        stations={stations}
-        handleStationSelect={stationDrawer.handleStationSelect}
-        selectedStation={stationDrawer.selectedStation}
+            stations={stations}
+            selectedStationId={selectedStationId}
+            onStationChange={onStationChange}
+            handleStationSelect={stationDrawer.handleStationSelect}
+            selectedStation={stationDrawer.selectedStation}
           />
         </div>
       </div>
