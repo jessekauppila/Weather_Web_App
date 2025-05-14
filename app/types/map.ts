@@ -1,0 +1,1 @@
+export type LayerId = 'stations' | 'forecastZones' | 'snowDepth' | 'temperature' | 'windSpeed' | 'precipitation'; 

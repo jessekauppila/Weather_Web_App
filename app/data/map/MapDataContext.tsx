@@ -14,7 +14,9 @@ import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties, WeatherStation } from '../../map/map';
 // import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 // import { WxTableOptions, DayRangeType } from '../../types';
-//import moment from 'moment-timezone';
+import moment from 'moment-timezone';
+import { DayRangeType } from '../../types';
+import { LayerId, LayerState, DEFAULT_LAYER_STATE } from '../../types/layers';
 
 interface Station {
   id: string;
@@ -58,125 +60,60 @@ interface ObservationData {
 
 // Create context with comprehensive type definitions
 interface MapDataContextType {
-  // Current map data
-  mapData: {
-    stationData: {
-      type: 'FeatureCollection';
-      features: Feature<Geometry, Map_BlockProperties>[];
-    };
-    forecastZones: { name: string; contour: [number, number][] }[];
-  };
-
-  // Weather data
-  weatherData: {
-    observationsDataDay: Record<string, unknown>[];
-    observationsDataHour: Record<string, unknown>[];
-    filteredObservationsDataHour: Record<string, unknown>[];
-  };
-
-  // Observation data
+  mapData: any;
+  isLoading: boolean;
   observationsDataDay: any;
   observationsDataHour: any;
   filteredObservationsDataHour: any;
-
-  // Station data
-  stations: Station[];
-  selectedStation: WeatherStation | null;
-  stationIds: string[];
-
-  // Time-related data
-  timeRange: number;
-  selectedDate: Date;
-  endDate: Date;
-  dayRangeType: string;
-
-  // UI states
-  isLoading: boolean;
   isMetric: boolean;
+  selectedStation: any;
   isDrawerOpen: boolean;
-
-  // Functions
-  handleStationChange: (stid: string) => void;
-  handleStationClick: (stid: string) => void;
-  handleRefresh: () => void;
-  setIsMetric: (value: boolean) => void;
-  updateMapData: () => void;
-  handleStationSelect: (station: WeatherStation) => void;
+  handleStationSelect: (station: any) => void;
   closeDrawer: () => void;
+  activeLayerState: LayerState;
+  timeRangeData: {
+    start_time_pdt: moment.Moment;
+    end_time_pdt: moment.Moment;
+  };
+  tableMode: 'summary' | 'daily';
+  dayRangeType: DayRangeType;
+  customTime: string;
+  calculateCurrentTimeRange: () => string;
+  onLayerToggle: (layerId: LayerId) => void;
 }
 
-// Create context with default values
-const MapDataContext = createContext<MapDataContextType>({
-  mapData: {
-    stationData: {
-      type: 'FeatureCollection',
-      features: [],
-    },
-    forecastZones: [],
-  },
-  weatherData: {
-    observationsDataDay: [],
-    observationsDataHour: [],
-    filteredObservationsDataHour: [],
-  },
-  observationsDataDay: { data: [], title: '' },
-  observationsDataHour: { data: [], title: '' },
-  filteredObservationsDataHour: { data: [], title: '' },
-  stations: [],
-  selectedStation: null,
-  stationIds: [],
-  timeRange: 1,
-  selectedDate: new Date(),
-  endDate: new Date(),
-  dayRangeType: 'all',
-  isLoading: false,
-  isMetric: false,
-  isDrawerOpen: false,
-  handleStationChange: () => {},
-  handleStationClick: () => {},
-  handleRefresh: () => {},
-  setIsMetric: () => {},
-  updateMapData: () => {},
-  handleStationSelect: () => {},
-  closeDrawer: () => {},
-});
+export const MapDataContext = createContext<MapDataContextType | undefined>(undefined);
 
-// Utility function to round numeric values
-function roundValue(value: number | string | null | undefined): string {
-  if (value === null || value === undefined || value === '' || value === '-') return '-';
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  return isNaN(numValue) ? '-' : numValue.toFixed(1);
-}
-
-export function MapDataProvider({
-  children,
-  observationsDataDay,
-  observationsDataHour,
-  filteredObservationsDataHour,
-  isMetric: initialIsMetric,
-  tableMode,
-  dayRangeType: initialDayRangeType = 'all',
-  customTime,
-  calculateCurrentTimeRange,
-  timeRangeData,
-  activeLayerState,
-  onLayerToggle,
-  selectedStationId,
-}: {
+export const MapDataProvider: React.FC<{
   children: React.ReactNode;
   observationsDataDay: any;
   observationsDataHour: any;
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
-  dayRangeType?: string;
-  customTime?: string;
-  calculateCurrentTimeRange?: () => string;
-  timeRangeData: any;
-  activeLayerState: any;
-  onLayerToggle: (layerId: string) => void;
+  dayRangeType: DayRangeType;
+  customTime: string;
+  calculateCurrentTimeRange: () => string;
+  timeRangeData: {
+    start_time_pdt: moment.Moment;
+    end_time_pdt: moment.Moment;
+  };
   selectedStationId: string | null;
-}) {
+  onLayerToggle: (layerId: LayerId) => void;
+}> = ({
+  children,
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric: initialIsMetric,
+  tableMode,
+  dayRangeType: initialDayRangeType,
+  customTime,
+  calculateCurrentTimeRange,
+  timeRangeData,
+  selectedStationId,
+  onLayerToggle
+}) => {
   //console.log('observationsDataDay:', observationsDataDay);
 
   // Debugging function to inspect coordinate transformation
@@ -281,6 +218,9 @@ export function MapDataProvider({
   const dataFetchStarted = useRef(false);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Initialize activeLayerState with DEFAULT_LAYER_STATE
+  const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
 
   // Fetch the data once on component mount
   useEffect(() => {
@@ -487,27 +427,22 @@ export function MapDataProvider({
   // Provide all values
   const value = {
     mapData,
-    weatherData,
+    isLoading,
     observationsDataDay,
     observationsDataHour,
     filteredObservationsDataHour,
-    stations,
-    selectedStation,
-    stationIds,
-    timeRange,
-    selectedDate,
-    endDate,
-    dayRangeType,
-    isLoading,
     isMetric,
+    selectedStation,
     isDrawerOpen,
-    handleStationChange,
-    handleStationClick,
-    handleRefresh,
-    setIsMetric,
-    updateMapData,
     handleStationSelect,
     closeDrawer,
+    activeLayerState,
+    timeRangeData,
+    tableMode,
+    dayRangeType,
+    customTime,
+    calculateCurrentTimeRange,
+    onLayerToggle
   };
 
   return (
@@ -515,6 +450,6 @@ export function MapDataProvider({
       {children}
     </MapDataContext.Provider>
   );
-}
+};
 
 export const useMapData = () => useContext(MapDataContext);
