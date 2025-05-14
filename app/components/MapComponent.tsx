@@ -40,14 +40,13 @@ interface MapComponentProps {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   tableMode: 'summary' | 'daily';
-  dayRangeType?: DayRangeType;
-  customTime?: string;
-  calculateCurrentTimeRange?: () => string;
+  dayRangeType: DayRangeType;
+  customTime: string;
+  calculateCurrentTimeRange: () => string;
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
   selectedStationId: string | null;
-
 }
 
 // Client-side portal component for Next.js
@@ -90,7 +89,11 @@ const ClientPortal = ({ children }: { children: React.ReactNode }) => {
 };
 
 // The actual map component that uses the context
-export const MapApp = ({ selectedStationId }) => {
+export const MapApp = ({ selectedStationId }: { selectedStationId: string | null }) => {
+  const context = useMapData();
+  if (!context) {
+    throw new Error('MapApp must be used within MapDataProvider');
+  }
   const { 
     mapData, 
     isLoading,
@@ -108,7 +111,7 @@ export const MapApp = ({ selectedStationId }) => {
     dayRangeType,
     customTime,
     calculateCurrentTimeRange
-  } = useMapData();
+  } = context;
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -282,7 +285,7 @@ export const MapApp = ({ selectedStationId }) => {
     if (selectedStationId) {
       selectStationById(selectedStationId);
     }
-  }, [selectedStationId]);
+  }, [selectedStationId, selectStationById]);
 
   return (
     <div className="w-full h-full relative">
