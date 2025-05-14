@@ -90,7 +90,7 @@ const ClientPortal = ({ children }: { children: React.ReactNode }) => {
 };
 
 // The actual map component that uses the context
-export const MapApp = () => {
+export const MapApp = ({ selectedStationId }) => {
   const { 
     mapData, 
     isLoading,
@@ -101,7 +101,13 @@ export const MapApp = () => {
     selectedStation,
     isDrawerOpen,
     handleStationSelect,
-    closeDrawer
+    closeDrawer,
+    activeLayerState,
+    timeRangeData,
+    tableMode,
+    dayRangeType,
+    customTime,
+    calculateCurrentTimeRange
   } = useMapData();
 
   // Helper to convert Map_BlockProperties to WeatherStation
@@ -126,6 +132,8 @@ export const MapApp = () => {
     'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
   });
 
+
+
   // This function can be used for both map clicks and dropdown selection
   const selectStationById = useCallback((stationIdentifier: string | number) => {
     const stationIdString = String(stationIdentifier);
@@ -140,24 +148,24 @@ export const MapApp = () => {
     }
 
     console.log('✅ MapComponent: Found station:', feature.properties.stationName);
-    console.log('📋 Station Properties:', {
-      stationName: feature.properties.stationName,
-      Stid: feature.properties.Stid,
-      latitude: feature.properties.latitude,
-      longitude: feature.properties.longitude,
-      curAirTemp: feature.properties.curAirTemp,
-      totalSnowDepth: feature.properties.totalSnowDepth,
-      totalSnowDepthChange: feature.properties.totalSnowDepthChange,
-      snowAccumulation24h: feature.properties.snowAccumulation24h,
-      curWindSpeed: feature.properties.curWindSpeed,
-      maxWindGust: feature.properties.maxWindGust,
-      windDirection: feature.properties.windDirection,
-      windSpeedAvg: feature.properties.windSpeedAvg,
-      elevation: feature.properties.elevation,
-      relativeHumidity: feature.properties.relativeHumidity,
-      precipAccumOneHour: feature.properties.precipAccumOneHour,
-      fetchTime: feature.properties.fetchTime
-    });
+    // console.log('📋 Station Properties:', {
+    //   stationName: feature.properties.stationName,
+    //   Stid: feature.properties.Stid,
+    //   latitude: feature.properties.latitude,
+    //   longitude: feature.properties.longitude,
+    //   curAirTemp: feature.properties.curAirTemp,
+    //   totalSnowDepth: feature.properties.totalSnowDepth,
+    //   totalSnowDepthChange: feature.properties.totalSnowDepthChange,
+    //   snowAccumulation24h: feature.properties.snowAccumulation24h,
+    //   curWindSpeed: feature.properties.curWindSpeed,
+    //   maxWindGust: feature.properties.maxWindGust,
+    //   windDirection: feature.properties.windDirection,
+    //   windSpeedAvg: feature.properties.windSpeedAvg,
+    //   elevation: feature.properties.elevation,
+    //   relativeHumidity: feature.properties.relativeHumidity,
+    //   precipAccumOneHour: feature.properties.precipAccumOneHour,
+    //   fetchTime: feature.properties.fetchTime
+    // });
     const station = mapPropertiesToWeatherStation(feature.properties);
     handleStationSelect(station);
   }, [mapData, handleStationSelect]);
@@ -268,6 +276,13 @@ export const MapApp = () => {
     [activeLayerState, mapData, handleMapClick]
   );
 
+  // Select station when selectedStationId changes
+  useEffect(() => {
+    if (selectedStationId) {
+      selectStationById(selectedStationId);
+    }
+  }, [selectedStationId]);
+
   return (
     <div className="w-full h-full relative">
       {isLoading && (
@@ -297,27 +312,19 @@ export const MapApp = () => {
 
       {/* Render StationDrawer using our custom portal */}
       <ClientPortal>
-
-      {/* {timeRangeData && (
-          <StationDrawer
-            isOpen={isDrawerOpen}
-            onClose={closeDrawer}
-            station={selectedStation}
-            observationsDataDay={observationsDataDay}
-            observationsDataHour={observationsDataHour}
-            filteredObservationsDataHour={filteredObservationsDataHour}
-            isMetric={isMetric}
-            tableMode={tableMode}
-            dayRangeType={dayRangeType || DayRangeType.MIDNIGHT}
-            customTime={customTime || ''}
-            calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
-            timeRangeData={timeRangeData}
-          />
-        )} */}
         <StationDrawer
           isOpen={isDrawerOpen}
           onClose={closeDrawer}
           station={selectedStation}
+          observationsDataDay={observationsDataDay}
+          observationsDataHour={observationsDataHour}
+          filteredObservationsDataHour={filteredObservationsDataHour}
+          isMetric={isMetric}
+          tableMode={tableMode}
+          dayRangeType={dayRangeType}
+          customTime={customTime}
+          calculateCurrentTimeRange={calculateCurrentTimeRange}
+          timeRangeData={timeRangeData}
         />
       </ClientPortal>
     </div>
@@ -326,9 +333,10 @@ export const MapApp = () => {
 
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
+  console.log('MapComponent selectedStationId:', props.selectedStationId);
   return (
     <MapDataProvider {...props}>
-      <MapApp />
+      <MapApp selectedStationId={props.selectedStationId} />
     </MapDataProvider>
   );
 } 
