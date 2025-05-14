@@ -1,4 +1,3 @@
-// app/hooks/useStationDrawer.ts
 import { useState, useCallback } from 'react';
 import type { WeatherStation } from '../map/map';
 

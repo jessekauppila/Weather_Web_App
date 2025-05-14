@@ -421,29 +421,30 @@ export function MapDataProvider({
   }, [formattedDailyData]);
 
   // Function to update map data
-  const updateMapData = useCallback(async () => {
-    setIsLoading(true);
-    const options = {
-      mode: 'summary' as 'summary' | 'daily',
-      startHour: 0,
-      endHour: 24,
-      start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      end: new Date().toISOString(),
-      dayRangeType: 'all' as DayRangeType
-    };
+  // const updateMapData = useCallback(async () => {
+  //   setIsLoading(true);
+  //   const options = {
+  //     mode: 'summary' as 'summary' | 'daily',
+  //     startHour: 0,
+  //     endHour: 24,
+  //     start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  //     end: new Date().toISOString(),
+  //     dayRangeType: 'all' as DayRangeType
+  //   };
     
-    const units: Array<Record<string, string>> = [];
-    const observations = {};
+  //   const units: Array<Record<string, string>> = [];
+  //   const observations = {};
     
-    try {
-      const result = await wxTableDataDayFromDB(observations, units, options, isMetric);
-      // console.log('Updated data:', result);
-    } catch (error) {
-      // console.error('Error in updateMapData:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isMetric]);
+  //   try //{
+  //     //const result = await wxTableDataDayFromDB(observations, units, options, isMetric);
+  //     // console.log('Updated data:', result);
+  //   //} 
+  //   catch (error) {
+  //     // console.error('Error in updateMapData:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [isMetric]);
 
   // These functions are placeholders until we merge with the data page
   const handleStationChange = useCallback((stid: string) => {
@@ -454,9 +455,9 @@ export function MapDataProvider({
     setSelectedStation(stid);
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    updateMapData();
-  }, [updateMapData]);
+  // const handleRefresh = useCallback(() => {
+  //   updateMapData();
+  // }, [updateMapData]);
 
   // Provide all values
   const value = {
