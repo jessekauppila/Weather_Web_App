@@ -159,14 +159,7 @@ export default async function wxTableDataDayFromDB(
 
   // Format the averages with unit labels
   const formattedDailyData = processedData.map((averages) => {
-    const formatted: { [key: string]: any } = { 
-      ...averages,
-      Stid: averages.Stid, // Explicitly preserve the Stid
-      Station: averages.Station,
-      Latitude: averages.Latitude,
-      Longitude: averages.Longitude,
-      Elevation: averages.Elevation
-    };
+    const formatted: { [key: string]: any } = { ...averages };
 
     // Helper function to safely process numeric fields
     const processNumericField = (

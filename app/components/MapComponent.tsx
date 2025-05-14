@@ -136,8 +136,7 @@ export const MapApp = ({
   });
 
   // This function can be used for both map clicks and dropdown selection
-  const selectStationById = (stationIdentifier: string | number) => {
-    console.log('🔍 MapComponent: Looking for station:', stationIdentifier);
+  const selectStationById = useCallback((stationIdentifier: string | number) => {
     const stationIdString = String(stationIdentifier);
     const feature = mapData.stationData.features.find(
       f =>
@@ -170,16 +169,15 @@ export const MapApp = ({
     });
     const station = mapPropertiesToWeatherStation(feature.properties);
     handleStationSelect(station);
-  };
+  }, [mapData, handleStationSelect]);
 
   // For map click:
-  const handleMapClick = (info: PickingInfo) => {
+  const handleMapClick = useCallback((info: PickingInfo) => {
     if (info.object && 'properties' in info.object) {
       const properties = (info.object as { properties: Map_BlockProperties }).properties;
-      // Prefer Stid if available, else stationName
       selectStationById(properties.Stid || properties.stationName);
     }
-  };
+  }, [selectStationById]);
 
   // For dropdown:
   const handleDropdownSelect = (stid: string) => {
@@ -195,10 +193,9 @@ export const MapApp = ({
   
   useEffect(() => {
     if (selectedStationId && mapData) {
-      console.log('🔄 MapComponent: Selected station ID changed:', selectedStationId);
       selectStationById(selectedStationId);
     }
-  }, [selectedStationId, mapData]);
+  }, [selectedStationId, mapData, selectStationById]);
 
   // Effect to react to observation data changes
   useEffect(() => {
