@@ -47,7 +47,7 @@ export type Map_BlockProperties = {
 export const map_INITIAL_VIEW_STATE: MapViewState = {
   latitude: 47,
   longitude: -121.7,
-  zoom: 7,
+  zoom: 7.1,
   maxZoom: 15,
   pitch: 45,
   bearing: 0,
