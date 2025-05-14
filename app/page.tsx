@@ -293,7 +293,8 @@ export default function Home() {
         // 2. Add the new layer to its group (keeping existing layers in the same group)
         nextState[group] = new Set(prev[group]).add(layerId);
       }
-      
+      console.log(`Toggled ${layerId} in group ${group}. New state:`, Array.from(nextState[group]));
+
       return nextState;
     });
   };

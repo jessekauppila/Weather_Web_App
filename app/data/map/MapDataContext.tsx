@@ -100,6 +100,7 @@ export const MapDataProvider: React.FC<{
   };
   selectedStationId: string | null;
   onLayerToggle: (layerId: LayerId) => void;
+  activeLayerState: LayerState;
 }> = ({
   children,
   observationsDataDay,
@@ -112,7 +113,8 @@ export const MapDataProvider: React.FC<{
   calculateCurrentTimeRange,
   timeRangeData,
   selectedStationId,
-  onLayerToggle
+  onLayerToggle,
+  activeLayerState
 }) => {
   //console.log('observationsDataDay:', observationsDataDay);
 
@@ -219,8 +221,8 @@ export const MapDataProvider: React.FC<{
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Initialize activeLayerState with DEFAULT_LAYER_STATE
-  const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
+  // Redundat this is in page.tsx!!!
+  //const [activeLayerState, setActiveLayerState] = useState<LayerState>(DEFAULT_LAYER_STATE);
 
   // Fetch the data once on component mount
   useEffect(() => {
@@ -451,5 +453,5 @@ export const MapDataProvider: React.FC<{
     </MapDataContext.Provider>
   );
 };
-
 export const useMapData = () => useContext(MapDataContext);
+

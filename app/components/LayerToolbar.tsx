@@ -121,6 +121,13 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
     return activeLayerState[group as keyof Omit<LayerState, 'other'>].size > 0;
   };
 
+  console.log('LayerToolbar activeLayerState:', {
+    temperature: Array.from(activeLayerState.temperature),
+    wind: Array.from(activeLayerState.wind),
+    precipitation: Array.from(activeLayerState.precipitation),
+    other: Array.from(activeLayerState.other),
+  });
+
   return (
     <div 
       ref={drawerRef}

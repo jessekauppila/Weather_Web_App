@@ -271,6 +271,7 @@ export const MapApp = ({ selectedStationId }) => {
   const layers = useMemo(
     () => {
       const layerVisibility = getLayerVisibility(activeLayerState);
+      console.log('MapComponent layerVisibility:', layerVisibility);
       return createMapLayers(layerVisibility, mapData, handleMapClick);
     },
     [activeLayerState, mapData, handleMapClick]
