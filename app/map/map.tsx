@@ -33,6 +33,8 @@ export type Map_BlockProperties = {
   relativeHumidity: number | null;
   precipAccumOneHour: string | null;
   fetchTime: string;
+  Stid: string;
+  stationIds: string;
 };
 
 // export const map_COLOR_SCALE = scaleThreshold<number, Color>()

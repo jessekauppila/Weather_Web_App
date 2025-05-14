@@ -68,6 +68,7 @@ export function map_weatherToGeoJSON(weatherData: WeatherStation[]): {
         relativeHumidity: parseValue(station['Relative Humidity']),
         precipAccumOneHour: station['Precip Accum One Hour'] === '-' ? null : station['Precip Accum One Hour'],
         fetchTime: station['Api Fetch Time'],
+        Stid: station['Stid'],
       },
     })),
   };

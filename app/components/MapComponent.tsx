@@ -46,6 +46,8 @@ interface MapComponentProps {
   timeRangeData: any;
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
+  selectedStationId: string | null;
+
 }
 
 // Client-side portal component for Next.js
@@ -100,6 +102,8 @@ export const MapApp = ({
   timeRangeData,
   activeLayerState,
   onLayerToggle,
+  selectedStationId,
+
 }: MapComponentProps) => {
   const { mapData, isLoading } = useMapData();
   const { 
@@ -116,7 +120,7 @@ export const MapApp = ({
     '24h Snow Accumulation': properties.snowAccumulation24h?.toString() ?? '-',
     'Cur Wind Speed': properties.curWindSpeed ?? '-',
     'Elevation': properties.elevation?.toString() ?? '-',
-    'Stid': properties.stationName, // or properties.Stid if available
+    'Stid': properties.Stid ?? '-',
     'Air Temp Min': properties.airTempMin?.toString() ?? '-',
     'Air Temp Max': properties.airTempMax?.toString() ?? '-',
     'Wind Speed Avg': properties.windSpeedAvg ?? '-',
@@ -132,14 +136,38 @@ export const MapApp = ({
   });
 
   // This function can be used for both map clicks and dropdown selection
-  const selectStationById = (stationIdentifier: string) => {
+  const selectStationById = (stationIdentifier: string | number) => {
+    console.log('🔍 MapComponent: Looking for station:', stationIdentifier);
+    const stationIdString = String(stationIdentifier);
     const feature = mapData.stationData.features.find(
       f =>
-        f.properties.stationName === stationIdentifier ||
-        f.properties.Stid === stationIdentifier
+        f.properties.stationName === stationIdString ||
+        f.properties.Stid === stationIdString
     );
-    if (!feature) return;
+    if (!feature) {
+      console.log('❌ MapComponent: Station not found:', stationIdString);
+      return;
+    }
 
+    console.log('✅ MapComponent: Found station:', feature.properties.stationName);
+    console.log('📋 Station Properties:', {
+      stationName: feature.properties.stationName,
+      Stid: feature.properties.Stid,
+      latitude: feature.properties.latitude,
+      longitude: feature.properties.longitude,
+      curAirTemp: feature.properties.curAirTemp,
+      totalSnowDepth: feature.properties.totalSnowDepth,
+      totalSnowDepthChange: feature.properties.totalSnowDepthChange,
+      snowAccumulation24h: feature.properties.snowAccumulation24h,
+      curWindSpeed: feature.properties.curWindSpeed,
+      maxWindGust: feature.properties.maxWindGust,
+      windDirection: feature.properties.windDirection,
+      windSpeedAvg: feature.properties.windSpeedAvg,
+      elevation: feature.properties.elevation,
+      relativeHumidity: feature.properties.relativeHumidity,
+      precipAccumOneHour: feature.properties.precipAccumOneHour,
+      fetchTime: feature.properties.fetchTime
+    });
     const station = mapPropertiesToWeatherStation(feature.properties);
     handleStationSelect(station);
   };
@@ -165,6 +193,13 @@ export const MapApp = ({
     filtered: null as any
   });
   
+  useEffect(() => {
+    if (selectedStationId && mapData) {
+      console.log('🔄 MapComponent: Selected station ID changed:', selectedStationId);
+      selectStationById(selectedStationId);
+    }
+  }, [selectedStationId, mapData]);
+
   // Effect to react to observation data changes
   useEffect(() => {
     // First, check if the observation data has actually changed 
@@ -193,6 +228,8 @@ export const MapApp = ({
       const updatedStationData = (mapData as MapData)?.stationData?.features?.find(
         f => f.properties.stationName === stationName
       );
+
+      
       
       // Update the selected station with fresh data if found
       if (updatedStationData) {
