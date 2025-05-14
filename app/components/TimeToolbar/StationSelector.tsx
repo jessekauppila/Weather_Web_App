@@ -9,12 +9,16 @@ interface StationSelectorProps {
   stations: Array<{ id: string; name: string }>;
   handleStationSelect: (station: any) => void;
   selectedStation: any;
+  selectedStationId: string | null;
+  onStationChange: (id: string) => void;
 }
 
 export function StationSelector({
   stations,
   handleStationSelect,
-  selectedStation
+  selectedStation,
+  selectedStationId,
+  onStationChange
 }: StationSelectorProps) {
   const handleChange = useCallback((event: SelectChangeEvent<string>) => {
     const stationId = event.target.value;
@@ -50,8 +54,17 @@ export function StationSelector({
     <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
-        value={selectedStation?.id || ''}
-        onChange={debouncedHandleStationChange}
+        value={selectedStationId || ''}
+        onChange={(e: SelectChangeEvent<string>) => {
+          const value = e.target.value;
+          console.log('Selection event triggered:', value);
+          onStationChange(value);
+          // Also call handleStationSelect for backward compatibility
+          const station = stations.find(s => s.id === value);
+          if (station) {
+            handleStationSelect(station);
+          }
+        }}
         label="Station"
         className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
