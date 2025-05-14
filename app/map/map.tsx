@@ -45,11 +45,11 @@ export type Map_BlockProperties = {
   // ] as Color[]);
 
 export const map_INITIAL_VIEW_STATE: MapViewState = {
-  latitude: 48.863017,
-  longitude: -121.67785,
-  zoom: 6,
-  maxZoom: 16,
-  pitch: 35,
+  latitude: 47,
+  longitude: -121.7,
+  zoom: 7,
+  maxZoom: 15,
+  pitch: 45,
   bearing: 0,
 };
 
