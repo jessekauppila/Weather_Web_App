@@ -90,28 +90,19 @@ const ClientPortal = ({ children }: { children: React.ReactNode }) => {
 };
 
 // The actual map component that uses the context
-export const MapApp = ({ 
-  observationsDataDay,
-  observationsDataHour,
-  filteredObservationsDataHour,
-  isMetric,
-  tableMode,
-  dayRangeType,
-  customTime,
-  calculateCurrentTimeRange,
-  timeRangeData,
-  activeLayerState,
-  onLayerToggle,
-  selectedStationId,
-
-}: MapComponentProps) => {
-  const { mapData, isLoading } = useMapData();
+export const MapApp = () => {
   const { 
-    selectedStation, 
-    isDrawerOpen, 
+    mapData, 
+    isLoading,
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
+    isMetric,
+    selectedStation,
+    isDrawerOpen,
     handleStationSelect,
-    closeDrawer 
-  } = useStationDrawer();
+    closeDrawer
+  } = useMapData();
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -191,12 +182,6 @@ export const MapApp = ({
     filtered: null as any
   });
   
-  useEffect(() => {
-    if (selectedStationId && mapData) {
-      selectStationById(selectedStationId);
-    }
-  }, [selectedStationId, mapData, selectStationById]);
-
   // Effect to react to observation data changes
   useEffect(() => {
     // First, check if the observation data has actually changed 
@@ -208,8 +193,6 @@ export const MapApp = ({
     
     // Only update if data has changed and drawer is open
     if (dataChanged && isDrawerOpen && selectedStation) {
-      //console.log('Observation data changed, updating station drawer');
-      
       // Update our reference to current data
       observationDataRef.current = {
         day: observationsDataDay,
@@ -222,11 +205,9 @@ export const MapApp = ({
       const stationName = selectedStation.Station;
       
       // Find the station in the mapData
-      const updatedStationData = (mapData as MapData)?.stationData?.features?.find(
+      const updatedStationData = mapData?.stationData?.features?.find(
         f => f.properties.stationName === stationName
       );
-
-      
       
       // Update the selected station with fresh data if found
       if (updatedStationData) {
@@ -282,7 +263,7 @@ export const MapApp = ({
   const layers = useMemo(
     () => {
       const layerVisibility = getLayerVisibility(activeLayerState);
-      return createMapLayers(layerVisibility, mapData as MapData, handleMapClick);
+      return createMapLayers(layerVisibility, mapData, handleMapClick);
     },
     [activeLayerState, mapData, handleMapClick]
   );
@@ -316,7 +297,8 @@ export const MapApp = ({
 
       {/* Render StationDrawer using our custom portal */}
       <ClientPortal>
-        {timeRangeData && (
+
+      {/* {timeRangeData && (
           <StationDrawer
             isOpen={isDrawerOpen}
             onClose={closeDrawer}
@@ -331,11 +313,13 @@ export const MapApp = ({
             calculateCurrentTimeRange={calculateCurrentTimeRange || (() => '1')}
             timeRangeData={timeRangeData}
           />
-        )}
+        )} */}
+        <StationDrawer
+          isOpen={isDrawerOpen}
+          onClose={closeDrawer}
+          station={selectedStation}
+        />
       </ClientPortal>
-
-      {/* Layer Controls */}
-      {/* Removed LayerToolbar as it's now rendered in page.tsx */}
     </div>
   );
 };
@@ -343,8 +327,8 @@ export const MapApp = ({
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
   return (
-    <MapDataProvider observationsDataDay={props.observationsDataDay}>
-      <MapApp {...props} />
+    <MapDataProvider {...props}>
+      <MapApp />
     </MapDataProvider>
   );
 } 
