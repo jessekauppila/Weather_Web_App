@@ -141,7 +141,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
   const selectStationById = useCallback((stationIdentifier: string | number) => {
     const stationIdString = String(stationIdentifier);
     const feature = mapData.stationData.features.find(
-      f =>
+      (f: Feature<Geometry, Map_BlockProperties>) =>
         f.properties.stationName === stationIdString ||
         f.properties.Stid === stationIdString
     );
@@ -217,7 +217,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       
       // Find the station in the mapData
       const updatedStationData = mapData?.stationData?.features?.find(
-        f => f.properties.stationName === stationName
+        (f: Feature<Geometry, Map_BlockProperties>) => f.properties.stationName === stationName
       );
       
       // Update the selected station with fresh data if found
