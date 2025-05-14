@@ -148,24 +148,24 @@ export const MapApp = ({ selectedStationId }) => {
     }
 
     console.log('✅ MapComponent: Found station:', feature.properties.stationName);
-    // console.log('📋 Station Properties:', {
-    //   stationName: feature.properties.stationName,
-    //   Stid: feature.properties.Stid,
-    //   latitude: feature.properties.latitude,
-    //   longitude: feature.properties.longitude,
-    //   curAirTemp: feature.properties.curAirTemp,
-    //   totalSnowDepth: feature.properties.totalSnowDepth,
-    //   totalSnowDepthChange: feature.properties.totalSnowDepthChange,
-    //   snowAccumulation24h: feature.properties.snowAccumulation24h,
-    //   curWindSpeed: feature.properties.curWindSpeed,
-    //   maxWindGust: feature.properties.maxWindGust,
-    //   windDirection: feature.properties.windDirection,
-    //   windSpeedAvg: feature.properties.windSpeedAvg,
-    //   elevation: feature.properties.elevation,
-    //   relativeHumidity: feature.properties.relativeHumidity,
-    //   precipAccumOneHour: feature.properties.precipAccumOneHour,
-    //   fetchTime: feature.properties.fetchTime
-    // });
+    console.log('📋 Station Properties:', {
+      stationName: feature.properties.stationName,
+      Stid: feature.properties.Stid,
+      latitude: feature.properties.latitude,
+      longitude: feature.properties.longitude,
+      curAirTemp: feature.properties.curAirTemp,
+      totalSnowDepth: feature.properties.totalSnowDepth,
+      totalSnowDepthChange: feature.properties.totalSnowDepthChange,
+      snowAccumulation24h: feature.properties.snowAccumulation24h,
+      curWindSpeed: feature.properties.curWindSpeed,
+      maxWindGust: feature.properties.maxWindGust,
+      windDirection: feature.properties.windDirection,
+      windSpeedAvg: feature.properties.windSpeedAvg,
+      elevation: feature.properties.elevation,
+      relativeHumidity: feature.properties.relativeHumidity,
+      precipAccumOneHour: feature.properties.precipAccumOneHour,
+      fetchTime: feature.properties.fetchTime
+    });
     const station = mapPropertiesToWeatherStation(feature.properties);
     handleStationSelect(station);
   }, [mapData, handleStationSelect]);
