@@ -11,9 +11,9 @@ import React, {
 import forecastZonesData from './forecastZones.json';
 import { map_weatherToGeoJSON } from './geoUtils';
 import type { Feature, Geometry } from 'geojson';
-import { Map_BlockProperties } from '../../map/map';
-import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
-import { WxTableOptions, DayRangeType } from '../../types';
+import { Map_BlockProperties, WeatherStation } from '../../map/map';
+// import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
+// import { WxTableOptions, DayRangeType } from '../../types';
 //import moment from 'moment-timezone';
 
 interface Station {
@@ -64,31 +64,24 @@ interface MapDataContextType {
       type: 'FeatureCollection';
       features: Feature<Geometry, Map_BlockProperties>[];
     };
-    forecastZones: { name: string; contour: number[][] }[];
-    observationsDataHour: {
-      data: any[];
-      title: string;
-    };
-    filteredObservationsDataHour: {
-      data: any[];
-      title: string;
-    };
-    observationsDataDay: {
-      data: any[];
-      title: string;
-    };
+    forecastZones: { name: string; contour: [number, number][] }[];
   };
 
-  // Weather data (will be used when merging)
+  // Weather data
   weatherData: {
     observationsDataDay: Record<string, unknown>[];
     observationsDataHour: Record<string, unknown>[];
     filteredObservationsDataHour: Record<string, unknown>[];
   };
 
+  // Observation data
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+
   // Station data
   stations: Station[];
-  selectedStation: string | null;
+  selectedStation: WeatherStation | null;
   stationIds: string[];
 
   // Time-related data
@@ -100,15 +93,16 @@ interface MapDataContextType {
   // UI states
   isLoading: boolean;
   isMetric: boolean;
+  isDrawerOpen: boolean;
 
-  // Functions that will be implemented when merging
+  // Functions
   handleStationChange: (stid: string) => void;
   handleStationClick: (stid: string) => void;
   handleRefresh: () => void;
   setIsMetric: (value: boolean) => void;
-
-  // Map specific functions
   updateMapData: () => void;
+  handleStationSelect: (station: WeatherStation) => void;
+  closeDrawer: () => void;
 }
 
 // Create context with default values
@@ -119,24 +113,15 @@ const MapDataContext = createContext<MapDataContextType>({
       features: [],
     },
     forecastZones: [],
-    observationsDataHour: {
-      data: [],
-      title: '',
-    },
-    filteredObservationsDataHour: {
-      data: [],
-      title: '',
-    },
-    observationsDataDay: {
-      data: [],
-      title: '',
-    },
   },
   weatherData: {
     observationsDataDay: [],
     observationsDataHour: [],
     filteredObservationsDataHour: [],
   },
+  observationsDataDay: { data: [], title: '' },
+  observationsDataHour: { data: [], title: '' },
+  filteredObservationsDataHour: { data: [], title: '' },
   stations: [],
   selectedStation: null,
   stationIds: [],
@@ -146,11 +131,14 @@ const MapDataContext = createContext<MapDataContextType>({
   dayRangeType: 'all',
   isLoading: false,
   isMetric: false,
+  isDrawerOpen: false,
   handleStationChange: () => {},
   handleStationClick: () => {},
   handleRefresh: () => {},
   setIsMetric: () => {},
   updateMapData: () => {},
+  handleStationSelect: () => {},
+  closeDrawer: () => {},
 });
 
 // Utility function to round numeric values
@@ -162,10 +150,32 @@ function roundValue(value: number | string | null | undefined): string {
 
 export function MapDataProvider({
   children,
-  observationsDataDay
+  observationsDataDay,
+  observationsDataHour,
+  filteredObservationsDataHour,
+  isMetric: initialIsMetric,
+  tableMode,
+  dayRangeType: initialDayRangeType = 'all',
+  customTime,
+  calculateCurrentTimeRange,
+  timeRangeData,
+  activeLayerState,
+  onLayerToggle,
+  selectedStationId,
 }: {
   children: React.ReactNode;
-  observationsDataDay?: any;
+  observationsDataDay: any;
+  observationsDataHour: any;
+  filteredObservationsDataHour: any;
+  isMetric: boolean;
+  tableMode: 'summary' | 'daily';
+  dayRangeType?: string;
+  customTime?: string;
+  calculateCurrentTimeRange?: () => string;
+  timeRangeData: any;
+  activeLayerState: any;
+  onLayerToggle: (layerId: string) => void;
+  selectedStationId: string | null;
 }) {
   //console.log('observationsDataDay:', observationsDataDay);
 
@@ -236,19 +246,10 @@ export function MapDataProvider({
       type: 'FeatureCollection',
       features: [],
     },
-    forecastZones: forecastZonesData.forecastZones,
-    observationsDataHour: {
-      data: [],
-      title: '',
-    },
-    filteredObservationsDataHour: {
-      data: [],
-      title: '',
-    },
-    observationsDataDay: observationsDataDay || {
-      data: [],
-      title: '',
-    },
+    forecastZones: forecastZonesData.forecastZones.map(zone => ({
+      name: zone.name,
+      contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
+    })),
   });
 
   // These will be populated when we merge with the data page
@@ -260,20 +261,18 @@ export function MapDataProvider({
 
   // Initialize with empty stations
   const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
-  const [selectedStation, setSelectedStation] = useState<
-    string | null
-  >(null);
+  const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [stationIds, setStationIds] = useState<string[]>([]);
 
   // Time-related state (placeholders for now)
   const [timeRange, setTimeRange] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  const [dayRangeType, setDayRangeType] = useState('all');
+  const [dayRangeType, setDayRangeType] = useState(initialDayRangeType);
 
   // UI states
   const [isLoading, setIsLoading] = useState(false);
-  const [isMetric, setIsMetric] = useState(false);
+  const [isMetric, setIsMetric] = useState(initialIsMetric);
   
   // State to store the formatted daily data
   const [formattedDailyData, setFormattedDailyData] = useState<any[]>([]);
@@ -281,8 +280,7 @@ export function MapDataProvider({
   // Flag to track if we've started fetching data
   const dataFetchStarted = useRef(false);
 
-
-////////////////////////////////////////////////////////////
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Fetch the data once on component mount
   useEffect(() => {
@@ -392,19 +390,10 @@ export function MapDataProvider({
     // Update the map data with all processed data
     setMapData({
       stationData: map_weatherToGeoJSON(stationsForMap),
-      forecastZones: forecastZonesData.forecastZones,
-      observationsDataHour: {
-        data: observationsData.flatMap((station: StationData) => station.hourlyData || []),
-        title: 'Hourly Data'
-      },
-      filteredObservationsDataHour: {
-        data: observationsData.flatMap((station: StationData) => station.filteredHourlyData || []),
-        title: 'Filtered Hourly Data'
-      },
-      observationsDataDay: {
-        data: observationsData.flatMap((station: StationData) => station.dailyData || []),
-        title: 'Daily Data'
-      }
+      forecastZones: forecastZonesData.forecastZones.map(zone => ({
+        name: zone.name,
+        contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
+      })),
     });
     
     // console.log('Updated map data with observations');
@@ -428,22 +417,80 @@ export function MapDataProvider({
 
   // These functions are placeholders until we merge with the data page
   const handleStationChange = useCallback((stid: string) => {
-    setSelectedStation(stid);
-  }, []);
+    const station = stations.find(s => s.id === stid);
+    if (station) {
+      const weatherStation: WeatherStation = {
+        Station: station.name,
+        'Cur Air Temp': '-',
+        '24h Snow Accumulation': '-',
+        'Cur Wind Speed': '-',
+        'Elevation': '-',
+        'Stid': station.id,
+        'Air Temp Min': '-',
+        'Air Temp Max': '-',
+        'Wind Speed Avg': '-',
+        'Max Wind Gust': '-',
+        'Wind Direction': '-',
+        'Total Snow Depth Change': '-',
+        'Precip Accum One Hour': '-',
+        'Total Snow Depth': '-',
+        'Latitude': '-',
+        'Longitude': '-',
+        'Relative Humidity': '-',
+        'Api Fetch Time': new Date().toISOString()
+      };
+      setSelectedStation(weatherStation);
+    }
+  }, [stations]);
 
   const handleStationClick = useCallback((stid: string) => {
-    setSelectedStation(stid);
-  }, []);
+    const station = stations.find(s => s.id === stid);
+    if (station) {
+      const weatherStation: WeatherStation = {
+        Station: station.name,
+        'Cur Air Temp': '-',
+        '24h Snow Accumulation': '-',
+        'Cur Wind Speed': '-',
+        'Elevation': '-',
+        'Stid': station.id,
+        'Air Temp Min': '-',
+        'Air Temp Max': '-',
+        'Wind Speed Avg': '-',
+        'Max Wind Gust': '-',
+        'Wind Direction': '-',
+        'Total Snow Depth Change': '-',
+        'Precip Accum One Hour': '-',
+        'Total Snow Depth': '-',
+        'Latitude': '-',
+        'Longitude': '-',
+        'Relative Humidity': '-',
+        'Api Fetch Time': new Date().toISOString()
+      };
+      setSelectedStation(weatherStation);
+    }
+  }, [stations]);
 
   const handleRefresh = useCallback(() => {
     // For now, just log that refresh was called
     console.log('Refresh called');
   }, []);
 
+  const handleStationSelect = useCallback((station: WeatherStation) => {
+    setSelectedStation(station);
+    setIsDrawerOpen(true);
+  }, []);
+
+  const closeDrawer = useCallback(() => {
+    setIsDrawerOpen(false);
+  }, []);
+
   // Provide all values
   const value = {
     mapData,
     weatherData,
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
     stations,
     selectedStation,
     stationIds,
@@ -453,11 +500,14 @@ export function MapDataProvider({
     dayRangeType,
     isLoading,
     isMetric,
+    isDrawerOpen,
     handleStationChange,
     handleStationClick,
     handleRefresh,
     setIsMetric,
     updateMapData,
+    handleStationSelect,
+    closeDrawer,
   };
 
   return (
