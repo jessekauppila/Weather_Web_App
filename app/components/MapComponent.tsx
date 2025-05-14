@@ -105,10 +105,58 @@ export const MapApp = ({
   const { 
     selectedStation, 
     isDrawerOpen, 
-    handleStationClick,
     handleStationSelect,
     closeDrawer 
-  } = useStationDrawer({ mapData });
+  } = useStationDrawer();
+
+  // Helper to convert Map_BlockProperties to WeatherStation
+  const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
+    Station: properties.stationName,
+    'Cur Air Temp': properties.curAirTemp?.toString() ?? '-',
+    '24h Snow Accumulation': properties.snowAccumulation24h?.toString() ?? '-',
+    'Cur Wind Speed': properties.curWindSpeed ?? '-',
+    'Elevation': properties.elevation?.toString() ?? '-',
+    'Stid': properties.stationName, // or properties.Stid if available
+    'Air Temp Min': properties.airTempMin?.toString() ?? '-',
+    'Air Temp Max': properties.airTempMax?.toString() ?? '-',
+    'Wind Speed Avg': properties.windSpeedAvg ?? '-',
+    'Max Wind Gust': properties.maxWindGust ?? '-',
+    'Wind Direction': properties.windDirection ?? '-',
+    'Total Snow Depth Change': properties.totalSnowDepthChange?.toString() ?? '-',
+    'Precip Accum One Hour': properties.precipAccumOneHour ?? '-',
+    'Total Snow Depth': properties.totalSnowDepth?.toString() ?? '-',
+    'Latitude': properties.latitude?.toString() ?? '-',
+    'Longitude': properties.longitude?.toString() ?? '-',
+    'Relative Humidity': properties.relativeHumidity?.toString() ?? '-',
+    'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
+  });
+
+  // This function can be used for both map clicks and dropdown selection
+  const selectStationById = (stationIdentifier: string) => {
+    const feature = mapData.stationData.features.find(
+      f =>
+        f.properties.stationName === stationIdentifier ||
+        f.properties.Stid === stationIdentifier
+    );
+    if (!feature) return;
+
+    const station = mapPropertiesToWeatherStation(feature.properties);
+    handleStationSelect(station);
+  };
+
+  // For map click:
+  const handleMapClick = (info: PickingInfo) => {
+    if (info.object && 'properties' in info.object) {
+      const properties = (info.object as { properties: Map_BlockProperties }).properties;
+      // Prefer Stid if available, else stationName
+      selectStationById(properties.Stid || properties.stationName);
+    }
+  };
+
+  // For dropdown:
+  const handleDropdownSelect = (stid: string) => {
+    selectStationById(stid);
+  };
 
   // Create a ref to track the current observation data
   const observationDataRef = useRef({
@@ -200,9 +248,9 @@ export const MapApp = ({
   const layers = useMemo(
     () => {
       const layerVisibility = getLayerVisibility(activeLayerState);
-      return createMapLayers(layerVisibility, mapData as MapData, handleStationClick);
+      return createMapLayers(layerVisibility, mapData as MapData, handleMapClick);
     },
-    [activeLayerState, mapData, handleStationClick]
+    [activeLayerState, mapData, handleMapClick]
   );
 
   return (
