@@ -30,13 +30,41 @@ export function StationSelector({
 
   const memoizedStationOptions = useMemo(() => (
     regions.map((region) => [
-      <ListSubheader key={`header-${region.id}`} className="!text-[var(--app-text-primary)]">
+      <ListSubheader 
+      key={`header-${region.id}`} 
+      className="!text-[var(--app-text-primary)]"
+      sx={{
+        fontSize: '1.1rem',
+        fontWeight: 'bold',
+        backgroundColor: 'var(--app-section-bg) !important',
+        color: 'var(--app-text-primary) !important',
+        padding: '4px 16px',
+        lineHeight: '1.2',
+        margin: 0,
+        minHeight: '32px'
+      }}
+      >
         {region.title}
       </ListSubheader>,
       stations
         .filter(station => region.stationIds.includes(station.id))
         .map((station) => (
-          <MenuItem key={station.id} value={station.id} className="!text-[var(--app-text-primary)]">
+          <MenuItem 
+          key={station.id} 
+          value={station.id} 
+          className="!text-[var(--app-text-primary)]"
+          sx={{
+            fontSize: '0.9rem',
+            fontWeight: 'normal',
+            padding: '6px 16px',
+            backgroundColor: 'var(--app-section-bg) !important',
+            color: 'var(--app-text-secondary) !important',
+            minHeight: '32px',
+            '&:hover': {
+              backgroundColor: 'var(--app-hover-bg) !important'
+            }
+          }}
+          >
             {station.name}
           </MenuItem>
         ))
@@ -49,6 +77,7 @@ export function StationSelector({
     }, 150),
     [handleChange]
   );
+
 
   return (
     <FormControl variant="outlined" size="small" className="w-full">
@@ -69,11 +98,21 @@ export function StationSelector({
         className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
           classes: {
-            paper: 'app-menu-paper'
+            paper: 'station-selector-menu-paper'
+          },
+          PaperProps: {
+            className: 'station-selector-menu-paper'
+          },
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left'
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left'
           }
         }}
       >
-        <MenuItem value="" className="!text-[var(--app-text-primary)]">All Stations</MenuItem>
         {memoizedStationOptions}
       </Select>
     </FormControl>
