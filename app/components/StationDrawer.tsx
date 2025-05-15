@@ -726,105 +726,105 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
-  function formatStid(day: string, startHour: string, endHour: string, dayRangeType: DayRangeType): string {
-    const dayFormat = moment(day, 'MMM DD').format('MM-DD');
+  // function formatStid(day: string, startHour: string, endHour: string, dayRangeType: DayRangeType): string {
+  //   const dayFormat = moment(day, 'MMM DD').format('MM-DD');
     
-    if (dayRangeType === DayRangeType.MIDNIGHT) {
-      return `${dayFormat} ${startHour} - ${dayFormat} ${endHour}`;
-    } else {
-      // For CURRENT or CUSTOM, include next day
-      const nextDay = moment(day, 'MMM DD').add(1, 'day').format('MM-DD');
-      return `${dayFormat} ${startHour} - ${nextDay} ${endHour}`;
-    }
-  }
+  //   if (dayRangeType === DayRangeType.MIDNIGHT) {
+  //     return `${dayFormat} ${startHour} - ${dayFormat} ${endHour}`;
+  //   } else {
+  //     // For CURRENT or CUSTOM, include next day
+  //     const nextDay = moment(day, 'MMM DD').add(1, 'day').format('MM-DD');
+  //     return `${dayFormat} ${startHour} - ${nextDay} ${endHour}`;
+  //   }
+  // }
   
   // Helper function to create a day summary from hours data
-  function createDaySummary(day: string, hoursData: any[], station: any, dayRangeType: DayRangeType, customTime: string) {
-    if (hoursData.length === 0) return null;
+  // function createDaySummary(day: string, hoursData: any[], station: any, dayRangeType: DayRangeType, customTime: string) {
+  //   if (hoursData.length === 0) return null;
     
-    let startHour, endHour;
-    let startTime, endTime;
+  //   let startHour, endHour;
+  //   let startTime, endTime;
     
-    switch (dayRangeType) {
-      case DayRangeType.MIDNIGHT:
-        // Midnight to midnight - use all hours
-        startHour = "12:00 AM";
-        endHour = "11:59 PM";
-        startTime = `${day}, ${currentYear}, ${startHour}`;
-        endTime = `${day}, ${currentYear}, ${endHour}`;
-        break;
+  //   switch (dayRangeType) {
+  //     case DayRangeType.MIDNIGHT:
+  //       // Midnight to midnight - use all hours
+  //       startHour = "12:00 AM";
+  //       endHour = "11:59 PM";
+  //       startTime = `${day}, ${currentYear}, ${startHour}`;
+  //       endTime = `${day}, ${currentYear}, ${endHour}`;
+  //       break;
         
-      case DayRangeType.CURRENT:
-        // Current time cutoff
-        const currentTime = moment().format('h:mm A');
-        startHour = currentTime;
-        endHour = currentTime;
+  //     case DayRangeType.CURRENT:
+  //       // Current time cutoff
+  //       const currentTime = moment().format('h:mm A');
+  //       startHour = currentTime;
+  //       endHour = currentTime;
         
-        // Format times for display
-        startTime = `${day}, ${currentYear}, 12:00 AM`;
-        endTime = `${day}, ${currentYear}, ${endHour}`;
-        break;
+  //       // Format times for display
+  //       startTime = `${day}, ${currentYear}, 12:00 AM`;
+  //       endTime = `${day}, ${currentYear}, ${endHour}`;
+  //       break;
         
-      case DayRangeType.CUSTOM:
-        // Custom time cutoff
-        if (!customTime) {
-          // Use current time as fallback
-          const now = new Date();
-          const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
-          const [hours, minutes] = defaultTime.split(':').map(Number);
-          startHour = moment().hour(hours).minute(minutes).format('h:mm A');
-        } else {
-          const [hours, minutes] = customTime.split(':').map(Number);
-          startHour = moment().hour(hours).minute(minutes).format('h:mm A');
-        }
-        endHour = startHour;
+  //     case DayRangeType.CUSTOM:
+  //       // Custom time cutoff
+  //       if (!customTime) {
+  //         // Use current time as fallback
+  //         const now = new Date();
+  //         const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
+  //         const [hours, minutes] = defaultTime.split(':').map(Number);
+  //         startHour = moment().hour(hours).minute(minutes).format('h:mm A');
+  //       } else {
+  //         const [hours, minutes] = customTime.split(':').map(Number);
+  //         startHour = moment().hour(hours).minute(minutes).format('h:mm A');
+  //       }
+  //       endHour = startHour;
         
-        // Format times for display
-        startTime = `${day}, ${currentYear}, 12:00 AM`;
-        endTime = `${day}, ${currentYear}, ${endHour}`;
-        break;
+  //       // Format times for display
+  //       startTime = `${day}, ${currentYear}, 12:00 AM`;
+  //       endTime = `${day}, ${currentYear}, ${endHour}`;
+  //       break;
         
-      default:
-        // Default: midnight to midnight
-        startHour = "12:00 AM";
-        endHour = "11:59 PM";
-        startTime = `${day}, ${currentYear}, ${startHour}`;
-        endTime = `${day}, ${currentYear}, ${endHour}`;
-    }
+  //     default:
+  //       // Default: midnight to midnight
+  //       startHour = "12:00 AM";
+  //       endHour = "11:59 PM";
+  //       startTime = `${day}, ${currentYear}, ${startHour}`;
+  //       endTime = `${day}, ${currentYear}, ${endHour}`;
+  //   }
 
-    // Create summary with properly filtered hours
-    return {
-      Station: station.Station,
-      Elevation: station.Elevation,
-      // Ensure Date is clearly the actual date string
-      Date: day,
-      // Format Date Time consistently for parsing in graph components
-      'Date Time': `${startHour} - ${endHour}, ${day}, ${currentYear}`,
-      // Make sure the Start/End Date Time formats are consistent
-      'Start Date Time': startTime,
-      'End Date Time': endTime,
-      Latitude: station.Latitude || 'NaN',
-      Longitude: station.Longitude || 'NaN',
-      Stid: formatStid(day, "12:00 AM", endHour, dayRangeType),
-      'Total Snow Depth': findLatestValue(hoursData, 'Total Snow Depth'),
-      'Air Temp Min': findMinValue(hoursData, 'Air Temp'),
-      'Air Temp Max': findMaxValue(hoursData, 'Air Temp'),
-      'Cur Air Temp': findLatestValue(hoursData, 'Air Temp'),
-      'Wind Speed Avg': calculateAverage(hoursData, 'Wind Speed'),
-      'Max Wind Gust': findMaxValue(hoursData, 'Wind Gust'),
-      'Wind Direction': findMostCommon(hoursData, 'Wind Direction'),
-      'Relative Humidity': findLatestValue(hoursData, 'Relative Humidity'),
-      'Solar Radiation Avg': calculateAverage(hoursData, 'Solar Radiation'),
-      'Cur Wind Speed': findLatestValue(hoursData, 'Wind Speed'),
-      '24h Snow Accumulation': calculateSnowAccumulation(hoursData),
-      'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursData),
-      'Precip Accum One Hour': calculateTotalPrecipitation(hoursData),
-      'Api Fetch Time': `${day}, ${hoursData[hoursData.length - 1]?.Hour || '11:59 PM'}`,
-      'api_fetch_time': hoursData.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
-      'precipitation': '',
-      'intermittent_snow': ''
-    };
-  }
+  //   // Create summary with properly filtered hours
+  //   return {
+  //     Station: station.Station,
+  //     Elevation: station.Elevation,
+  //     // Ensure Date is clearly the actual date string
+  //     Date: day,
+  //     // Format Date Time consistently for parsing in graph components
+  //     'Date Time': `${startHour} - ${endHour}, ${day}, ${currentYear}`,
+  //     // Make sure the Start/End Date Time formats are consistent
+  //     'Start Date Time': startTime,
+  //     'End Date Time': endTime,
+  //     Latitude: station.Latitude || 'NaN',
+  //     Longitude: station.Longitude || 'NaN',
+  //     Stid: formatStid(day, "12:00 AM", endHour, dayRangeType),
+  //     'Total Snow Depth': findLatestValue(hoursData, 'Total Snow Depth'),
+  //     'Air Temp Min': findMinValue(hoursData, 'Air Temp'),
+  //     'Air Temp Max': findMaxValue(hoursData, 'Air Temp'),
+  //     'Cur Air Temp': findLatestValue(hoursData, 'Air Temp'),
+  //     'Wind Speed Avg': calculateAverage(hoursData, 'Wind Speed'),
+  //     'Max Wind Gust': findMaxValue(hoursData, 'Wind Gust'),
+  //     'Wind Direction': findMostCommon(hoursData, 'Wind Direction'),
+  //     'Relative Humidity': findLatestValue(hoursData, 'Relative Humidity'),
+  //     'Solar Radiation Avg': calculateAverage(hoursData, 'Solar Radiation'),
+  //     'Cur Wind Speed': findLatestValue(hoursData, 'Wind Speed'),
+  //     '24h Snow Accumulation': calculateSnowAccumulation(hoursData),
+  //     'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursData),
+  //     'Precip Accum One Hour': calculateTotalPrecipitation(hoursData),
+  //     'Api Fetch Time': `${day}, ${hoursData[hoursData.length - 1]?.Hour || '11:59 PM'}`,
+  //     'api_fetch_time': hoursData.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
+  //     'precipitation': '',
+  //     'intermittent_snow': ''
+  //   };
+  // }
   
   if (!station) return null;
 
