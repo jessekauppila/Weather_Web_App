@@ -6,6 +6,7 @@ import WxSnowGraph from '../vis/wxSnowGraph';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 import { Tabs, Tab, Box } from '@mui/material';
+import WindRose from '../vis/windRose';
 
 type HourData = {
   Day: string;
@@ -899,6 +900,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 id={`station-tab-4`}
                 aria-controls={`station-tabpanel-4`}
               />
+              <Tab 
+                label="Wind Rose" 
+                id={`station-tab-5`}
+                aria-controls={`station-tabpanel-5`}
+              />
             </Tabs>
           </Box>
 
@@ -1043,6 +1049,22 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 <p>No raw hourly data available</p>
             </div>
           )}
+          </TabPanel>
+
+          {/* Tab 6: Wind Rose */}
+          <TabPanel value={activeTab} index={5}>
+            {stationDataHourFiltered.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
+                <WindRose 
+                  data={stationDataHourFiltered.data}
+                  stationName={station.Station}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No wind data available</p>
+              </div>
+            )}
           </TabPanel>
         </div>
       </div>
