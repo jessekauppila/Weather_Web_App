@@ -27,9 +27,11 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   const processedData = useMemo(() => {
     // Define wind speed ranges
     const speedRanges = [
-      '0 to 2', '2 to 4', '4 to 6', '6 to 8', '8 to 10',
-      '10 to 12', '12 to 14', '14 to 16', '16 to 18'
+      '0 to .6', '.6 to 16.2', '16.2 to 25.5', '25.5 to 37.3', '37.3 to 150'
     ];
+
+    // [0, .6], [.6, 16.2], [16.2, 25.5], [25.5, 37.3], [37.3, 500]
+
 
     // Define wind directions (16 points)
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
@@ -81,11 +83,15 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   }, [data]);
 
   // Constants for the visualization
-  const width = 600;
-  const height = 600;
-  const margin = { top: 40, right: 80, bottom: 40, left: 40 };
+  const MAX_SIZE = 1500; // Maximum size for the wind rose
+  const width = Math.min(1500, MAX_SIZE);
+  const height = Math.min(500, MAX_SIZE);
+  const margin = { top: 10, right: 500, bottom: 100, left: 40 };
   const innerRadius = 30;
-  const outerRadius = Math.min(width - margin.left - margin.right, height - margin.top - margin.bottom) / 2;
+  const outerRadius = Math.min(
+    width - margin.left - margin.right,
+    height - margin.top - margin.bottom
+  ) / 2;
 
   useEffect(() => {
     console.log('useEffect triggered with processedData:', processedData);
@@ -97,10 +103,14 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
     // Clear any existing SVG content
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // Create the SVG
+    // Create the SVG with viewBox for responsive scaling
     const svg = d3.select(svgRef.current)
       .attr("viewBox", [0, 0, width, height])
-      .attr("font-family", "sans-serif");
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .attr("font-family", "sans-serif")
+      .style("max-width", `${MAX_SIZE}px`)
+      .style("width", "100%")
+      .style("height", "auto");
 
     // Create the main group and center it
     const g = svg.append("g")
@@ -131,8 +141,11 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
 
     const colorScale = d3.scaleOrdinal()
       .domain(parsedData.columns.slice(1).map(String))
-      .range(d3.schemeBlues[parsedData.columns.length - 1]);
+      //.range(d3.schemeBlues[parsedData.columns.length - 1]);
+      .range(['#FFFFFF','#FFD5D5', '#E39E9E', '#F27272', '#F80707']);
     console.log('Color scale domain:', colorScale.domain());
+
+    
 
     // Create the arc generator
     const makeArc = d3.arc<d3.SeriesPoint<{ [key: string]: number }>>()
@@ -236,19 +249,112 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .data(parsedData.columns.slice(1).reverse())
       .join("g")
         .attr("transform", (d: string | number | symbol, i: number) => 
-          `translate(${outerRadius + 30},${-outerRadius + 40 + (i - (parsedData.columns.length - 1) / 3) * 20})`)
+          `translate(${outerRadius + 50},${-outerRadius + 25 + (i - (parsedData.columns.length - 1) / 3) * 20})`)
         .call((g: d3.Selection<d3.BaseType | SVGGElement, string | number | symbol, SVGGElement, unknown>) => g.append("rect")
-          .attr("width", 18)
-          .attr("height", 18)
+          .attr("width", 12)
+          .attr("height", 12)
           .attr("fill", (d: string | number | symbol) => colorScale(String(d)) as string)
           .attr("stroke", "dimgray")
           .attr("stroke-width", 0.5))
         .call((g: d3.Selection<d3.BaseType | SVGGElement, string | number | symbol, SVGGElement, unknown>) => g.append("text")
-          .attr("x", 24)
-          .attr("y", 9)
+          .attr("x", 18)
+          .attr("y", 6)
           .attr("dy", "0.35em")
-          .text((d: string | number | symbol) => `${String(d)} km/h`)
-          .style("font-size", 13));
+          .style("font-size", "10px")
+          .style("font-weight", "normal")
+          .style("fill", "var(--app-text-secondary)")
+          .each(function(d: string | number | symbol) {
+            const range = String(d);
+            const [min, max] = range.split(' to ').map(Number);
+            const description = getWindDescription(min, max);
+            d3.select(this)
+              .text(`${min}-${max}mph `)
+              .append("tspan")
+              .style("font-weight", "bold")
+              .text(description);
+          })
+          .style("font-size", 9));
+
+    // Helper function to get wind speed description
+    function getWindDescription(min: number, max: number): string {
+      if (min < .6) return "Calm";
+      if (min < 16.2) return "Light";
+      if (min < 25.2) return "Moderate";
+      if (min < 37.3) return "Strong";
+      return "Extreme";
+    }
+
+    // const getWindStrengthWithRange = (speed: number) => {
+    //     if (speed <= 0.6) return 'Calm (≤ 0.6 mph)';
+    //     else if (speed <= 16.2) return 'Light (0.6-16.2 mph)';
+    //     else if (speed <= 25.5) return 'Moderate (16.2-25.5 mph)';
+    //     else if (speed <= 37.3) return 'Strong (25.5-37.3 mph)';
+    //     else return 'Extreme (> 37.3 mph)';
+    //   };
+      
+
+
+
+    //Add annotations
+    const annotation = g.append("g")
+      .attr("class", "annotations")
+      .attr("transform", `translate(${outerRadius + 50},${-outerRadius + 220 + (parsedData.columns.length) * 20})`)
+      .append("text")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("dy", "1.2em")
+        .style("font-size", "9px")
+        .style("fill", "var(--app-text-secondary)");
+
+    annotation
+      .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .style("font-weight", "bold")
+        .text("Extreme ")
+      .append("tspan")
+        .style("font-weight", "normal")
+        .text("(Gale force or higher; difficulty in walking and slight to considerable structural damage.)");
+
+    annotation
+      .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .style("font-weight", "bold")
+        .text("Strong ")
+      .append("tspan")
+        .style("font-weight", "normal")
+        .text("(Strong breeze; whole trees in motion and snow drifting.)");
+
+    annotation
+      .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .style("font-weight", "bold")
+        .text("Moderate ")
+      .append("tspan")
+        .style("font-weight", "normal")
+        .text("(Fresh breeze; small trees sway, flags stretched and snow begins to drift.)");
+
+    annotation
+      .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .style("font-weight", "bold")
+        .text("Light ")
+      .append("tspan")
+        .style("font-weight", "normal")
+        .text("(Light to gentle breeze; flags and twigs in motion.)");
+
+    annotation
+      .append("tspan")
+        .attr("x", 0)
+        .attr("dy", "1.2em")
+        .style("font-weight", "bold")
+        .text("Calm ")
+      .append("tspan")
+        .style("font-weight", "normal")
+        .text("(No air motion; smoke rises vertically.)");
 
   }, [processedData, width, height, innerRadius, outerRadius]);
 
@@ -272,16 +378,26 @@ function getCardinalDirection(degrees: number): string {
 // Helper function to determine speed range
 function getSpeedRange(speed: number): string {
   const ranges = [
-    [0, 2], [2, 4], [4, 6], [6, 8], [8, 10],
-    [10, 12], [12, 14], [14, 16], [16, 18]
+    [0, .6], [.6, 16.2], [16.2, 25.5], [25.5, 37.3], [37.3, 500]
+    // [0, .6], [.6, 16.2], [16.2, 25.5], [25.5, 37.3], [37.3, 500],
+    // [10, 12], [12, 14], [14, 16], [16, 18]
+    
   ];
+
+      // const getWindStrengthWithRange = (speed: number) => {
+    //     if (speed <= 0.6) return 'Calm (≤ 0.6 mph)';
+    //     else if (speed <= 16.2) return 'Light (0.6-16.2 mph)';
+    //     else if (speed <= 25.5) return 'Moderate (16.2-25.5 mph)';
+    //     else if (speed <= 37.3) return 'Strong (25.5-37.3 mph)';
+    //     else return 'Extreme (> 37.3 mph)';
+    //   };
   
   for (const [min, max] of ranges) {
     if (speed >= min && speed < max) {
       return `${min} to ${max}`;
     }
   }
-  return '16 to 18';
+  return '>37.3';
 }
 
 export default WindRose;
