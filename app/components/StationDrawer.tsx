@@ -947,7 +947,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           style={{ 
             height: `calc(100% - 50px)`,
             minHeight: '120px',
-            maxHeight: `${DRAWER_HEIGHT - 90}px`,
+            maxHeight: `${DRAWER_HEIGHT +150}px`,
             overflowY: 'auto',
             position: 'relative'
           }}
