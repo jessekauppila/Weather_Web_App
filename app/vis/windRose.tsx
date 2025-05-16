@@ -191,11 +191,30 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       return angle !== undefined ? (angle + x.bandwidth() / 2 + Math.PI / 2) % (2 * Math.PI) < Math.PI : false;
     };
 
+    // Helper function to determine label size
+    const getLabelSize = (direction: string): number => {
+      const primaryDirections = ['N', 'E', 'S', 'W'];
+      const secondaryDirections = ['NE', 'SE', 'SW', 'NW'];
+      
+      if (primaryDirections.includes(direction)) return 18;
+      if (secondaryDirections.includes(direction)) return 14;
+      return 12;
+    };
+
     label.append("text")
       .attr("transform", (d: WindRoseData) => inLowerHalf(d) ? "rotate(90)translate(0,6)" : "rotate(-90)translate(0,6)")
       .text((d: WindRoseData) => d.angle)
-      .attr("font-weight", 500)
-      .attr("font-size", 14);
+      .attr("font-weight", (d: WindRoseData) => {
+        const primaryDirections = ['N', 'E', 'S', 'W'];
+        const secondaryDirections = ['NE', 'SE', 'SW', 'NW'];
+        if (primaryDirections.includes(d.angle)) return 700;
+        if (secondaryDirections.includes(d.angle)) return 600;
+        return 500;
+      })
+      .attr("font-size", (d: WindRoseData) => getLabelSize(d.angle))
+      .attr("fill", "var(--app-text-primary)")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle");
 
     // Add the y-axis circles
     g.append("g")
