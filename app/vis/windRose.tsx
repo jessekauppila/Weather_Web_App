@@ -11,11 +11,74 @@ interface WindRoseProps {
   stationName: string;
 }
 
+interface WindRoseData {
+  angle: string;
+  total: number;
+  [key: string]: any;
+}
+
 const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   
   console.log('WindRose received data:', data);
   console.log('Station name:', stationName);
+
+  // Process the data into the format expected by the windrose
+  const processedData = useMemo(() => {
+    // Define wind speed ranges
+    const speedRanges = [
+      '0 to 2', '2 to 4', '4 to 6', '6 to 8', '8 to 10',
+      '10 to 12', '12 to 14', '14 to 16', '16 to 18'
+    ];
+
+    // Define wind directions (16 points)
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+
+    // Initialize the data structure
+    const windData = directions.map(direction => {
+      const row: { [key: string]: number | string } = { angle: direction };
+      speedRanges.forEach(range => {
+        row[range] = 0;
+      });
+      return row;
+    });
+
+    // Process each observation
+    data.forEach(obs => {
+      if (!obs['Wind Direction'] || !obs['Wind Speed']) return;
+
+      const direction = String(obs['Wind Direction']);
+      const speed = parseFloat(String(obs['Wind Speed']));
+      if (isNaN(speed)) return;
+
+      // Find the speed range
+      let speedRange = '16 to 18';
+      for (const range of speedRanges) {
+        const [min, max] = range.split(' to ').map(Number);
+        if (speed >= min && speed < max) {
+          speedRange = range;
+          break;
+        }
+      }
+
+      // Find the direction row and increment the count
+      const directionRow = windData.find(row => String(row.angle) === direction);
+      if (directionRow) {
+        directionRow[speedRange] = (Number(directionRow[speedRange]) || 0) + 1;
+      }
+    });
+
+    // Convert to CSV format
+    const headers = ['angle', ...speedRanges];
+    const csvRows = [headers.join(',')];
+    windData.forEach(row => {
+      const values = headers.map(header => row[header]);
+      csvRows.push(values.join(','));
+    });
+
+    return csvRows.join('\n');
+  }, [data]);
 
   // Constants for the visualization
   const width = 600;
@@ -23,12 +86,6 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   const margin = { top: 40, right: 80, bottom: 40, left: 40 };
   const innerRadius = 30;
   const outerRadius = Math.min(width - margin.left - margin.right, height - margin.top - margin.bottom) / 2;
-
-  // Process the data into the format expected by the windrose
-  const processedData = useMemo(() => {
-    console.log('Processing data in useMemo');
-    // ... your existing data processing code ...
-  }, [data]);
 
   useEffect(() => {
     console.log('useEffect triggered with processedData:', processedData);
@@ -44,6 +101,10 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
     const svg = d3.select(svgRef.current)
       .attr("viewBox", [0, 0, width, height])
       .attr("font-family", "sans-serif");
+
+    // Create the main group and center it
+    const g = svg.append("g")
+      .attr("transform", `translate(${width/2},${height/2})`);
 
     // Parse the CSV data
     const parsedData = d3.csvParse(processedData, (d: any) => {
@@ -93,7 +154,7 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .data(d3.range(0, 360, 360/parsedData.length))
       .join("g")
         .attr("class", "axis")
-        .attr("transform", d => `rotate(${d - 90})`)
+        .attr("transform", (d: number) => `rotate(${d - 90})`)
         .append("line")
           .attr("x1", innerRadius)
           .attr("x2", y(y.ticks(5).reverse()[0]))
@@ -107,9 +168,9 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .selectAll(".ring")
       .data(stackedData)
       .join("g")
-        .attr("fill", d => colorScale(String(d)) as string)
+        .attr("fill", (d: d3.Series<{ [key: string]: number }, string>) => colorScale(d.key) as string)
         .selectAll("path")
-        .data(d => d)
+        .data((d: d3.Series<{ [key: string]: number }, string>) => d)
         .join("path")
           .attr("d", makeArc)
           .attr("transform", `rotate(${-360.0/parsedData.length/2.0})`);
@@ -121,7 +182,7 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .data(parsedData)
       .join("g")
         .attr("text-anchor", "middle")
-        .attr("transform", d => 
+        .attr("transform", (d: WindRoseData) => 
           `rotate(${(Number(x(d.angle) ?? 0) + x.bandwidth() / 2) * 180 / Math.PI - (90 - (-360.0/parsedData.length/2.0))}) 
            translate(${outerRadius + 20},0)`);
 
@@ -131,8 +192,8 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
     };
 
     label.append("text")
-      .attr("transform", d => inLowerHalf(d) ? "rotate(90)translate(0,6)" : "rotate(-90)translate(0,6)")
-      .text(d => d.angle)
+      .attr("transform", (d: WindRoseData) => inLowerHalf(d) ? "rotate(90)translate(0,6)" : "rotate(-90)translate(0,6)")
+      .text((d: WindRoseData) => d.angle)
       .attr("font-weight", 500)
       .attr("font-size", 14);
 
@@ -142,30 +203,32 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .selectAll("g")
       .data(y.ticks(5))
       .join("g")
-      .call(g => g.append("circle")
-        .attr("fill", "none")
-        .attr("stroke", "gray")
-        .attr("stroke-dasharray", "4,4")
-        .attr("r", y));
+      .call((selection: d3.Selection<d3.BaseType | SVGGElement, number, SVGGElement, unknown>) => {
+        selection.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "gray")
+          .attr("stroke-dasharray", "4,4")
+          .attr("r", y);
+      });
 
     // Add the legend
     g.append("g")
       .selectAll("g")
       .data(parsedData.columns.slice(1).reverse())
       .join("g")
-        .attr("transform", (_, i) => 
+        .attr("transform", (d: string | number | symbol, i: number) => 
           `translate(${outerRadius + 30},${-outerRadius + 40 + (i - (parsedData.columns.length - 1) / 3) * 20})`)
-        .call(g => g.append("rect")
+        .call((g: d3.Selection<d3.BaseType | SVGGElement, string | number | symbol, SVGGElement, unknown>) => g.append("rect")
           .attr("width", 18)
           .attr("height", 18)
-          .attr("fill", d => colorScale(String(d)) as string)
+          .attr("fill", (d: string | number | symbol) => colorScale(String(d)) as string)
           .attr("stroke", "dimgray")
           .attr("stroke-width", 0.5))
-        .call(g => g.append("text")
+        .call((g: d3.Selection<d3.BaseType | SVGGElement, string | number | symbol, SVGGElement, unknown>) => g.append("text")
           .attr("x", 24)
           .attr("y", 9)
           .attr("dy", "0.35em")
-          .text(d => `${d} km/h`)
+          .text((d: string | number | symbol) => `${String(d)} km/h`)
           .style("font-size", 13));
 
   }, [processedData, width, height, innerRadius, outerRadius]);
