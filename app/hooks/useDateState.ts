@@ -15,7 +15,7 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
 
   // Wrapper for setSelectedDate that adds logging
   const loggedSetSelectedDate = useCallback((newDate: Date) => {
-    console.log('📅 DATE STATE: Selected date changed to', moment(newDate).format('YYYY-MM-DD'));
+    //console.log('📅 DATE STATE: Selected date changed to', moment(newDate).format('YYYY-MM-DD'));
     setSelectedDate(newDate);
     if (onDateChange) {
       onDateChange(newDate);
@@ -24,7 +24,7 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
 
   // Wrapper for setEndDate that adds logging
   const loggedSetEndDate = useCallback((newDate: Date) => {
-    console.log('📅 DATE STATE: End date changed to', moment(newDate).format('YYYY-MM-DD'));
+   // console.log('📅 DATE STATE: End date changed to', moment(newDate).format('YYYY-MM-DD'));
     setEndDate(newDate);
   }, [setEndDate]);
 
@@ -38,7 +38,7 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
   const handleNextDay = useCallback(() => {
     const newDate = addDays(selectedDate, 1);
     if (newDate <= new Date()) {
-      console.log('📅 DATE STATE: Moving to next day', moment(newDate).format('YYYY-MM-DD'));
+      //console.log('📅 DATE STATE: Moving to next day', moment(newDate).format('YYYY-MM-DD'));
       loggedSetSelectedDate(newDate);
       loggedSetEndDate(newDate);
     } else {
@@ -52,7 +52,7 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
       .startOf('day')
       .toDate();
     
-    console.log('📅 DATE STATE: Date input changed to', moment(newDate).format('YYYY-MM-DD'));
+    //console.log('📅 DATE STATE: Date input changed to', moment(newDate).format('YYYY-MM-DD'));
     loggedSetSelectedDate(newDate);
     loggedSetEndDate(newDate);
   }, [loggedSetSelectedDate, loggedSetEndDate]);

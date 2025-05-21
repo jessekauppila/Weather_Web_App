@@ -101,7 +101,8 @@ export default function Home() {
     // When date changes, ONLY log - don't call refresh directly
     logAppEvent('DATE CHANGE', 'Date changed', {
       date: moment(newDate).format('YYYY-MM-DD')
-    });
+    }
+  );
     // Let useEffect handle the refresh based on dependency changes
   });
 

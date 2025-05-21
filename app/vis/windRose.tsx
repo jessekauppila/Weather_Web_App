@@ -20,8 +20,7 @@ interface WindRoseData {
 const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   
-  console.log('WindRose received data:', data);
-  console.log('Station name:', stationName);
+
 
   // Process the data into the format expected by the windrose
   const processedData = useMemo(() => {
@@ -94,9 +93,7 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
   ) / 2;
 
   useEffect(() => {
-    console.log('useEffect triggered with processedData:', processedData);
     if (!svgRef.current || processedData === undefined || processedData === null) {
-      console.log('Early return - missing ref or data');
       return;
     }
 
@@ -125,25 +122,21 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       d.total = t;
       return d;
     });
-    console.log('Parsed CSV data:', parsedData);
 
     // Create scales
     const x = d3.scaleBand()
       .range([0, 2 * Math.PI])
       .domain(parsedData.map(d => d.angle))
       .align(0);
-    console.log('X scale domain:', x.domain());
 
     const y = d3.scaleLinear()
       .range([innerRadius, outerRadius])
       .domain([0, d3.max(parsedData, d => d.total) || 0]);
-    console.log('Y scale domain:', y.domain());
 
     const colorScale = d3.scaleOrdinal()
       .domain(parsedData.columns.slice(1).map(String))
       //.range(d3.schemeBlues[parsedData.columns.length - 1]);
       .range(['#FFFFFF','#FFD5D5', '#E39E9E', '#F27272', '#F80707']);
-    console.log('Color scale domain:', colorScale.domain());
 
     
 
@@ -268,7 +261,7 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
             const [min, max] = range.split(' to ').map(Number);
             const description = getWindDescription(min, max);
             d3.select(this)
-              .text(`${min}-${max}mph `)
+              .text(`${min}-${max} mph `)
               .append("tspan")
               .style("font-weight", "bold")
               .text(description);
