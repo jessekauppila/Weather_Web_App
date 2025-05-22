@@ -240,11 +240,11 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
         selection.append("text")
           .attr("x", 0)
           .attr("y", d => -y(d)) // Position above the circle
-          .attr("dy", "-0.5em") // Small offset from the circle
+          .attr("dy", "-.25em") // Small offset from the circle
           .attr("text-anchor", "middle")
-          .attr("fill", "var(--app-text-secondary)")
+          .attr("fill", "var(--app-text-primary)")
           .attr("font-size", "10px")
-          .text(d => d); // Show the value
+          .text(d => `${d} hrs`); // Show the value
       });
 
     // Add the legend
