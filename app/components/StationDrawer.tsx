@@ -158,6 +158,33 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return Number(calculateCurrentTimeRange().split(" ")[0]) || 1;
   }, [calculateCurrentTimeRange]);
 
+  // Helper functions for data processing
+  // Helper function to convert compass directions to degrees
+  function convertCompassToDegrees(compass: string): number {
+    const compassMap: { [key: string]: number } = {
+      'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+      'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+      'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+      'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+    };
+    return compassMap[compass.toUpperCase()] ?? NaN;
+  }
+
+  const averageWindDirectionCompass = useCallback((data: any[], field: string): string => {
+    const windDirectionNumbers = data.map(item => {
+      const val = item[field];
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string' && !isNaN(parseFloat(val))) return parseFloat(val);
+      return convertCompassToDegrees(val);
+    });
+    
+    const avgDirection = circularMean(windDirectionNumbers);
+    if (avgDirection === null) return "-";
+    
+    const compassValue = degreeToCompass(avgDirection);
+    return compassValue;
+  }, []);
+
   // Update stationDayData to incorporate date-specific data
   const stationDayData = useMemo(() => {
     if (!station) return { data: [], title: '' };
@@ -548,10 +575,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     stationDataHourFiltered, 
     dayRangeType, 
     customTime,
-    timeRangeData
+    timeRangeData,
+    averageWindDirectionCompass
   ]);
 
-  // Helper functions for data processing
   function findMinValue(data: any[], field: string): string {
     const values = data
       .map(item => parseFloat(item[field]))
@@ -583,38 +610,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
     return `${Math.round(avg * 10) / 10}`;
-  }
-
-  function averageWindDirectionCompass(data: any[], field: string): string {
-    // Log the raw values to see what we're getting
-    
-    const windDirectionNumbers = data.map(item => {
-      const val = item[field];
-      // If it's already a number, use it
-      if (typeof val === 'number') return val;
-      // If it's a string number, parse it
-      if (typeof val === 'string' && !isNaN(parseFloat(val))) return parseFloat(val);
-      // If it's a compass direction, convert it
-      return convertCompassToDegrees(val);
-    });
-    
-    const avgDirection = circularMean(windDirectionNumbers);
-    
-    if (avgDirection === null) return "-";
-    
-    const compassValue = degreeToCompass(avgDirection);
-    return compassValue;
-  }
-
-  // Helper function to convert compass directions to degrees
-  function convertCompassToDegrees(compass: string): number {
-    const compassMap: { [key: string]: number } = {
-      'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
-      'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
-      'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
-      'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
-    };
-    return compassMap[compass.toUpperCase()] ?? NaN;
   }
 
   function calculateSnowAccumulation(hourData: any[]): string {
