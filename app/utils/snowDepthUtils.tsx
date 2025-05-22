@@ -322,7 +322,9 @@ export function filterSnowDepthOutliers(
     // Optional: Implement cache size limit
     if (filterCache.size > 1000) { // Adjust size limit as needed
         const firstKey = filterCache.keys().next().value;
-        filterCache.delete(firstKey);
+        if (typeof firstKey === 'string') {
+            filterCache.delete(firstKey);
+        }
     }
 
     return hourlyChangeLimits;
