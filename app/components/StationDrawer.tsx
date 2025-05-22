@@ -7,6 +7,7 @@ import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
 import { Tabs, Tab, Box } from '@mui/material';
 import WindRose from '../vis/windRose';
+import { circularMean, degreeToCompass } from '@/app/data/utils/degreeToCompass';
 
 type HourData = {
   Day: string;
@@ -500,7 +501,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         'Cur Air Temp': findLatestValue(hoursInRange, 'Air Temp'),
         'Wind Speed Avg': calculateAverage(hoursInRange, 'Wind Speed'),
         'Max Wind Gust': findMaxValue(hoursInRange, 'Wind Gust'),
-        'Wind Direction': findMostCommon(hoursInRange, 'Wind Direction'),
+        'Wind Direction': averageWindDirectionCompass(hoursInRange, 'Wind Direction'),
         'Relative Humidity': findLatestValue(hoursInRange, 'Relative Humidity'),
         'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
         'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
@@ -584,28 +585,36 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${Math.round(avg * 10) / 10}`;
   }
 
-  function findMostCommon(data: any[], field: string): string {
-    const values = data.map(item => item[field]).filter(val => val && val !== "-");
-    if (!values.length) return "-";
+  function averageWindDirectionCompass(data: any[], field: string): string {
+    // Log the raw values to see what we're getting
     
-    // Count occurrences of each value
-    const counts: {[key: string]: number} = {};
-    values.forEach(val => {
-      counts[val] = (counts[val] || 0) + 1;
+    const windDirectionNumbers = data.map(item => {
+      const val = item[field];
+      // If it's already a number, use it
+      if (typeof val === 'number') return val;
+      // If it's a string number, parse it
+      if (typeof val === 'string' && !isNaN(parseFloat(val))) return parseFloat(val);
+      // If it's a compass direction, convert it
+      return convertCompassToDegrees(val);
     });
     
-    // Find the most common
-    let maxCount = 0;
-    let mostCommon = "-";
+    const avgDirection = circularMean(windDirectionNumbers);
     
-    Object.entries(counts).forEach(([val, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        mostCommon = val;
-      }
-    });
+    if (avgDirection === null) return "-";
     
-    return mostCommon;
+    const compassValue = degreeToCompass(avgDirection);
+    return compassValue;
+  }
+
+  // Helper function to convert compass directions to degrees
+  function convertCompassToDegrees(compass: string): number {
+    const compassMap: { [key: string]: number } = {
+      'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+      'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+      'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+      'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+    };
+    return compassMap[compass.toUpperCase()] ?? NaN;
   }
 
   function calculateSnowAccumulation(hourData: any[]): string {
@@ -727,106 +736,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
-  // function formatStid(day: string, startHour: string, endHour: string, dayRangeType: DayRangeType): string {
-  //   const dayFormat = moment(day, 'MMM DD').format('MM-DD');
-    
-  //   if (dayRangeType === DayRangeType.MIDNIGHT) {
-  //     return `${dayFormat} ${startHour} - ${dayFormat} ${endHour}`;
-  //   } else {
-  //     // For CURRENT or CUSTOM, include next day
-  //     const nextDay = moment(day, 'MMM DD').add(1, 'day').format('MM-DD');
-  //     return `${dayFormat} ${startHour} - ${nextDay} ${endHour}`;
-  //   }
-  // }
-  
-  // Helper function to create a day summary from hours data
-  // function createDaySummary(day: string, hoursData: any[], station: any, dayRangeType: DayRangeType, customTime: string) {
-  //   if (hoursData.length === 0) return null;
-    
-  //   let startHour, endHour;
-  //   let startTime, endTime;
-    
-  //   switch (dayRangeType) {
-  //     case DayRangeType.MIDNIGHT:
-  //       // Midnight to midnight - use all hours
-  //       startHour = "12:00 AM";
-  //       endHour = "11:59 PM";
-  //       startTime = `${day}, ${currentYear}, ${startHour}`;
-  //       endTime = `${day}, ${currentYear}, ${endHour}`;
-  //       break;
-        
-  //     case DayRangeType.CURRENT:
-  //       // Current time cutoff
-  //       const currentTime = moment().format('h:mm A');
-  //       startHour = currentTime;
-  //       endHour = currentTime;
-        
-  //       // Format times for display
-  //       startTime = `${day}, ${currentYear}, 12:00 AM`;
-  //       endTime = `${day}, ${currentYear}, ${endHour}`;
-  //       break;
-        
-  //     case DayRangeType.CUSTOM:
-  //       // Custom time cutoff
-  //       if (!customTime) {
-  //         // Use current time as fallback
-  //         const now = new Date();
-  //         const defaultTime = `${now.getHours()}:${now.getMinutes()}`;
-  //         const [hours, minutes] = defaultTime.split(':').map(Number);
-  //         startHour = moment().hour(hours).minute(minutes).format('h:mm A');
-  //       } else {
-  //         const [hours, minutes] = customTime.split(':').map(Number);
-  //         startHour = moment().hour(hours).minute(minutes).format('h:mm A');
-  //       }
-  //       endHour = startHour;
-        
-  //       // Format times for display
-  //       startTime = `${day}, ${currentYear}, 12:00 AM`;
-  //       endTime = `${day}, ${currentYear}, ${endHour}`;
-  //       break;
-        
-  //     default:
-  //       // Default: midnight to midnight
-  //       startHour = "12:00 AM";
-  //       endHour = "11:59 PM";
-  //       startTime = `${day}, ${currentYear}, ${startHour}`;
-  //       endTime = `${day}, ${currentYear}, ${endHour}`;
-  //   }
-
-  //   // Create summary with properly filtered hours
-  //   return {
-  //     Station: station.Station,
-  //     Elevation: station.Elevation,
-  //     // Ensure Date is clearly the actual date string
-  //     Date: day,
-  //     // Format Date Time consistently for parsing in graph components
-  //     'Date Time': `${startHour} - ${endHour}, ${day}, ${currentYear}`,
-  //     // Make sure the Start/End Date Time formats are consistent
-  //     'Start Date Time': startTime,
-  //     'End Date Time': endTime,
-  //     Latitude: station.Latitude || 'NaN',
-  //     Longitude: station.Longitude || 'NaN',
-  //     Stid: formatStid(day, "12:00 AM", endHour, dayRangeType),
-  //     'Total Snow Depth': findLatestValue(hoursData, 'Total Snow Depth'),
-  //     'Air Temp Min': findMinValue(hoursData, 'Air Temp'),
-  //     'Air Temp Max': findMaxValue(hoursData, 'Air Temp'),
-  //     'Cur Air Temp': findLatestValue(hoursData, 'Air Temp'),
-  //     'Wind Speed Avg': calculateAverage(hoursData, 'Wind Speed'),
-  //     'Max Wind Gust': findMaxValue(hoursData, 'Wind Gust'),
-  //     'Wind Direction': findMostCommon(hoursData, 'Wind Direction'),
-  //     'Relative Humidity': findLatestValue(hoursData, 'Relative Humidity'),
-  //     'Solar Radiation Avg': calculateAverage(hoursData, 'Solar Radiation'),
-  //     'Cur Wind Speed': findLatestValue(hoursData, 'Wind Speed'),
-  //     '24h Snow Accumulation': calculateSnowAccumulation(hoursData),
-  //     'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursData),
-  //     'Precip Accum One Hour': calculateTotalPrecipitation(hoursData),
-  //     'Api Fetch Time': `${day}, ${hoursData[hoursData.length - 1]?.Hour || '11:59 PM'}`,
-  //     'api_fetch_time': hoursData.map(hour => hour.API_Fetch_Time || hour['API Fetch Time']),
-  //     'precipitation': '',
-  //     'intermittent_snow': ''
-  //   };
-  // }
-  
   if (!station) return null;
 
   return (
@@ -1066,6 +975,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               </div>
             )}
           </TabPanel>
+
+          
         </div>
       </div>
     </div>

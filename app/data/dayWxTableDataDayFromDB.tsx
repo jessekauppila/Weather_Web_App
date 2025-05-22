@@ -5,6 +5,7 @@ import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 import { fetchStations } from '@/app/utils/fetchStaticStationData';
 // Import the interface from types.ts
 import { WxTableOptions } from '../types';
+import { degreeToCompass, circularMean } from '@/app/data/utils/degreeToCompass';
 
 export default async function wxTableDataDayFromDB(
   inputObservations: Record<string, Array<Record<string, any>>>,
@@ -338,29 +339,6 @@ export default async function wxTableDataDayFromDB(
       (value, unit) => `${value}${unit}` // Custom formatter for Relative Humidity
     );
 
-    function degreeToCompass(degree: number): string {
-      // A utility function to convert degrees to compass directions
-      const directions = [
-        'N',
-        'NNE',
-        'NE',
-        'ENE',
-        'E',
-        'ESE',
-        'SE',
-        'SSE',
-        'S',
-        'SSW',
-        'SW',
-        'WSW',
-        'W',
-        'WNW',
-        'NW',
-        'NNW',
-      ];
-      const index = Math.round(degree / 22.5) % 16;
-      return directions[index];
-    }
 
     // Process wind direction
     processNumericField(
@@ -369,19 +347,20 @@ export default async function wxTableDataDayFromDB(
       '',
       0,
       (numbers) => {
-        const sum = numbers.reduce((a, b) => a + b, 0);
-        const avg = (sum / numbers.length) % 360; // Ensure the result is between 0 and 359
-        return { avg: avg };
+        const avg = circularMean(numbers);
+        return { avg: avg !== null && !isNaN(avg) ? avg : NaN };
       }
     );
 
-    // Convert average wind direction to compass direction
+    // Convert average wind direction to compass direction, handling NaN/undefined
     if (
-      formatted['Wind Direction'] &&
-      formatted['Wind Direction'] !== '-'
+      formatted['Wind Direction'] !== undefined &&
+      !isNaN(Number(formatted['Wind Direction']))
     ) {
       const avgDirection = parseFloat(formatted['Wind Direction']);
       formatted['Wind Direction'] = degreeToCompass(avgDirection);
+    } else {
+      formatted['Wind Direction'] = '-';
     }
 
     // Process date/time
