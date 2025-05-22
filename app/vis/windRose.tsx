@@ -222,18 +222,29 @@ const WindRose: React.FC<WindRoseProps> = ({ data, stationName }) => {
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle");
 
-    // Add the y-axis circles
+    // Add the y-axis circles and their labels
     g.append("g")
       .attr("class", "yAxis")
       .selectAll("g")
       .data(y.ticks(5))
       .join("g")
       .call((selection: d3.Selection<d3.BaseType | SVGGElement, number, SVGGElement, unknown>) => {
+        // Add the circle
         selection.append("circle")
           .attr("fill", "none")
           .attr("stroke", "gray")
           .attr("stroke-dasharray", "4,4")
           .attr("r", y);
+
+        // Add the label
+        selection.append("text")
+          .attr("x", 0)
+          .attr("y", d => -y(d)) // Position above the circle
+          .attr("dy", "-0.5em") // Small offset from the circle
+          .attr("text-anchor", "middle")
+          .attr("fill", "var(--app-text-secondary)")
+          .attr("font-size", "10px")
+          .text(d => d); // Show the value
       });
 
     // Add the legend
