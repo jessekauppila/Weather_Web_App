@@ -119,30 +119,36 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
   
 
-  const { viewState, setViewState } = context;
+  const [viewState, setViewState] = useState(map_INITIAL_VIEW_STATE);
 
   // Add this near the top of the MapApp component
   const viewStateRef = useRef(viewState);
   const [localViewState, setLocalViewState] = useState(viewState);
   const isTransitioningRef = useRef(false);
+  const isUserInteractionRef = useRef(false);
 
   // Update the ref when viewState changes from context
   useEffect(() => {
-    viewStateRef.current = viewState;
+    if (!isUserInteractionRef.current) {
+      viewStateRef.current = viewState;
+      setLocalViewState(viewState);
+    }
   }, [viewState]);
 
   // Handle view state changes with debouncing
   const handleViewStateChange = useCallback(({viewState: newViewState}: {viewState: any}) => {
-    // Don't update if we're in the middle of a transition
-    if (isTransitioningRef.current) {
-      return;
-    }
-
+    isUserInteractionRef.current = true;
+    
     // Only update if there's an actual change
     if (JSON.stringify(newViewState) !== JSON.stringify(viewStateRef.current)) {
       setLocalViewState(newViewState);
       setViewState(newViewState);
     }
+
+    // Reset the user interaction flag after a short delay
+    setTimeout(() => {
+      isUserInteractionRef.current = false;
+    }, 100);
   }, [setViewState]);
 
   // Helper to convert Map_BlockProperties to WeatherStation
@@ -184,6 +190,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     
     // Set transitioning flag
     isTransitioningRef.current = true;
+    isUserInteractionRef.current = true;
     
     // Update view state with animation
     const newViewState = {
@@ -198,16 +205,20 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       transitionEasing: (t: number) => t * (2 - t)
     };
     
+    // First update the view state
     setLocalViewState(newViewState);
     setViewState(newViewState);
     
-    // Clear transitioning flag after animation
+    // Then update the selected station after a small delay
     setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, 1000);
-    
-    handleStationSelect(station);
-  }, [mapData, handleStationSelect]);
+      handleStationSelect(station);
+      // Clear transitioning flag after animation
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+        isUserInteractionRef.current = false;
+      }, 1000);
+    }, 100);
+  }, [mapData, handleStationSelect, viewStateRef]);
 
   // For map click:
   const handleMapClick = useCallback((info: PickingInfo) => {
@@ -218,9 +229,9 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
   }, [selectStationById]);
 
   // For dropdown:
-  const handleDropdownSelect = (stid: string) => {
+  const handleDropdownSelect = useCallback((stid: string) => {
     selectStationById(stid);
-  };
+  }, [selectStationById]);
 
   // Create a ref to track the current observation data
   const observationDataRef = useRef({
@@ -320,7 +331,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
   // Select station when selectedStationId changes
   useEffect(() => {
-    if (selectedStationId) {
+    if (selectedStationId && !isTransitioningRef.current) {
       selectStationById(selectedStationId);
     }
   }, [selectedStationId, selectStationById]);

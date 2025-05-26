@@ -440,7 +440,7 @@ const handleStationSelect = (station: WeatherStation) => {
     zoom: 11, // Adjust zoom level as needed
     maxZoom: 15,
     minZoom: 0,  // Add this
-    pitch: 45,
+    pitch: 2,
     bearing: 0,
     transitionDuration: 1000, // Animation duration in milliseconds
     transitionInterpolator: new FlyToInterpolator(), // Smooth animation
