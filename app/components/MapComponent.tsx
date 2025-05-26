@@ -21,6 +21,8 @@ import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { MapViewState } from '@deck.gl/core';
+import { FlyToInterpolator } from '@deck.gl/core';
 //import LayerToolbar from './LayerToolbar';
 
 interface MapData {
@@ -47,6 +49,8 @@ interface MapComponentProps {
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
   selectedStationId: string | null;
+  viewState: MapViewState;
+  setViewState: (viewState: MapViewState) => void;
 }
 
 // Client-side portal component for Next.js
@@ -113,6 +117,34 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     calculateCurrentTimeRange
   } = context;
 
+  
+
+  const { viewState, setViewState } = context;
+
+  // Add this near the top of the MapApp component
+  const viewStateRef = useRef(viewState);
+  const [localViewState, setLocalViewState] = useState(viewState);
+  const isTransitioningRef = useRef(false);
+
+  // Update the ref when viewState changes from context
+  useEffect(() => {
+    viewStateRef.current = viewState;
+  }, [viewState]);
+
+  // Handle view state changes with debouncing
+  const handleViewStateChange = useCallback(({viewState: newViewState}: {viewState: any}) => {
+    // Don't update if we're in the middle of a transition
+    if (isTransitioningRef.current) {
+      return;
+    }
+
+    // Only update if there's an actual change
+    if (JSON.stringify(newViewState) !== JSON.stringify(viewStateRef.current)) {
+      setLocalViewState(newViewState);
+      setViewState(newViewState);
+    }
+  }, [setViewState]);
+
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
     Station: properties.stationName,
@@ -135,8 +167,6 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
   });
 
-
-
   // This function can be used for both map clicks and dropdown selection
   const selectStationById = useCallback((stationIdentifier: string | number) => {
     const stationIdString = String(stationIdentifier);
@@ -150,26 +180,32 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       return;
     }
 
-    // console.log('✅ MapComponent: Found station:', feature.properties.stationName);
-    // console.log('📋 Station Properties:', {
-    //   stationName: feature.properties.stationName,
-    //   Stid: feature.properties.Stid,
-    //   latitude: feature.properties.latitude,
-    //   longitude: feature.properties.longitude,
-    //   curAirTemp: feature.properties.curAirTemp,
-    //   totalSnowDepth: feature.properties.totalSnowDepth,
-    //   totalSnowDepthChange: feature.properties.totalSnowDepthChange,
-    //   snowAccumulation24h: feature.properties.snowAccumulation24h,
-    //   curWindSpeed: feature.properties.curWindSpeed,
-    //   maxWindGust: feature.properties.maxWindGust,
-    //   windDirection: feature.properties.windDirection,
-    //   windSpeedAvg: feature.properties.windSpeedAvg,
-    //   elevation: feature.properties.elevation,
-    //   relativeHumidity: feature.properties.relativeHumidity,
-    //   precipAccumOneHour: feature.properties.precipAccumOneHour,
-    //   fetchTime: feature.properties.fetchTime
-    // });
     const station = mapPropertiesToWeatherStation(feature.properties);
+    
+    // Set transitioning flag
+    isTransitioningRef.current = true;
+    
+    // Update view state with animation
+    const newViewState = {
+      ...viewStateRef.current,
+      longitude: parseFloat(station.Longitude),
+      latitude: parseFloat(station.Latitude),
+      zoom: 11,
+      pitch: 45,
+      bearing: 0,
+      transitionDuration: 1000,
+      transitionInterpolator: new FlyToInterpolator(),
+      transitionEasing: (t: number) => t * (2 - t)
+    };
+    
+    setLocalViewState(newViewState);
+    setViewState(newViewState);
+    
+    // Clear transitioning flag after animation
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 1000);
+    
     handleStationSelect(station);
   }, [mapData, handleStationSelect]);
 
@@ -280,6 +316,8 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     [activeLayerState, mapData, handleMapClick]
   );
 
+  
+
   // Select station when selectedStationId changes
   useEffect(() => {
     if (selectedStationId) {
@@ -300,7 +338,8 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       <DeckGL
         layers={layers}
         effects={[map_lightingEffect]}
-        initialViewState={map_INITIAL_VIEW_STATE}
+        viewState={localViewState}
+        onViewStateChange={handleViewStateChange}
         controller={true}
         getTooltip={map_getTooltip}
         style={{ width: '100%', height: '100%' }}

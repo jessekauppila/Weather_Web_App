@@ -12,6 +12,7 @@ import {
   _SunLight as SunLight,
 } from '@deck.gl/core';
 import { getMapTooltip } from '../components/MapTooltip';
+import {FlyToInterpolator} from '@deck.gl/core';
 
 ////////////////////////
 
@@ -43,6 +44,8 @@ export type Map_BlockProperties = {
   //   [30, 144, 255], // DodgerBlue (31-34°F)
   //   [150, 255, 150], // Pastel green (above 34°F)
   // ] as Color[]);
+
+
 
 export const map_INITIAL_VIEW_STATE: MapViewState = {
   latitude: 47,

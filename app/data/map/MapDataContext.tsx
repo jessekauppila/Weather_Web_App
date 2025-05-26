@@ -11,12 +11,17 @@ import React, {
 import forecastZonesData from './forecastZones.json';
 import { map_weatherToGeoJSON } from './geoUtils';
 import type { Feature, Geometry } from 'geojson';
-import { Map_BlockProperties, WeatherStation } from '../../map/map';
+import { Map_BlockProperties, map_INITIAL_VIEW_STATE, WeatherStation } from '../../map/map';
 // import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 // import { WxTableOptions, DayRangeType } from '../../types';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../../types';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE } from '../../types/layers';
+import {
+  FlyToInterpolator,
+  MapViewState,
+} from '@deck.gl/core';
+
 
 interface Station {
   id: string;
@@ -80,6 +85,8 @@ interface MapDataContextType {
   customTime: string;
   calculateCurrentTimeRange: () => string;
   onLayerToggle: (layerId: LayerId) => void;
+  viewState: MapViewState;
+  setViewState: (viewState: MapViewState) => void;
 }
 
 export const MapDataContext = createContext<MapDataContextType | undefined>(undefined);
@@ -417,10 +424,31 @@ export const MapDataProvider: React.FC<{
     console.log('Refresh called');
   }, []);
 
-  const handleStationSelect = useCallback((station: WeatherStation) => {
-    setSelectedStation(station);
-    setIsDrawerOpen(true);
-  }, []);
+
+  const [viewState, setViewState] = useState<MapViewState>(map_INITIAL_VIEW_STATE);
+
+// When a station is selected, animate to its location
+const handleStationSelect = (station: WeatherStation) => {
+  setSelectedStation(station);
+  setIsDrawerOpen(true);
+  
+  // Animate to the station's location
+  setViewState({
+    ...viewState,
+    latitude: parseFloat(station.Latitude),
+    longitude: parseFloat(station.Longitude),
+    zoom: 11, // Adjust zoom level as needed
+    maxZoom: 15,
+    minZoom: 0,  // Add this
+    pitch: 45,
+    bearing: 0,
+    transitionDuration: 1000, // Animation duration in milliseconds
+    transitionInterpolator: new FlyToInterpolator(), // Smooth animation
+    transitionEasing: t => t * (2 - t) // Easing function for smooth deceleration
+  });
+};
+
+
 
   const closeDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -444,7 +472,9 @@ export const MapDataProvider: React.FC<{
     dayRangeType,
     customTime,
     calculateCurrentTimeRange,
-    onLayerToggle
+    onLayerToggle,
+    viewState,
+    setViewState,
   };
 
   return (
