@@ -23,6 +23,7 @@ import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
 import { MapViewState } from '@deck.gl/core';
 import { FlyToInterpolator } from '@deck.gl/core';
+import isEqual from 'lodash/isEqual';
 //import LayerToolbar from './LayerToolbar';
 
 interface MapData {
@@ -116,43 +117,10 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     customTime,
     calculateCurrentTimeRange,
     viewState,
-    setViewState
+    setViewState,
+    setSelectedStation
   } = context;
 
-  
-  //const [viewState, setViewState] = useState(map_INITIAL_VIEW_STATE);
-
-  // const [viewState, setViewState] = useState(map_INITIAL_VIEW_STATE);
-
-  // Add this near the top of the MapApp component
-  // const viewStateRef = useRef(viewState);
-  // const [localViewState, setLocalViewState] = useState(viewState);
-  // const isTransitioningRef = useRef(false);
-  // const isUserInteractionRef = useRef(false);
-
-  // Update the ref when viewState changes from context
-  // useEffect(() => {
-  //   if (!isUserInteractionRef.current) {
-  //     viewStateRef.current = viewState;
-  //     setLocalViewState(viewState);
-  //   }
-  // }, [viewState]);
-
-  // Handle view state changes with debouncing
-  // const handleViewStateChange = useCallback(({viewState: newViewState}: {viewState: any}) => {
-  //   isUserInteractionRef.current = true;
-    
-  //   // Only update if there's an actual change
-  //   // if (JSON.stringify(newViewState) !== JSON.stringify(viewStateRef.current)) {
-  //   //   setLocalViewState(newViewState);
-  //   //   setViewState(newViewState);
-  //   // }
-
-  //   // Reset the user interaction flag after a short delay
-  //   setTimeout(() => {
-  //     isUserInteractionRef.current = false;
-  //   }, 100);
-  // }, [setViewState]);
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -178,6 +146,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
   // This function can be used for both map clicks and dropdown selection
   const selectStationById = useCallback((stationIdentifier: string | number) => {
+    console.log('[MapComponent] selectStationById called with:', stationIdentifier);
     const stationIdString = String(stationIdentifier);
     const feature = mapData.stationData.features.find(
       (f: Feature<Geometry, Map_BlockProperties>) =>
@@ -191,36 +160,8 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
     const station = mapPropertiesToWeatherStation(feature.properties);
     
-    // // Set transitioning flag
-    // isTransitioningRef.current = true;
-    // isUserInteractionRef.current = true;
-    
-    // // Update view state with animation
-    // const newViewState = {
-    //   ...viewStateRef.current,
-    //   longitude: parseFloat(station.Longitude),
-    //   latitude: parseFloat(station.Latitude),
-    //   zoom: 11,
-    //   pitch: 45,
-    //   bearing: 0,
-    //   transitionDuration: 1000,
-    //   transitionInterpolator: new FlyToInterpolator(),
-    //   transitionEasing: (t: number) => t * (2 - t)
-    // };
-    
-    // // First update the view state
-    // setLocalViewState(newViewState);
-    // setViewState(newViewState);
-    
-    // Then update the selected station after a small delay
-    setTimeout(() => {
       handleStationSelect(station);
-      // Clear transitioning flag after animation
-      // setTimeout(() => {
-      //   isTransitioningRef.current = false;
-      //   isUserInteractionRef.current = false;
-      // }, 1000);
-    }, 100);
+
   }, [mapData, handleStationSelect]);
 
   // For map click:
@@ -245,41 +186,30 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
   
   // Effect to react to observation data changes
   useEffect(() => {
-    // First, check if the observation data has actually changed 
-    // to avoid unnecessary updates
-    const dataChanged = 
+    const dataChanged =
       observationDataRef.current.day !== observationsDataDay ||
       observationDataRef.current.hour !== observationsDataHour ||
       observationDataRef.current.filtered !== filteredObservationsDataHour;
-    
-    // Only update if data has changed and drawer is open
+
     if (dataChanged && isDrawerOpen && selectedStation) {
-      // Update our reference to current data
       observationDataRef.current = {
         day: observationsDataDay,
         hour: observationsDataHour,
         filtered: filteredObservationsDataHour
       };
-      
-      // If the drawer is open, we should refresh the selected station data
-      // to reflect the new time range
+
       const stationName = selectedStation.Station;
-      
-      // Find the station in the mapData
       const updatedStationData = mapData?.stationData?.features?.find(
         (f: Feature<Geometry, Map_BlockProperties>) => f.properties.stationName === stationName
       );
-      
-      // Update the selected station with fresh data if found
+
       if (updatedStationData) {
         const properties = updatedStationData.properties;
-        
-        // Helper function to format values with units
         const formatValue = (value: number | string | null | undefined, unit: string) => {
           if (value === null || value === undefined || value === '-') return '-';
           return `${value} ${unit}`;
         };
-        
+
         const updatedStation: WeatherStation = {
           ...selectedStation,
           'Cur Air Temp': formatValue(properties.curAirTemp, '°F'),
@@ -290,12 +220,22 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
           'Total Snow Depth': formatValue(properties.totalSnowDepth, 'in'),
           'Api Fetch Time': properties.fetchTime || new Date().toISOString()
         };
-        
-        // Set the selected station with fresh data if found
-        handleStationSelect(updatedStation);
+
+        // Only update if the data is actually different
+        if (!isEqual(updatedStation, selectedStation)) {
+          setSelectedStation(updatedStation);
+        }
       }
     }
-  }, [observationsDataDay, observationsDataHour, filteredObservationsDataHour, isDrawerOpen, selectedStation, mapData, handleStationSelect]);
+  }, [
+    observationsDataDay,
+    observationsDataHour,
+    filteredObservationsDataHour,
+    isDrawerOpen,
+    selectedStation,
+    mapData,
+    setSelectedStation
+  ]);
 
   // Effect to manage drawer state
   useEffect(() => {
@@ -308,7 +248,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
         if (e.key === 'Escape') {
           closeDrawer();
         }
-      };
+      };setTimeout
       
       window.addEventListener('keydown', handleEscape);
       
@@ -334,10 +274,13 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
   // Select station when selectedStationId changes
   useEffect(() => {
-    if (selectedStationId ) {
-      selectStationById(selectedStationId);
+    if (selectedStationId) {
+      console.log('[MapComponent] useEffect triggered with selectedStationId:', selectedStationId);
+      if (selectedStation?.Stid !== selectedStationId) {
+        selectStationById(selectedStationId);
+      }
     }
-  }, [selectedStationId, selectStationById]);
+  }, [selectedStationId, selectStationById, selectedStation?.Stid]);
 
   return (
     <div className="w-full h-full relative">

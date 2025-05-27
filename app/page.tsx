@@ -343,7 +343,7 @@ export default function Home() {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
 
   const handleStationIdChange = useCallback((id: string) => {
-    console.log('Station changed to:', id);
+    console.log(' [Page.tsx] setSelectedStationId called with:', id);
     setSelectedStationId(id);
   }, []);
 

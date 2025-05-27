@@ -83,15 +83,10 @@ export function StationSelector({
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
         value={selectedStationId || ''}
-        onChange={(e: SelectChangeEvent<string>) => {
-          const value = e.target.value;
-          console.log('Selection event triggered:', value);
-          onStationChange(value);
-          // Also call handleStationSelect for backward compatibility
-          const station = stations.find(s => s.id === value);
-          if (station) {
-            handleStationSelect(station);
-          }
+          onChange={(e: SelectChangeEvent<string>) => {
+            const value = e.target.value;
+            console.log('[StationSelector] onStationChange called with:', value);
+            onStationChange(value); // Only update the selectedStationId
         }}
         label="Station"
         className="w-full app-select text-[var(--app-text-primary)]"

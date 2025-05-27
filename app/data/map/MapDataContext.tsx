@@ -87,6 +87,7 @@ interface MapDataContextType {
   onLayerToggle: (layerId: LayerId) => void;
   viewState: MapViewState;
   setViewState: (viewState: MapViewState) => void;
+  setSelectedStation: (station: WeatherStation) => void;
 }
 
 export const MapDataContext = createContext<MapDataContextType | undefined>(undefined);
@@ -425,10 +426,12 @@ export const MapDataProvider: React.FC<{
   }, []);
 
 
-  const [viewState, setViewState] = useState<MapViewState>(map_INITIAL_VIEW_STATE);
+const [viewState, setViewState] = useState<MapViewState>(map_INITIAL_VIEW_STATE);
 
 // When a station is selected, animate to its location
 const handleStationSelect = (station: WeatherStation) => {
+
+  console.log('[MapDataContext] handleStationSelect called with:', station);
   setSelectedStation(station);
   setIsDrawerOpen(true);
   
@@ -475,6 +478,7 @@ const handleStationSelect = (station: WeatherStation) => {
     onLayerToggle,
     viewState,
     setViewState,
+    setSelectedStation
   };
 
   return (
