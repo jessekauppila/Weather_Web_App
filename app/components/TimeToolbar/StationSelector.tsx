@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, Select, MenuItem, ListSubheader } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, ListSubheader, Box, Chip } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import { regions } from '../../config/regions';
 import { useMemo, useCallback } from 'react';
@@ -9,7 +9,7 @@ interface StationSelectorProps {
   handleStationSelect: (station: any) => void;
   selectedStation: any;
   selectedStationId: string | null;
-  onStationChange: (id: string) => void;
+  onStationChange: (ids: string[]) => void;
 }
 
 export function StationSelector({
@@ -82,12 +82,28 @@ export function StationSelector({
     <FormControl variant="outlined" size="small" className="w-full">
       <InputLabel className="!text-[var(--app-text-primary)]">Station</InputLabel>
       <Select
-        value={selectedStationId || ''}
-          onChange={(e: SelectChangeEvent<string>) => {
-            const value = e.target.value;
-            console.log('[StationSelector] onStationChange called with:', value);
-            onStationChange(value); // Only update the selectedStationId
+        multiple
+        value={selectedStationId ? [selectedStationId] : []}
+        onChange={(e: SelectChangeEvent<string>) => {
+          const values = e.target.value as string[];
+          console.log('[StationSelector] onStationChange called with:', value);
+            onStationChange(values);
         }}
+        renderValue={(selected) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {(selected as string[]).map((value: string) => (
+              <Chip
+                key={value}
+                label={stations.find(s => s.id === value)?.name}
+                onDelete={() => {
+                  const newValues = (selected as string[]).filter(id => id !== value);
+                  onStationChange(newValues);
+                }}
+                className="!bg-[var(--app-section-bg)] !text-[var(--app-text-primary)]"
+              />
+            ))}
+          </Box>
+        )}
         label="Station"
         className="w-full app-select text-[var(--app-text-primary)]"
         MenuProps={{
