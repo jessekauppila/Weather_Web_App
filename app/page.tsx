@@ -202,11 +202,25 @@ export default function Home() {
     setCustomTime
   };
 
+  const [selectedStationIds, setSelectedStationIds] = useState<string[]>([]);
+
+  const handleMultiStationSelect = useCallback((stations: any[]) => {
+    console.log('Multi-station selection:', stations);
+    // For now, just select the first station for the drawer
+    if (stations.length > 0) {
+      // You can use your existing useStationDrawer hook
+      handleStationClick(stations[0].Stid || stations[0].id);
+    }
+  }, [handleStationClick]);
+
   const stationProps = {
     selectedStation,
     stations,
     handleStationChange,
     stationIds,
+    selectedStationIds,
+    onStationSelectionChange: setSelectedStationIds,
+    handleMultiStationSelect,
   };
 
   const dataProps = {

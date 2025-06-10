@@ -14,6 +14,7 @@ import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { MultiStationSelector } from './TimeToolbar/MultiStationSelector';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -59,6 +60,9 @@ interface TimeToolbarProps {
   };
   selectedStationId: string | null;
   onStationChange: (id: string) => void;
+  selectedStationIds: string[];
+  onStationSelectionChange: (ids: string[]) => void;
+  handleMultiStationSelect: (stations: any[]) => void;
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -89,13 +93,16 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   mapData,
   selectedStationId,
   onStationChange,
+  selectedStationIds,
+  onStationSelectionChange,
+  handleMultiStationSelect,
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const stationDrawer = useStationDrawer();
+  //const stationDrawer = useStationDrawer();
 
   
   // Check if we're on mobile
@@ -205,12 +212,14 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
         <div className="w-full mt-4">
           <StationSelector
             stations={stations}
-            selectedStationId={selectedStationId}
-            onStationChange={onStationChange}
-            handleStationSelect={stationDrawer.handleStationSelect}
-            selectedStation={stationDrawer.selectedStation}
+            selectedStationIds={selectedStationIds}
+            onStationSelectionChange={onStationSelectionChange}
+            handleStationSelect={handleMultiStationSelect}
+            maxSelections={3}
           />
         </div>
+
+
       </div>
     </div>
   );

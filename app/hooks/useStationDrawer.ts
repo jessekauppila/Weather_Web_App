@@ -2,9 +2,10 @@ import { useState, useCallback } from 'react';
 import type { WeatherStation } from '../map/map';
 
 interface UseStationDrawerReturn {
-  selectedStation: WeatherStation | null;
+  selectedStations: WeatherStation[]; // Array instead of single
   isDrawerOpen: boolean;
-  handleStationSelect: (station: WeatherStation) => void;
+  handleStationSelect: (stations: WeatherStation[]) => void; // Array parameter
+  handleStationToggle: (station: WeatherStation) => void; // New: toggle individual station
   closeDrawer: () => void;
 }
 
