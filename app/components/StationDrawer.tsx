@@ -729,6 +729,41 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
+  useEffect(() => {
+    console.log('🟠 STATION DRAWER - Props received:', {
+      isOpen,
+      singleStation: station ? {
+        name: station.Station,
+        stid: station.Stid,
+        elevation: station.Elevation
+      } : undefined,
+      multipleStations: stations ? stations.map(s => ({
+        name: s.Station,
+        stid: s.Stid
+      })) : undefined,
+      hasTimeRangeData: !!timeRangeData,
+      hasObservationsDataDay: !!observationsDataDay?.data?.length,
+      hasObservationsDataHour: !!observationsDataHour?.data?.length
+    });
+  }, [isOpen, station, stations, timeRangeData, observationsDataDay, observationsDataHour]);
+
+  useEffect(() => {
+    console.log('🟠 STATION DRAWER - Processed data:', {
+      stationDayData: {
+        dataLength: stationDayData.data.length,
+        title: stationDayData.title
+      },
+      stationDataHourFiltered: {
+        dataLength: stationDataHourFiltered.data.length,
+        title: stationDataHourFiltered.title  
+      },
+      processedDailyFromHourly: {
+        dataLength: processedDailyFromHourly.data.length,
+        title: processedDailyFromHourly.title
+      }
+    });
+  }, [stationDayData, stationDataHourFiltered, processedDailyFromHourly]);
+
   if (!currentStations.length) return null;
 
   return (
