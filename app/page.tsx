@@ -29,7 +29,8 @@ import { Analytics } from "@vercel/analytics/react"
 
 import MapComponent from './components/MapComponent';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
-
+//import useStationDrawer from '@/app/hooks/useStationDrawer';
+import StationDrawer from '@/app/components/StationDrawer';
 
 interface Station {
   id: string;
@@ -343,9 +344,24 @@ export default function Home() {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
 
   const handleStationIdChange = useCallback((id: string) => {
-    console.log('Station changed to:', id);
+    console.log('🟡 PAGE - handleStationIdChange called:', {
+      newStationId: id,
+      previousStationId: selectedStationId
+    });
     setSelectedStationId(id);
-  }, []);
+  }, [selectedStationId]);
+
+  useEffect(() => {
+    console.log('🟡 PAGE - Station props being passed to TimeToolbar:', {
+      selectedStation,
+      selectedStationId,
+      stationsCount: stations.length,
+      // stationDrawerState: {
+      //   isOpen: stationDrawer?.isOpen,
+      //   selectedStation: stationDrawer?.selectedStation?.Station
+      // }
+    });
+  }, [selectedStation, selectedStationId, stations]);
 
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">

@@ -85,11 +85,22 @@ export function StationSelector({
         value={selectedStationId || ''}
         onChange={(e: SelectChangeEvent<string>) => {
           const value = e.target.value;
-          console.log('Selection event triggered:', value);
-          onStationChange(value);
-          // Also call handleStationSelect for backward compatibility
           const station = stations.find(s => s.id === value);
+          
+          console.log('🔴 STATION SELECTOR - Selection made:', {
+            selectedId: value,
+            stationName: station?.name,
+            station: station,
+            availableStations: stations.length
+          });
+          
+          onStationChange(value);
+          
           if (station) {
+            console.log('🔴 STATION SELECTOR - Calling handleStationSelect:', {
+              stationId: station.id,
+              stationName: station.name
+            });
             handleStationSelect(station);
           }
         }}
