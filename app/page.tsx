@@ -29,6 +29,7 @@ import { Analytics } from "@vercel/analytics/react"
 
 import MapComponent from './components/MapComponent';
 import { LayerId, LayerState, DEFAULT_LAYER_STATE, LAYER_GROUPS } from '@/app/types/layers';
+import useStationDrawer from '@/app/hooks/useStationDrawer';
 
 
 interface Station {
@@ -85,6 +86,20 @@ export default function Home() {
     handleStationChange,
     handleStationClick
   } = useStations({ setTableMode });
+
+  const allStationIds = useMemo(() => 
+    stations.map(station => station.id), 
+    [stations]
+  );
+
+  useEffect(() => {
+    console.log('🟡 PAGE - allStationIds vs stationIds:', {
+      allStationIds: allStationIds.length,
+      stationIds: stationIds.length,
+      allStationIdsSample: allStationIds.slice(0, 3),
+      stationIdsSample: stationIds.slice(0, 3)
+    });
+  }, [allStationIds, stationIds]);
 
   // Date and time state
   const {
@@ -148,7 +163,7 @@ export default function Home() {
     dataReady: weatherDataReady,
   } = useWeatherData(
     timeRangeData,
-    stationIds,
+    allStationIds,
     tableMode,
     calculatedStartHour,
     calculatedEndHour,
@@ -213,6 +228,8 @@ export default function Home() {
     }
   }, [handleStationClick]);
 
+  const stationDrawer = useStationDrawer();
+
   const stationProps = {
     selectedStation,
     stations,
@@ -221,6 +238,7 @@ export default function Home() {
     selectedStationIds,
     onStationSelectionChange: setSelectedStationIds,
     handleMultiStationSelect,
+    stationDrawer,
   };
 
   const dataProps = {
@@ -360,6 +378,30 @@ export default function Home() {
     console.log('Station changed to:', id);
     setSelectedStationId(id);
   }, []);
+
+  // Add useEffect to track when things change that shouldn't
+  useEffect(() => {
+    console.log('🟡 PAGE - Station selection changed (should NOT affect map):', {
+      selectedStationIds,
+      shouldOnlyAffectDrawer: true
+    });
+  }, [selectedStationIds]);
+
+  useEffect(() => {
+    console.log('🟡 PAGE - observationsDataDay changed (this SHOULD affect map):', {
+      dataLength: observationsDataDay?.data?.length || 0,
+      title: observationsDataDay?.title
+    });
+  }, [observationsDataDay]);
+
+  // Add this useEffect right after your existing useEffect logs (around line 237)
+  useEffect(() => {
+    console.log('🟡 PAGE - stationIds changed:', {
+      stationIds,
+      length: stationIds.length,
+      shouldAlwaysBeAllStations: true
+    });
+  }, [stationIds]);
 
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">

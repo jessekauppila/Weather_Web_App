@@ -83,6 +83,13 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   customTime,
   calculateCurrentTimeRange
 }) => {
+  console.log('🟠 STATION DRAWER - Props received:', {
+    isOpen,
+    singleStation: station?.Station,
+    multipleStations: stations?.map(s => s.Station),
+    shouldChangeBasedOnSelection: true
+  });
+
   // NEW: Normalize to always work with an array internally
   const currentStations = useMemo(() => {
     if (stations && stations.length > 0) return stations;

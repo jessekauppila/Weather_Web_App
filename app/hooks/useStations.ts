@@ -47,11 +47,11 @@ export function useStations({ setTableMode }: UseStationsProps) {
     
     if (!selectedStationId) {
       setSelectedStation('');
-      setStationIds(stations.map(station => station.id));
+      // setStationIds(stations.map(station => station.id));
       setTableMode('summary');  // Set mode directly here
     } else {
       setSelectedStation(selectedStationId);
-      setStationIds([selectedStationId]);
+      // setStationIds([selectedStationId]);
       setTableMode('daily');    // Set mode directly here
     }
   }, [stations, setTableMode]);
@@ -59,7 +59,7 @@ export function useStations({ setTableMode }: UseStationsProps) {
   const handleStationClick = useCallback((stationId: string) => {
     setIsStationChanging(true);
     setSelectedStation(stationId);
-    setStationIds([stationId]);
+    // setStationIds([stationId]);
     setTableMode('daily');      // Set mode directly here
     
     setTimeout(() => {

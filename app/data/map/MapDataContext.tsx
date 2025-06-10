@@ -116,7 +116,11 @@ export const MapDataProvider: React.FC<{
   onLayerToggle,
   activeLayerState
 }) => {
-  //console.log('observationsDataDay:', observationsDataDay);
+  console.log('🟢 MAP DATA PROVIDER - Props received:', {
+    observationsDataDayLength: observationsDataDay?.data?.length || 0,
+    observationsDataHourLength: observationsDataHour?.data?.length || 0,
+    selectedStationId,
+  });
 
   // Debugging function to inspect coordinate transformation
   function inspectCoordinateTransformation(data: any) {
