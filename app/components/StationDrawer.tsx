@@ -8,6 +8,7 @@ import { DayRangeType } from '../types';
 import { Tabs, Tab, Box } from '@mui/material';
 import WindRose from '../vis/windRose';
 import { circularMean, degreeToCompass } from '@/app/data/utils/degreeToCompass';
+import type { WeatherStation } from '../map/map';  
 
 type HourData = {
   Day: string;
@@ -18,23 +19,9 @@ type HourData = {
 interface StationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  station: {
-    Station: string;
-    'Cur Air Temp': string;
-    '24h Snow Accumulation': string;
-    'Cur Wind Speed': string;
-    'Elevation': string;
-    'Stid': string;
-    'Air Temp Min': string;
-    'Air Temp Max': string;
-    'Wind Speed Avg': string;
-    'Max Wind Gust': string;
-    'Wind Direction': string;
-    'Total Snow Depth Change': string;
-    'Precip Accum One Hour': string;
-    'Total Snow Depth': string;
-    [key: string]: string;
-  } | null;
+  // Support both single and multiple stations
+  station?: WeatherStation | null;  // Single station (existing)
+  stations?: WeatherStation[];      // Multiple stations (new)
   timeRangeData?: {
     start_time_pdt: moment.Moment;
     end_time_pdt: moment.Moment;
@@ -85,6 +72,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   isOpen,
   onClose,
   station,
+  stations,
   timeRangeData,
   observationsDataDay,
   observationsDataHour,
@@ -95,6 +83,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   customTime,
   calculateCurrentTimeRange
 }) => {
+  // NEW: Normalize to always work with an array internally
+  const currentStations = useMemo(() => {
+    if (stations && stations.length > 0) return stations;
+    if (station) return [station];
+    return [];
+  }, [station, stations]);
+
+  // NEW: Determine if we're in multi-station mode
+  const isMultiStationMode = currentStations.length > 1;
+
   // Simple configuration
   const DRAWER_HEIGHT = 700; // Fixed height when open
   const MIN_DRAWER_HEIGHT = 50; // Minimum height when dragging
@@ -731,7 +729,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
-  if (!station) return null;
+  if (!currentStations.length) return null;
 
   return (
     <div
@@ -780,34 +778,37 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               }}
             >
               <Tab 
-                label="Summary" 
+                label={isMultiStationMode ? "Station Comparison" : "Summary"}
                 id={`station-tab-0`}
                 aria-controls={`station-tabpanel-0`}
               />
               <Tab 
-                label="Hourly Graph" 
+                label={isMultiStationMode ? "Hourly Comparison" : "Hourly Graph"}
                 id={`station-tab-1`}
                 aria-controls={`station-tabpanel-1`}
               />
               <Tab 
-                label="Daily Graph" 
+                label={isMultiStationMode ? "Daily Comparison" : "Daily Graph"}
                 id={`station-tab-2`}
                 aria-controls={`station-tabpanel-2`}
               />
               <Tab 
-                label="Filtered Data" 
+                label={isMultiStationMode ? "Combined Data" : "Filtered Data"}
                 id={`station-tab-3`}
                 aria-controls={`station-tabpanel-3`}
               />
+              {/* Only show Raw Data tab for single station */}
+              {!isMultiStationMode && (
+                <Tab 
+                  label="Raw Data"
+                  id={`station-tab-4`}
+                  aria-controls={`station-tabpanel-4`}
+                />
+              )}
               <Tab 
-                label="Raw Data" 
-                id={`station-tab-4`}
-                aria-controls={`station-tabpanel-4`}
-              />
-              <Tab 
-                label="Wind Rose" 
-                id={`station-tab-5`}
-                aria-controls={`station-tabpanel-5`}
+                label={isMultiStationMode ? "Wind Comparison" : "Wind Rose"}
+                id={`station-tab-${isMultiStationMode ? 4 : 5}`}
+                aria-controls={`station-tabpanel-${isMultiStationMode ? 4 : 5}`}
               />
             </Tabs>
           </Box>
@@ -860,30 +861,50 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 1: Daily Summary from Hourly */}
           <TabPanel value={activeTab} index={0}>
-
-
-            {/* Station Summary Table - Always visible at the top */}
-            <div className="mb-6 pb-2">
-            <DayAveragesTable 
-              dayAverages={stationDayData}
-              onStationClick={() => {}}
-              mode={tableMode}
-              key={`summary-${station.Station}`}
-            />
-          </div>
-          
-            {processedDailyFromHourly.data.length > 0 ? (
-              <div className="mb-6">
-                <DayAveragesTable 
-                  dayAverages={processedDailyFromHourly}
-                  onStationClick={() => {}}
-                  mode={tableMode}
-                  key={`daily-summary-${station.Station}`}
-                />
+            {isMultiStationMode ? (
+              <div>
+                <h3>Station Comparison</h3>
+                <p>Multi-station view coming soon...</p>
+                {/* For now, show all stations individually */}
+                {currentStations.map((stn, index) => (
+                  <div key={stn.Stid} className="mb-6">
+                    <h4>{stn.Station}</h4>
+                    <DayAveragesTable 
+                      dayAverages={{
+                        data: [stn],
+                        title: stn.Station
+                      }}
+                      onStationClick={() => {}}
+                      mode={tableMode}
+                      key={`summary-${stn.Station}-${index}`}
+                    />
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p></p>
+              <div>
+                <div className="mb-6 pb-2">
+                  <DayAveragesTable 
+                    dayAverages={stationDayData}
+                    onStationClick={() => {}}
+                    mode={tableMode}
+                    key={`summary-${currentStations[0]?.Station}`}
+                  />
+                </div>
+                {processedDailyFromHourly.data.length > 0 ? (
+                  <div className="mb-6">
+                    <DayAveragesTable 
+                      dayAverages={processedDailyFromHourly}
+                      onStationClick={() => {}}
+                      mode={tableMode}
+                      key={`daily-summary-${currentStations[0]?.Station}`}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <p></p>
+                  </div>
+                )}
               </div>
             )}
           </TabPanel>
@@ -921,15 +942,13 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           )}
           </TabPanel>
 
-
-
           {/* Tab 4: Filtered Hourly Data Table */}
           <TabPanel value={activeTab} index={3}>
             {stationDataHourFiltered.data.length > 0 ? (
               <div className="mb-6 app-section-solid">
                 <HourWxTable 
                   hourAverages={stationDataHourFiltered}
-                  key={`filtered-${station.Station}`}
+                  key={`filtered-${currentStations[0]?.Station}`}
                 />
               </div>
             ) : (
@@ -945,7 +964,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               <div className="mb-6 app-section-solid">
                 <HourWxTable 
                   hourAverages={stationDataHourUnFiltered}
-                  key={`raw-${station.Station}`}
+                  key={`raw-${currentStations[0]?.Station}`}
                 />
               </div>
             ) : (
@@ -961,7 +980,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               <div className="mb-6 app-section-solid">
                 <WindRose 
                   data={stationDataHourFiltered.data}
-                  stationName={station.Station}
+                  stationName={currentStations[0]?.Station || ''}
                 />
               </div>
             ) : (
