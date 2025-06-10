@@ -59,6 +59,9 @@ interface TimeToolbarProps {
   };
   selectedStationId: string | null;
   onStationChange: (id: string) => void;
+  selectedStationIds: string[];
+  onStationSelectionChange: (stationIds: string[]) => void;
+  handleMultiStationSelect: (stations: any[]) => void;
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -89,6 +92,9 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   mapData,
   selectedStationId,
   onStationChange,
+  selectedStationIds,
+  onStationSelectionChange,
+  handleMultiStationSelect,
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
@@ -205,10 +211,9 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
         <div className="w-full mt-4">
           <StationSelector
             stations={stations}
-            selectedStationId={selectedStationId}
-            onStationChange={onStationChange}
-            handleStationSelect={stationDrawer.handleStationSelect}
-            selectedStation={stationDrawer.selectedStation}
+            handleStationSelect={handleMultiStationSelect}
+            selectedStationIds={selectedStationIds}
+            onStationSelectionChange={onStationSelectionChange}
           />
         </div>
       </div>
