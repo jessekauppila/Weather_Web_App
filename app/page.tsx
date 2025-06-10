@@ -203,11 +203,30 @@ export default function Home() {
     setCustomTime
   };
 
+  const [selectedStationIds, setSelectedStationIds] = useState<string[]>([]);
+
+  const handleMultiStationSelect = useCallback((stations: any[]) => {
+    console.log('🟡 PAGE - handleMultiStationSelect called:', {
+      stationCount: stations.length,
+      stationNames: stations.map(s => s?.name || s?.Station),
+      stationIds: stations.map(s => s?.id || s?.Stid)
+    });
+    
+    if (stations.length > 0) {
+      setSelectedStationId(stations[0].id || stations[0].Stid);
+    } else {
+      setSelectedStationId(null);
+    }
+  }, []);
+
   const stationProps = {
     selectedStation,
     stations,
     handleStationChange,
     stationIds,
+    selectedStationIds,
+    onStationSelectionChange: setSelectedStationIds,
+    handleMultiStationSelect,
   };
 
   const dataProps = {
