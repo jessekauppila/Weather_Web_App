@@ -11,6 +11,8 @@ import { circularMean, degreeToCompass } from '@/app/data/utils/degreeToCompass'
 import type { WeatherStation } from '../map/map';  
 import { processSingleStationData } from '../data/utils/singleStationData';
 import { processMultiStationData } from '../data/utils/multiStationData';
+import { processSingleStationHourlyData } from '../data/utils/singleStationHourlyData';
+import { processMultiStationHourlyData } from '../data/utils/multiStationHourlyData';
 
 type HourData = {
   Day: string;
@@ -85,14 +87,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   customTime,
   calculateCurrentTimeRange
 }) => {
-  console.log('🟠 STATION DRAWER - All props received:', {
-    isOpen,
-    station: station ? { name: station.Station, stid: station.Stid } : null,
-    stations: stations ? stations.map(s => ({ name: s.Station, stid: s.Stid })) : null,
-    stationsLength: stations?.length || 0,
-    isStationsArray: Array.isArray(stations),
-    stationType: typeof stations
-  });
 
   // NEW: Normalize to always work with an array internally
   const currentStations = useMemo(() => {
@@ -197,7 +191,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   // Update stationDayData to incorporate date-specific data
   const stationDayData = useMemo(() => {
     return processSingleStationData({
-      station,
+      station: station ?? null,
       observationsDataDay
     });
   }, [station, observationsDataDay]);
@@ -286,25 +280,20 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   
   // Filter and format the data for the graphs
   const stationDataHourFiltered = useMemo(() => {
-    if (!station || !filteredObservationsDataHour?.data) {
-      return {
-        data: [],
-        title: station ? `Filtered Hourly Data - ${station.Station}` : ''
-      };
-    }
+    return processSingleStationHourlyData({
+      station: station ?? null,
+      filteredObservationsDataHour
+    });
+  }, [station, filteredObservationsDataHour?.data]);
 
-    const stationData = filteredObservationsDataHour.data.filter(
-      (obs: { Station: string }) => obs.Station === station.Station
-    );
-
-    return {
-      data: stationData,
-      title: `Filtered Hourly Data - ${station.Station}`
-    };
-  }, [
-    station, 
-    filteredObservationsDataHour?.data 
-  ]);
+  // NEW: Multi-station hourly filtered data
+  const multiStationDataHourFiltered = useMemo(() => {
+    return processMultiStationHourlyData({
+      stations: currentStations,
+      filteredObservationsDataHour,
+      isMultiStationMode
+    });
+  }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
   const stationDataHourUnFiltered = useMemo(() => {
     if (!station || !observationsDataHour?.data) {
@@ -733,6 +722,21 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     });
   }, [multiStationDayData, isMultiStationMode]);
 
+  // Add useEffect to log when multiStationDataHourFiltered changes:
+  useEffect(() => {
+    console.log('🟣 STATION DRAWER - multiStationDataHourFiltered changed:', {
+      multiStationDataHourFiltered: multiStationDataHourFiltered,
+      totalDataLength: multiStationDataHourFiltered.data.length,
+      stationDataKeys: Object.keys(multiStationDataHourFiltered.stationData || {}),
+      stationRecordCounts: Object.entries(multiStationDataHourFiltered.stationData || {}).map(([station, data]) => ({
+        station,
+        recordCount: Array.isArray(data) ? data.length : 0
+      })),
+      title: multiStationDataHourFiltered.title,
+      isMultiStationMode: isMultiStationMode
+    });
+  }, [multiStationDataHourFiltered, isMultiStationMode]);
+
   useEffect(() => {
     console.log('🟠 STATION DRAWER - Props received:', {
       isOpen,
@@ -762,12 +766,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         dataLength: stationDataHourFiltered.data.length,
         title: stationDataHourFiltered.title  
       },
+      multiStationDataHourFiltered: {
+        totalDataLength: multiStationDataHourFiltered.data.length,
+        stationCount: Object.keys(multiStationDataHourFiltered.stationData || {}).length,
+        title: multiStationDataHourFiltered.title
+      },
       processedDailyFromHourly: {
         dataLength: processedDailyFromHourly.data.length,
         title: processedDailyFromHourly.title
       }
     });
-  }, [stationDayData, stationDataHourFiltered, processedDailyFromHourly]);
+  }, [stationDayData, stationDataHourFiltered, multiStationDataHourFiltered, processedDailyFromHourly]);
 
   if (!currentStations.length) return null;
 
@@ -841,25 +850,29 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 aria-controls={`station-tabpanel-3`}
               />
 
-              {/* Only show Raw Data tab for single station */}
-              {!isMultiStationMode && (
-                <Tab 
-                  label="Raw Data"
-                  id={`station-tab-4`}
-                  aria-controls={`station-tabpanel-4`}
-                />
-              )}
+              {/* Always show Raw Data tab */}
+              <Tab 
+                label={isMultiStationMode ? "Multi-Raw Data" : "Raw Data"}
+                id={`station-tab-4`}
+                aria-controls={`station-tabpanel-4`}
+              />
 
               <Tab 
                 label={isMultiStationMode ? "Wind Comparison" : "Wind Rose"}
                 id={`station-tab-${isMultiStationMode ? 4 : 5}`}
-                aria-controls={`station-tabpanel-${isMultiStationMode ? 4 : 5}`}
+                aria-controls={`station-tabpanel-5`}
               />
 
               <Tab 
                 label={isMultiStationMode ? "Station Comparison" : "Summary"}
-                id={`station-tab-0`}
-                aria-controls={`station-tabpanel-5`}
+                id={`station-tab-${isMultiStationMode ? 5 : 6}`}
+                aria-controls={`station-tabpanel-6`}
+              />
+
+              <Tab 
+                label={isMultiStationMode ? "Combined Date" : "Wind Roses"}
+                id={`station-tab-${isMultiStationMode ? 6 : 7}`}
+                aria-controls={`station-tabpanel-7`}
               />
 
             </Tabs>
@@ -1064,6 +1077,22 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               </div>
             )
             }
+          </TabPanel>
+
+                    {/* Tab 8: Wind Rose */}
+                    <TabPanel value={activeTab} index={7}>
+            {stationDataHourFiltered.data.length > 0 ? (
+              <div className="mb-6 app-section-solid">
+                <WindRose 
+                  data={stationDataHourFiltered.data}
+                  stationName={currentStations[0]?.Station || ''}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No wind data available</p>
+              </div>
+            )}
           </TabPanel>
 
           

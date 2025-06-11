@@ -1,5 +1,5 @@
 // app/data/utils/singleStationData.ts
-import type { WeatherStation } from '../..//map/map';
+import type { WeatherStation } from '../../map/map';
 
 export interface SingleStationDataOptions {
   station: WeatherStation | null;
