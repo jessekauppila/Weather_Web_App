@@ -698,13 +698,40 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
-  // Add this new useMemo for multi-station day data
+  // Replace the multiStationDayData useMemo with enhanced debugging:
   const multiStationDayData = useMemo(() => {
-    return processMultiStationData({
+    console.log('🟠 STATION DRAWER - Creating multiStationDayData:', {
+      currentStations: currentStations,
+      currentStationsLength: currentStations.length,
+      observationsDataDay: observationsDataDay,
+      isMultiStationMode: isMultiStationMode
+    });
+
+    const result = processMultiStationData({
       stations: currentStations,
       observationsDataDay
     });
+
+    console.log('🟠 STATION DRAWER - multiStationDayData result:', {
+      result: result,
+      dataLength: result.data.length,
+      title: result.title,
+      resultData: result.data
+    });
+
+    return result;
   }, [currentStations, observationsDataDay]);
+
+  // Also add a separate useEffect to log when multiStationDayData changes:
+  useEffect(() => {
+    console.log('🟠 STATION DRAWER - multiStationDayData changed:', {
+      multiStationDayData: multiStationDayData,
+      dataLength: multiStationDayData.data.length,
+      title: multiStationDayData.title,
+      isMultiStationMode: isMultiStationMode,
+      firstStationInData: multiStationDayData.data[0]
+    });
+  }, [multiStationDayData, isMultiStationMode]);
 
   useEffect(() => {
     console.log('🟠 STATION DRAWER - Props received:', {
@@ -895,6 +922,14 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 <h3 className="text-lg font-semibold mb-4 text-[var(--app-text-primary)]">
                   Station Comparison ({currentStations.length} stations)
                 </h3>
+                
+                {/* Add debugging here */}
+                {console.log('🟠 ABOUT TO RENDER DayAveragesTable with multiStationDayData:', {
+                  multiStationDayData: multiStationDayData,
+                  dataLength: multiStationDayData.data.length,
+                  tableMode: tableMode,
+                  isMultiStationMode: isMultiStationMode
+                })}
                 
                 {/* Use the multi-station data structure */}
                 <DayAveragesTable 
