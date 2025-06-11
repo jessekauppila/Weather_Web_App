@@ -115,14 +115,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     calculateCurrentTimeRange
   } = context;
 
-  // Add logging to track the array
-  useEffect(() => {
-    console.log('🔵 MAP APP - selectedStationsArray from context:', {
-      selectedStationsArray,
-      stationsCount: selectedStationsArray?.length || 0,
-      stationNames: selectedStationsArray?.map(s => s?.name || s?.Station) || []
-    });
-  }, [selectedStationsArray]);
+
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -151,11 +144,6 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
   // Add this useEffect to track selectedStationId changes
   useEffect(() => {
-    console.log('🔵 MAP COMPONENT - selectedStationId changed:', {
-      selectedStationId,
-      mapDataFeatures: mapData?.stationData?.features?.length || 0
-    });
-    
     if (selectedStationId && mapData?.stationData?.features) {
       // Find all selected stations and convert to WeatherStation format
       const feature = mapData.stationData.features.find(
@@ -381,12 +369,6 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
-  console.log('🔵 MAP COMPONENT - Props received:', {
-    selectedStationId: props.selectedStationId,
-    selectedStationsArray: props.selectedStationsArray,
-    stationsCount: props.selectedStationsArray?.length || 0
-  });
-  
   return (
     <MapDataProvider 
       {...props}

@@ -230,13 +230,7 @@ export default function Home() {
     }
   }, [selectedStationIds]);
 
-  // Add logging to track the stations array
-  useEffect(() => {
-    console.log('🟡 PAGE - selectedStationsArray changed:', {
-      stationCount: selectedStationsArray.length,
-      stationNames: selectedStationsArray.map(s => s?.name || s?.Station)
-    });
-  }, [selectedStationsArray]);
+
 
   const stationProps = {
     selectedStation,
@@ -389,17 +383,7 @@ export default function Home() {
     setSelectedStationId(id);
   }, [selectedStationId]);
 
-  useEffect(() => {
-    console.log('🟡 PAGE - Station props being passed to TimeToolbar:', {
-      selectedStation,
-      selectedStationId,
-      stationsCount: stations.length,
-      // stationDrawerState: {
-      //   isOpen: stationDrawer?.isOpen,
-      //   selectedStation: stationDrawer?.selectedStation?.Station
-      // }
-    });
-  }, [selectedStation, selectedStationId, stations]);
+
 
   return (
     <main className="flex min-h-screen flex-col items-center relative w-full overflow-hidden">
