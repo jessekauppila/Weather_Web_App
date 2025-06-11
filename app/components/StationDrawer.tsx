@@ -919,17 +919,16 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           <TabPanel value={activeTab} index={0}>
             {isMultiStationMode ? (
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-[var(--app-text-primary)]">
+                {/* <h3 className="text-lg font-semibold mb-4 text-[var(--app-text-primary)]">
                   Station Comparison ({currentStations.length} stations)
-                </h3>
+                </h3> */}
                 
-                {/* Add debugging here */}
-                {console.log('🟠 ABOUT TO RENDER DayAveragesTable with multiStationDayData:', {
+                {/* {console.log('🟠 ABOUT TO RENDER DayAveragesTable with multiStationDayData:', {
                   multiStationDayData: multiStationDayData,
                   dataLength: multiStationDayData.data.length,
                   tableMode: tableMode,
                   isMultiStationMode: isMultiStationMode
-                })}
+                })} */}
                 
                 {/* Use the multi-station data structure */}
                 <DayAveragesTable 
