@@ -154,10 +154,6 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       
       if (feature) {
         const station = mapPropertiesToWeatherStation(feature.properties);
-        console.log('🔵 MAP COMPONENT - Found station for drawer:', {
-          stationName: station.Station,
-          stationId: station.Stid
-        });
         
         // For now, single station but structured as array
         setSelectedStations([station]);
