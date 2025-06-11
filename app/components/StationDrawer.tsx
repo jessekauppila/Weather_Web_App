@@ -83,6 +83,15 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   customTime,
   calculateCurrentTimeRange
 }) => {
+  console.log('🟠 STATION DRAWER - All props received:', {
+    isOpen,
+    station: station ? { name: station.Station, stid: station.Stid } : null,
+    stations: stations ? stations.map(s => ({ name: s.Station, stid: s.Stid })) : null,
+    stationsLength: stations?.length || 0,
+    isStationsArray: Array.isArray(stations),
+    stationType: typeof stations
+  });
+
   // NEW: Normalize to always work with an array internally
   const currentStations = useMemo(() => {
     if (stations && stations.length > 0) return stations;
@@ -751,7 +760,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     console.log('🟠 STATION DRAWER - Processed data:', {
       stationDayData: {
         dataLength: stationDayData.data.length,
-        title: stationDayData.title
+        title: stationDayData.title,
+        stationDataDay: stationDayData.data
       },
       stationDataHourFiltered: {
         dataLength: stationDataHourFiltered.data.length,
@@ -817,21 +827,25 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 id={`station-tab-0`}
                 aria-controls={`station-tabpanel-0`}
               />
+
               <Tab 
                 label={isMultiStationMode ? "Hourly Comparison" : "Hourly Graph"}
                 id={`station-tab-1`}
                 aria-controls={`station-tabpanel-1`}
               />
+
               <Tab 
                 label={isMultiStationMode ? "Daily Comparison" : "Daily Graph"}
                 id={`station-tab-2`}
                 aria-controls={`station-tabpanel-2`}
               />
+
               <Tab 
                 label={isMultiStationMode ? "Combined Data" : "Filtered Data"}
                 id={`station-tab-3`}
                 aria-controls={`station-tabpanel-3`}
               />
+
               {/* Only show Raw Data tab for single station */}
               {!isMultiStationMode && (
                 <Tab 
@@ -840,11 +854,19 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   aria-controls={`station-tabpanel-4`}
                 />
               )}
+
               <Tab 
                 label={isMultiStationMode ? "Wind Comparison" : "Wind Rose"}
                 id={`station-tab-${isMultiStationMode ? 4 : 5}`}
                 aria-controls={`station-tabpanel-${isMultiStationMode ? 4 : 5}`}
               />
+
+              <Tab 
+                label={isMultiStationMode ? "Station Comparison" : "Summary"}
+                id={`station-tab-0`}
+                aria-controls={`station-tabpanel-5`}
+              />
+
             </Tabs>
           </Box>
 
@@ -895,54 +917,28 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           {/* Tab Panels */}
 
           {/* Tab 1: Daily Summary from Hourly */}
+
+
+          {/* ///////////////////|||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\ */}
+
           <TabPanel value={activeTab} index={0}>
-            {isMultiStationMode ? (
+            { 
               <div>
                 <h3>Station Comparison</h3>
-                <p>Multi-station view coming soon...</p>
                 {/* For now, show all stations individually */}
-                {currentStations.map((stn, index) => (
-                  <div key={stn.Stid} className="mb-6">
-                    <h4>{stn.Station}</h4>
-                    <DayAveragesTable 
-                      dayAverages={{
-                        data: [stn],
-                        title: stn.Station
-                      }}
-                      onStationClick={() => {}}
-                      mode={tableMode}
-                      key={`summary-${stn.Station}-${index}`}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div>
-                <div className="mb-6 pb-2">
                   <DayAveragesTable 
-                    dayAverages={stationDayData}
-                    onStationClick={() => {}}
-                    mode={tableMode}
-                    key={`summary-${currentStations[0]?.Station}`}
-                  />
-                </div>
-                {processedDailyFromHourly.data.length > 0 ? (
-                  <div className="mb-6">
-                    <DayAveragesTable 
-                      dayAverages={processedDailyFromHourly}
-                      onStationClick={() => {}}
-                      mode={tableMode}
-                      key={`daily-summary-${currentStations[0]?.Station}`}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <p></p>
-                  </div>
-                )}
+                  dayAverages={stationDayData}
+                  onStationClick={() => {}}
+                  mode={tableMode}
+                  key={`summary-${currentStations[0]?.Station}`}
+                />
               </div>
-            )}
+            
+            }
           </TabPanel>
+
+                    {/* ///////////////////|||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\ */}
+
 
           {/* Tab 2: Hourly Snow and Temperature Graph */}
           <TabPanel value={activeTab} index={1}>
@@ -1023,6 +1019,38 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                 <p>No wind data available</p>
               </div>
             )}
+          </TabPanel>
+
+          {/* Tab 7: Daily Summary from Hourly */}
+            <TabPanel value={activeTab} index={6}>
+            {
+            (
+              <div>
+                <div className="mb-6 pb-2">
+                  <DayAveragesTable 
+                    dayAverages={stationDayData}
+                    onStationClick={() => {}}
+                    mode={tableMode}
+                    key={`summary-${currentStations[0]?.Station}`}
+                  />
+                </div>
+                {processedDailyFromHourly.data.length > 0 ? (
+                  <div className="mb-6">
+                    <DayAveragesTable 
+                      dayAverages={processedDailyFromHourly}
+                      onStationClick={() => {}}
+                      mode={tableMode}
+                      key={`daily-summary-${currentStations[0]?.Station}`}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <p></p>
+                  </div>
+                )}
+              </div>
+            )
+            }
           </TabPanel>
 
           

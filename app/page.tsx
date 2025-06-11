@@ -205,19 +205,38 @@ export default function Home() {
 
   const [selectedStationIds, setSelectedStationIds] = useState<string[]>([]);
 
+  // Add state for the full selected stations array
+  const [selectedStationsArray, setSelectedStationsArray] = useState<any[]>([]);
+
   const handleMultiStationSelect = useCallback((stations: any[]) => {
     console.log('🟡 PAGE - handleMultiStationSelect called:', {
       stationCount: stations.length,
       stationNames: stations.map(s => s?.name || s?.Station),
-      stationIds: stations.map(s => s?.id || s?.Stid)
+      stationIds: stations.map(s => s?.id || s?.Stid),
+      selectedStationIds
     });
     
+    // ✅ NEW: Store the full stations array
+    setSelectedStationsArray(stations);
+    
+    // Still set selectedStationId for backward compatibility
     if (stations.length > 0) {
-      setSelectedStationId(stations[0].id || stations[0].Stid);
+      const primaryStationId = stations[0].id || stations[0].Stid;
+      console.log('🟡 PAGE - Setting selectedStationId to:', primaryStationId);
+      setSelectedStationId(primaryStationId);
     } else {
+      console.log('🟡 PAGE - Clearing selectedStationId (no stations selected)');
       setSelectedStationId(null);
     }
-  }, []);
+  }, [selectedStationIds]);
+
+  // Add logging to track the stations array
+  useEffect(() => {
+    console.log('🟡 PAGE - selectedStationsArray changed:', {
+      stationCount: selectedStationsArray.length,
+      stationNames: selectedStationsArray.map(s => s?.name || s?.Station)
+    });
+  }, [selectedStationsArray]);
 
   const stationProps = {
     selectedStation,
@@ -409,7 +428,7 @@ export default function Home() {
               activeLayerState={activeLayerState}
               onLayerToggle={handleLayerToggle}
               selectedStationId={selectedStationId}
-
+              selectedStationsArray={selectedStationsArray}
             />
 
                 {/* Container for both controls positioned at the top */}

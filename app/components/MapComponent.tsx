@@ -47,6 +47,7 @@ interface MapComponentProps {
   activeLayerState: LayerState;
   onLayerToggle: (layerId: LayerId) => void;
   selectedStationId: string | null;
+  selectedStationsArray: any[];
 }
 
 // Client-side portal component for Next.js
@@ -102,6 +103,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     filteredObservationsDataHour,
     isMetric,
     selectedStation,
+    selectedStationsArray,
     isDrawerOpen,
     handleStationSelect,
     closeDrawer,
@@ -112,6 +114,15 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     customTime,
     calculateCurrentTimeRange
   } = context;
+
+  // Add logging to track the array
+  useEffect(() => {
+    console.log('🔵 MAP APP - selectedStationsArray from context:', {
+      selectedStationsArray,
+      stationsCount: selectedStationsArray?.length || 0,
+      stationNames: selectedStationsArray?.map(s => s?.name || s?.Station) || []
+    });
+  }, [selectedStationsArray]);
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -135,7 +146,39 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
   });
 
+  // Add state to track selected stations array
+  const [selectedStations, setSelectedStations] = useState<WeatherStation[]>([]);
 
+  // Add this useEffect to track selectedStationId changes
+  useEffect(() => {
+    console.log('🔵 MAP COMPONENT - selectedStationId changed:', {
+      selectedStationId,
+      mapDataFeatures: mapData?.stationData?.features?.length || 0
+    });
+    
+    if (selectedStationId && mapData?.stationData?.features) {
+      // Find all selected stations and convert to WeatherStation format
+      const feature = mapData.stationData.features.find(
+        (f: Feature<Geometry, Map_BlockProperties>) =>
+          f.properties.Stid === selectedStationId || 
+          f.properties.stationName === selectedStationId
+      );
+      
+      if (feature) {
+        const station = mapPropertiesToWeatherStation(feature.properties);
+        console.log('🔵 MAP COMPONENT - Found station for drawer:', {
+          stationName: station.Station,
+          stationId: station.Stid
+        });
+        
+        // For now, single station but structured as array
+        setSelectedStations([station]);
+        handleStationSelect(station);
+      }
+    } else {
+      setSelectedStations([]);
+    }
+  }, [selectedStationId, mapData, handleStationSelect]);
 
   // This function can be used for both map clicks and dropdown selection
   const selectStationById = useCallback((stationIdentifier: string | number) => {
@@ -320,6 +363,7 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
           isOpen={isDrawerOpen}
           onClose={closeDrawer}
           station={selectedStation}
+          stations={selectedStationsArray}
           observationsDataDay={observationsDataDay}
           observationsDataHour={observationsDataHour}
           filteredObservationsDataHour={filteredObservationsDataHour}
@@ -337,10 +381,20 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
 
 // Wrapped component with provider
 export default function MapComponent(props: MapComponentProps) {
-  // console.log('MapComponent selectedStationId:', props.selectedStationId);
+  console.log('🔵 MAP COMPONENT - Props received:', {
+    selectedStationId: props.selectedStationId,
+    selectedStationsArray: props.selectedStationsArray,
+    stationsCount: props.selectedStationsArray?.length || 0
+  });
+  
   return (
-    <MapDataProvider {...props}>
-      <MapApp selectedStationId={props.selectedStationId} />
+    <MapDataProvider 
+      {...props}
+      selectedStationsArray={props.selectedStationsArray}
+    >
+      <MapApp 
+        selectedStationId={props.selectedStationId} 
+      />
     </MapDataProvider>
   );
 } 
