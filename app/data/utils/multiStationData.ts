@@ -95,7 +95,13 @@ export function processMultiStationData({
           'Wind Direction': stationDayObservation['Wind Direction'] || station['Wind Direction'] || '-',
           'Precip Accum One Hour': stationDayObservation['Precip Accum One Hour'] || station['Precip Accum One Hour'] || '-',
           'Date': stationDayObservation['Date'] || stationDayObservation['Day'] || new Date().toLocaleDateString(),
-          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString()
+          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString(),
+          'Elevation': stationDayObservation['Elevation'] || station['Elevation'] || '-',
+          'Latitude': stationDayObservation['Latitude'] || station['Latitude'] || '-',
+          'Longitude': stationDayObservation['Longitude'] || station['Longitude'] || '-',
+          'Relative Humidity': stationDayObservation['Relative Humidity'] || station['Relative Humidity'] || '-',
+          'Solar Radiation': stationDayObservation['Solar Radiation'] || station['Solar Radiation'] || '-',
+
         };
 
         console.log('🟠 ENHANCED STATION:', {
@@ -135,7 +141,7 @@ export function processMultiStationData({
   const stationNames = stations.map(s => s.Station || s.name || s.id);
   const title = stations.length === 1 
     ? `${stationNames[0]} - Summary`
-    : `Station Comparison (${stations.length} stations): ${stationNames.join(', ')}`;
+    : `${stationNames.join(', ')}`;
   
   const result = {
     data: enhancedStations, // ← Array of all enhanced stations
@@ -147,7 +153,7 @@ export function processMultiStationData({
     title: title,
     finalData: result,
     enhancedStationsDetails: enhancedStations.map(station => ({
-      name: station.Station || station.name || station.id,
+      name: station.Station,  // Use Station field since we ensure it exists
       fields: Object.keys(station),
       sampleFields: {
         'Cur Air Temp': station['Cur Air Temp'],
