@@ -67,6 +67,7 @@ interface MapDataContextType {
   filteredObservationsDataHour: any;
   isMetric: boolean;
   selectedStation: any;
+  selectedStationsArray: any[];
   isDrawerOpen: boolean;
   handleStationSelect: (station: any) => void;
   closeDrawer: () => void;
@@ -99,6 +100,7 @@ export const MapDataProvider: React.FC<{
     end_time_pdt: moment.Moment;
   };
   selectedStationId: string | null;
+  selectedStationsArray: any[];
   onLayerToggle: (layerId: LayerId) => void;
   activeLayerState: LayerState;
 }> = ({
@@ -113,6 +115,7 @@ export const MapDataProvider: React.FC<{
   calculateCurrentTimeRange,
   timeRangeData,
   selectedStationId,
+  selectedStationsArray,
   onLayerToggle,
   activeLayerState
 }) => {
@@ -426,6 +429,25 @@ export const MapDataProvider: React.FC<{
     setIsDrawerOpen(false);
   }, []);
 
+  // Add this useEffect around line 115 (after state initialization):
+  useEffect(() => {
+    console.log('🟢 MAP DATA CONTEXT - selectedStationId changed:', {
+      selectedStationId,
+      shouldTriggerStationDrawerUpdate: true,
+      observationsDataDayLength: observationsDataDay?.data?.length || 0,
+      observationsDataHourLength: observationsDataHour?.data?.length || 0
+    });
+  }, [selectedStationId, observationsDataDay, observationsDataHour]);
+
+  // Add console log to track the received array (around line 110):
+  useEffect(() => {
+    console.log('🟢 MAP DATA PROVIDER - selectedStationsArray received:', {
+      selectedStationsArray,
+      stationsCount: selectedStationsArray?.length || 0,
+      stationNames: selectedStationsArray?.map(s => s?.name || s?.Station) || []
+    });
+  }, [selectedStationsArray]);
+
   // Provide all values
   const value = {
     mapData,
@@ -435,6 +457,7 @@ export const MapDataProvider: React.FC<{
     filteredObservationsDataHour,
     isMetric,
     selectedStation,
+    selectedStationsArray,
     isDrawerOpen,
     handleStationSelect,
     closeDrawer,

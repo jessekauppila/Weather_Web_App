@@ -31,29 +31,31 @@ export function StationSelector({
 
   const handleChange = useCallback((event: SelectChangeEvent<string[]>) => {
     const value = event.target.value as string[];
-    const limitedValue = value.slice(0, maxSelections); // Limit to max selections
+    const limitedValue = value.slice(0, maxSelections);
     
-    console.log('🔴 STATION SELECTOR - Multi-selection made:', {
+    console.log('🔴 STATION SELECTOR - Multi-selection changed:', {
       selectedIds: limitedValue,
       selectedCount: limitedValue.length,
-      maxAllowed: maxSelections
+      maxAllowed: maxSelections,
+      previousSelection: selectedStationIds // Track what was selected before
     });
     
-    // Update the ID array
+    // Update the ID array FIRST
     onStationSelectionChange(limitedValue);
     
     // Convert IDs to station objects for handleStationSelect
     const selectedStations = limitedValue.map(id => 
       stations.find(s => s.id === id)
-    ).filter(Boolean); // Remove any undefined results
+    ).filter(Boolean);
     
     console.log('🔴 STATION SELECTOR - Calling handleStationSelect with stations:', {
       stationCount: selectedStations.length,
-      stationNames: selectedStations.map(s => s?.name)
+      stationNames: selectedStations.map(s => s?.name),
+      stationObjects: selectedStations
     });
     
     handleStationSelect(selectedStations);
-  }, [stations, handleStationSelect, onStationSelectionChange, maxSelections]);
+  }, [stations, handleStationSelect, onStationSelectionChange, maxSelections, selectedStationIds]);
 
   const memoizedStationOptions = useMemo(() => (
     regions.map((region) => [
