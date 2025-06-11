@@ -689,93 +689,20 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   // Replace the multiStationDayData useMemo with enhanced debugging:
   const multiStationDayData = useMemo(() => {
-    console.log('🟠 STATION DRAWER - Creating multiStationDayData:', {
-      currentStations: currentStations,
-      currentStationsLength: currentStations.length,
-      observationsDataDay: observationsDataDay,
-      isMultiStationMode: isMultiStationMode
-    });
-
     const result = processMultiStationData({
       stations: currentStations,
       observationsDataDay
     });
 
-    console.log('🟠 STATION DRAWER - multiStationDayData result:', {
-      result: result,
-      dataLength: result.data.length,
-      title: result.title,
-      resultData: result.data
-    });
-
     return result;
   }, [currentStations, observationsDataDay]);
 
-  // Also add a separate useEffect to log when multiStationDayData changes:
   useEffect(() => {
-    console.log('🟠 STATION DRAWER - multiStationDayData changed:', {
-      multiStationDayData: multiStationDayData,
-      dataLength: multiStationDayData.data.length,
-      title: multiStationDayData.title,
-      isMultiStationMode: isMultiStationMode,
-      firstStationInData: multiStationDayData.data[0]
-    });
-  }, [multiStationDayData, isMultiStationMode]);
-
-  // Add useEffect to log when multiStationDataHourFiltered changes:
-  useEffect(() => {
-    console.log('🟣 STATION DRAWER - multiStationDataHourFiltered changed:', {
-      multiStationDataHourFiltered: multiStationDataHourFiltered,
-      totalDataLength: multiStationDataHourFiltered.data.length,
-      stationDataKeys: Object.keys(multiStationDataHourFiltered.stationData || {}),
-      stationRecordCounts: Object.entries(multiStationDataHourFiltered.stationData || {}).map(([station, data]) => ({
-        station,
-        recordCount: Array.isArray(data) ? data.length : 0
-      })),
-      title: multiStationDataHourFiltered.title,
-      isMultiStationMode: isMultiStationMode
-    });
-  }, [multiStationDataHourFiltered, isMultiStationMode]);
-
-  useEffect(() => {
-    console.log('🟠 STATION DRAWER - Props received:', {
-      isOpen,
-      singleStation: station ? {
-        name: station.Station,
-        stid: station.Stid,
-        elevation: station.Elevation
-      } : undefined,
-      multipleStations: stations ? stations.map(s => ({
-        name: s.Station,
-        stid: s.Stid
-      })) : undefined,
-      hasTimeRangeData: !!timeRangeData,
-      hasObservationsDataDay: !!observationsDataDay?.data?.length,
-      hasObservationsDataHour: !!observationsDataHour?.data?.length
-    });
+    // Removed console logging
   }, [isOpen, station, stations, timeRangeData, observationsDataDay, observationsDataHour]);
 
   useEffect(() => {
-    console.log('🟠 STATION DRAWER - Processed data:', {
-      stationDayData: {
-        dataLength: stationDayData.data.length,
-        title: stationDayData.title,
-        stationDataDay: stationDayData.data
-      },
-      stationDataHourFiltered: {
-        dataLength: stationDataHourFiltered.data.length,
-        title: stationDataHourFiltered.title  
-      },
-      multiStationDataHourFiltered: {
-        totalDataLength: multiStationDataHourFiltered.data.length,
-        stationCount: Object.keys(multiStationDataHourFiltered.stationData || {}).length,
-        title: multiStationDataHourFiltered.title
-      },
-      processedDailyFromHourly: {
-        dataLength: processedDailyFromHourly.data.length,
-        title: processedDailyFromHourly.title
-      }
-    });
+    // Removed console logging  
   }, [stationDayData, stationDataHourFiltered, multiStationDataHourFiltered, processedDailyFromHourly]);
 
   if (!currentStations.length) return null;
