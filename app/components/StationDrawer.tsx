@@ -9,6 +9,8 @@ import { Tabs, Tab, Box } from '@mui/material';
 import WindRose from '../vis/windRose';
 import { circularMean, degreeToCompass } from '@/app/data/utils/degreeToCompass';
 import type { WeatherStation } from '../map/map';  
+import { processSingleStationData } from '../data/utils/singleStationData';
+import { processMultiStationData } from '../data/utils/multiStationData';
 
 type HourData = {
   Day: string;
@@ -194,52 +196,10 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   // Update stationDayData to incorporate date-specific data
   const stationDayData = useMemo(() => {
-    if (!station) return { data: [], title: '' };
-    
-    // If we have observationsDataDay with data for this station, use it to enhance station data
-    if (observationsDataDay?.data?.length) {
-      // Try to find the station's data in the observations
-      const stationDayObservation = observationsDataDay.data.find(
-        (obs: any) => obs.Station === station.Station
-      );
-      
-      if (stationDayObservation) {
-        // Create an enhanced station object with properties from both the station
-        // and its corresponding observation data
-        const enhancedStation = {
-          ...station, // Keep all existing station properties
-          // Update temperature properties
-          'Cur Air Temp': stationDayObservation['Cur Air Temp'] || station['Cur Air Temp'] || '-',
-          'Air Temp Min': stationDayObservation['Air Temp Min'] || station['Air Temp Min'] || '-',
-          'Air Temp Max': stationDayObservation['Air Temp Max'] || station['Air Temp Max'] || '-',
-          // Update snow properties
-          'Total Snow Depth': stationDayObservation['Total Snow Depth'] || station['Total Snow Depth'] || '-',
-          'Total Snow Depth Change': stationDayObservation['Total Snow Depth Change'] || station['Total Snow Depth Change'] || '-',
-          '24h Snow Accumulation': stationDayObservation['24h Snow Accumulation'] || station['24h Snow Accumulation'] || '-',
-          // Update wind properties
-          'Wind Speed Avg': stationDayObservation['Wind Speed Avg'] || station['Wind Speed Avg'] || '-',
-          'Max Wind Gust': stationDayObservation['Max Wind Gust'] || station['Max Wind Gust'] || '-',
-          'Wind Direction': stationDayObservation['Wind Direction'] || station['Wind Direction'] || '-',
-          // Update precipitation property
-          'Precip Accum One Hour': stationDayObservation['Precip Accum One Hour'] || station['Precip Accum One Hour'] || '-',
-          // Add the observation date to the station (important for tables)
-          'Date': stationDayObservation['Date'] || stationDayObservation['Day'] || new Date().toLocaleDateString(),
-          // Instead of a timestamp, use the actual observation date as an identifier
-          'ObservationDate': stationDayObservation['Start Date Time'] || stationDayObservation['Date'] || new Date().toISOString()
-        };
-        
-        return {
-          data: [enhancedStation],
-          title: `${enhancedStation.Station} - ${observationsDataDay.title}`
-        };
-      }
-    }
-    
-    // Fallback to just using the station data if no observation data available
-    return {
-      data: [station],
-      title: station.Station || ''
-    };
+    return processSingleStationData({
+      station,
+      observationsDataDay
+    });
   }, [station, observationsDataDay]);
 
   const findLatestValue = useCallback((data: any[], field: string): string => {
@@ -738,6 +698,14 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${total.toFixed(2)} in`;
   }
 
+  // Add this new useMemo for multi-station day data
+  const multiStationDayData = useMemo(() => {
+    return processMultiStationData({
+      stations: currentStations,
+      observationsDataDay
+    });
+  }, [currentStations, observationsDataDay]);
+
   useEffect(() => {
     console.log('🟠 STATION DRAWER - Props received:', {
       isOpen,
@@ -922,19 +890,30 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           {/* ///////////////////|||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\ */}
 
           <TabPanel value={activeTab} index={0}>
-            { 
+            {isMultiStationMode ? (
               <div>
-                <h3>Station Comparison</h3>
-                {/* For now, show all stations individually */}
-                  <DayAveragesTable 
+                <h3 className="text-lg font-semibold mb-4 text-[var(--app-text-primary)]">
+                  Station Comparison ({currentStations.length} stations)
+                </h3>
+                
+                {/* Use the multi-station data structure */}
+                <DayAveragesTable 
+                  dayAverages={multiStationDayData}
+                  onStationClick={() => {}}
+                  mode={tableMode}
+                  key={`multi-station-comparison`}
+                />
+              </div>
+            ) : (
+              <div>
+                <DayAveragesTable 
                   dayAverages={stationDayData}
                   onStationClick={() => {}}
                   mode={tableMode}
-                  key={`summary-${currentStations[0]?.Station}`}
+                  key={`single-station-summary`}
                 />
               </div>
-            
-            }
+            )}
           </TabPanel>
 
                     {/* ///////////////////|||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\ */}
