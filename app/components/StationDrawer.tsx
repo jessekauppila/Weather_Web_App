@@ -288,11 +288,22 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
   // NEW: Multi-station hourly filtered data
   const multiStationDataHourFiltered = useMemo(() => {
-    return processMultiStationHourlyData({
+    const result = processMultiStationHourlyData({
       stations: currentStations,
       filteredObservationsDataHour,
       isMultiStationMode
     });
+    
+    // Temporary debug logging
+    console.log('🔵 multiStationDataHourFiltered result:', {
+      stationsCount: currentStations.length,
+      isMultiStationMode,
+      hasFilteredObservationsDataHour: !!filteredObservationsDataHour?.data?.length,
+      resultDataLength: result.data.length,
+      result
+    });
+    
+    return result;
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
   const stationDataHourUnFiltered = useMemo(() => {
@@ -960,17 +971,36 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 6: Wind Rose */}
           <TabPanel value={activeTab} index={5}>
-            {stationDataHourFiltered.data.length > 0 ? (
-              <div className="mb-6 app-section-solid">
-                <WindRose 
-                  data={stationDataHourFiltered.data}
-                  stationName={currentStations[0]?.Station || ''}
-                />
-              </div>
+            {isMultiStationMode ? (
+              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
+                <div>
+                  {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
+                    <div key={`windrose-${stationName}-${index}`} className="mb-6 app-section-solid">
+                      <WindRose 
+                        data={stationHourlyData as any[]}
+                        stationName={stationName}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No multi-station wind data available</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p>No wind data available</p>
-              </div>
+              stationDataHourFiltered.data.length > 0 ? (
+                <div className="mb-6 app-section-solid">
+                  <WindRose 
+                    data={stationDataHourFiltered.data}
+                    stationName={currentStations[0]?.Station || ''}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No wind data available</p>
+                </div>
+              )
             )}
           </TabPanel>
 
