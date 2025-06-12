@@ -15,6 +15,8 @@ import { processSingleStationHourlyData } from '../data/utils/singleStationHourl
 import { processMultiStationHourlyData } from '../data/utils/multiStationHourlyData';
 import WindRoseSimple from '../vis/windRoseSimple';
 import WindRoseLegend from '../vis/windRoseLegend';
+import { processHourlyData } from '../data/utils/processHourlyData';
+
 
 
 type HourData = {
@@ -301,108 +303,61 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
   const stationDataHourUnFiltered = useMemo(() => {
-    if (!observationsDataHour?.data || currentStations.length === 0) {
-      return {
-        data: [],
-        stationData: {},
-        title: 'No Raw Hourly Data Available'
-      };
-    }
-  
-    // Multi-station mode
-    if (isMultiStationMode) {
-      const stationDataMap: { [stationName: string]: any[] } = {};
-      const allData: any[] = [];
-  
-      currentStations.forEach(station => {
-        const stationIdentifier = station.Station || station.name || station.id;
-        const stationData = observationsDataHour.data.filter(
-          (obs: { Station: string }) => obs.Station === stationIdentifier
-        );
-        // Enhance with station props
-        const enhancedData = stationData.map((hourData: { [key: string]: any }) => ({
-          ...hourData,
-          'Stid': station.Stid,
-          'Elevation': station.Elevation,
-          'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
-        }));
-        stationDataMap[stationIdentifier] = enhancedData;
-        allData.push(...enhancedData);
-      });
-  
-      return {
-        data: allData,
-        stationData: stationDataMap,
-        title: `Raw Hourly Data - ${currentStations.length} Stations`
-      };
-    }
-  
-    // Single station mode
-    const station = currentStations[0];
-    const filteredData = observationsDataHour.data.filter(
-      (obs: { Station: string }) => obs.Station === station.Station
-    );
-    const enhancedData = filteredData.map((hourData: { [key: string]: any }) => ({
-      ...hourData,
-      'Stid': station.Stid,
-      'Elevation': station.Elevation,
-      'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
-    }));
-  
-    return {
-      data: enhancedData,
-      stationData: { [station.Station]: enhancedData },
-      title: `Raw Hourly Data - ${station.Station}`
-    };
+    return processHourlyData({
+      stations: currentStations,
+      observationsDataHour,
+      isMultiStationMode
+    });
   }, [currentStations, observationsDataHour?.data, isMultiStationMode]);
 
-  const stationObservationsDataDay = useMemo(() => {
-    if (!station || !observationsDataDay?.data) {
-      return {
-        data: [],
-        title: station ? `Daily Data - ${station.Station}` : ''
-      };
-    }
 
-    const filteredData = observationsDataDay.data.filter(
-      (obs: { Station: string }) => obs.Station === station.Station
-    );
+  // const stationObservationsDataDay = useMemo(() => {
+  //   if (!station || !observationsDataDay?.data) {
+  //     return {
+  //       data: [],
+  //       title: station ? `Daily Data - ${station.Station}` : ''
+  //     };
+  //   }
 
-    // If no data found, return empty
-    if (!filteredData.length) {
-      return {
-        data: [],
-        title: station ? `Daily Data - ${station.Station}` : ''
-      };
-    }
+  //   const filteredData = observationsDataDay.data.filter(
+  //     (obs: { Station: string }) => obs.Station === station.Station
+  //   );
 
-    // Format the data to match the desired structure
-    const formattedData = filteredData.map((obs: { 
-      Station: string;
-      'Start Date Time': string;
-      'End Date Time': string;
-      [key: string]: any;
-    }) => ({
-      ...obs,
-      Date: obs['Start Date Time']?.split(',')[0] || '',
-      Stid: `${obs['Start Date Time']?.split(',')[1]?.trim()} - ${obs['End Date Time']?.split(',')[1]?.trim()}`,
-      Latitude: station.Latitude,
-      Longitude: station.Longitude,
-      // Use the actual observation dates as identifiers instead of random timestamps
-      'ObservationPeriod': `${obs['Start Date Time'] || ''}-${obs['End Date Time'] || ''}`
-    }));
+  //   // If no data found, return empty
+  //   if (!filteredData.length) {
+  //     return {
+  //       data: [],
+  //       title: station ? `Daily Data - ${station.Station}` : ''
+  //     };
+  //   }
 
-    // Create the title with elevation and date range
-    const title = `${station.Station} - ${station.Elevation}\n${formattedData[0]?.['Start Date Time']?.split(',')[1]?.trim()} - ${formattedData[0]?.['End Date Time']?.split(',')[1]?.trim()}`;
+  //   // Format the data to match the desired structure
+  //   const formattedData = filteredData.map((obs: { 
+  //     Station: string;
+  //     'Start Date Time': string;
+  //     'End Date Time': string;
+  //     [key: string]: any;
+  //   }) => ({
+  //     ...obs,
+  //     Date: obs['Start Date Time']?.split(',')[0] || '',
+  //     Stid: `${obs['Start Date Time']?.split(',')[1]?.trim()} - ${obs['End Date Time']?.split(',')[1]?.trim()}`,
+  //     Latitude: station.Latitude,
+  //     Longitude: station.Longitude,
+  //     // Use the actual observation dates as identifiers instead of random timestamps
+  //     'ObservationPeriod': `${obs['Start Date Time'] || ''}-${obs['End Date Time'] || ''}`
+  //   }));
 
-    return {
-      data: formattedData,
-      title
-    };
-  }, [
-   station, 
-    observationsDataDay?.data
-  ]);
+  //   // Create the title with elevation and date range
+  //   const title = `${station.Station} - ${station.Elevation}\n${formattedData[0]?.['Start Date Time']?.split(',')[1]?.trim()} - ${formattedData[0]?.['End Date Time']?.split(',')[1]?.trim()}`;
+
+  //   return {
+  //     data: formattedData,
+  //     title
+  //   };
+  // }, [
+  //  station, 
+  //   observationsDataDay?.data
+  // ]);
 
   // Replace the safeTimeRangeData useMemo with this
   const timeRangeInfo = useMemo(() => {
@@ -965,18 +920,40 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 5: Raw Hourly Data Table */}
           <TabPanel value={activeTab} index={4}>
-            {stationDataHourUnFiltered.data.length > 0 ? (
-              <div className="mb-6 app-section-solid">
-                <HourWxTable 
-                  hourAverages={stationDataHourUnFiltered}
-                  key={`raw-${currentStations[0]?.Station}`}
-                />
-              </div>
+            {isMultiStationMode ? (
+              stationDataHourUnFiltered.data.length > 0 && stationDataHourUnFiltered.stationData ? (
+                <div className="flex flex-col gap-6">
+                  {Object.entries(stationDataHourUnFiltered.stationData).map(([stationName, stationHourlyData], index) => (
+                    <div key={`hourly-table-${stationName}-${index}`} className="app-section-solid">
+                      <HourWxTable 
+                        hourAverages={{
+                          data: stationHourlyData as any[],
+                          title: `Raw Hourly Data - ${stationName}`
+                        }}
+                        key={`raw-${stationName}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No multi-station hourly data available</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p>No raw hourly data available</p>
-            </div>
-          )}
+              stationDataHourUnFiltered.data.length > 0 ? (
+                <div className="mb-6 app-section-solid">
+                  <HourWxTable 
+                    hourAverages={stationDataHourUnFiltered}
+                    key={`raw-${currentStations[0]?.Station}`}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No raw hourly data available</p>
+                </div>
+              )
+            )}
           </TabPanel>
 
           {/* Tab 6: Wind Rose */}
