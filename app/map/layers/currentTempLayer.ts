@@ -28,8 +28,8 @@ export function createCurrentTempLayer(
       let icon_num = 'minus-9';
       if (curTemp <= -9) icon_num = 'minus-9';
       else if (curTemp <= -1) icon_num = `minus${curTemp}`;
-      else if (curTemp <= 59) icon_num = `${curTemp}`;
-      else icon_num = '60';
+      else if (curTemp <= 119) icon_num = `${curTemp}`;
+      else icon_num = '120';
 
       return `temp-${icon_num}`;
     },

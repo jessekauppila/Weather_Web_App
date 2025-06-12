@@ -323,7 +323,7 @@ export function filterSnowDepthOutliers(
     if (filterCache.size > 1000) { // Adjust size limit as needed
         const firstKey = filterCache.keys().next().value;
         if (typeof firstKey === 'string') {
-            filterCache.delete(firstKey);
+        filterCache.delete(firstKey);
         }
     }
 
