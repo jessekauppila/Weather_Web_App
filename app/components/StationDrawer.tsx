@@ -13,6 +13,9 @@ import { processSingleStationData } from '../data/utils/singleStationData';
 import { processMultiStationData } from '../data/utils/multiStationData';
 import { processSingleStationHourlyData } from '../data/utils/singleStationHourlyData';
 import { processMultiStationHourlyData } from '../data/utils/multiStationHourlyData';
+import WindRoseSimple from '../vis/windRoseSimple';
+import WindRoseLegend from '../vis/windRoseLegend';
+
 
 type HourData = {
   Day: string;
@@ -973,15 +976,28 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
           <TabPanel value={activeTab} index={5}>
             {isMultiStationMode ? (
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
-                <div>
-                  {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
-                    <div key={`windrose-${stationName}-${index}`} className="mb-6 app-section-solid">
-                      <WindRose 
-                        data={stationHourlyData as any[]}
-                        stationName={stationName}
-                      />
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Wind Roses */}
+                  <div className="flex-1">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
+                        <div key={`windrose-${stationName}-${index}`} className="app-section-solid">
+                          <WindRoseSimple 
+                            data={stationHourlyData as any[]}
+                            stationName={stationName}
+                            size="medium"
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  
+                  {/* Shared Legend */}
+                  <div className="lg:w-80 flex-shrink-0">
+                    <div className="app-section-solid sticky top-4">
+                      <WindRoseLegend />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
