@@ -13,25 +13,11 @@ export default function useStationDrawer(): UseStationDrawerReturn {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleStationSelect = useCallback((station: WeatherStation) => {
-    console.log('🟢 USE_STATION_DRAWER - handleStationSelect called:', {
-      newStation: {
-        name: station.Station,
-        stid: station.Stid,
-        elevation: station.Elevation
-      },
-      previousStation: selectedStation?.Station || 'None',
-      drawerWasOpen: isDrawerOpen
-    });
-    
     setSelectedStation(station);
     setIsDrawerOpen(true);
   }, [selectedStation, isDrawerOpen]);
 
   const closeDrawer = useCallback(() => {
-    console.log('🟢 USE_STATION_DRAWER - closeDrawer called:', {
-      closingStation: selectedStation?.Station || 'None'
-    });
-    
     setIsDrawerOpen(false);
     setSelectedStation(null);
   }, [selectedStation]);

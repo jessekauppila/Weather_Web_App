@@ -297,15 +297,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       isMultiStationMode
     });
     
-    // Temporary debug logging
-    console.log('🔵 multiStationDataHourFiltered result:', {
-      stationsCount: currentStations.length,
-      isMultiStationMode,
-      hasFilteredObservationsDataHour: !!filteredObservationsDataHour?.data?.length,
-      resultDataLength: result.data.length,
-      result
-    });
-    
     return result;
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
@@ -416,7 +407,6 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   // Replace the safeTimeRangeData useMemo with this
   const timeRangeInfo = useMemo(() => {
     if (!timeRangeData || !timeRangeData.start_time_pdt || !timeRangeData.end_time_pdt) {
-      console.error('StationDrawer: Missing or invalid timeRangeData!');
       return null;
     }
     
@@ -729,11 +719,11 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   }, [currentStations, observationsDataDay]);
 
   useEffect(() => {
-    // Removed console logging
+    // Empty effect
   }, [isOpen, station, stations, timeRangeData, observationsDataDay, observationsDataHour]);
 
   useEffect(() => {
-    // Removed console logging  
+    // Empty effect
   }, [stationDayData, stationDataHourFiltered, multiStationDataHourFiltered, processedDailyFromHourly]);
 
   if (!currentStations.length) return null;
