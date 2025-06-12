@@ -147,7 +147,7 @@ export function StationSelector({
                   label={station?.name || stationId}
                   size="small"
                   sx={{
-                    backgroundColor: 'var(--app-section-bg)',
+                    backgroundColor: 'var(--app-text-tertiary)',
                     color: 'var(--app-text-primary)',
                     fontSize: '0.75rem',
                     height: '24px',
