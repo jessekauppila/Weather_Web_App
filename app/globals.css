@@ -24,6 +24,8 @@
   /* Text colors */
   --app-text-primary: #a9a9a9;              /* Light gray for primary text (active elements) */
   --app-text-secondary: #757575;            /* Medium gray for secondary text (inactive elements) */
+  --app-text-tertiary: #454545;            /* Medium gray for secondary text (inactive elements) */
+
   
   /* Border colors */
   --app-border-color: #616161;              /* Medium gray for borders */
