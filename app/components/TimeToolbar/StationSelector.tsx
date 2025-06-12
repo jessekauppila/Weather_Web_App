@@ -7,11 +7,13 @@ import {
   Checkbox,
   ListItemText,
   Chip,
-  Box
+  Box,
+  IconButton
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material';
 import { regions } from '../../config/regions';
 import { useMemo, useCallback } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface StationSelectorProps {
   stations: Array<{ id: string; name: string }>;
@@ -146,28 +148,48 @@ export function StationSelector({
                   key={stationId}
                   label={station?.name || stationId}
                   size="small"
+                  deleteIcon={
+                    <IconButton
+                      size="small"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        console.log('🔴 STATION SELECTOR - Delete button clicked');
+                        
+                        const newSelected = selectedStationIds.filter(id => id !== stationId);
+                        console.log('🔴 STATION SELECTOR - New selection:', newSelected);
+                        
+                        // First update selectedStationIds
+                        onStationSelectionChange(newSelected);
+                        
+                        // Then update selectedStations based on the new list
+                        const selectedStations = newSelected.map(id => 
+                          stations.find(s => s.id === id)
+                        ).filter(Boolean);
+                        
+                        console.log('🔴 STATION SELECTOR - Calling handleStationSelect with:', selectedStations);
+                        handleStationSelect(selectedStations);
+                      }}
+                      sx={{
+                        padding: '2px',
+                        margin: '0 2px 0 -6px',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                        }
+                      }}
+                    >
+                      <CloseIcon sx={{ fontSize: '16px', color: 'var(--app-text-secondary)' }} />
+                    </IconButton>
+                  }
                   sx={{
                     backgroundColor: 'var(--app-text-tertiary)',
                     color: 'var(--app-text-primary)',
                     fontSize: '0.75rem',
                     height: '24px',
                     '& .MuiChip-deleteIcon': {
-                      color: 'var(--app-text-secondary)',
-                      fontSize: '16px',
-                      '&:hover': {
-                        color: 'var(--app-text-primary)'
-                      }
+                      display: 'none' // Hide the default delete icon
                     }
                   }}
-                  onDelete={() => {
-                    const newSelected = selectedStationIds.filter(id => id !== stationId);
-                    onStationSelectionChange(newSelected);
-                    
-                    const selectedStations = newSelected.map(id => 
-                      stations.find(s => s.id === id)
-                    ).filter(Boolean);
-                    handleStationSelect(selectedStations);
-                  }}
+                  onDelete={() => {}} // Keep this empty but present to maintain chip structure
                 />
               );
             })}
