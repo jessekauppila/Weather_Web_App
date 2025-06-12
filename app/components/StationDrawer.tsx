@@ -310,43 +310,60 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
   const stationDataHourUnFiltered = useMemo(() => {
-    if (!station || !observationsDataHour?.data) {
+    if (!observationsDataHour?.data || currentStations.length === 0) {
       return {
         data: [],
-        title: station ? `Raw Hourly Data - ${station.Station}` : ''
+        stationData: {},
+        title: 'No Raw Hourly Data Available'
       };
     }
-
-    // Get data for this specific station
+  
+    // Multi-station mode
+    if (isMultiStationMode) {
+      const stationDataMap: { [stationName: string]: any[] } = {};
+      const allData: any[] = [];
+  
+      currentStations.forEach(station => {
+        const stationIdentifier = station.Station || station.name || station.id;
+        const stationData = observationsDataHour.data.filter(
+          (obs: { Station: string }) => obs.Station === stationIdentifier
+        );
+        // Enhance with station props
+        const enhancedData = stationData.map((hourData: { [key: string]: any }) => ({
+          ...hourData,
+          'Stid': station.Stid,
+          'Elevation': station.Elevation,
+          'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
+        }));
+        stationDataMap[stationIdentifier] = enhancedData;
+        allData.push(...enhancedData);
+      });
+  
+      return {
+        data: allData,
+        stationData: stationDataMap,
+        title: `Raw Hourly Data - ${currentStations.length} Stations`
+      };
+    }
+  
+    // Single station mode
+    const station = currentStations[0];
     const filteredData = observationsDataHour.data.filter(
       (obs: { Station: string }) => obs.Station === station.Station
     );
-    
-    // If we have data, enhance it with the current station properties for consistency
-    if (filteredData.length > 0) {
-      // Add some station properties to each hourly observation
-      const enhancedData = filteredData.map((hourData: { [key: string]: any }) => ({
-        ...hourData,
-        // Add any important station properties here
-        'Stid': station.Stid,
-        'Elevation': station.Elevation,
-        // Use the observation's own date/time as an identifier instead of a random timestamp
-        'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
-      }));
-      
-      return {
-        data: enhancedData,
-        title: `Raw Hourly Data - ${station.Station}`
-      };
-    }
-
+    const enhancedData = filteredData.map((hourData: { [key: string]: any }) => ({
+      ...hourData,
+      'Stid': station.Stid,
+      'Elevation': station.Elevation,
+      'ObservationId': `${hourData.Day || ''}-${hourData.Hour || ''}-${hourData.Station || ''}`
+    }));
+  
     return {
-      data: filteredData,
+      data: enhancedData,
+      stationData: { [station.Station]: enhancedData },
       title: `Raw Hourly Data - ${station.Station}`
     };
-  }, [station, 
-    observationsDataHour?.data
-  ]);
+  }, [currentStations, observationsDataHour?.data, isMultiStationMode]);
 
   const stationObservationsDataDay = useMemo(() => {
     if (!station || !observationsDataDay?.data) {
