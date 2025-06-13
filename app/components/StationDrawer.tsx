@@ -750,34 +750,34 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               />
 
               <Tab 
-                label={isMultiStationMode ? "Station Comparison Graphs 2" : "Station Comparison Graphs 2"}
+                label={isMultiStationMode ? "Data Comparison Graphs" : "Data Comparison Graphs"}
                 id={`station-tab-2`}
                 aria-controls={`station-tabpanel-2`}
               />
 
               <Tab 
-                label={isMultiStationMode ? "Data Comparison Graphs" : "Data Comparison Graphs"}
+                label={isMultiStationMode ? "Filtered Tabular Data" : "Filtered Data"}
                 id={`station-tab-3`}
                 aria-controls={`station-tabpanel-3`}
               />
 
               <Tab 
-                label={isMultiStationMode ? "Filtered Tabular Data" : "Filtered Data"}
+                label={isMultiStationMode ? "Raw Tabular Data" : "Raw Data"}
                 id={`station-tab-4`}
                 aria-controls={`station-tabpanel-4`}
               />
 
               <Tab 
-                label={isMultiStationMode ? "Raw Tabular Data" : "Raw Data"}
+                label={isMultiStationMode ? "Wind Rose" : "Wind Rose"}
                 id={`station-tab-5`}
                 aria-controls={`station-tabpanel-5`}
               />
 
-              <Tab 
-                label={isMultiStationMode ? "Wind Rose" : "Wind Rose"}
+              {/* <Tab 
+                label={isMultiStationMode ? "Station Comparison Graphs 2" : "Station Comparison Graphs 2"}
                 id={`station-tab-6`}
                 aria-controls={`station-tabpanel-6`}
-              />
+              /> */}
 
             </Tabs>
           </Box>
@@ -865,26 +865,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 1: Multi-Station Snow Depth Graph */}
           <TabPanel value={activeTab} index={1}>
-            {(
-              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
-                <div className="mb-6 app-section-solid">
-                  <WxMultiStationSnowDepth 
-                    stationData={multiStationDataHourFiltered}
-                    isHourly={true}
-                    isMetric={isMetric}
-                  />
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p>No multi-station snow depth data available</p>
-                </div>
-              )
-            )}
-          </TabPanel>
-
-          {/* Tab 2: Multi-Station Graphs */}
-          <TabPanel value={activeTab} index={2}>
-            {(
+          {(
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
                 <div className="flex flex-col gap-6">
                   {/* Snow Depth Graph */}
@@ -944,8 +925,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 3: Original Hourly Snow and Temperature Graph */}
-          <TabPanel value={activeTab} index={3}>
+          {/* Tab 2: Original Hourly Snow and Temperature Graph */}
+          <TabPanel value={activeTab} index={2}>
             {isMultiStationMode ? (
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
                 <div className="flex flex-col gap-6">
@@ -984,8 +965,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 4: Filtered Data */}
-          <TabPanel value={activeTab} index={4}>
+          {/* Tab 3: Filtered Data */}
+          <TabPanel value={activeTab} index={3}>
             {isMultiStationMode ? (
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
                 <div className="flex flex-col gap-6">
@@ -1022,8 +1003,8 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 5: Raw Data */}
-          <TabPanel value={activeTab} index={5}>
+          {/* Tab 4: Raw Data */}
+          <TabPanel value={activeTab} index={4}>
             {isMultiStationMode ? (
               stationDataHourUnFiltered.data.length > 0 && stationDataHourUnFiltered.stationData ? (
                 <div className="flex flex-col gap-6">
@@ -1060,36 +1041,19 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 6: Wind Rose */}
-          <TabPanel value={activeTab} index={6}>
+          {/* Tab 5: Wind Rose */}
+          <TabPanel value={activeTab} index={5}>
             {isMultiStationMode ? (
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Wind Roses */}
-                  <div className="flex-1">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                      {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
-                        <div key={`windrose-${stationName}-${index}`} className="app-section-solid">
-                          <WindRoseSimple 
-                            data={stationHourlyData as any[]}
-                            stationName={stationName}
-                            size="medium"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Shared Legend */}
-                  <div className="lg:w-80 flex-shrink-0">
-                    <div className="app-section-solid sticky top-4">
-                      <WindRoseLegend />
-                    </div>
-                  </div>
+                <div className="mb-6 app-section-solid">
+                  <WindRose 
+                    data={multiStationDataHourFiltered.data}
+                    stationName={currentStations[0]?.Station || ''}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p>No multi-station wind data available</p>
+                  <p>No wind data available</p>
                 </div>
               )
             ) : (
@@ -1107,6 +1071,25 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
               )
             )}
           </TabPanel>
+
+          {/* Tab 6: Multi-Station Graphs (moved from index 2) */}
+          {/* <TabPanel value={activeTab} index={6}>
+          {(
+              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
+                <div className="mb-6 app-section-solid">
+                  <WxMultiStationSnowDepth 
+                    stationData={multiStationDataHourFiltered}
+                    isHourly={true}
+                    isMetric={isMetric}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No multi-station snow depth data available</p>
+                </div>
+              )
+            )}
+          </TabPanel> */}
 
           {/* Tab 5: Station Comparison */}
           {/* <TabPanel value={activeTab} index={5}>
