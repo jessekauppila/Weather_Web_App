@@ -3,17 +3,6 @@ import * as d3 from 'd3';
 import moment from 'moment-timezone';
 import { formatValueWithUnit } from "@/app/utils/formatValueWithUnit";
 import { UnitType } from "@/app/utils/units";
-import { 
-  graphDimensions, 
-  graphColors, 
-  svgStyles, 
-  legendConfig,
-  barDimensions,
-  axisConfig,
-  tooltipConfig,
-  dateFormatting,
-  createScales
-} from './utils/graphStyles';
 
 interface DayAverage {
   [key: string]: string | number;
@@ -105,15 +94,24 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
     // Get container dimensions and set margins
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;
-    const containerHeight = graphDimensions.containerHeight;
-    const margin = graphDimensions.margin;
+    const containerHeight = 400; // Fixed height
+    const margin = { top: 30, right: 60, bottom: 50, left: 60 };
     const width = containerWidth - margin.left - margin.right;
     const height = containerHeight - margin.top - margin.bottom;
 
-    // Use shared colors
-    const { snowDepth, hourlySnow, precipitation, temperature } = graphColors;
+    // Define spacing constants at the top of the useEffect
+    const spacing = {
+      dateAxisOffset: 20,
+      legendOffset: 40  // This includes the dateAxisOffset plus additional space
+    };
 
-    // First process the data
+    // Add console logs to check data
+    //console.log('Raw data before processing:', dayAverages.data);
+
+    // At the start of data processing
+    //console.log('Raw data:', dayAverages.data);
+
+    // Process data first
     const data = dayAverages.data
       .map((d) => {
         const date = isHourly 
@@ -138,6 +136,8 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
         return processed;
       })
       .filter(d => d.date && !isNaN(d.date.getTime()));
+
+
 
     //SNOW DEPTH CHANGES 
     // Calculate snow depth changes with look-back for NaN values
@@ -164,17 +164,19 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
         return { ...point, snowDepth24h: 0 }; // Default to 0 if no valid comparison can be made
       });
 
+    //console.log('Data after initial processing:', rawData);
+
     // Apply interpolation after sorting and change calculation
     const dataInterpolated = interpolateValues(rawData);
 
-    // First calculate statistics
-    const avgSnowDepth = d3.mean(dataInterpolated, d => d.totalSnowDepth) || 0;
-    const minSnowDepth = d3.min(dataInterpolated, d => d.totalSnowDepth) || 0;
-    const maxSnowDepth = d3.max(dataInterpolated, d => d.totalSnowDepth) || 0;
-
-    // Then create scales
-    const yScaleTemp = createScales.temperature(dataInterpolated, height, isMetric);
-    const yScaleLine = createScales.snowDepth(dataInterpolated, height, avgSnowDepth);
+    // Keep temperature scale
+    const yScaleTemp = d3.scaleLinear()
+      .domain([
+        Math.min(10, d3.min(dataInterpolated, d => d.temp) || 10),
+        Math.max(50, d3.max(dataInterpolated, d => d.temp) || 50)
+      ])
+      .range([height, 0])
+      .nice();
 
     // Update legend items
     const legendItems = [
@@ -183,6 +185,31 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       'Liquid Precipitation (SWE)',
       'Temperature'
     ];
+
+    // // Create tooltip first
+    // const tooltip = d3.select('body')
+    //   .append('div')
+    //   .attr('class', 'snow-accum-tooltip')
+    //   .style('opacity', 0)
+    //   .style('position', 'absolute')
+    //   .style('pointer-events', 'none')
+    //   .style('background', 'white')
+    //   .style('border', '1px solid #ddd')
+    //   .style('border-radius', '4px')
+    //   .style('padding', '8px')
+    //   .style('z-index', '1000');
+
+    // Update tooltip content
+    // tooltip
+    //   .html(`
+    //     <div class="tooltip-content">
+    //       <strong>${d3.timeFormat(isHourly ? '%B %d %H:%M' : '%B %d')(d.date)}</strong><br/>
+    //       <span>Total Snow Depth: ${d.totalSnowDepth}″</span><br/>
+    //       <span>24h Snow Depth: ${d.snowDepth24h}″</span><br/>
+    //       <span>Precip Accum: ${d.precipAccum}″</span><br/>
+    //       <span>Temperature: ${d.temp}°F</span>
+    //     </div>
+    //   `);
 
     // Update scales with padding
     const xScale = d3.scaleTime()
@@ -221,15 +248,20 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .style('fill', 'rgb(128, 128, 128)') // Match the grey of the temperature area
       .text('Temperature (°F)');
 
+    // Calculate snow depth statistics and scales
+    const avgSnowDepth = d3.mean(dataInterpolated, d => d.totalSnowDepth) || 0;
+    const minSnowDepth = d3.min(dataInterpolated, d => d.totalSnowDepth) || 0;
+    const maxSnowDepth = d3.max(dataInterpolated, d => d.totalSnowDepth) || 0;
+
     // Calculate the range centered on the average
     const rangeMin = Math.min(minSnowDepth, avgSnowDepth - 6);
     const rangeMax = Math.max(maxSnowDepth, avgSnowDepth + 6);
 
     // Create scales with separate domains for line and bars
-    // const yScaleLine = d3.scaleLinear()
-    //   .domain([rangeMin, rangeMax])
-    //   .range([height, 0])
-    //   .nice();
+    const yScaleLine = d3.scaleLinear()
+      .domain([rangeMin, rangeMax])
+      .range([height, 0])
+      .nice();
 
     const yScaleBars = d3.scaleLinear()
       .domain([0, Math.max(2, d3.max(dataInterpolated, d => Math.max(d.snowDepth24h, d.precipAccum)) || 0)])
@@ -254,6 +286,16 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
     const tickValues = dataInterpolated
       .filter((_, i) => i % tickInterval === 0)
       .map(d => d.date);
+
+    // // Add x-axis with dynamic ticks
+    // svg.append('g')
+    //   .attr('transform', `translate(0,${height})`)
+    //   .call(d3.axisBottom(xScale)
+    //     .tickValues(tickValues)
+    //     .tickFormat((d) => moment(d as Date).format(isHourly ? 'h a' : 'MM/DD')))
+    //   .selectAll('text')
+    //   .style('text-anchor', 'middle')
+    //   .style('fill', 'black');
 
     // Create custom ticks for dates - only show first occurrence of each date
     const getDateTicks = () => {
@@ -424,7 +466,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       .attr('font-family', 'sans-serif')
       .attr('font-size', 12)
       .attr('text-anchor', 'start')
-      .attr('transform', `translate(0,${height + graphDimensions.spacing.legendOffset})`);
+      .attr('transform', `translate(0,${height + spacing.legendOffset})`);
 
     const itemWidth = legendWidth / legendItems.length;
 
@@ -450,7 +492,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
 
     // Update container height to account for all elements
     d3.select(svgRef.current)
-      .attr('height', height + margin.top + margin.bottom + graphDimensions.spacing.legendOffset); 
+      .attr('height', height + margin.top + margin.bottom + spacing.legendOffset); 
 
     // Remove the temperature area and range code and replace with a single line
     const tempLine = d3.line<(typeof dataInterpolated)[0]>()
@@ -551,7 +593,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
     // Keep the original time axis but modify it based on time span
     svg.append('g')
       .attr('class', 'x-axis-time')
-      .attr('transform', `translate(0,${height + graphDimensions.spacing.dateAxisOffset})`)
+      .attr('transform', `translate(0,${height + spacing.dateAxisOffset})`)
       .call(d3.axisBottom(xScaleBars)
         .tickValues(dataInterpolated.map(d => {
           // Only show ticks for the first hour of each day
@@ -572,10 +614,10 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       // Add bracket
       svg.append('path')
         .attr('d', `
-          M ${xScaleBars(date)} ${height + graphDimensions.spacing.dateAxisOffset - 15}
-          L ${xScaleBars(date)} ${height + graphDimensions.spacing.dateAxisOffset - 20}
-          L ${xScaleBars(nextDate)} ${height + graphDimensions.spacing.dateAxisOffset - 20}
-          L ${xScaleBars(nextDate)} ${height + graphDimensions.spacing.dateAxisOffset - 15}
+          M ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 15}
+          L ${xScaleBars(date)} ${height + spacing.dateAxisOffset - 20}
+          L ${xScaleBars(nextDate)} ${height + spacing.dateAxisOffset - 20}
+          L ${xScaleBars(nextDate)} ${height + spacing.dateAxisOffset - 15}
         `)
         .attr('stroke', 'black')
         .attr('fill', 'none');
@@ -583,7 +625,7 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       // Add centered date label
       svg.append('text')
         .attr('x', xScaleBars(date) + (xScaleBars(nextDate) - xScaleBars(date))/2)
-        .attr('y', height + graphDimensions.spacing.dateAxisOffset + 8)
+        .attr('y', height + spacing.dateAxisOffset + 8)
         .attr('text-anchor', 'middle')
         .style('fill', 'black')
         .style('font-size', '12px')
@@ -653,12 +695,20 @@ function WxSnowGraph({ dayAverages, isHourly = false, isMetric = false }: DayAve
       className={`graph-container bg-white p-4 rounded-xl shadow-md transition-opacity duration-500 ${
         isLoaded ? 'opacity-100' : 'opacity-0'
       }`}
-      style={svgStyles.container}
+      style={{ 
+        width: '100%',
+        height: '500px',
+        overflow: 'hidden'
+      }}
     >
       {/* <h3 className="text-center font-bold mb-4">{dayAverages.title}</h3> */}
       <svg 
         ref={svgRef}
-        style={svgStyles.svg}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: 'calc(100% - 2rem)'
+        }}
       />
     </div>
   );
