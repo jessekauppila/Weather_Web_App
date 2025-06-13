@@ -18,6 +18,7 @@ import WindRoseLegend from '../vis/windRoseLegend';
 import WxMultiStationSnowDepth from '../vis/wxMultiStationSnowDepth';
 import { processHourlyData } from '../data/utils/processHourlyData';
 import WxMultiStationSnowDepthVisx from '../vis/WxMultiStationSnowDepthVisx';
+import WxMultiStationVisX from '../vis/WxMultiStationVisX';
 
 
 
@@ -302,8 +303,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
       isMultiStationMode
     });
     
+    
+    
     return result;
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
+
+  console.log("multiStationDataHourFiltered", multiStationDataHourFiltered);
 
   const stationDataHourUnFiltered = useMemo(() => {
     return processHourlyData({
@@ -877,20 +882,63 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 2: Multi-Station Snow Depth Graph (Visx Version) */}
+          {/* Tab 2: Multi-Station Graphs */}
           <TabPanel value={activeTab} index={2}>
             {(
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
-                <div className="mb-6 app-section-solid">
-                  <WxMultiStationSnowDepthVisx 
-                    stationData={multiStationDataHourFiltered}
-                    isHourly={true}
-                    isMetric={isMetric}
-                  />
+                <div className="flex flex-col gap-6">
+                  {/* Snow Depth Graph */}
+
+                  {/* <div className="app-section-solid">
+                    <WxMultiStationSnowDepthVisx
+                      stationData={multiStationDataHourFiltered}
+                      // isHourly={true}
+                      // isMetric={isMetric}
+                    />
+                  </div> */}
+
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="snow_depth"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+                  
+                  {/* 24-Hour Snow Depth Graph */}
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="snow_24h"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+
+                  {/* Wind Speed Graph */}
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="wind_speed"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+
+                  {/* Precipitation Accumulation Graph */}
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="precip_accum"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p>No multi-station snow depth data available</p>
+                  <p>No multi-station data available</p>
                 </div>
               )
             )}
