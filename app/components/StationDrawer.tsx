@@ -15,8 +15,9 @@ import { processSingleStationHourlyData } from '../data/utils/singleStationHourl
 import { processMultiStationHourlyData } from '../data/utils/multiStationHourlyData';
 import WindRoseSimple from '../vis/windRoseSimple';
 import WindRoseLegend from '../vis/windRoseLegend';
-import WxMultiStationSnowDepth from '../vis/WxMultiStationSnowDepth';
+import WxMultiStationSnowDepth from '../vis/wxMultiStationSnowDepth';
 import { processHourlyData } from '../data/utils/processHourlyData';
+import WxMultiStationSnowDepthVisx from '../vis/WxMultiStationSnowDepthVisx';
 
 
 
@@ -876,12 +877,12 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
             )}
           </TabPanel>
 
-          {/* Tab 2: Multi-Station Snow Depth Graph (Duplicate) */}
+          {/* Tab 2: Multi-Station Snow Depth Graph (Visx Version) */}
           <TabPanel value={activeTab} index={2}>
             {(
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
                 <div className="mb-6 app-section-solid">
-                  <WxMultiStationSnowDepth 
+                  <WxMultiStationSnowDepthVisx 
                     stationData={multiStationDataHourFiltered}
                     isHourly={true}
                     isMetric={isMetric}
