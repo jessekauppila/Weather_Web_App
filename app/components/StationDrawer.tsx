@@ -1043,7 +1043,52 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 5: Wind Rose */}
           <TabPanel value={activeTab} index={5}>
-            {isMultiStationMode ? (
+
+          {isMultiStationMode ? (
+              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Wind Roses */}
+                  <div className="flex-1">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
+                        <div key={`windrose-${stationName}-${index}`} className="app-section-solid">
+                          <WindRoseSimple 
+                            data={stationHourlyData as any[]}
+                            stationName={stationName}
+                            size="medium"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Shared Legend */}
+                  <div className="lg:w-80 flex-shrink-0">
+                    <div className="app-section-solid sticky top-4">
+                      <WindRoseLegend />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No multi-station wind data available</p>
+                </div>
+              )
+            ) : (
+              stationDataHourFiltered.data.length > 0 ? (
+                <div className="mb-6 app-section-solid">
+                  <WindRose 
+                    data={stationDataHourFiltered.data}
+                    stationName={currentStations[0]?.Station || ''}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No wind data available</p>
+                </div>
+              )
+            )}
+            {/* {isMultiStationMode ? (
               multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
                 <div className="mb-6 app-section-solid">
                   <WindRose 
@@ -1069,7 +1114,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   <p>No wind data available</p>
                 </div>
               )
-            )}
+            )} */}
           </TabPanel>
 
           {/* Tab 6: Multi-Station Graphs (moved from index 2) */}
