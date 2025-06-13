@@ -405,7 +405,7 @@ export default function Home() {
             />
 
                 {/* Container for both controls positioned at the top */}
-                <div className="fixed top-4 left-4 right-4 z-10 flex flex-col md:flex-row gap-4 justify-between items-start"
+                <div className="fixed top-4 left-4 right-4 flex flex-col md:flex-row gap-4 justify-between items-start"
                   style={{
                     pointerEvents: 'auto',
                     maxHeight: 'calc(100vh - 2rem)',
@@ -413,7 +413,7 @@ export default function Home() {
                   }}
                 >
                 {/* Time toolbar - left on desktop, top on mobile */}
-                <div className="w-full md:flex-grow">
+                <div className="w-full md:flex-grow time-toolbar-container">
                   <TimeToolbar
                     {...timeProps}
                     {...stationProps}
