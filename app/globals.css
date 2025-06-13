@@ -1242,20 +1242,20 @@ body.drawer-open {
   top: var(--app-margin);
   left: 50%;
   transform: translate(-50%, 0);
-  width: 400px;
+  width: 800px; /* Increased from 400px to accommodate wider layout */
+  max-width: calc(100vw - 2rem); /* Ensure it doesn't overflow on smaller screens */
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border: none;
   border-radius: var(--app-border-radius);
-  z-index: 10000; /* Keep this highest */
+  z-index: 10000;
   margin: 0;
-  /* padding: var(--app-padding); */
   pointer-events: none;
   transition: transform 0.3s ease-in-out;
 }
 
 .time-toolbar-content {
-  padding: var(--app-padding); /* var(--app-padding) */
+  padding: var(--app-padding);
 }
 
 .time-toolbar.open {
@@ -1465,4 +1465,27 @@ body.drawer-open {
 .time-toolbar-container {
   isolation: isolate;
   z-index: 10000;
+}
+
+/* Mobile styles for TimeToolbar */
+@media (max-width: 768px) {
+  .time-toolbar {
+    width: calc(100vw - 2rem);
+  }
+  
+  .time-toolbar-content {
+    padding: calc(var(--app-padding) / 2);
+  }
+}
+
+/* Station selector specific styles */
+.station-selector {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .station-selector {
+    min-width: 300px;
+    max-width: 400px;
+  }
 }

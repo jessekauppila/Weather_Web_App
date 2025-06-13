@@ -163,22 +163,24 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
       <div className="time-toolbar-content">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 w-full">
-          <TimeRangeSelector
-            calculateCurrentTimeRange={calculateCurrentTimeRange}
-            handleTimeRangeChange={handleTimeRangeChange}
-          />
-          
-          <DateControls
-            selectedDate={selectedDate}
-            endDate={endDate}
-            handleDateChange={handleDateChange}
-            handleEndDateChange={handleEndDateChange}
-            handlePrevDay={handlePrevDay}
-            handleNextDay={handleNextDay}
-            useCustomEndDate={useCustomEndDate}
-          />
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <TimeRangeSelector
+              calculateCurrentTimeRange={calculateCurrentTimeRange}
+              handleTimeRangeChange={handleTimeRangeChange}
+            />
+            
+            <DateControls
+              selectedDate={selectedDate}
+              endDate={endDate}
+              handleDateChange={handleDateChange}
+              handleEndDateChange={handleEndDateChange}
+              handlePrevDay={handlePrevDay}
+              handleNextDay={handleNextDay}
+              useCustomEndDate={useCustomEndDate}
+            />
+          </div>
 
-     {/* <CutoffControls
+              {/* <CutoffControls
             dayRangeType={dayRangeType}
             handleDayRangeTypeChange={handleDayRangeTypeChange}
             customTime={customTime}
@@ -206,15 +208,24 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             handleUnitsPopupButtonClick={handleUnitsPopupButtonClick}
           /> */}
           
-        </div>
+        {/* </div>
 
-        <div className="w-full mt-4">
+        <div className="w-full mt-4"> */}
           <StationSelector
             stations={stations}
             handleStationSelect={handleMultiStationSelect}
             selectedStationIds={selectedStationIds}
             onStationSelectionChange={onStationSelectionChange}
           />
+
+          <div className="w-full sm:flex-grow sm:max-w-[400px]">
+            <StationSelector
+              stations={stations}
+              handleStationSelect={handleMultiStationSelect}
+              selectedStationIds={selectedStationIds}
+              onStationSelectionChange={onStationSelectionChange}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -129,7 +129,7 @@ export function StationSelector({
   ), [stations, selectedStationIds, maxSelections]);
 
   return (
-    <FormControl variant="outlined" size="small" className="w-full">
+    <FormControl variant="outlined" size="small" className="w-full station-selector">
       <InputLabel className="!text-[var(--app-text-primary)]">
         Stations ({selectedStationIds.length}/{maxSelections})
       </InputLabel>
@@ -220,7 +220,8 @@ export function StationSelector({
             minHeight: '40px !important',
             display: 'flex !important',
             alignItems: 'flex-start !important',
-            paddingTop: '8px !important'
+            paddingTop: '8px !important',
+            width: '100%'
           }
         }}
       >
