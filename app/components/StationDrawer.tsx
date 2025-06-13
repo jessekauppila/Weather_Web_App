@@ -869,19 +869,42 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 1: Hourly Snow and Temperature Graph */}
           <TabPanel value={activeTab} index={1}>
-            {stationDataHourFiltered.data.length > 0 ? (
-              <div className="mb-6 app-section-solid">
-                <WxSnowGraph 
-                  dayAverages={stationDataHourFiltered}
-                  isHourly={true}
-                  isMetric={isMetric}
-                />
-              </div>
+            {isMultiStationMode ? (
+              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
+                <div className="flex flex-col gap-6">
+                  {Object.entries(multiStationDataHourFiltered.stationData).map(([stationName, stationHourlyData], index) => (
+                    <div key={`hourly-graph-${stationName}-${index}`} className="app-section-solid">
+                      <WxSnowGraph 
+                        dayAverages={{
+                          data: stationHourlyData as any[],
+                          title: `Hourly Temperature and Snow Depth - ${stationName}`
+                        }}
+                        isHourly={true}
+                        isMetric={isMetric}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No multi-station hourly graph data available</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <p>No hourly graph data available</p>
-            </div>
-          )}
+              stationDataHourFiltered.data.length > 0 ? (
+                <div className="mb-6 app-section-solid">
+                  <WxSnowGraph 
+                    dayAverages={stationDataHourFiltered}
+                    isHourly={true}
+                    isMetric={isMetric}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No hourly graph data available</p>
+                </div>
+              )
+            )}
           </TabPanel>
 
           {/* Tab 2: Combined/Filtered Data */}
