@@ -1265,7 +1265,8 @@ body.drawer-open {
   background-color: var(--app-toolbar-bg);
   border-radius: var(--app-border-radius);
   overflow: hidden;
-  height: 120px; /* Increased height for 2D brush */
+  height: 80px; /* Reverted to 80px */
+  border: 1px solid var(--app-text-secondary);
 }
 
 .time-brush-container svg {
