@@ -1242,8 +1242,8 @@ body.drawer-open {
   top: var(--app-margin);
   left: 50%;
   transform: translate(-50%, 0);
-  width: 800px; /* Increased from 400px to accommodate wider layout */
-  max-width: calc(100vw - 2rem); /* Ensure it doesn't overflow on smaller screens */
+  width: 800px;
+  max-width: calc(100vw - 2rem);
   background-color: var(--app-toolbar-bg);
   color: var(--app-text-primary);
   border: none;
@@ -1256,6 +1256,48 @@ body.drawer-open {
 
 .time-toolbar-content {
   padding: var(--app-padding);
+}
+
+/* Add styles for the brush component */
+.time-brush-container {
+  width: 100%;
+  margin-bottom: var(--app-padding);
+  background-color: var(--app-toolbar-bg);
+  border-radius: var(--app-border-radius);
+  overflow: hidden;
+  height: 120px; /* Increased height for 2D brush */
+}
+
+.time-brush-container svg {
+  display: block;
+}
+
+/* Ensure text is visible */
+.time-brush-container text {
+  fill: var(--app-text-primary);
+}
+
+/* Style the brush handles */
+.time-brush-container .visx-brush-handle {
+  fill: var(--app-toolbar-bg);
+  stroke: var(--app-border-hover);
+  stroke-width: 1;
+  cursor: move;
+}
+
+/* Style the brush selection */
+.time-brush-container .visx-brush-selection {
+  fill: var(--app-hover-bg);
+  fill-opacity: 0.3;
+  stroke: var(--app-border-hover);
+  stroke-width: 1;
+  pointer-events: all !important;
+}
+
+/* Style the brush overlay */
+.time-brush-container .visx-brush-overlay {
+  fill: transparent;
+  cursor: crosshair;
 }
 
 .time-toolbar.open {
