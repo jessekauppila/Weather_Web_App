@@ -103,7 +103,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [brushDimensions, setBrushDimensions] = useState({ width: 0, height: 100 });
+  const [brushDimensions, setBrushDimensions] = useState({ width: 0, height: 80 });
   const brushContainerRef = useRef<HTMLDivElement>(null);
 
   const stationDrawer = useStationDrawer();
@@ -126,7 +126,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
       if (brushContainerRef.current) {
         setBrushDimensions({
           width: brushContainerRef.current.offsetWidth,
-          height: 100, // Fixed height for now
+          height: 80, // Set height back to 80
         });
       }
     };

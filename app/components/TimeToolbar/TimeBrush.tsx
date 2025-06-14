@@ -1,12 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
 import { Group } from '@visx/group';
 import { scaleTime, scaleLinear } from '@visx/scale';
 import { Brush } from '@visx/brush';
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, startOfDay, endOfDay, isValid } from 'date-fns';
 import { Axis } from '@visx/axis';
-import { Grid } from '@visx/grid';
-import { Text } from '@visx/text';
-import { useCallback } from 'react';
+import { PatternLines } from '@visx/pattern';
+import { BaseBrushState } from '@visx/brush/lib/types';
 
 interface TimeBrushProps {
   width: number;
@@ -14,17 +13,18 @@ interface TimeBrushProps {
   selectedDate: Date;
   endDate: Date;
   onBrushChange: (start: Date, end: Date) => void;
-  timeRangeData?: any[];
 }
 
 const dimensions = {
-  margin: { 
-    top: 20, 
-    right: 20, 
-    bottom: 30, 
-    left: 20 
-  }
+  margin: {
+    top: 10,
+    right: 20,
+    bottom: 30, // More space for labels
+    left: 20,
+  },
 };
+
+const PATTERN_ID = 'brush_pattern';
 
 export function TimeBrush({
   width,
@@ -32,116 +32,108 @@ export function TimeBrush({
   selectedDate,
   endDate,
   onBrushChange,
-  timeRangeData = []
 }: TimeBrushProps) {
-  // Calculate the date range (1 month back from current date)
+  const brushRef = useRef<any>(null);
+
+  // The brush will always show the last month.
   const dateRange = useMemo(() => {
-    const end = new Date();
-    const start = subMonths(end, 1);
+    const end = endOfDay(new Date());
+    const start = startOfDay(subMonths(end, 1));
     return { start, end };
   }, []);
 
-  // Create scales
-  const xScale = useMemo(() => {
-    return scaleTime({
-      domain: [dateRange.start, dateRange.end],
-      range: [dimensions.margin.left, width - dimensions.margin.right],
-      nice: true,
-    });
-  }, [dateRange, width]);
+  const innerWidth = width - dimensions.margin.left - dimensions.margin.right;
+  const innerHeight = height - dimensions.margin.top - dimensions.margin.bottom;
 
-  const yScale = useMemo(() => {
-    return scaleLinear({
-      domain: [0, 100],
-      range: [height - dimensions.margin.bottom, dimensions.margin.top],
-      nice: true,
-    });
-  }, [height]);
+  const xScale = useMemo(() => scaleTime<number>({
+    domain: [dateRange.start, dateRange.end],
+    range: [0, innerWidth],
+  }), [dateRange.start, dateRange.end, innerWidth]);
 
-  // Handle brush changes
-  const handleBrushChange = useCallback((domain: [Date, Date] | null) => {
-    if (domain && domain[0] && domain[1]) {
-      const start = new Date(domain[0]);
-      const end = new Date(domain[1]);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        onBrushChange(start, end);
-      }
+  const yScale = useMemo(() => scaleLinear<number>({
+    domain: [0, 1],
+    range: [innerHeight, 0],
+  }), [innerHeight]);
+
+  // This function is now called only when the user finishes dragging.
+  const handleBrushEnd = useCallback((domain: BaseBrushState) => {
+    if (!domain.x0 || !domain.x1) return;
+
+    const startDate = xScale.invert(domain.x0);
+    const endDate = xScale.invert(domain.x1);
+
+    if (isValid(startDate) && isValid(endDate)) {
+        onBrushChange(startDate, endDate);
     }
-  }, [onBrushChange]);
+  }, [xScale, onBrushChange]);
+
+  // This sets the initial highlighted area to your app's current selection.
+  const initialBrushPosition = useMemo(() => {
+    if (!isValid(selectedDate) || !isValid(endDate)) return undefined;
+    
+    const startX = xScale(selectedDate);
+    const endX = xScale(endDate);
+
+    return {
+      start: { x: Math.max(0, startX) },
+      end: { x: Math.min(innerWidth, endX) },
+    };
+  }, [selectedDate, endDate, xScale, innerWidth]);
 
   return (
-    <div className="w-full mb-4">
+    <div className="w-full">
       <svg width={width} height={height}>
-        <Group>
-          {/* Background */}
-          <rect
-            width={width}
-            height={height}
-            fill="var(--app-toolbar-bg)"
-            rx={4}
-          />
-
-          {/* Grid lines */}
-          <Grid
-            xScale={xScale}
-            yScale={yScale}
-            width={width - dimensions.margin.left - dimensions.margin.right}
-            height={height - dimensions.margin.top - dimensions.margin.bottom}
-            strokeDasharray="2,2"
+        <PatternLines
+            id={PATTERN_ID}
+            height={8}
+            width={8}
             stroke="var(--app-text-secondary)"
-            strokeOpacity={0.3}
+            strokeWidth={1}
+            orientation={['diagonal']}
+        />
+        <Group left={dimensions.margin.left} top={dimensions.margin.top}>
+          {/* This is the track that you can brush over */}
+          <rect
+            x={0}
+            y={0}
+            width={innerWidth}
+            height={innerHeight}
+            fill={`url(#${PATTERN_ID})`}
+            fillOpacity={0.2}
+            stroke='var(--app-text-secondary)'
+            strokeWidth={0.5}
           />
 
-          {/* Time axis */}
           <Axis
             orientation="bottom"
             scale={xScale}
-            top={height - dimensions.margin.bottom}
-            numTicks={6}
-            tickFormat={d => format(d as Date, 'MMM d')}
-            stroke="var(--app-text-secondary)"
-            tickStroke="var(--app-text-secondary)"
-            tickLength={4}
+            top={innerHeight}
+            numTicks={width > 520 ? 10 : 5}
+            tickFormat={d => format(d as Date, 'M/d')}
+            stroke="var(--app-text-primary)"
+            tickStroke="var(--app-text-primary)"
             tickLabelProps={() => ({
-              fill: "var(--app-text-primary)",
+              fill: 'var(--app-text-primary)',
               fontSize: 10,
               textAnchor: 'middle',
-              dy: '0.5em',
             })}
           />
-
-          {/* Brush component */}
           <Brush
+            ref={brushRef}
             xScale={xScale}
             yScale={yScale}
-            width={width - dimensions.margin.left - dimensions.margin.right}
-            height={height - dimensions.margin.top - dimensions.margin.bottom}
-            margin={dimensions.margin}
+            width={innerWidth}
+            height={innerHeight}
             handleSize={8}
-            resizeTriggerAreas={['left', 'right', 'top', 'bottom']}
-            brushDirection="both"
-            initialBrushPosition={{
-              start: { x: xScale(selectedDate), y: dimensions.margin.top },
-              end: { x: xScale(endDate), y: height - dimensions.margin.bottom }
-            }}
-            onChange={(domain) => {
-              if (domain) {
-                const start = xScale.invert(domain.x0);
-                const end = xScale.invert(domain.x1);
-                handleBrushChange([start, end]);
-              }
-            }}
+            resizeTriggerAreas={['left', 'right']}
+            brushDirection="horizontal"
+            initialBrushPosition={initialBrushPosition}
+            onBrushEnd={handleBrushEnd} // Important: updates only on release
             selectedBoxStyle={{
               fill: 'var(--app-hover-bg)',
-              fillOpacity: 0.3,
               stroke: 'var(--app-border-hover)',
-              strokeWidth: 1,
             }}
-            handleStyle={{
-              fill: 'var(--app-toolbar-bg)',
-              stroke: 'var(--app-border-hover)',
-              strokeWidth: 1,
-            }}
+            useWindowMoveEvents
           />
         </Group>
       </svg>
