@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { SelectChangeEvent } from '@mui/material';
 import { format } from 'date-fns';
 import { DayRangeType } from '../types';
@@ -14,6 +14,7 @@ import { DataInfo } from './TimeToolbar/DataInfo';
 import { UnitsSwitch } from './TimeToolbar/UnitsSwitch';
 import { StationSelector } from './TimeToolbar/StationSelector';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
+import { TimeBrush } from './TimeToolbar/TimeBrush';
 
 interface TimeToolbarProps {
   calculateCurrentTimeRange: () => string;
@@ -62,6 +63,7 @@ interface TimeToolbarProps {
   selectedStationIds: string[];
   onStationSelectionChange: (stationIds: string[]) => void;
   handleMultiStationSelect: (stations: any[]) => void;
+  timeRangeData?: any[];
 }
 
 const TimeToolbar: React.FC<TimeToolbarProps> = ({
@@ -95,11 +97,14 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   selectedStationIds,
   onStationSelectionChange,
   handleMultiStationSelect,
+  timeRangeData,
 }) => {
   const [dataAnchorEl, setDataAnchorEl] = useState<null | HTMLElement>(null);
   const [cutOffAnchorEl, setCutOffAnchorEl] = useState<null | HTMLElement>(null);
   const [unitsAnchorEl, setUnitsAnchorEl] = useState<null | HTMLElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [brushDimensions, setBrushDimensions] = useState({ width: 0, height: 100 });
+  const brushContainerRef = useRef<HTMLDivElement>(null);
 
   const stationDrawer = useStationDrawer();
 
@@ -113,6 +118,22 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Update brush dimensions on mount and resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (brushContainerRef.current) {
+        setBrushDimensions({
+          width: brushContainerRef.current.offsetWidth,
+          height: 100, // Fixed height for now
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   const handleCustomTimeButtonClick = async () => {
@@ -152,6 +173,27 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+  // Handle brush changes with validation
+  const handleBrushChange = useCallback((start: Date, end: Date) => {
+    // Validate dates before updating
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      try {
+        const startStr = format(start, 'yyyy-MM-dd');
+        const endStr = format(end, 'yyyy-MM-dd');
+        
+        handleDateChange({ 
+          target: { value: startStr } 
+        } as React.ChangeEvent<HTMLInputElement>);
+        
+        handleEndDateChange({ 
+          target: { value: endStr } 
+        } as React.ChangeEvent<HTMLInputElement>);
+      } catch (error) {
+        console.error('Error formatting dates:', error);
+      }
+    }
+  }, [handleDateChange, handleEndDateChange]);
+
   return (
     <div className={`time-toolbar ${isOpen ? 'open' : ''}`}>
       <div 
@@ -162,6 +204,18 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
       </div>
 
       <div className="time-toolbar-content">
+        {/* Time brush container */}
+        <div ref={brushContainerRef} className="w-full time-brush-container">
+          <TimeBrush
+            width={brushDimensions.width}
+            height={brushDimensions.height}
+            selectedDate={selectedDate}
+            endDate={endDate}
+            onBrushChange={handleBrushChange}
+            timeRangeData={timeRangeData}
+          />
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 w-full">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
             <TimeRangeSelector
