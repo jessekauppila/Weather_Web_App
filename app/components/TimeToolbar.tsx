@@ -211,12 +211,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
         {/* </div>
 
         <div className="w-full mt-4"> */}
-          <StationSelector
-            stations={stations}
-            handleStationSelect={handleMultiStationSelect}
-            selectedStationIds={selectedStationIds}
-            onStationSelectionChange={onStationSelectionChange}
-          />
+
 
           <div className="w-full sm:flex-grow sm:max-w-[400px]">
             <StationSelector
