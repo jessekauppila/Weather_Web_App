@@ -32,12 +32,12 @@ export function useWeatherControls(
     (event: SelectChangeEvent<string>) => {
       const value = event.target.value;
       
-      console.log('Time range changed to', value);
+      console.log('⏰ TIME RANGE SELECTOR: Changed to', {
+        value,
+        type: typeof value
+      });
       
-      // Don't change the selected date, just the range
       setTimeRange(Number(value));
-      
-      // Trigger data refresh after changing range
       handleRefresh();
     },
     [setTimeRange, handleRefresh]

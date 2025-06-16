@@ -137,6 +137,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
   }, []);
 
   const handleCustomTimeButtonClick = async () => {
+    console.log('⏰ CUSTOM TIME: Button clicked');
     await handleDayRangeTypeChange({ 
       target: { value: DayRangeType.CUSTOM } 
     } as SelectChangeEvent<DayRangeType>);
@@ -181,6 +182,11 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
         const startStr = format(start, 'yyyy-MM-dd');
         const endStr = format(end, 'yyyy-MM-dd');
         
+        console.log('🖌️ BRUSH: Changing dates', {
+          start: startStr,
+          end: endStr
+        });
+
         handleDateChange({ 
           target: { value: startStr } 
         } as React.ChangeEvent<HTMLInputElement>);

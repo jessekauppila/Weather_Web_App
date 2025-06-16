@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import moment from 'moment-timezone';
-import { addDays, subDays } from 'date-fns';
+import { addDays, subDays, format } from 'date-fns';
 
 /**
  * Custom hook for managing date state in the application
@@ -47,15 +47,22 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
   }, [selectedDate, loggedSetSelectedDate, loggedSetEndDate]);
 
   const handleDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = moment(event.target.value)
-      .tz('America/Los_Angeles')
-      .startOf('day')
-      .toDate();
-    
-    //console.log('📅 DATE STATE: Date input changed to', moment(newDate).format('YYYY-MM-DD'));
-    loggedSetSelectedDate(newDate);
-    loggedSetEndDate(newDate);
-  }, [loggedSetSelectedDate, loggedSetEndDate]);
+    const newDate = new Date(event.target.value);
+    console.log('📅 DATE CONTROLS: Start date changed', {
+      value: event.target.value,
+      parsed: format(newDate, 'yyyy-MM-dd')
+    });
+    setSelectedDate(newDate);
+  }, [setSelectedDate]);
+
+  const handleEndDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(event.target.value);
+    console.log('📅 DATE CONTROLS: End date changed', {
+      value: event.target.value,
+      parsed: format(newDate, 'yyyy-MM-dd')
+    });
+    setEndDate(newDate);
+  }, [setEndDate]);
 
   return {
     selectedDate,
@@ -66,6 +73,7 @@ export function useDateState(onDateChange?: (newDate: Date) => void) {
     setUseCustomEndDate,
     handlePrevDay,
     handleNextDay,
-    handleDateChange
+    handleDateChange,
+    handleEndDateChange
   };
 } 

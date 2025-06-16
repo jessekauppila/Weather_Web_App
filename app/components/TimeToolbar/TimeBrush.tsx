@@ -57,12 +57,16 @@ export function TimeBrush({
 
   // This function is now called only when the user finishes dragging.
   const handleBrushEnd = useCallback((domain: BaseBrushState) => {
-    if (!domain.x0 || !domain.x1) return;
+    if (!domain.extent.x0 || !domain.extent.x1) return;
 
-    const startDate = xScale.invert(domain.x0);
-    const endDate = xScale.invert(domain.x1);
+    const startDate = xScale.invert(domain.extent.x0);
+    const endDate = xScale.invert(domain.extent.x1);
 
     if (isValid(startDate) && isValid(endDate)) {
+        console.log('🖌️ BRUSH: Time range changed', {
+            start: format(startDate, 'yyyy-MM-dd HH:mm'),
+            end: format(endDate, 'yyyy-MM-dd HH:mm')
+        });
         onBrushChange(startDate, endDate);
     }
   }, [xScale, onBrushChange]);

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import moment from 'moment-timezone';
 import { DayRangeType } from '../types';
+import { format } from 'date-fns';
 
 /**
  * Custom hook for managing time range and date selections
@@ -43,6 +44,12 @@ export function useTimeRange() {
   }, [useCustomEndDate, timeRange]);
 
   const calculateTimeRange = useCallback((date: Date, type: DayRangeType, rangeValue: number = timeRange) => {
+    console.log('🕒 TIME RANGE: Calculating', {
+      date: date.toISOString(),
+      type,
+      rangeValue
+    });
+
     // IMPORTANT CHANGE: Always use the selected date as the END DATE, not as a midpoint
     const endMoment = moment(date).tz('America/Los_Angeles');
     let currentMoment = moment().tz('America/Los_Angeles');
@@ -89,6 +96,13 @@ export function useTimeRange() {
       endHour: type === DayRangeType.MIDNIGHT ? 24 : currentHour
     };
     
+    console.log('🕒 TIME RANGE: Result', {
+      start: result.start.format('YYYY-MM-DD HH:mm'),
+      end: result.end.format('YYYY-MM-DD HH:mm'),
+      startHour: result.startHour,
+      endHour: result.endHour
+    });
+
     return result;
   }, [customTime, timeRange]);
 

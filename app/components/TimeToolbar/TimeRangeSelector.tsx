@@ -10,6 +10,9 @@ export function TimeRangeSelector({
   calculateCurrentTimeRange, 
   handleTimeRangeChange 
 }: TimeRangeSelectorProps) {
+  const currentRange = calculateCurrentTimeRange();
+  console.log('⏰ TIME RANGE SELECTOR: Current range', currentRange);
+
   return (
     <FormControl variant="outlined" size="small" className="w-[100px] sm:w-auto">
       <InputLabel sx={{ color: 'var(--app-text-secondary)' }}>Range</InputLabel>
