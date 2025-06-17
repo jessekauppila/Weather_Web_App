@@ -10,6 +10,7 @@ import { createTerrainLayer } from './terrainLayer';
 import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
 import { createCombinedSnowDepthIcons } from '@/app/map/layers/snowDepthIconsLayer';
+import { createCombinedSnowDepthIconsRedo } from '@/app/map/layers/snowDepthIconsLayerRedo';
 import { createCombinedSnowDepthColumns } from '@/app/map/layers/snowDepthColumnsLayer';
 import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
 import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
@@ -23,6 +24,7 @@ export {
   createCombinedMaxMinLayer,
   createCombinedAvgMaxWindLayer,
   createCombinedSnowDepthIcons,
+  createCombinedSnowDepthIconsRedo,
   createCombinedSnowDepthColumns,
   createMaxTempColLayer,
   createMinTempColLayer,
@@ -106,6 +108,14 @@ export function createMapLayers(
       ),
     visibility.snowDepthIcons &&
       createCombinedSnowDepthIcons(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
+    visibility.snowDepthIconsRedo &&
+      createCombinedSnowDepthIconsRedo(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
