@@ -9,7 +9,8 @@ export type LayerId =
   | 'maxTempCol'
   | 'minTempCol'
   | 'currentTempCol'
-  | 'snowDepthIconsRedo';
+  | 'snowDepthIconsRedo'
+  | 'liquidPrecipIcons';
 
 
 export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
@@ -70,6 +71,11 @@ export const LAYER_CONFIG = {
     id: 'snowDepthColumns' as LayerId,
     group: 'precipitation' as LayerGroup,
     label: 'Snow Depth Change Columns',
+  },
+  liquidPrecipIcons: {
+    id: 'liquidPrecipIcons' as LayerId,
+    group: 'precipitation' as LayerGroup,
+    label: 'Liquid Precipitation Icons',
   },
 } as const;
 

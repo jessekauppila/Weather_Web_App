@@ -15,6 +15,7 @@ import { createCombinedSnowDepthColumns } from '@/app/map/layers/snowDepthColumn
 import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
 import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
 import { createCurrentTempColLayer } from './temperatureWithColumns/currentTempColLayer';
+import { createCombinedLiquidPrecipIcons } from '@/app/map/layers/liquidPrecipIcons';
 
 // Re-export the layer creators for direct usage if needed
 export { 
@@ -28,7 +29,8 @@ export {
   createCombinedSnowDepthColumns,
   createMaxTempColLayer,
   createMinTempColLayer,
-  createCurrentTempColLayer
+  createCurrentTempColLayer,
+  createCombinedLiquidPrecipIcons
 };
 
 type LayerVisibility = {
@@ -124,6 +126,14 @@ export function createMapLayers(
       ),
     visibility.snowDepthColumns &&
       createCombinedSnowDepthColumns(
+        data.stationData ?? {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        onStationClick
+      ),
+    visibility.liquidPrecipIcons &&
+      createCombinedLiquidPrecipIcons(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],

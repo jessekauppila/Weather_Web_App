@@ -115,7 +115,62 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     calculateCurrentTimeRange
   } = context;
 
+  // Add this console log in the component where mapData is available
+  // This could be in the component body or in a useEffect
 
+  // useEffect(() => {
+  //   // Log the full structure
+  //   console.log('Full MapData:', {
+  //     stationCount: mapData.stationData?.features?.length,
+  //     sampleStation: mapData.stationData?.features[0],
+  //     observationsDay: {
+  //       sample: mapData.observationsDataDay?.[0],
+  //       fields: mapData.observationsDataDay?.[0] ? Object.keys(mapData.observationsDataDay[0]) : []
+  //     },
+  //     observationsHour: {
+  //       sample: mapData.observationsDataHour?.[0],
+  //       fields: mapData.observationsDataHour?.[0] ? Object.keys(mapData.observationsDataHour[0]) : []
+  //     },
+  //     filteredHour: {
+  //       sample: mapData.filteredObservationsDataHour?.[0],
+  //       fields: mapData.filteredObservationsDataHour?.[0] ? Object.keys(mapData.filteredObservationsDataHour[0]) : []
+  //     }
+  //   });
+
+  //   // Log specific precipitation-related fields
+  //   if (mapData.stationData?.features[0]?.properties) {
+  //     console.log('Station Properties:', {
+  //       allFields: Object.keys(mapData.stationData.features[0].properties),
+  //       precipFields: Object.keys(mapData.stationData.features[0].properties)
+  //         .filter(key => key.toLowerCase().includes('precip'))
+  //     });
+  //   }
+  // }, [mapData]);
+
+  // useEffect(() => {
+  //   console.log('MapComponent Data:', {
+  //     stationData: {
+  //       count: mapData.stationData?.features?.length,
+  //       sampleFeature: mapData.stationData?.features[0] ? {
+  //         properties: {
+  //           ...mapData.stationData.features[0].properties,
+  //           // Log specific precipitation fields
+  //           precipAccumOneHour: mapData.stationData.features[0].properties.precipAccumOneHour,
+  //           'Precip Accum One Hour': mapData.stationData.features[0].properties['Precip Accum One Hour'],
+  //           precip_accum_one_hour: mapData.stationData.features[0].properties.precip_accum_one_hour,
+  //         }
+  //       } : null
+  //     },
+  //     observationsHour: {
+  //       count: mapData.observationsDataHour?.data?.length,
+  //       sample: mapData.observationsDataHour?.data?.[0]
+  //     },
+  //     filteredHour: {
+  //       count: mapData.filteredObservationsDataHour?.data?.length,
+  //       sample: mapData.filteredObservationsDataHour?.data?.[0]
+  //     }
+  //   });
+  // }, [mapData]);
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
