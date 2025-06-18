@@ -10,7 +10,10 @@ export type LayerId =
   | 'minTempCol'
   | 'currentTempCol'
   | 'snowDepthIconsRedo'
-  | 'liquidPrecipIcons';
+  | 'liquidPrecipIcons'
+  | 'snowAccumColumns'
+  | 'liquidPrecipIcons'
+  | 'liquidPrecipColumns';
 
 
 export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
@@ -65,12 +68,24 @@ export const LAYER_CONFIG = {
   snowDepthIconsRedo: {
     id: 'snowDepthIconsRedo' as LayerId,
     group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Change Icons Redo',
+    label: 'Snow Accum Icons',
+  },
+
+  snowAccumColumns: {
+    id: 'snowAccumColumns' as LayerId,
+    group: 'precipitation' as LayerGroup,
+    label: 'Snow Accum Columns',
   },
   snowDepthColumns: {
-    id: 'snowDepthColumns' as LayerId,
+      id: 'snowDepthColumns' as LayerId,
+      group: 'precipitation' as LayerGroup,
+      label: 'Snow Depth Change Columns',
+    },
+
+  liquidPrecipColumns: {
+    id: 'liquidPrecipColumns' as LayerId,
     group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Change Columns',
+    label: 'Liquid Precipitation Columns',
   },
   liquidPrecipIcons: {
     id: 'liquidPrecipIcons' as LayerId,

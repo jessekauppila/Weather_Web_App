@@ -11,7 +11,7 @@ function getSnowDepthIcon(depth: number | null): string {
 
   // Handle values greater than 60
   if (depth > 60) {
-    return 'snow-depth-60+';
+    return 'snow-depth-60';
   }
 
   // Handle values between 0 and 0.9

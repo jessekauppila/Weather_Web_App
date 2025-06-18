@@ -1,13 +1,13 @@
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../map';
-import { createSnowDepthBoundaryLayer } from './snow-depth/boundaryLayerRedo';
-import { createSnowDepthNumericLayer } from './snow-depth/numericLayerRedo';
+import { createSnowDepthBoundaryLayer } from './snow-accum/boundaryLayer';
+import { createSnowDepthNumericLayer } from './snow-accum/numericLayer';
 
 /**
  * Creates a composite layer combining snow depth boundary and numeric icons
  */
-export function createCombinedSnowDepthIconsRedo(
+export function createCombinedSnowAccum(
   data: {
     type: 'FeatureCollection';
     features: Feature<Geometry, Map_BlockProperties>[];

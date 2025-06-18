@@ -44,44 +44,6 @@ export function createLiquidPrecipNumericLayer(
 
 {
 
-    // // Filter with detailed logging
-    // const filteredFeatures = data.features.filter(f => {
-    //   const value = f.properties.precipAccumOneHour;
-    //   const isNull = !value;
-    //   const isDash = value === "-";
-    //   const parsed = value ? parseValue(value) : NaN;
-    //   const isNaNValue = isNaN(parsed);
-  
-    //   // Log why each feature is being filtered out
-    //   if (isNull || isDash || isNaNValue) {
-    //     console.log('❌ Filtered out feature:', {
-    //       station: f.properties.stationName || f.properties.stationName,
-    //       value,
-    //       reason: {
-    //         isNull,
-    //         isDash,
-    //         isNaNValue,
-    //         parsed
-    //       }
-    //     });
-    //     return false;
-    //   }
-      
-    //   // Log features that pass the filter
-    //   console.log('✅ Valid feature:', {
-    //     station: f.properties.stationName || f.properties.stationName,
-    //     value,
-    //     parsed
-    //   });
-    //   return true;
-    // });
-  
-    // console.log('📊 Filtering Results:', {
-    //   originalCount: data.features.length,
-    //   filteredCount: filteredFeatures.length,
-    //   difference: data.features.length - filteredFeatures.length
-    // });
-  
 
   return new IconLayer({
     id: 'liquidPrecipNumeric',

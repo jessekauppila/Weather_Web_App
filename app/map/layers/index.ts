@@ -10,8 +10,10 @@ import { createTerrainLayer } from './terrainLayer';
 import { createCombinedMaxMinLayer } from './combinedMaxMinLayer';
 import { createCombinedAvgMaxWindLayer } from './combinedAvgMaxWind';
 import { createCombinedSnowDepthIcons } from '@/app/map/layers/snowDepthIconsLayer';
-import { createCombinedSnowDepthIconsRedo } from '@/app/map/layers/snowDepthIconsLayerRedo';
+import { createCombinedSnowAccum } from '@/app/map/layers/snowAccumIconsLayer';
 import { createCombinedSnowDepthColumns } from '@/app/map/layers/snowDepthColumnsLayer';
+import { createCombinedSnowAccumColumns } from '@/app/map/layers/snowAccumColumnsLayer';
+import { createCombinedLiquidPrecipColumns } from '@/app/map/layers/liquidPrecipColumnsLayer';
 import { createMaxTempColLayer } from './temperatureWithColumns/maxTempColLayer';
 import { createMinTempColLayer } from './temperatureWithColumns/minTempColLayer';
 import { createCurrentTempColLayer } from './temperatureWithColumns/currentTempColLayer';
@@ -25,8 +27,10 @@ export {
   createCombinedMaxMinLayer,
   createCombinedAvgMaxWindLayer,
   createCombinedSnowDepthIcons,
-  createCombinedSnowDepthIconsRedo,
+  createCombinedSnowAccum,
   createCombinedSnowDepthColumns,
+  createCombinedLiquidPrecipColumns,
+  createCombinedSnowAccumColumns,
   createMaxTempColLayer,
   createMinTempColLayer,
   createCurrentTempColLayer,
@@ -117,7 +121,7 @@ export function createMapLayers(
         onStationClick
       ),
     visibility.snowDepthIconsRedo &&
-      createCombinedSnowDepthIconsRedo(
+    createCombinedSnowAccum(
         data.stationData ?? {
           type: 'FeatureCollection',
           features: [],
@@ -125,13 +129,29 @@ export function createMapLayers(
         onStationClick
       ),
     visibility.snowDepthColumns &&
-      createCombinedSnowDepthColumns(
-        data.stationData ?? {
-          type: 'FeatureCollection',
-          features: [],
-        },
-        onStationClick
-      ),
+        createCombinedSnowDepthColumns(
+          data.stationData ?? {
+            type: 'FeatureCollection',
+            features: [],
+          },
+          onStationClick
+        ),
+    visibility.snowAccumColumns &&
+        createCombinedSnowAccumColumns(
+          data.stationData ?? {
+            type: 'FeatureCollection',
+            features: [],
+          },
+          onStationClick
+        ),
+    visibility.liquidPrecipColumns &&
+        createCombinedLiquidPrecipColumns(
+          data.stationData ?? {
+            type: 'FeatureCollection',
+            features: [],
+          },
+          onStationClick
+        ),
     visibility.liquidPrecipIcons &&
       createCombinedLiquidPrecipIcons(
         data.stationData ?? {
