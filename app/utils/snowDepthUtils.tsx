@@ -363,6 +363,32 @@ export function calculateSnowDepthAccumulation(data: any[]) {
     return results;
   }
 
+  // Add this new function
+export function calculatePrecipitationAccumulation(data: any[]) {
+  const results = [];
+  let precipTotal = 0;
+  const recentHours = [];
+
+  for (let i = 0; i < data.length; i++) {
+    const current = data[i];
+    const currentPrecip = parseFloat(current['Precip Accum'] || "0");
+    
+    // Skip invalid values
+    if (isNaN(currentPrecip)) continue;
+    
+    precipTotal += currentPrecip;
+    recentHours.push(currentPrecip);
+
+    results.push({
+      date_time: current.date_time,
+      precip: currentPrecip,
+      precip_total: Number(precipTotal.toFixed(2))
+    });
+  }
+
+  return results;
+}
+
 // Function to check for identical elements to the third decimal place against all other elements
 function applyIdenticalCheck(data: SnowDataPoint[]): SnowDataPoint[] {
   return data.map((currentPoint) => {

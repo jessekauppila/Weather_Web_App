@@ -310,7 +310,20 @@ export const MapDataProvider: React.FC<{
     
     // console.log('Processed observations data:', observationsData);
     
+    // Add this before converting to stationsForMap
+    console.log('Raw station data before conversion:', {
+      sampleStation: transformedData[0],
+      snowFields: transformedData.slice(0, 3).map(station => ({
+        station: station.Station,
+        '24h Snow Accumulation': station['24h Snow Accumulation'],
+        totalSnowDepth: station['Total Snow Depth'],
+        totalSnowDepthChange: station['Total Snow Depth Change']
+      }))
+    });
+
     // Convert data to match WeatherStation type (all fields as strings)
+
+    //THIS IS WHAT IS USED IN THE MAP COMPONENT JESSE!!!!
     const stationsForMap = transformedData.map(station => ({
       Stid: String(station.Stid),
       Station: String(station.Station),
@@ -332,9 +345,20 @@ export const MapDataProvider: React.FC<{
       'Api Fetch Time': String(station['Api Fetch Time'])
     }));
     
-    // Update the map data with all processed data
+    // Add this after converting to GeoJSON
+    const geoJsonData = map_weatherToGeoJSON(stationsForMap);
+    console.log('Data after GeoJSON conversion:', {
+      sampleFeature: geoJsonData.features[0],
+      snowProperties: geoJsonData.features.slice(0, 3).map(f => ({
+        station: f.properties.stationName,
+        snowAccumulation24h: f.properties.snowAccumulation24h,
+        totalSnowDepth: f.properties.totalSnowDepth,
+        totalSnowDepthChange: f.properties.totalSnowDepthChange
+      }))
+    });
+
     setMapData({
-      stationData: map_weatherToGeoJSON(stationsForMap),
+      stationData: geoJsonData,
       forecastZones: forecastZonesData.forecastZones.map(zone => ({
         name: zone.name,
         contour: zone.contour.map(point => [point[0], point[1]] as [number, number])

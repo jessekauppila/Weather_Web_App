@@ -34,11 +34,11 @@ export function createSnowDepthNumericLayer(
 ) {
   return new IconLayer({
     id: 'snowDepthNumeric',
-    data: data.features.filter(f => f.properties.totalSnowDepthChange !== null),
+    data: data.features.filter(f => f.properties.snowAccumulation24h !== null),
     billboard: false,
     autoHighlight: true,
     getIcon: (f) => {
-      const snowDepth = f.properties.totalSnowDepthChange;
+      const snowDepth = f.properties.snowAccumulation24h;
       return getSnowDepthIcon(snowDepth);
     },
     getPosition: (f) => [

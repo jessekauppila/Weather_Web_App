@@ -193,18 +193,27 @@ const sectionStyle = `
               <div style="${sectionTitleStyle}">
                 Snow
               </div>
-              <div style="${measurementStyle}">
-                ${renderValue(props.totalSnowDepth?.toString() ?? null, 'in')}
-                <div style="${labelStyle}">Snow Depth</div>
+
+                <div style="${measurementStyle}">
+                ${renderValue(props.snowAccumulation24h?.toString()  ?? null, 'in')}
+                <div style="${labelStyle}">Snow Accum</div>
               </div>
-              <div style="${measurementStyle}">
-                ${renderValue(props.totalSnowDepthChange?.toString() ?? null, 'in')}
-                <div style="${labelStyle}">Depth Change</div>
-              </div>
+
               <div style="${measurementStyle}">
                 ${renderValue(props.precipAccumOneHour ?? null, 'in')}
                 <div style="${labelStyle}">Liquid Precip</div>
               </div>
+
+              <div style="${measurementStyle}">
+                ${renderValue(props.totalSnowDepth?.toString() ?? null, 'in')}
+                <div style="${labelStyle}">Snow Depth</div>
+              </div>
+              
+              <div style="${measurementStyle}">
+                ${renderValue(props.totalSnowDepthChange?.toString() ?? null, 'in')}
+                <div style="${labelStyle}">Depth Change</div>
+              </div>
+
             </div>
 
             <!-- Temperature Section -->

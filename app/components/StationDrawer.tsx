@@ -19,6 +19,8 @@ import WxMultiStationSnowDepth from '../vis/wxMultiStationSnowDepth';
 import { processHourlyData } from '../data/utils/processHourlyData';
 import WxMultiStationSnowDepthVisx from '../vis/WxMultiStationSnowDepthVisx';
 import WxMultiStationVisX from '../vis/WxMultiStationVisX';
+import { calculatePrecipitationAccumulation } from '../utils/snowDepthUtils';
+
 
 
 
@@ -308,7 +310,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return result;
   }, [currentStations, filteredObservationsDataHour?.data, isMultiStationMode]);
 
-  console.log("multiStationDataHourFiltered", multiStationDataHourFiltered);
+  //console.log("multiStationDataHourFiltered", multiStationDataHourFiltered);
 
   const stationDataHourUnFiltered = useMemo(() => {
     return processHourlyData({
@@ -473,8 +475,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         'Solar Radiation Avg': calculateAverage(hoursInRange, 'Solar Radiation'),
         'Cur Wind Speed': findLatestValue(hoursInRange, 'Wind Speed'),
         '24h Snow Accumulation': calculateSnowAccumulation(hoursInRange),
+        //'Total Hourly Snow Accumulation': calculateTotalHourlySnowAccumulation(hoursInRange),
         'Total Snow Depth Change': calculateTotalSnowDepthChange(hoursInRange),
-        'Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
+        'Total Precip Accum One Hour': calculateTotalPrecipitation(hoursInRange),
         'Api Fetch Time': `${endDay}, ${hoursInRange[hoursInRange.length - 1]?.Hour || cutoffTimeFormat}`,
         'api_fetch_time': hoursInRange[hoursInRange.length - 1]?.API_Fetch_Time || '',
         'precipitation': '',
@@ -661,15 +664,21 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
     return `${diff.toFixed(2)} in`;
   }
 
-  function calculateTotalPrecipitation(hourData: any[]): string {
-    // Sum all valid precipitation values
-    const total = hourData.reduce((sum, hour) => {
-      const precip = parseFloat(hour['Precip Accum'] || "0");
-      return sum + (isNaN(precip) ? 0 : precip);
-    }, 0);
+  // function calculateTotalPrecipitation(hourData: any[]): string {
+  //   // Sum all valid precipitation values
+  //   const total = hourData.reduce((sum, hour) => {
+  //     const precip = parseFloat(hour['Precip Accum'] || "0");
+  //     return sum + (isNaN(precip) ? 0 : precip);
+  //   }, 0);
     
+  //   return `${total.toFixed(2)} in`;
+  // }
+
+  function calculateTotalPrecipitation(hourData: any[]): string {
+    const results = calculatePrecipitationAccumulation(hourData);
+    const total = results.length > 0 ? results[results.length - 1].precip_total : 0;
     return `${total.toFixed(2)} in`;
-  }
+}
 
   // Replace the multiStationDayData useMemo with enhanced debugging:
   const multiStationDayData = useMemo(() => {

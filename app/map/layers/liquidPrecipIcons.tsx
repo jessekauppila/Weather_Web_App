@@ -14,9 +14,13 @@ export function createCombinedLiquidPrecipIcons(
   },
   onClick?: (info: PickingInfo) => void
 ) {
-  console.log('Creating combined snow depth icons with data:', {
+  console.log('🌊 Creating Liquid Precip Layers:', {
     featureCount: data.features.length,
-    firstFeature: data.features[0]?.properties
+    sampleFeatures: data.features.slice(0, 3).map(f => ({
+      station: f.properties.stationName || f.properties.stationName,
+      precip: f.properties.precipAccumOneHour,
+      allProps: f.properties
+    }))
   });
 
   // Create both layers with updated icon mappings

@@ -147,30 +147,30 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
   //   }
   // }, [mapData]);
 
-  useEffect(() => {
-    console.log('MapComponent Data:', {
-      stationData: {
-        count: mapData.stationData?.features?.length,
-        sampleFeature: mapData.stationData?.features[0] ? {
-          properties: {
-            ...mapData.stationData.features[0].properties,
-            // Log specific precipitation fields
-            precipAccumOneHour: mapData.stationData.features[0].properties.precipAccumOneHour,
-            'Precip Accum One Hour': mapData.stationData.features[0].properties['Precip Accum One Hour'],
-            precip_accum_one_hour: mapData.stationData.features[0].properties.precip_accum_one_hour,
-          }
-        } : null
-      },
-      observationsHour: {
-        count: mapData.observationsDataHour?.data?.length,
-        sample: mapData.observationsDataHour?.data?.[0]
-      },
-      filteredHour: {
-        count: mapData.filteredObservationsDataHour?.data?.length,
-        sample: mapData.filteredObservationsDataHour?.data?.[0]
-      }
-    });
-  }, [mapData]);
+  // useEffect(() => {
+  //   console.log('MapComponent Data:', {
+  //     stationData: {
+  //       count: mapData.stationData?.features?.length,
+  //       sampleFeature: mapData.stationData?.features[0] ? {
+  //         properties: {
+  //           ...mapData.stationData.features[0].properties,
+  //           // Log specific precipitation fields
+  //           precipAccumOneHour: mapData.stationData.features[0].properties.precipAccumOneHour,
+  //           'Precip Accum One Hour': mapData.stationData.features[0].properties['Precip Accum One Hour'],
+  //           precip_accum_one_hour: mapData.stationData.features[0].properties.precip_accum_one_hour,
+  //         }
+  //       } : null
+  //     },
+  //     observationsHour: {
+  //       count: mapData.observationsDataHour?.data?.length,
+  //       sample: mapData.observationsDataHour?.data?.[1]
+  //     },
+  //     filteredHour: {
+  //       count: mapData.filteredObservationsDataHour?.data?.length,
+  //       sample: mapData.filteredObservationsDataHour?.data?.[1]
+  //     }
+  //   });
+  // }, [mapData]);
 
   // Helper to convert Map_BlockProperties to WeatherStation
   const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
@@ -193,6 +193,8 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     'Relative Humidity': properties.relativeHumidity?.toString() ?? '-',
     'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
   });
+
+  // console.log('🔧 MapComponent: mapPropertiesToWeatherStation:', mapPropertiesToWeatherStation);
 
   // Add state to track selected stations array
   const [selectedStations, setSelectedStations] = useState<WeatherStation[]>([]);
