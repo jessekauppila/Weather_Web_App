@@ -288,6 +288,7 @@ export default function Home() {
   const handleLayerToggle = (layerId: LayerId) => {
     setActiveLayerState(prev => {
       const group = LAYER_GROUPS[layerId];
+      const nextState = { ...prev };
       
       if (group === 'other') {
         // For 'other' group, toggle the layer independently
@@ -297,26 +298,42 @@ export default function Home() {
         } else {
           nextOther.add(layerId);
         }
-        return { ...prev, other: nextOther };
+        nextState.other = nextOther;
+        return nextState;
       }
 
-      // For the three main groups (temperature, wind, precipitation)
-      const nextState = { ...prev };
-      
+      // For exclusive groups (justWind, justMaxMinTemp, justCurrentTemp, justSnowDepth)
+      const exclusiveGroups = new Set(['justWind', 'justMaxMinTemp', 'justCurrentTemp', 'justSnowDepth']);
+      if (exclusiveGroups.has(group)) {
+        // Clear all exclusive groups
+        exclusiveGroups.forEach(g => {
+          nextState[g as keyof LayerState] = new Set<LayerId>();
+        });
+
+        // If we're turning on a layer (not just turning it off)
+        if (!prev[group].has(layerId)) {
+          nextState[group] = new Set([layerId]);
+        }
+
+        return nextState;
+      }
+
+      // For non-exclusive groups
       if (nextState[group].has(layerId)) {
         // If the layer is already active, just turn it off
         nextState[group].delete(layerId);
       } else {
-        // If turning on a layer in a group:
-        // 1. Clear other groups
-        if (group !== 'temperature') nextState.temperature = new Set();
-        if (group !== 'wind') nextState.wind = new Set();
-        if (group !== 'precipitation') nextState.precipitation = new Set();
+        // If turning on a layer in a non-exclusive group
+        const nonExclusiveGroups = ['temperature', 'wind', 'precipitation', 'precipitationTemp'];
+        nonExclusiveGroups.forEach(g => {
+          if (g !== group) {
+            nextState[g as keyof LayerState] = new Set<LayerId>();
+          }
+        });
         
-        // 2. Add the new layer to its group (keeping existing layers in the same group)
-        nextState[group] = new Set(prev[group]).add(layerId);
+        // Add the new layer to its group
+        nextState[group] = new Set([layerId]);
       }
-      console.log(`Toggled ${layerId} in group ${group}. New state:`, Array.from(nextState[group]));
 
       return nextState;
     });
