@@ -8,29 +8,20 @@ export function createSnowDepthBoundaryLayer(
     features: Feature<Geometry, Map_BlockProperties>[];
   }
 ) {
+  const validFeatures = data.features.filter(f => f.properties.totalSnowDepthChange !== null);
+
+  const uniqueId = `snowDepthBoundary-${Date.now()}`;
+
   return new IconLayer({
-    id: 'snowDepthBoundary',
-    data: data.features.filter(f => f.properties.totalSnowDepthChange !== null),
+    id: uniqueId,
+    data: validFeatures,
     billboard: false,
     autoHighlight: true,
     getIcon: (f) => {
       const snowDepth = f.properties.totalSnowDepthChange;
-      console.log('Processing boundary feature:', {
-        station: f.properties.stationName,
-        snowDepth,
-        hasValue: snowDepth !== null
-      });
-
-      if (snowDepth === null) {
-        console.log('Skipping boundary icon for null snow depth');
-        return 'default-icon';
-      }
-
-      const icon = snowDepth > 0 
+      return snowDepth > 0 
         ? 'snow-depth-boundary-positive'
         : 'snow-depth-boundary-negative';
-      console.log('Selected boundary icon:', icon, 'for value:', snowDepth);
-      return icon;
     },
     getPosition: (f) => [
       f.properties.longitude,
@@ -40,7 +31,7 @@ export function createSnowDepthBoundaryLayer(
     getAngle: 0,
     angleAlignment: 'viewport',
     iconAtlas: '/snowDepthAtlas/snowDepth_boundary_atlas.png',
-    iconMapping: '/snowDepthAtlas/boundary-icon-mapping.json',
+    iconMapping: '/snowDepthAtlas/boundary-icon-mapping.json', //ICON_MAPPING,
     pickable: false,
     shadowEnabled: false,
     alphaCutoff: 0.05,

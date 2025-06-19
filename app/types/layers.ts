@@ -69,7 +69,7 @@ export const LAYER_CONFIG = {
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
     group: 'justWind' as LayerGroup,
-    label: 'Avg/Max Wind',
+    label: 'Avg/Max/Dir Wind',
   },
   snowDepthIcons: {
     id: 'snowDepthIcons' as LayerId,
@@ -138,11 +138,11 @@ export const DEFAULT_LAYER_STATE: LayerState = {
   temperature: new Set(),
   wind: new Set(),
   precipitation: new Set(),
-  precipitationTemp: new Set(['currentTemp']),
+  precipitationTemp: new Set(['combinedPrecipIcons']),
   other: new Set(['forecastZones']),
   justWind: new Set(),
-  justMaxMinTemp: new Set(),
-  justCurrentTemp: new Set(),
+  justMaxMinTemp: new Set(['minMaxTemp']),
+  justCurrentTemp: new Set( ),
   justSnowDepth: new Set(),
 };
 
@@ -159,7 +159,7 @@ export function getLayerVisibility(activeLayerState: LayerState) {
 
   // Update visibility based on active layers in each group
   Object.entries(activeLayerState).forEach(([group, activeLayerIds]) => {
-    activeLayerIds.forEach(layerId => {
+    activeLayerIds.forEach((layerId: LayerId) => {
       visibility[layerId] = true;
     });
   });

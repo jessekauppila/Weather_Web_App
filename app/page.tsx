@@ -303,18 +303,20 @@ export default function Home() {
       }
 
       // For exclusive groups (justWind, justMaxMinTemp, justCurrentTemp, justSnowDepth)
-      const exclusiveGroups = new Set(['justWind', 'justMaxMinTemp', 'justCurrentTemp', 'justSnowDepth']);
-      if (exclusiveGroups.has(group)) {
-        // Clear all exclusive groups
-        exclusiveGroups.forEach(g => {
-          nextState[g as keyof LayerState] = new Set<LayerId>();
-        });
-
-        // If we're turning on a layer (not just turning it off)
+      const exclusiveGroups = ['justWind', 'justMaxMinTemp', 'justCurrentTemp', 'justSnowDepth'];
+      if (exclusiveGroups.includes(group)) {
+        // If turning on a layer in an exclusive group
         if (!prev[group].has(layerId)) {
+          // Clear all exclusive groups
+          exclusiveGroups.forEach(g => {
+            nextState[g as keyof LayerState] = new Set<LayerId>();
+          });
+          // Add the new layer to its group
           nextState[group] = new Set([layerId]);
+        } else {
+          // If turning off a layer, clear its group
+          nextState[group] = new Set<LayerId>();
         }
-
         return nextState;
       }
 
