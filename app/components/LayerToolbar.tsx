@@ -20,16 +20,39 @@ interface LayerToolbarProps {
   onToggle: () => void;
 }
 
-const GROUP_LABELS: Record<LayerGroup, string> = {
-  temperature: 'Temperature',
-  wind: 'Wind',
-  precipitation: 'Snow Depth',
-  precipitationTemp: 'Snow & Water Precipitation',
-  other: 'Other',
-  justWind: 'Wind',
-  justMaxMinTemp: 'Temperature',
-  justCurrentTemp: 'Temperature',
-  justSnowDepth: 'Snow Depth'
+// New visual grouping structure
+interface VisualGroup {
+  label: string;
+  groups: LayerGroup[];
+}
+
+const VISUAL_GROUPS: VisualGroup[] = [
+  {
+    label: 'Temperature',
+    groups: ['justCurrentTemp', 'justMaxMinTemp']
+  },
+  {
+    label: 'Wind',
+    groups: ['justWind']
+  },
+  {
+    label: 'Snow Depth',
+    groups: ['justSnowDepth']
+  },
+  {
+    label: 'Snow & Water Precipitation',
+    groups: ['precipitationTemp']
+  },
+  {
+    label: 'Other',
+    groups: ['other']
+  }
+];
+
+// Function to get the visual label for a group
+const getVisualLabel = (group: LayerGroup): string => {
+  const visualGroup = VISUAL_GROUPS.find(vg => vg.groups.includes(group));
+  return visualGroup ? visualGroup.label : group;
 };
 
 // Modify GROUP_ORDER to control display order
@@ -186,7 +209,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
                       textAlign: 'center'
                     }}
                   >
-                    {GROUP_LABELS[group]}
+                    {getVisualLabel(group)}
                   </Typography>
                   {layers.map((layerId) => {
                     const isChecked = group === 'other' 

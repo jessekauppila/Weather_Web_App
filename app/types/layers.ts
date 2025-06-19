@@ -44,7 +44,7 @@ export const LAYER_CONFIG = {
   currentTemp: {
     id: 'currentTemp' as LayerId,
     group: 'justCurrentTemp' as LayerGroup,
-    label: 'Current Temp Icons',
+    label: 'Current',
   },
   // currentTempCol: {
   //   id: 'currentTempCol' as LayerId,
@@ -54,7 +54,7 @@ export const LAYER_CONFIG = {
   minMaxTemp: {
     id: 'minMaxTemp' as LayerId,
     group: 'justMaxMinTemp' as LayerGroup,
-    label: 'Min/Max Temp',
+    label: 'Min/Max',
   },
   // maxTempCol: {
   //   id: 'maxTempCol' as LayerId,
@@ -69,12 +69,12 @@ export const LAYER_CONFIG = {
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
     group: 'justWind' as LayerGroup,
-    label: 'Avg/Max/Dir Wind',
+    label: 'Avg/Max/Dir',
   },
   snowDepthIcons: {
     id: 'snowDepthIcons' as LayerId,
     group: 'justSnowDepth' as LayerGroup,
-    label: 'Snow Depth',
+    label: 'Increase/Decrease',
   },
   snowDepthColumns: {
     id: 'snowDepthColumns' as LayerId,
@@ -107,7 +107,7 @@ export const LAYER_CONFIG = {
   combinedPrecipIcons: {
     id: 'combinedPrecipIcons' as LayerId,
     group: 'precipitationTemp' as LayerGroup,
-    label: 'Snow & Water Accumulation',
+    label: '24hr Snow & Liquid Precip',
   },
 } as const;
 
