@@ -8,21 +8,12 @@ export function createSnowDepthBoundaryLayer(
     features: Feature<Geometry, Map_BlockProperties>[];
   }
 ) {
-  const validFeatures = data.features.filter(f => f.properties.totalSnowDepthChange !== null);
-
-  const uniqueId = `snowDepthBoundary-${Date.now()}`;
-
   return new IconLayer({
-    id: uniqueId,
-    data: validFeatures,
+    id: 'snowDepthBoundary',
+    data: data.features.filter(f => f.properties.totalSnowDepthChange !== null),
     billboard: false,
     autoHighlight: true,
-    getIcon: (f) => {
-      const snowDepth = f.properties.totalSnowDepthChange;
-      return snowDepth > 0 
-        ? 'snow-depth-boundary-positive'
-        : 'snow-depth-boundary-negative';
-    },
+    getIcon: () => 'snow-depth-boundary',  // This is correct
     getPosition: (f) => [
       f.properties.longitude,
       f.properties.latitude,
@@ -30,8 +21,8 @@ export function createSnowDepthBoundaryLayer(
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
-    iconAtlas: '/snowDepthAtlas/snowDepth_boundary_atlas.png',
-    iconMapping: '/snowDepthAtlas/boundary-icon-mapping.json', //ICON_MAPPING,
+    iconAtlas: '/snowDepthAtlasRedo/snowDepth_boundary_atlas.png',  // Make sure this file exists
+    iconMapping: '/snowDepthAtlasRedo/boundary-icon-mapping.json',  // This path is correct
     pickable: false,
     shadowEnabled: false,
     alphaCutoff: 0.05,

@@ -52,7 +52,7 @@ export function createWindArrowLayer(
     ],
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'map',
+    angleAlignment: 'viewport',
     iconAtlas: '/windAtlas/wind_arrows_location_icon_atlas.png',
     iconMapping: '/windAtlas/location-icon-mapping.json',
     pickable: true,

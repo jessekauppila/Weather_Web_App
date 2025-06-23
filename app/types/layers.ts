@@ -1,3 +1,5 @@
+//inside types/layers.ts
+
 export type LayerId =
   | 'forecastZones'
   | 'terrain'
@@ -8,9 +10,26 @@ export type LayerId =
   | 'snowDepthColumns'
   | 'maxTempCol'
   | 'minTempCol'
-  | 'currentTempCol';
+  | 'currentTempCol'
+  | 'snowDepthIconsRedo'
+  | 'liquidPrecipIcons'
+  | 'snowAccumColumns'
+  | 'liquidPrecipIcons'
+  | 'liquidPrecipColumns'
+  | 'combinedPrecipIcons';
 
-export type LayerGroup = 'temperature' | 'wind' | 'precipitation' | 'other';
+
+  export type LayerGroup = 
+  | 'temperature' 
+  | 'wind' 
+  | 'precipitation' 
+  | 'precipitationTemp' 
+  | 'other'
+  | 'justWind'
+  | 'justMaxMinTemp'
+  | 'justCurrentTemp'
+  | 'justSnowDepth';
+
 
 // Single source of truth for layer configuration
 export const LAYER_CONFIG = {
@@ -26,43 +45,71 @@ export const LAYER_CONFIG = {
   },
   currentTemp: {
     id: 'currentTemp' as LayerId,
-    group: 'temperature' as LayerGroup,
-    label: 'Current Temp Icons',
+    group: 'justCurrentTemp' as LayerGroup,
+    label: 'Current',
   },
-  currentTempCol: {
-    id: 'currentTempCol' as LayerId,
-    group: 'temperature' as LayerGroup,
-    label: 'Current Temp Columns',
-  },
+  // currentTempCol: {
+  //   id: 'currentTempCol' as LayerId,
+  //   group: 'temperature' as LayerGroup,
+  //   label: 'Current Temp Columns',
+  // },
   minMaxTemp: {
     id: 'minMaxTemp' as LayerId,
-    group: 'temperature' as LayerGroup,
-    label: 'Min/Max Temp',
+    group: 'justMaxMinTemp' as LayerGroup,
+    label: 'Min/Max',
   },
-  maxTempCol: {
-    id: 'maxTempCol' as LayerId,
-    group: 'temperature' as LayerGroup,
-    label: 'Max Temp Columns',
-  },
-  minTempCol: {
-    id: 'minTempCol' as LayerId,
-    group: 'temperature' as LayerGroup,
-    label: 'Min Temp Columns',
-  },
+  // maxTempCol: {
+  //   id: 'maxTempCol' as LayerId,
+  //   group: 'temperature' as LayerGroup,
+  //   label: 'Max Temp Columns',
+  // },
+  // minTempCol: {
+  //   id: 'minTempCol' as LayerId,
+  //   group: 'temperature' as LayerGroup,
+  //   label: 'Min Temp Columns',
+  // },
   avgMaxWind: {
     id: 'avgMaxWind' as LayerId,
-    group: 'wind' as LayerGroup,
-    label: 'Avg/Max Wind',
+    group: 'justWind' as LayerGroup,
+    label: 'Avg/Max/Dir',
   },
   snowDepthIcons: {
     id: 'snowDepthIcons' as LayerId,
-    group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Change Icons',
+    group: 'justSnowDepth' as LayerGroup,
+    label: 'Increase/Decrease',
   },
   snowDepthColumns: {
     id: 'snowDepthColumns' as LayerId,
     group: 'precipitation' as LayerGroup,
-    label: 'Snow Depth Change Columns',
+    label: 'Snow Depth Columns',
+  },
+  // snowDepthIconsRedo: {
+  //   id: 'snowDepthIconsRedo' as LayerId,
+  //   group: 'precipitation' as LayerGroup,
+  //   label: 'Snow Accum Icons',
+  // },
+
+  // snowAccumColumns: {
+  //   id: 'snowAccumColumns' as LayerId,
+  //   group: 'precipitation' as LayerGroup,
+  //   label: 'Snow Accum Columns',
+  // },
+
+
+  // liquidPrecipColumns: {
+  //   id: 'liquidPrecipColumns' as LayerId,
+  //   group: 'precipitation' as LayerGroup,
+  //   label: 'Liquid Precipitation Columns',
+  // },
+  // liquidPrecipIcons: {
+  //   id: 'liquidPrecipIcons' as LayerId,
+  //   group: 'precipitation' as LayerGroup,
+  //   label: 'Liquid Precipitation Icons',
+  // },
+  combinedPrecipIcons: {
+    id: 'combinedPrecipIcons' as LayerId,
+    group: 'precipitationTemp' as LayerGroup,
+    label: '24hr Snow & Liquid Precip',
   },
 } as const;
 
@@ -81,23 +128,43 @@ export interface LayerState {
   temperature: Set<LayerId>;
   wind: Set<LayerId>;
   precipitation: Set<LayerId>;
+  precipitationTemp: Set<LayerId>;
   other: Set<LayerId>;
+  justWind: Set<LayerId>;
+  justMaxMinTemp: Set<LayerId>;
+  justCurrentTemp: Set<LayerId>;
+  justSnowDepth: Set<LayerId>;
 }
 
 export const DEFAULT_LAYER_STATE: LayerState = {
-  temperature: new Set(['currentTemp']),
+  temperature: new Set(),
   wind: new Set(),
   precipitation: new Set(),
+  precipitationTemp: new Set(['combinedPrecipIcons']),
   other: new Set(['forecastZones']),
+  justWind: new Set(),
+  justMaxMinTemp: new Set(['minMaxTemp']),
+  justCurrentTemp: new Set( ),
+  justSnowDepth: new Set(),
 };
 
 // Helper function to get layer visibility state
 export function getLayerVisibility(activeLayerState: LayerState) {
-  return Object.values(LAYER_CONFIG).reduce(
+  // Start with all layers set to false
+  const visibility = Object.values(LAYER_CONFIG).reduce(
     (acc, layer) => ({
       ...acc,
-      [layer.id]: activeLayerState[layer.group].has(layer.id),
+      [layer.id]: false
     }),
     {} as Record<LayerId, boolean>
   );
+
+  // Update visibility based on active layers in each group
+  Object.entries(activeLayerState).forEach(([group, activeLayerIds]) => {
+    activeLayerIds.forEach((layerId: LayerId) => {
+      visibility[layerId] = true;
+    });
+  });
+
+  return visibility;
 } 

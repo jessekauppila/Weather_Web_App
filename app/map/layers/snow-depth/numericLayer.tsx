@@ -17,40 +17,29 @@ export function createSnowDepthNumericLayer(
     autoHighlight: true,
     getIcon: (d) => {
       const snowDepth = d.properties.totalSnowDepthChange;
-      console.log('Processing numeric feature:', {
-        station: d.properties.stationName,
-        snowDepth,
-        hasValue: snowDepth !== null
-      });
+
       
       if (snowDepth === null) {
-        console.log('Skipping numeric icon for null snow depth');
         return 'default-icon';
       }
 
       const snowDepthRounded = Math.round(snowDepth);
-      console.log('Rounded snow depth:', snowDepthRounded);
 
       let icon_num = 'minus-19';
       if (snowDepthRounded <= -19) {
         icon_num = 'minus-19';
-        console.log('Using minimum icon for snow depth <= -19');
       }
       else if (snowDepthRounded < 0) {
         icon_num = `minus-${Math.abs(snowDepthRounded)}`;
-        console.log('Using negative icon:', icon_num);
       }
       else if (snowDepthRounded <= 49) {
         icon_num = `${snowDepthRounded}`;
-        console.log('Using positive icon:', icon_num);
       }
       else {
         icon_num = '50';
-        console.log('Using maximum icon for snow depth > 49');
       }
 
       const icon = `snow-depth-${icon_num}`;
-      console.log('Final icon name:', icon);
       return icon;
     },
     getPosition: (f) => [
