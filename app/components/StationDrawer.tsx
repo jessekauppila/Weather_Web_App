@@ -86,7 +86,7 @@ function TabPanel(props: TabPanelProps) {
 const StationDrawer: React.FC<StationDrawerProps> = ({
   isOpen,
   onClose,
-  station,
+  //station,
   stations,
   timeRangeData,
   observationsDataDay,

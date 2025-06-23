@@ -81,6 +81,7 @@ interface MapDataContextType {
   customTime: string;
   calculateCurrentTimeRange: () => string;
   onLayerToggle: (layerId: LayerId) => void;
+  selectedStations: WeatherStation[];
 }
 
 export const MapDataContext = createContext<MapDataContextType | undefined>(undefined);
@@ -182,6 +183,27 @@ export const MapDataProvider: React.FC<{
 
   }
 
+  const mapPropertiesToWeatherStation = (properties: Map_BlockProperties): WeatherStation => ({
+    Station: properties.stationName,
+    'Cur Air Temp': properties.curAirTemp?.toString() ?? '-',
+    '24h Snow Accumulation': properties.snowAccumulation24h?.toString() ?? '-',
+    'Cur Wind Speed': properties.curWindSpeed ?? '-',
+    'Elevation': properties.elevation?.toString() ?? '-',
+    'Stid': properties.Stid ?? '-',
+    'Air Temp Min': properties.airTempMin?.toString() ?? '-',
+    'Air Temp Max': properties.airTempMax?.toString() ?? '-',
+    'Wind Speed Avg': properties.windSpeedAvg ?? '-',
+    'Max Wind Gust': properties.maxWindGust ?? '-',
+    'Wind Direction': properties.windDirection ?? '-',
+    'Total Snow Depth Change': properties.totalSnowDepthChange?.toString() ?? '-',
+    'Precip Accum One Hour': properties.precipAccumOneHour ?? '-',
+    'Total Snow Depth': properties.totalSnowDepth?.toString() ?? '-',
+    'Latitude': properties.latitude?.toString() ?? '-',
+    'Longitude': properties.longitude?.toString() ?? '-',
+    'Relative Humidity': properties.relativeHumidity?.toString() ?? '-',
+    'Api Fetch Time': properties.fetchTime ?? new Date().toISOString()
+  });
+
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
@@ -203,6 +225,7 @@ export const MapDataProvider: React.FC<{
 
   // Initialize with empty stations
   const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
+  const [selectedStations, setSelectedStations] = useState<WeatherStation[]>([]);
   const [selectedStation, setSelectedStation] = useState<WeatherStation | null>(null);
   const [stationIds, setStationIds] = useState<string[]>([]);
 
@@ -243,6 +266,28 @@ export const MapDataProvider: React.FC<{
   }, [observationsDataDay]);
 
   ////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (selectedStationsArray?.length > 0 && mapData?.stationData?.features) {
+      const stations = selectedStationsArray.map(stationData => {
+        const feature = mapData.stationData.features.find(
+          f => f.properties.Stid === stationData.id || f.properties.Stid === stationData.Stid
+        );
+        if (feature) {
+          return mapPropertiesToWeatherStation(feature.properties);
+        }
+        return null;
+      }).filter(Boolean);
+
+      setSelectedStations(stations);
+      setSelectedStation(stations[0]); // Keep for backward compatibility
+      setIsDrawerOpen(true);
+    } else {
+      setSelectedStations([]);
+      setSelectedStation(null);
+      setIsDrawerOpen(false);
+    }
+  }, [selectedStationsArray, mapData]);
 
   
   // Process the formatted data once it's available
@@ -474,7 +519,8 @@ export const MapDataProvider: React.FC<{
     dayRangeType,
     customTime,
     calculateCurrentTimeRange,
-    onLayerToggle
+    onLayerToggle,
+    selectedStations,
   };
 
   return (

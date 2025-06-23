@@ -56,6 +56,7 @@ export function StationSelector({
       stationObjects: selectedStations
     });
     
+    // Update the station selection
     handleStationSelect(selectedStations);
   }, [stations, handleStationSelect, onStationSelectionChange, maxSelections, selectedStationIds]);
 
