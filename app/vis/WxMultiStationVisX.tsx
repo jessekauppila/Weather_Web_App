@@ -282,7 +282,7 @@ function WxMultiStationVisX({
             orientation="left"
             scale={yScale}
             left={dimensions.margin.left}
-            tickFormat={d => config.formatValue(d, isMetric)}
+            tickFormat={d => config.formatValue(Number(d), isMetric)}
             stroke="var(--app-text-secondary)"
             tickStroke="var(--app-text-secondary)"
             tickLength={4}

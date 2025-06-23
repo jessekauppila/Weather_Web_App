@@ -5,7 +5,7 @@ import { Brush } from '@visx/brush';
 import { format, subMonths, startOfDay, endOfDay, isValid } from 'date-fns';
 import { Axis } from '@visx/axis';
 import { PatternLines } from '@visx/pattern';
-import { BaseBrushState } from '@visx/brush/lib/types';
+//import BaseBrush, { BaseBrushState, UpdateBrush } from '@visx/brush/lib/BaseBrush';
 
 interface TimeBrushProps {
   width: number;
@@ -56,14 +56,18 @@ export function TimeBrush({
   }), [innerHeight]);
 
   // This function is now called only when the user finishes dragging.
-  const handleBrushEnd = useCallback((domain: BaseBrushState) => {
-    if (!domain.x0 || !domain.x1) return;
+  const handleBrushEnd = useCallback((domain: { x0: number, x1: number } | null) => {
+    if (!domain?.x0 || !domain?.x1) return;
 
     const startDate = xScale.invert(domain.x0);
     const endDate = xScale.invert(domain.x1);
 
     if (isValid(startDate) && isValid(endDate)) {
-        onBrushChange(startDate, endDate);
+      console.log('🖌️ BRUSH: Time range changed', {
+        start: format(startDate, 'yyyy-MM-dd HH:mm'),
+        end: format(endDate, 'yyyy-MM-dd HH:mm')
+      });
+      onBrushChange(startDate, endDate);
     }
   }, [xScale, onBrushChange]);
 
