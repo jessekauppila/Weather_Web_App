@@ -205,7 +205,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
 
       <div className="time-toolbar-content">
         {/* Time brush container */}
-        <div ref={brushContainerRef} className="w-full time-brush-container">
+        {/* <div ref={brushContainerRef} className="w-full time-brush-container">
           <TimeBrush
             width={brushDimensions.width}
             height={brushDimensions.height}
@@ -214,7 +214,7 @@ const TimeToolbar: React.FC<TimeToolbarProps> = ({
             onBrushChange={handleBrushChange}
             timeRangeData={timeRangeData}
           />
-        </div>
+        </div> */}
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 w-full">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
