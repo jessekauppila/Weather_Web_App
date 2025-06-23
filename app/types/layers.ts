@@ -1,3 +1,5 @@
+//inside types/layers.ts
+
 export type LayerId =
   | 'forecastZones'
   | 'terrain'
