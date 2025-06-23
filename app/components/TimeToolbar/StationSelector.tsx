@@ -131,7 +131,7 @@ export function StationSelector({
   return (
     <FormControl variant="outlined" size="small" className="w-full station-selector">
       <InputLabel className="!text-[var(--app-text-primary)]">
-        Stations ({selectedStationIds.length}/{maxSelections})
+        Stations {/* ({selectedStationIds.length}/{maxSelections}) */}
       </InputLabel>
       <Select
         multiple

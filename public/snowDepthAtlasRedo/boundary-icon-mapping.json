@@ -1,0 +1,18 @@
+{
+  "default-icon": {
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 512,
+    "anchorX": 512,
+    "anchorY": 512
+  },
+  "snow-depth-boundary": {
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 512,
+    "anchorX": 512,
+    "anchorY": 512
+  }
+} 
