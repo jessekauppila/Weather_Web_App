@@ -8,7 +8,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { LayerId, LayerState, LAYER_GROUPS, LAYER_LABELS } from '@/app/types/layers';
+import { LayerId, LayerState, LAYER_GROUPS, LAYER_LABELS, LayerGroup } from '@/app/types/layers';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
@@ -20,15 +20,50 @@ interface LayerToolbarProps {
   onToggle: () => void;
 }
 
-const GROUP_LABELS: Record<string, string> = {
-  temperature: 'Temperature',
-  wind: 'Wind',
-  precipitation: 'Precipitation',
-  other: 'Other',
+// New visual grouping structure
+interface VisualGroup {
+  label: string;
+  groups: LayerGroup[];
+}
+
+const VISUAL_GROUPS: VisualGroup[] = [
+  {
+    label: 'Temperature',
+    groups: ['justCurrentTemp', 'justMaxMinTemp']
+  },
+  {
+    label: 'Wind',
+    groups: ['justWind']
+  },
+  {
+    label: 'Snow Depth',
+    groups: ['justSnowDepth']
+  },
+  {
+    label: 'Snow & Water Precipitation',
+    groups: ['precipitationTemp']
+  },
+  {
+    label: 'Other',
+    groups: ['other']
+  }
+];
+
+// Function to get the visual label for a group
+const getVisualLabel = (group: LayerGroup): string => {
+  const visualGroup = VISUAL_GROUPS.find(vg => vg.groups.includes(group));
+  return visualGroup ? visualGroup.label : group;
 };
 
-// Add ordered array to control group display order
-const GROUP_ORDER = ['temperature', 'wind', 'precipitation', 'other'] as const;
+// Modify GROUP_ORDER to control display order
+const GROUP_ORDER: readonly LayerGroup[] = [
+  'justCurrentTemp',
+  'justMaxMinTemp',
+  'justWind',
+  'justSnowDepth',
+  'precipitationTemp',
+  'other'
+];
 
 const switchStyle = {
   '& .MuiSwitch-switchBase': {
@@ -114,11 +149,11 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
   }, {} as Record<string, LayerId[]>);
 
   // Add function to check if a group has any active layers
-  const isGroupActive = (group: string) => {
+  const isGroupActive = (group: LayerGroup) => {
     if (group === 'other') {
       return activeLayerState.other.size > 0;
     }
-    return activeLayerState[group as keyof Omit<LayerState, 'other'>].size > 0;
+    return activeLayerState[group].size > 0;
   };
 
   // console.log('LayerToolbar activeLayerState:', {
@@ -156,13 +191,11 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
           Layers
         </Typography>
 
-        {/* {idx < arr.length - 1 && ( */}
-                  <div className="layer-toolbar-divider" />
-                {/* )} */}
-
         <FormGroup sx={{ width: '100%' }}>
-          {GROUP_ORDER.map((group, idx, arr) => {
+          {GROUP_ORDER.map((group) => {
             const layers = groupedLayers[group] || [];
+            if (layers.length === 0) return null;
+
             return (
               <React.Fragment key={group}>
                 <Box>
@@ -171,13 +204,12 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
                     sx={{ 
                       color: isGroupActive(group) ? 'var(--app-text-primary)' : 'var(--app-text-secondary)', 
                       mb: 0.5,
-                      mt: group !== 'temperature' ? 1 : 0,
+                      mt: 1,
                       transition: 'color 0.2s ease-in-out',
-                                  textAlign: 'center'
-
+                      textAlign: 'center'
                     }}
                   >
-                    {GROUP_LABELS[group]}
+                    {getVisualLabel(group)}
                   </Typography>
                   {layers.map((layerId) => {
                     const isChecked = group === 'other' 
@@ -202,9 +234,7 @@ const LayerToolbar: React.FC<LayerToolbarProps> = ({
                     );
                   })}
                 </Box>
-                {idx < arr.length - 1 && (
-                  <div className="layer-toolbar-divider" />
-                )}
+                <div className="layer-toolbar-divider" />
               </React.Fragment>
             );
           })}
