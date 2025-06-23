@@ -119,6 +119,28 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
   const startYRef = useRef<number>(0);
   const startHeightRef = useRef<number>(0);
   
+  // Add this near your other state declarations
+  const [visibleGraphs, setVisibleGraphs] = useState({
+    air_temp: true,
+    snow_depth: true,
+    snow_24h: true,
+    wind_speed: true,
+    precip_accum: true,
+    relative_humidity: true,
+    solar_radiation: true
+  });
+
+  // Add this helper object for human-readable names
+  const graphLabels = {
+    air_temp: "Air Temperature",
+    snow_depth: "Snow Depth",
+    snow_24h: "24h Snow",
+    wind_speed: "Wind Speed",
+    precip_accum: "Precipitation",
+    relative_humidity: "Relative Humidity",
+    solar_radiation: "Solar Radiation"
+  };
+
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -865,21 +887,33 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
 
           {/* Tab 1: Multi-Station Snow Depth Graph */}
           <TabPanel value={activeTab} index={1}>
-          {(
-              multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
-                <div className="flex flex-col gap-6">
-                  {/* Snow Depth Graph */}
+            {(multiStationDataHourFiltered.data.length > 0 && multiStationDataHourFiltered.stationData ? (
+              <div className="flex flex-col gap-6">
+                {/* Add checkbox controls */}
+                <div className="app-section-solid p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+                    {Object.entries(graphLabels).map(([key, label]) => (
+                      <div key={key} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`graph-${key}`}
+                          checked={visibleGraphs[key as keyof typeof visibleGraphs]}
+                          onChange={(e) => setVisibleGraphs(prev => ({
+                            ...prev,
+                            [key]: e.target.checked
+                          }))}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`graph-${key}`} className="text-sm">
+                          {label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* <div className="app-section-solid">
-                    <WxMultiStationSnowDepthVisx
-                      stationData={multiStationDataHourFiltered}
-                      // isHourly={true}
-                      // isMetric={isMetric}
-                    />
-                  </div> */}
-
-{/* 'air_temp' | 'precip_accum' | 'snow_24h' | 'wind_speed' | 'relative_humidity' | 'solar_radiation'; */}
-
+                {/* Conditional graph rendering */}
+                {visibleGraphs.air_temp && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -888,7 +922,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+                )}
 
+                {visibleGraphs.snow_depth && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -897,8 +933,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
-                  
-                  {/* 24-Hour Snow Depth Graph */}
+                )}
+
+                {visibleGraphs.snow_24h && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -907,8 +944,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+                )}
 
-                  {/* Wind Speed Graph */}
+                {visibleGraphs.wind_speed && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -917,8 +955,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+                )}
 
-                  {/* Precipitation Accumulation Graph */}
+                {visibleGraphs.precip_accum && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -927,7 +966,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+                )}
 
+                {visibleGraphs.relative_humidity && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -936,7 +977,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+                )}
 
+                {visibleGraphs.solar_radiation && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -945,14 +988,13 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
-
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p>No multi-station data available</p>
-                </div>
-              )
-            )}
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No multi-station data available</p>
+              </div>
+            ))}
           </TabPanel>
 
           {/* Tab 2: Original Hourly Snow and Temperature Graph */}
