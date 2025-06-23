@@ -53,7 +53,7 @@ const dataTypeConfigs: Record<DataType, DataTypeConfig> = {
     formatValue: (value, isMetric) => formatValueWithUnit(value, UnitType.PRECIPITATION, isMetric)
   },
   air_temp: {
-    field: 'Cur Air Temp',
+    field: 'Air Temp',
     title: 'Air Temperature',
     unit: '°F',
     formatValue: (value, isMetric) => formatValueWithUnit(value, UnitType.TEMPERATURE, isMetric)

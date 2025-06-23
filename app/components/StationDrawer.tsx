@@ -878,6 +878,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                     />
                   </div> */}
 
+{/* 'air_temp' | 'precip_accum' | 'snow_24h' | 'wind_speed' | 'relative_humidity' | 'solar_radiation'; */}
+
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="air_temp"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
                       stationData={multiStationDataHourFiltered}
@@ -916,6 +927,25 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                       isMetric={isMetric}
                     />
                   </div>
+
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="relative_humidity"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="solar_radiation"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
