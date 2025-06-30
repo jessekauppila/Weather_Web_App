@@ -15,7 +15,7 @@ import { MapDataProvider, useMapData } from '../data/map/MapDataContext';
 import StationDrawer from './StationDrawer';
 import type { WeatherStation } from '../map/map';
 import type { PickingInfo } from '@deck.gl/core';
-import type { Feature, Geometry } from 'geojson';
+import type { Feature, Geometry, FeatureCollection, Polygon } from 'geojson';
 import type { Map_BlockProperties } from '../map/map';
 import { DayRangeType } from '../types';
 import { Switch } from '@mui/material';
@@ -28,7 +28,7 @@ interface MapData {
     type: 'FeatureCollection';
     features: Feature<Geometry, Map_BlockProperties>[];
   };
-  forecastZones: { name: string; contour: [number, number][] }[];
+  forecastZones: FeatureCollection<Polygon>;
   observationsDataDay: any;
   observationsDataHour: any;
   filteredObservationsDataHour: any;
