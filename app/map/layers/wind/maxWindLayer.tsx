@@ -2,6 +2,7 @@ import { IconLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../../map';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 
 export function createMaxWindLayer(
   data: {
@@ -44,7 +45,7 @@ export function createMaxWindLayer(
     },
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'viewport',
+    // angleAlignment: 'viewport',
     iconAtlas: '/maxWindAtlas/maxWind_location_icon_atlas.png',
     iconMapping: '/maxWindAtlas/location-icon-mapping.json',
     pickable: true,
@@ -52,5 +53,12 @@ export function createMaxWindLayer(
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+
+    angleAlignment: 'viewport', //'viewport' for 3d, 'screen' for 2d
+    parameters: {
+      depthTest: false,      // Disable depth testing completely
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 
