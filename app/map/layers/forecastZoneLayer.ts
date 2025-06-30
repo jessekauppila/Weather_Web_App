@@ -1,19 +1,30 @@
-import { PolygonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer } from '@deck.gl/layers';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
+import type { FeatureCollection, Polygon } from 'geojson';
 
 /**
- * Creates a polygon layer to display forecast zones on the map
+ * Creates a GeoJSON layer to display forecast zones on the map
  */
 export function createForecastZoneLayer(
-  data: { name: string; contour: [number, number][] }[]
+  data: FeatureCollection<Polygon>
 ) {
-  return new PolygonLayer({
+  console.log('🔍 Creating forecast zone layer with data:', data);
+  console.log('🔍 Features count:', data?.features?.length || 0);
+  
+  const layer = new GeoJsonLayer({
     id: 'forecast-zones',
-    data,
+    data: data,
     stroked: true,
-    filled: false,
-    getPolygon: (d) => d.contour,
-    getLineColor: [100, 0, 100, 200],
+    filled: true,
+    getFillColor: [100, 0, 100, 100],
+    getLineColor: [100, 0, 100, 255],
     getLineWidth: 2000,
+    lineWidthMinPixels: 3,
     pickable: true,
+    // Temporarily remove TerrainExtension to debug
+    // extensions: [new TerrainExtension()]
   });
+  
+  console.log('🔍 Created forecast zone layer:', layer);
+  return layer;
 } 

@@ -188,11 +188,30 @@ export const MapDataProvider: React.FC<{
       type: 'FeatureCollection',
       features: [],
     },
-    forecastZones: forecastZonesData.forecastZones.map(zone => ({
-      name: zone.name,
-      contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
-    })),
+    // for use with the old forecast zone layer
+    // forecastZones: forecastZonesData.forecastZones.map(zone => ({
+    //   name: zone.name,
+    //   contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
+    // })),
+
+
+    forecastZones: {
+      type: 'FeatureCollection',
+      features: forecastZonesData.forecastZones.map(zone => ({
+        type: 'Feature',
+        properties: {
+          name: zone.name
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [zone.contour]
+        }
+      }))
+    },
   });
+  
+  console.log('🔍 MapDataContext initialized with forecastZones:', mapData.forecastZones);
+  console.log('🔍 forecastZones features count:', mapData.forecastZones.features.length);
 
   // These will be populated when we merge with the data page
   const [weatherData, setWeatherData] = useState({
@@ -335,10 +354,25 @@ export const MapDataProvider: React.FC<{
     // Update the map data with all processed data
     setMapData({
       stationData: map_weatherToGeoJSON(stationsForMap),
-      forecastZones: forecastZonesData.forecastZones.map(zone => ({
-        name: zone.name,
-        contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
-      })),
+
+      // forecastZones: forecastZonesData.forecastZones.map(zone => ({
+      //   name: zone.name,
+      //   contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
+      // })),
+      
+      forecastZones: {
+        type: 'FeatureCollection',
+        features: forecastZonesData.forecastZones.map(zone => ({
+          type: 'Feature',
+          properties: {
+            name: zone.name
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [zone.contour]
+          }
+        }))
+      },
     });
     
     // console.log('Updated map data with observations');
