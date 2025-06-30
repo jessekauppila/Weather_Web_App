@@ -1,5 +1,7 @@
 import { PolygonLayer } from '@deck.gl/layers';
 
+// I still have to make this float above the terrain layer or on top ofit 
+
 /**
  * Creates a polygon layer to display forecast zones on the map
  */
