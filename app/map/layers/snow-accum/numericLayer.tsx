@@ -2,6 +2,7 @@ import { IconLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../../map';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 
 function getSnowDepthIcon(depth: number | null): string {
   // Handle negative or null values
@@ -48,7 +49,6 @@ export function createSnowDepthNumericLayer(
     getElevation: () => 5000, 
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'viewport',
     iconAtlas: '/snowDepthAtlasRedo/snowDepth_num_icon_atlas.png',
     iconMapping: '/snowDepthAtlasRedo/num-icon-mapping.json',
     pickable: true,
@@ -56,5 +56,11 @@ export function createSnowDepthNumericLayer(
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+    angleAlignment: 'viewport', //'viewport' for 3d, 'screen' for 2d
+    parameters: {
+      depthTest: false,      // Disable depth testing completely
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 
