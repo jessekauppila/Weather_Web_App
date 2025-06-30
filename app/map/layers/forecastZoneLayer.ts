@@ -16,7 +16,7 @@ export function createForecastZoneLayer(
     data: data,
     stroked: true,
     filled: true,
-    getFillColor: [100, 0, 100, 100],
+    getFillColor: [100, 0, 100, 25],
     getLineColor: [100, 0, 100, 255],
     getLineWidth: 2000,
     lineWidthMinPixels: 3,
