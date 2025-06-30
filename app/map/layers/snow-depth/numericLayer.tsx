@@ -48,6 +48,7 @@ export function createSnowDepthNumericLayer(
     ],
     getSize: 100,
     getAngle: 0,
+    getElevation: () => 5000, 
     angleAlignment: 'viewport',
     iconAtlas: '/snowDepthAtlas/snowDepth_num_icon_atlas.png',
     iconMapping: '/snowDepthAtlas/num-icon-mapping.json',

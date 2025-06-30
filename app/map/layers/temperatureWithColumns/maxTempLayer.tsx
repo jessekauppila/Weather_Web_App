@@ -1,4 +1,5 @@
 import { IconLayer } from '@deck.gl/layers';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../../map';
@@ -44,5 +45,6 @@ export function createMaxTempLayer(
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+    extensions: [new TerrainExtension()],
   });
 } 
