@@ -23,10 +23,11 @@ export function createSnowDepthBoundaryLayer(
         ? 'snow-depth-boundary-positive'
         : 'snow-depth-boundary-negative';
     },
-    getPosition: (f) => [
-      f.properties.longitude,
-      f.properties.latitude,
-    ],
+    // getPosition: (f) => [
+    //   f.properties.longitude,
+    //   f.properties.latitude,
+    // ],
+    getElevation: () => 5000, 
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',

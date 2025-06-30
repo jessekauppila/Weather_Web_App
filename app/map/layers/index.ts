@@ -61,10 +61,13 @@ export function createMapLayers(
   // console.log('stationData features count:', data.stationData?.features.length ?? 0);
 
   const layers = [
+
+    visibility.terrain && createTerrainLayer(),
+    
     visibility.forecastZones &&
       createForecastZoneLayer(data.forecastZones ?? []),
 
-    visibility.terrain && createTerrainLayer(),
+   
     
     visibility.currentTemp &&
       createCurrentTempLayer(

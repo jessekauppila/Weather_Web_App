@@ -18,6 +18,7 @@ export function createSnowDepthBoundaryLayer(
       f.properties.longitude,
       f.properties.latitude,
     ],
+    getElevation: () => 5000, 
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',

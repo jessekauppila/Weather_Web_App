@@ -15,14 +15,14 @@ export function createTerrainLayer() {
     texture: MapConfig.surfaceImage,
     wireframe: false,
     color: [255, 255, 255],
-    material: {
-      diffuse: 1,
-    },
+    // material: {
+    //   diffuse: 1,
+    // },
     operation: 'terrain+draw',
-    loadOptions: {
-      fetch: {
-        mode: 'cors',
-      },
-    },
+    // loadOptions: {
+    //   fetch: {
+    //     mode: 'cors',
+    //   },
+    // },
   });
 }
