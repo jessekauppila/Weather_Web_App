@@ -31,7 +31,7 @@ export function createForecastZoneLayer(
     // stroked: false,  // Not needed for LineStrings
     // wireframe: false, // Not needed for LineStrings
 
-    extensions: [new TerrainExtension()],
+    //extensions: [new TerrainExtension()],
 
   });
   
