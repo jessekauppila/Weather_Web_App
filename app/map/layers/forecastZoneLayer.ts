@@ -1,30 +1,45 @@
 import { GeoJsonLayer } from '@deck.gl/layers';
 import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
-import type { FeatureCollection, Polygon } from 'geojson';
+import type { FeatureCollection, LineString } from 'geojson';
 
 /**
  * Creates a GeoJSON layer to display forecast zones on the map
  */
 export function createForecastZoneLayer(
-  data: FeatureCollection<Polygon>
+  data: FeatureCollection<LineString>
 ) {
-  console.log('🔍 Creating forecast zone layer with data:', data);
-  console.log('🔍 Features count:', data?.features?.length || 0);
+  // Detailed data validation logging
+  console.log('🔍 Creating forecast zone layer with data:', {
+    type: data?.type,
+    featureCount: data?.features?.length,
+    isValidGeoJSON: data?.type === 'FeatureCollection' && Array.isArray(data?.features),
+    firstFeature: data?.features?.[0]
+  });
   
   const layer = new GeoJsonLayer({
     id: 'forecast-zones',
-    data: data,
-    stroked: true,
-    filled: true,
-    getFillColor: [100, 0, 100, 100],
-    getLineColor: [100, 0, 100, 255],
+    data,
+    
+    // Styling for LineStrings
+    getLineColor: [100, 0, 100, 255], // Solid purple lines
     getLineWidth: 2000,
-    lineWidthMinPixels: 3,
-    pickable: true,
-    // Temporarily remove TerrainExtension to debug
-    // extensions: [new TerrainExtension()]
+    lineWidthMinPixels: 1,
+    lineWidthMaxPixels: 3,
+    pickable: false,
+
+    // // Remove polygon-specific properties
+    // stroked: false,  // Not needed for LineStrings
+    // wireframe: false, // Not needed for LineStrings
+
+    extensions: [new TerrainExtension()],
+
   });
   
-  console.log('🔍 Created forecast zone layer:', layer);
+  console.log('🔍 Created forecast zone layer:', {
+    id: layer.id,
+    props: layer.props,
+    hasData: Boolean(layer.props.data)
+  });
+  
   return layer;
 } 
