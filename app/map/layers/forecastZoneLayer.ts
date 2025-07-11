@@ -8,38 +8,28 @@ import type { FeatureCollection, LineString } from 'geojson';
 export function createForecastZoneLayer(
   data: FeatureCollection<LineString>
 ) {
-  // Detailed data validation logging
-  console.log('🔍 Creating forecast zone layer with data:', {
-    type: data?.type,
-    featureCount: data?.features?.length,
-    isValidGeoJSON: data?.type === 'FeatureCollection' && Array.isArray(data?.features),
-    firstFeature: data?.features?.[0]
-  });
-  
-  const layer = new GeoJsonLayer({
+
+  // Build layer configuration
+  const layerConfig: any = {
     id: 'forecast-zones',
-    data,
+    data: data,
     
-    // Styling for LineStrings
-    getLineColor: [100, 0, 100, 255], // Solid purple lines
-    getLineWidth: 2000,
-    lineWidthMinPixels: 1,
-    lineWidthMaxPixels: 3,
-    pickable: false,
+    getLineColor: [255, 0, 255, 255], // Bright magenta for visibility
+    getLineWidth: 4, // Extra thick for testing
+    lineWidthMinPixels: 10,
+    pickable: true
+  };
 
-    // // Remove polygon-specific properties
-    // stroked: false,  // Not needed for LineStrings
-    // wireframe: false, // Not needed for LineStrings
 
-    //extensions: [new TerrainExtension()],
-
-  });
+    layerConfig.parameters = {
+      depthTest: false,
+      depthMask: false
+    };
+    // layerConfig.extensions = [new TerrainExtension()];
+    layerConfig.terrainDrawMode = 'drape';
   
-  console.log('🔍 Created forecast zone layer:', {
-    id: layer.id,
-    props: layer.props,
-    hasData: Boolean(layer.props.data)
-  });
+  
+  const layer = new GeoJsonLayer(layerConfig);
   
   return layer;
 } 

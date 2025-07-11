@@ -1,6 +1,6 @@
 import { PickingInfo } from '@deck.gl/core';
 //import type { Feature, Geometry } from 'geojson'; for old forecast zone layer
-import type { Feature, Geometry, FeatureCollection, Polygon } from 'geojson';
+import type { Feature, Geometry, FeatureCollection, LineString } from 'geojson';
 import { Map_BlockProperties } from '../map';
 import { LayerId } from '@/app/types/layers';
 
@@ -50,7 +50,7 @@ type LayerVisibility = {
 export function createMapLayers(
   visibility: LayerVisibility,
   data: {
-    forecastZones?: FeatureCollection<Polygon>;
+    forecastZones?: FeatureCollection<LineString>;
     stationData?: {
       type: 'FeatureCollection';
       features: Feature<Geometry, Map_BlockProperties>[];
@@ -70,8 +70,6 @@ export function createMapLayers(
         type: 'FeatureCollection',
         features: []
       }),
-
-   
     
     visibility.currentTemp &&
       createCurrentTempLayer(
