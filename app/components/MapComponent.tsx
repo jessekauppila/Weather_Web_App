@@ -22,6 +22,7 @@ import { Switch } from '@mui/material';
 import { LayerId, LayerState, getLayerVisibility } from '@/app/types/layers';
 import useStationDrawer from '@/app/hooks/useStationDrawer';
 //import LayerToolbar from './LayerToolbar';
+import type { ViewState } from '@deck.gl/core';
 
 interface MapData {
   stationData: {
@@ -298,6 +299,18 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
     // Empty refresh handler
   }, []);
 
+  const [viewState, setViewState] = useState(map_INITIAL_VIEW_STATE);
+
+  const onViewStateChange = useCallback(({viewState: newViewState}: {viewState: ViewState}) => {
+    const zoom = Math.min(Math.max(newViewState.zoom, 5), 15);
+    setViewState({
+      ...newViewState,
+      zoom,
+      longitude: newViewState.longitude,
+      latitude: newViewState.latitude
+    });
+  }, []);
+
   return (
     <div className="w-full h-full relative">
       {isLoading && (
@@ -311,17 +324,29 @@ export const MapApp = ({ selectedStationId }: { selectedStationId: string | null
       <DeckGL
         layers={layers}
         effects={[map_lightingEffect]}
-        initialViewState={map_INITIAL_VIEW_STATE}
-        controller={true}
+        viewState={viewState}
+        onViewStateChange={onViewStateChange}
+        controller={{
+          doubleClickZoom: false,
+          scrollZoom: {
+            speed: 0.01,
+            smooth: true
+          },
+          dragPan: true
+        }}
         getTooltip={map_getTooltip}
         style={{ width: '100%', height: '100%' }}
       >
         <Map
+          maxTileCacheSize={1000}
+          renderWorldCopies={false}
+          maxZoom={15}
+          minZoom={5}
           reuseMaps
           mapStyle={map_MAP_STYLE}
-          mapboxAccessToken={
-            process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-          }
+          mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+          terrain={{ source: 'mapbox-dem', exaggeration: 1.5 }}
+          maxPitch={85}
         />
       </DeckGL>
 
