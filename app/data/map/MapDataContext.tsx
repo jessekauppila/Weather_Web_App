@@ -10,11 +10,11 @@ import React, {
 } from 'react';
 //import forecastZonesData from './forecastZones.json';
 import forecastZonesData from './forecastZonesGeoJson.json';
-console.log('🔍 Imported forecastZonesData:', {
-  type: forecastZonesData.type,
-  featureCount: forecastZonesData.features?.length,
-  firstFeature: forecastZonesData.features?.[0]
-});
+// console.log('🔍 Imported forecastZonesData:', {
+//   type: forecastZonesData.type,
+//   featureCount: forecastZonesData.features?.length,
+//   firstFeature: forecastZonesData.features?.[0]
+// });
 import { map_weatherToGeoJSON } from './geoUtils';
 import type { Feature, Geometry, LineString, FeatureCollection, GeoJsonProperties, Position } from 'geojson';
 import { Map_BlockProperties, WeatherStation } from '../../map/map';
@@ -194,13 +194,30 @@ export const MapDataProvider: React.FC<{
 
   }
 
+  // First, properly type the forecast zones data
+  interface ForecastZoneFeature {
+    type: 'Feature';
+    geometry: {
+      type: 'LineString';
+      coordinates: [number, number][];
+    };
+    properties: {
+      name: string;
+    };
+  }
+
+  interface ForecastZoneCollection {
+    type: 'FeatureCollection';
+    features: ForecastZoneFeature[];
+  }
+
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
       type: 'FeatureCollection',
       features: [],
     },
-    forecastZones: forecastZonesData as unknown as FeatureCollection<LineString>,
+    forecastZones: forecastZonesData as ForecastZoneCollection,
   });
   
   console.log('🔍 Initial mapData.forecastZones:', {
@@ -350,7 +367,7 @@ export const MapDataProvider: React.FC<{
     // Update the map data with all processed data
     setMapData({
       stationData: map_weatherToGeoJSON(stationsForMap),
-      forecastZones: forecastZonesData as unknown as FeatureCollection<LineString>,
+      forecastZones: forecastZonesData as ForecastZoneCollection,
     });
     
     console.log('🔍 Updated mapData.forecastZones:', {

@@ -12,17 +12,21 @@ export function createTerrainLayer() {
     strategy: 'no-overlap',
     elevationDecoder: MapConfig.elevationDecoder,
     elevationData: MapConfig.terrainImage,
-    texture: MapConfig.surfaceImage,
+    
+    // CHOOSE YOUR PREFERRED MUTED TEXTURE:
+    //texture: MapConfig.surfaceImageMuted,        // Very muted grayscale
+     texture: MapConfig.surfaceImageOutdoors,  // Natural but less saturated  
+    // texture: MapConfig.surfaceImageStreets,   // Minimal streets style
+    // texture: MapConfig.surfaceImage,          // Original bright satellite
+    
     wireframe: false,
-    color: [255, 255, 255],
-    // material: {
-    //   diffuse: 1,
-    // },
+    
+    // COLOR TINTING OPTIONS:
+    color: [200, 200, 200],        // Gray tint (makes everything more muted)
+    // color: [255, 255, 255],     // No tint (original colors)
+    // color: [180, 190, 200],     // Cool blue-gray tint
+    // color: [200, 195, 180],     // Warm beige tint
+    
     operation: 'terrain+draw',
-    // loadOptions: {
-    //   fetch: {
-    //     mode: 'cors',
-    //   },
-    // },
   });
 }
