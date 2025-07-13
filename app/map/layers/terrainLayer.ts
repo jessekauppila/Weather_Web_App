@@ -17,7 +17,7 @@ export function createTerrainLayer() {
     //texture: MapConfig.surfaceImageMuted,        // Very muted grayscale
      texture: MapConfig.surfaceImageOutdoors,  // Natural but less saturated  
     // texture: MapConfig.surfaceImageStreets,   // Minimal streets style
-    // texture: MapConfig.surfaceImage,          // Original bright satellite
+     //texture: MapConfig.surfaceImage,          // Original bright satellite
     
     wireframe: false,
     

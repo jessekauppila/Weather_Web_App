@@ -14,9 +14,9 @@ export function createForecastZoneLayer(
     id: 'forecast-zones',
     data: data,
     
-    getLineColor: [100, 0, 100, 200],
-    getLineWidth: .5, // Extra thick for testing
-    lineWidthMinPixels: 10,
+    getLineColor: [100, 0, 100, 150],
+    getLineWidth: .25, // Extra thick for testing
+    lineWidthMinPixels: 2,
     pickable: false
   };
 
