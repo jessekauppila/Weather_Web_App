@@ -8,7 +8,7 @@ function convertWindSpeed(metersPerSecond: number): number {
 }
 
 function convertPrecipitation(millimeters: number): number {
-  return millimeters *  0.00393701;  // mm to inches
+  return millimeters *  0.0393701;  // mm to inches
 }
 
 function convertPrecipitationMMtoCM(centimeters: number): number {
