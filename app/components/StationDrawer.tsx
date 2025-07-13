@@ -841,9 +841,9 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
         <div 
           className="drawer-scrollbar overflow-y-auto pr-2" 
           style={{ 
-            height: `calc(100% - 50px)`,
+            height: `calc(100% - 60px)`,  // Changed from 50px to give more space
             minHeight: '120px',
-            maxHeight: `${DRAWER_HEIGHT +150}px`,
+            maxHeight: `${DRAWER_HEIGHT + 400}px`,  // Increased from 150 to 300
             overflowY: 'auto',
             position: 'relative'
           }}
