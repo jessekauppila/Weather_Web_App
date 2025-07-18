@@ -181,10 +181,12 @@ function WxMultiStationVisX({
   });
 
   const yScale = scaleLinear({
-    domain: [
-      dataType === 'air_temp' ? 0 : 0, // Could add different domain logic per data type
-      Math.max(...processedData.flatMap(d => d.data).map(d => d.value)) * 1.2
-    ],
+    domain: dataType === 'snow_depth' 
+      ? extent(processedData.flatMap(d => d.data).map(d => d.value)) as [number, number] // Use actual min/max for snow depth
+      : [
+          0, // Start at 0 for other types
+          Math.max(...processedData.flatMap(d => d.data).map(d => d.value)) * 1.2
+        ],
     range: [height + dimensions.margin.top, dimensions.margin.top],
   });
 

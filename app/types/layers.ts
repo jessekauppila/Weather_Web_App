@@ -136,12 +136,15 @@ export interface LayerState {
   justSnowDepth: Set<LayerId>;
 }
 
+
+// Default layers that are on or off when the map first loads
 export const DEFAULT_LAYER_STATE: LayerState = {
   temperature: new Set(),
   wind: new Set(),
   precipitation: new Set(),
-  precipitationTemp: new Set(['combinedPrecipIcons']),
-  other: new Set(['forecastZones']),
+  precipitationTemp: new Set(),
+  //precipitationTemp: new Set(['combinedPrecipIcons']),
+  other: new Set(['forecastZones', 'terrain']),
   justWind: new Set(),
   justMaxMinTemp: new Set(['minMaxTemp']),
   justCurrentTemp: new Set( ),

@@ -1,21 +1,37 @@
-import { PolygonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer } from '@deck.gl/layers';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
+import type { FeatureCollection, LineString } from 'geojson';
 
 // I still have to make this float above the terrain layer or on top ofit 
 
 /**
- * Creates a polygon layer to display forecast zones on the map
+ * Creates a GeoJSON layer to display forecast zones on the map
  */
 export function createForecastZoneLayer(
-  data: { name: string; contour: [number, number][] }[]
+  data: FeatureCollection<LineString>
 ) {
-  return new PolygonLayer({
+
+  // Build layer configuration
+  const layerConfig: any = {
     id: 'forecast-zones',
-    data,
-    stroked: true,
-    filled: false,
-    getPolygon: (d) => d.contour,
-    getLineColor: [100, 0, 100, 200],
-    getLineWidth: 2000,
-    pickable: true,
-  });
+    data: data,
+    
+    getLineColor: [100, 0, 100, 150],
+    getLineWidth: .25, // Extra thick for testing
+    lineWidthMinPixels: 2,
+    pickable: false
+  };
+
+
+    layerConfig.parameters = {
+      depthTest: false,
+      depthMask: false
+    };
+    // layerConfig.extensions = [new TerrainExtension()];
+    layerConfig.terrainDrawMode = 'drape';
+  
+  
+  const layer = new GeoJsonLayer(layerConfig);
+  
+  return layer;
 } 

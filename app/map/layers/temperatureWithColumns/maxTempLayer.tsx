@@ -1,4 +1,5 @@
 import { IconLayer } from '@deck.gl/layers';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import type { Feature, Geometry } from 'geojson';
 import { PickingInfo } from '@deck.gl/core';
 import { Map_BlockProperties } from '../../map';
@@ -13,7 +14,9 @@ export function createMaxTempLayer(
   return new IconLayer({
     id: 'maxTempIcons',
     data: data.features,
+
     billboard: false,
+
     autoHighlight: true,
     getIcon: (f) => {
       if (!f?.properties?.airTempMax) {
@@ -36,7 +39,7 @@ export function createMaxTempLayer(
     ],
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'viewport',
+    // angleAlignment: 'viewport',
     iconAtlas: '/maxTempAtlas/maxTemp_location_icon_atlas.png',
     iconMapping: '/maxTempAtlas/location-icon-mapping.json',
     pickable: true,
@@ -44,5 +47,12 @@ export function createMaxTempLayer(
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+
+    angleAlignment: 'viewport', //'viewport' for 3d, 'screen' for 2d
+    parameters: {
+      depthTest: false,      // Disable depth testing completely
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 

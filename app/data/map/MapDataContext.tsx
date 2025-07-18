@@ -8,9 +8,15 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
-import forecastZonesData from './forecastZones.json';
+//import forecastZonesData from './forecastZones.json';
+import forecastZonesData from './forecastZonesGeoJson.json';
+// console.log('🔍 Imported forecastZonesData:', {
+//   type: forecastZonesData.type,
+//   featureCount: forecastZonesData.features?.length,
+//   firstFeature: forecastZonesData.features?.[0]
+// });
 import { map_weatherToGeoJSON } from './geoUtils';
-import type { Feature, Geometry } from 'geojson';
+import type { Feature, Geometry, LineString, FeatureCollection, GeoJsonProperties, Position } from 'geojson';
 import { Map_BlockProperties, WeatherStation } from '../../map/map';
 // import wxTableDataDayFromDB from '../dayWxTableDataDayFromDB';
 // import { WxTableOptions, DayRangeType } from '../../types';
@@ -60,7 +66,13 @@ interface ObservationData {
 
 // Create context with comprehensive type definitions
 interface MapDataContextType {
-  mapData: any;
+  mapData: {
+    stationData: {
+      type: 'FeatureCollection';
+      features: Feature<Geometry, Map_BlockProperties>[];
+    };
+    forecastZones: FeatureCollection<LineString>;
+  };
   isLoading: boolean;
   observationsDataDay: any;
   observationsDataHour: any;
@@ -182,16 +194,36 @@ export const MapDataProvider: React.FC<{
 
   }
 
+  // First, properly type the forecast zones data
+  interface ForecastZoneFeature {
+    type: 'Feature';
+    geometry: {
+      type: 'LineString';
+      coordinates: [number, number][];
+    };
+    properties: {
+      name: string;
+    };
+  }
+
+  interface ForecastZoneCollection {
+    type: 'FeatureCollection';
+    features: ForecastZoneFeature[];
+  }
+
   // Initialize with empty map data
   const [mapData, setMapData] = useState<MapDataContextType['mapData']>({
     stationData: {
       type: 'FeatureCollection',
       features: [],
     },
-    forecastZones: forecastZonesData.forecastZones.map(zone => ({
-      name: zone.name,
-      contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
-    })),
+    forecastZones: forecastZonesData as ForecastZoneCollection,
+  });
+  
+  console.log('🔍 Initial mapData.forecastZones:', {
+    type: mapData.forecastZones.type,
+    featureCount: mapData.forecastZones.features?.length,
+    firstFeature: mapData.forecastZones.features?.[0]
   });
 
   // These will be populated when we merge with the data page
@@ -335,13 +367,14 @@ export const MapDataProvider: React.FC<{
     // Update the map data with all processed data
     setMapData({
       stationData: map_weatherToGeoJSON(stationsForMap),
-      forecastZones: forecastZonesData.forecastZones.map(zone => ({
-        name: zone.name,
-        contour: zone.contour.map(point => [point[0], point[1]] as [number, number])
-      })),
+      forecastZones: forecastZonesData as ForecastZoneCollection,
     });
     
-    // console.log('Updated map data with observations');
+    console.log('🔍 Updated mapData.forecastZones:', {
+      type: mapData.forecastZones.type,
+      featureCount: mapData.forecastZones.features?.length,
+      firstFeature: mapData.forecastZones.features?.[0]
+    });
     
     // Also update stations list
     const stationList = transformedData.map((station: StationData) => ({

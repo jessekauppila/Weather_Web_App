@@ -1,4 +1,5 @@
 import { IconLayer } from '@deck.gl/layers';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map';
 
@@ -27,6 +28,7 @@ export function createSnowDepthBoundaryLayer(
       f.properties.longitude,
       f.properties.latitude,
     ],
+    getElevation: () => 5000, 
     getSize: 100,
     getAngle: 0,
     angleAlignment: 'viewport',
@@ -36,5 +38,10 @@ export function createSnowDepthBoundaryLayer(
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+    parameters: {
+      depthTest: false,
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 

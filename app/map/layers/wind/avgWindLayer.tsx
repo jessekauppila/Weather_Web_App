@@ -1,6 +1,7 @@
 import { IconLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 
 export function createAvgWindLayer(
   data: {
@@ -42,12 +43,18 @@ export function createAvgWindLayer(
     },
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'viewport',
     iconAtlas: '/avgWindAtlas/avgWind_location_icon_atlas.png',
     iconMapping: '/avgWindAtlas/location-icon-mapping.json',
     pickable: false,
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+
+    angleAlignment: 'viewport', //'viewport' for 3d, 'screen' for 2d
+    parameters: {
+      depthTest: false,      // Disable depth testing completely
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 

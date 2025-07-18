@@ -1071,7 +1071,8 @@ body.drawer-open {
   z-index: 9999;
   transform-origin: bottom;
   overflow: hidden;
-  background-color: var(--app-dropdown-bg);
+  /* background-color: var(--app-dropdown-bg); */
+  background-color: #000000;
   color: var(--app-text-primary);
   border-top: 1px solid var(--app-border-color);
   box-shadow: var(--app-box-shadow);

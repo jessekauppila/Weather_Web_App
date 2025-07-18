@@ -2,6 +2,7 @@ import { IconLayer } from '@deck.gl/layers';
 import type { Feature, Geometry } from 'geojson';
 import { Map_BlockProperties } from '../../map';
 import { PickingInfo } from '@deck.gl/core';
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 
 export function createMinTempLayer(
   data: {
@@ -13,7 +14,9 @@ export function createMinTempLayer(
   return new IconLayer({
     id: 'minTempIcons',
     data: data.features,
+
     billboard: false,
+    
     autoHighlight: false,
     getIcon: (f) => {
       if (!f?.properties?.airTempMin) {
@@ -48,12 +51,19 @@ export function createMinTempLayer(
     ],
     getSize: 100,
     getAngle: 0,
-    angleAlignment: 'viewport',
+    getElevation: () => 5000, 
     iconAtlas: '/minTempAtlas/minTemp_location_icon_atlas.png',
     iconMapping: '/minTempAtlas/location-icon-mapping.json',
     pickable: false,
     shadowEnabled: false,
     alphaCutoff: 0.05,
     sizeScale: 1,
+
+    angleAlignment: 'viewport', //'viewport' for 3d, 'screen' for 2d
+    parameters: {
+      depthTest: false,      // Disable depth testing completely
+      depthMask: false
+    },
+    extensions: [new TerrainExtension()],
   });
 } 
