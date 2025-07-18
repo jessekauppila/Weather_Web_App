@@ -946,6 +946,17 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   </div>
                 )}
 
+                {visibleGraphs.precip_accum && (
+                  <div className="app-section-solid">
+                    <WxMultiStationVisX 
+                      stationData={multiStationDataHourFiltered}
+                      dataType="precip_accum"
+                      isHourly={true}
+                      isMetric={isMetric}
+                    />
+                  </div>
+                )}
+
                 {visibleGraphs.wind_speed && (
                   <div className="app-section-solid">
                     <WxMultiStationVisX 
@@ -957,16 +968,7 @@ const StationDrawer: React.FC<StationDrawerProps> = ({
                   </div>
                 )}
 
-                {visibleGraphs.precip_accum && (
-                  <div className="app-section-solid">
-                    <WxMultiStationVisX 
-                      stationData={multiStationDataHourFiltered}
-                      dataType="precip_accum"
-                      isHourly={true}
-                      isMetric={isMetric}
-                    />
-                  </div>
-                )}
+
 
                 {visibleGraphs.relative_humidity && (
                   <div className="app-section-solid">
