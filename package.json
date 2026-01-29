@@ -46,7 +46,7 @@
     "mapbox-gl": "^3.10.0",
     "moment-timezone": "^0.5.47",
     "motion": "^12.5.0",
-    "next": "^15.3.2",
+    "next": "15.3.8",
     "node": "^22.16.0",
     "node-fetch": "^2.7.0",
     "react": "^18",
