@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/batchUploadLastHourRevised",
-      "schedule": "5,20 * * * *"
+      "schedule": "5 * * * *"
     },
     {
       "path": "/api/infoExExport",
-      "schedule": "10 * * * *"
+      "schedule": "7 * * * *"
     }
   ]
 }
