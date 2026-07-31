@@ -7,6 +7,7 @@ import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
 import { VercelPoolClient } from '@vercel/postgres';
+import { nwacAuth } from '../nwacAuth';
 
 export async function GET(request: NextRequest) {
   return handleRequest(request);
@@ -80,7 +81,7 @@ async function handleRequest(request: NextRequest) {
       '8',
       '9',
     ];
-    const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
+    const auth: string = nwacAuth();
 
     for (
       let hours_processed = 0;

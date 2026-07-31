@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@vercel/postgres';
 import moment from 'moment-timezone';
 import processAllWxData from '../allWxprocessor';
+import { nwacAuth } from '../nwacAuth';
 
 export async function GET(request: NextRequest) {
   return handleRequest(request);
@@ -80,7 +81,7 @@ async function handleRequest(request: NextRequest) {
       '9',
     ];
 
-    const auth: string = '50a07f08af2fe5ca0579c21553e1c9029e04';
+    const auth: string = nwacAuth();
 
     // Fetch weather data
     let observationsData;
